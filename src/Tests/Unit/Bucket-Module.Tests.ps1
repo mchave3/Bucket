@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     #-------------------------------------------------------------------------
     Set-Location -Path $PSScriptRoot
     #-------------------------------------------------------------------------
@@ -47,3 +47,4 @@ Describe 'Module Tests' -Tag Unit {
         } #uri
     } #context_ModuleTests
 } #describe_ModuleTests
+

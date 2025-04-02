@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Short description
 .DESCRIPTION
@@ -31,4 +31,5 @@ function Get-HelloWorld {
     $message = "Hello, happy $dayOfWeek World!"
     return $message
 } #Get-HelloWorld
+
 

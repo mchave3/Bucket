@@ -1,4 +1,4 @@
-# this psm1 is for local testing and development use only
+﻿# this psm1 is for local testing and development use only
 
 # dot source the parent import for local development variables
 . $PSScriptRoot\Imports.ps1

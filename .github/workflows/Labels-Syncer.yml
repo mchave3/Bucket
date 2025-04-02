@@ -1,0 +1,23 @@
+---
+name: ♻️ Sync labels
+
+run-name: "♻️ Sync labels"
+
+permissions:
+  issues: write
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  labels:
+    name: ♻️ Sync labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@main
+      - name: 🚀 Run Label Syncer
+        uses: micnncim/action-label-syncer@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

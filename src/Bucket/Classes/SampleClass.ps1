@@ -34,3 +34,4 @@ class SampleClass {
         return "Happy Birthday $($this.Name)! You are now $($this.Age) years old."
     }
 }
+

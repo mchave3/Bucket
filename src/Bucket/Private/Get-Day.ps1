@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Short description
 .DESCRIPTION
@@ -36,4 +36,5 @@ function Get-Day {
 
     return $day
 } #Get-Day
+
 

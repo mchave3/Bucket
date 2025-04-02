@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     Set-Location -Path $PSScriptRoot
     $ModuleName = 'Bucket'
     $PathToManifest = [System.IO.Path]::Combine('..', '..', $ModuleName, "$ModuleName.psd1")
@@ -58,4 +58,5 @@ Describe $ModuleName {
         }
     } #context_CommandHelp
 }
+
 
