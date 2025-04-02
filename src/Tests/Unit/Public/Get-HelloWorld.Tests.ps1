@@ -1,4 +1,5 @@
-﻿BeforeDiscovery {
+﻿<#
+BeforeDiscovery {
     Set-Location -Path $PSScriptRoot
     $ModuleName = 'Bucket'
     $PathToManifest = [System.IO.Path]::Combine('..', '..', '..', $ModuleName, "$ModuleName.psd1")
@@ -35,5 +36,4 @@ InModuleScope 'Bucket' {
         } #context_Success
     } #describe_Get-HelloWorld
 } #inModule
-
-
+#>

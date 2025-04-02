@@ -1,35 +1,26 @@
-﻿<#
-.SYNOPSIS
-    Short description
-.DESCRIPTION
-    Long description
-.EXAMPLE
-    C:\PS>
-    Example of how to use this cmdlet
-.EXAMPLE
-    C:\PS>
-    Another example of how to use this cmdlet
-.PARAMETER InputObject
-    Specifies the object to be processed.  You can also pipe the objects to this command.
-.OUTPUTS
-    Output from this cmdlet (if any)
-.NOTES
-    General notes
-.COMPONENT
-    Bucket
-#>
-function Get-HelloWorld {
+﻿function Get-HelloWorld {
+    <#
+    .SYNOPSIS
+    A brief description of the Get-HelloWorld function.
+
+    .DESCRIPTION
+    A detailed description of the Get-HelloWorld function, its purpose, and how it works.
+
+    .PARAMETER Name
+    Specifies the name to use in the greeting.
+
+    .EXAMPLE
+    Get-HelloWorld -Name "John"
+    Returns "Hello, John!"
+
+    .NOTES
+    Additional information about the function.
+    #>
     [CmdletBinding()]
     param (
-        # [Parameter(Mandatory = $true,
-        #     HelpMessage = 'Helpful Message')]
-        # [ValidateNotNull()]
-        # [ValidateNotNullOrEmpty()]
-        # [string]$YourParameter
+        [Parameter()]
+        [string]$Name = "World"
     )
-    $dayOfWeek = Get-Day # Get-Day is a private function
-    $message = "Hello, happy $dayOfWeek World!"
-    return $message
-} #Get-HelloWorld
 
-
+    return "Hello, $Name!"
+}
