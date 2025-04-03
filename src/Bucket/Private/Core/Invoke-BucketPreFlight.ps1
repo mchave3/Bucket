@@ -87,7 +87,8 @@ function Invoke-BucketPreFlight {
                     if ($result) {
                         Write-BucketLog -Data "Created folder: $($folder.Description) at $folderPath" -Level Info
                     }
-                } else {
+                } 
+                else {
                     # Verify we have write permissions to the existing folder
                     $testFile = Join-Path -Path $folderPath -ChildPath "test_permission_$([Guid]::NewGuid()).tmp"
                     try {
@@ -113,5 +114,7 @@ function Invoke-BucketPreFlight {
         Write-BucketLog -Data "Bucket pre-flight checks completed." -Level Info
         Write-BucketLog -Data "Bucket is ready for use." -Level Info
         #endregion Finalize Pre-Flight
+
     }
+
 }
