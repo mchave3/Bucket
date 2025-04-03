@@ -364,12 +364,30 @@ Add-BuildTask CreateMarkdownHelp -After CreateHelpStart {
     Write-Build DarkGray '             Replace each missing element we need for a proper generic module page .md file'
     $ModulePageFileContent = Get-Content -Raw $ModulePage
     $ModulePageFileContent = $ModulePageFileContent -replace '{{Manually Enter Description Here}}', $script:ModuleDescription
-    $script:FunctionsToExport | ForEach-Object {
-        Write-Build DarkGray "             Updating definition for the following function: $($_)"
-        $TextToReplace = "{{Manually Enter $($_) Description Here}}"
-        $ReplacementText = (Get-Help -Detailed $_).Synopsis
-        $ModulePageFileContent = $ModulePageFileContent -replace $TextToReplace, $ReplacementText
+    
+    # If FunctionsToExport contains *, retrieve all functions from the Public folder
+    if ($script:FunctionsToExport -contains '*') {
+        Write-Build DarkGray "             FunctionsToExport contains wildcard (*). Getting actual functions from Public folder..."
+        $PublicFunctions = Get-ChildItem -Path "$script:ModuleSourcePath\Public\*.ps1" -ErrorAction SilentlyContinue | 
+                           Select-Object -ExpandProperty BaseName
+        
+        foreach ($Function in $PublicFunctions) {
+            Write-Build DarkGray "             Updating definition for the following function: $Function"
+            $TextToReplace = "{{Manually Enter $Function Description Here}}"
+            $Help = Get-Help -Detailed $Function -ErrorAction SilentlyContinue
+            $ReplacementText = if ($Help) { $Help.Synopsis } else { "Function $Function" }
+            $ModulePageFileContent = $ModulePageFileContent -replace $TextToReplace, $ReplacementText
+        }
+    } else {
+        # Original behavior
+        $script:FunctionsToExport | ForEach-Object {
+            Write-Build DarkGray "             Updating definition for the following function: $($_)"
+            $TextToReplace = "{{Manually Enter $($_) Description Here}}"
+            $ReplacementText = (Get-Help -Detailed $_).Synopsis
+            $ModulePageFileContent = $ModulePageFileContent -replace $TextToReplace, $ReplacementText
+        }
     }
+
     Write-Build DarkGray '             Evaluating if running 7.4.0 or higher...'
     # https://github.com/PowerShell/platyPS/issues/595
     if ($PSVersionTable.PSVersion -ge [version]'7.4.0') {
