@@ -44,7 +44,7 @@ function Start-Bucket {
 
         #region XAML
         # Load the XAML file for the GUI
-        $inputXaml = Get-Content -Path "$PSScriptRoot\GUI\BucketGUI.xaml" -Raw
+        $inputXaml = Get-Content -Path "$PSScriptRoot\GUI\MainWindow.xaml" -Raw
 
         $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', '' -replace 'x:N', 'N' -replace '^<Win.*', '<Window' -replace 'BucketVer', $script:BucketVersion
         [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
