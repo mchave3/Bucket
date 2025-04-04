@@ -68,6 +68,28 @@ function Invoke-BucketPreFlight {
         Write-BucketLog -Data "Starting pre-flight checks..." -Level Info
         #endregion Log Initialization Status
 
+        #region Check Administrator Privileges
+        try {
+            $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+            $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+            
+            Write-BucketLog -Data "Checking administrator privileges..." -Level Debug
+            
+            if (-not $isAdmin) {
+                $errorMsg = "Bucket requires administrator privileges. Please restart PowerShell as Administrator."
+                Write-BucketLog -Data $errorMsg -Level Error
+                Write-Error $errorMsg -ErrorAction Stop
+            }
+            
+            Write-BucketLog -Data "Administrator privileges verified." -Level Info
+        }
+        catch {
+            $errorMsg = "Failed to verify administrator privileges: $_"
+            Write-BucketLog -Data $errorMsg -Level Error
+            Write-Error $errorMsg -ErrorAction Stop
+        }
+        #endregion Check Administrator Privileges
+
         #region Create Required Directories
         # Create and verify required directories
         $requiredFolders = @(
