@@ -54,12 +54,37 @@ function Start-Bucket {
         
         $inputXaml = Get-Content -Path $xamlPath -Raw
 
-        $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', '' -replace 'x:N', 'N' -replace '^<Win.*', '<Window' -replace 'BucketVer', $script:BucketVersion
+        $inputXaml = $inputXaml -replace 'BucketVer', $script:BucketVersion
+
+        Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing 
+
         [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
         [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
+
+        # load the MahApps.Metro assembly
+        $assemblyPath = Join-Path -Path (Split-Path -Parent $PSScriptRoot) -ChildPath "Assemblies"
+        $AllDlls = Get-ChildItem -Path $assemblyPath -Recurse -Filter *.dll
+        Write-BucketLog -Data "Looking for assemblies in: $assemblyPath" -Level Verbose
+        Write-BucketLog -Data "$PSScriptRoot" -Level Verbose
+        if ($AllDlls.Count -eq 0) {
+            Write-BucketLog -Data "$PSScriptRoot\Assemblies does not contain any DLLs" -Level Error
+            exit 1
+        }
+        foreach ($dll in $AllDlls) {
+            try {
+                [void][System.Reflection.Assembly]::LoadFrom($dll.FullName)
+                Write-BucketLog -Data "Loaded assembly: $($dll.FullName)" -Level Verbose
+            } 
+            catch {
+                Write-BucketLog -Data "Failed to load assembly: $($dll.FullName) - $_" -Level Error
+            }
+        }
+
         [xml]$xaml = $inputXaml
 
         $reader = (New-Object System.Xml.XmlNodeReader $xaml)
+        write-bucketlog -Data "$reader" -Level Verbose
+        write-bucketlog -Data "$xaml" -Level Verbose
         try {
             $form = [Windows.Markup.XamlReader]::Load($reader)
         }
