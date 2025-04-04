@@ -561,6 +561,33 @@ Add-BuildTask Build {
     Invoke-Formatter $script:BuildModuleRootFile -ErrorAction SilentlyContinue
     Write-Build Gray '        ...Module creation complete.'
 
+    Write-Build Gray '        Updating module manifest to export only public functions...'
+    # Get the list of public functions to export
+    $publicFunctions = Get-ChildItem -Path "$script:ArtifactsPath\Public" -Filter "*.ps1" -ErrorAction SilentlyContinue | 
+                      Select-Object -ExpandProperty BaseName
+    
+    if ($publicFunctions) {
+        # Update the module manifest to export only the public functions
+        Write-Build Gray "        Found $($publicFunctions.Count) public functions to export"
+        
+        # Read manifest content
+        $manifestPath = Join-Path -Path $script:ArtifactsPath -ChildPath "$($script:ModuleName).psd1"
+        $manifestContent = Get-Content -Path $manifestPath -Raw
+        
+        # Use regex to replace the FunctionsToExport value
+        if ($manifestContent -match "FunctionsToExport\s*=\s*['`"]?\*['`"]?") {
+            $functionsToExportString = "FunctionsToExport = @('" + ($publicFunctions -join "','") + "')"
+            $manifestContent = $manifestContent -replace "FunctionsToExport\s*=\s*['`"]?\*['`"]?", $functionsToExportString
+            $manifestContent | Out-File -FilePath $manifestPath -Encoding utf8 -Force
+            Write-Build Gray "        Updated manifest to export only public functions"
+        } else {
+            Write-Build Yellow "        Could not find FunctionsToExport in manifest, manual update may be required"
+        }
+    } else {
+        Write-Build Yellow "        No public functions found to export"
+    }
+    Write-Build Gray '        ...Module manifest update complete.'
+
     Write-Build Gray '        Cleaning up leftover artifacts...'
     #cleanup artifacts that are no longer required
     if (Test-Path "$script:ArtifactsPath\Public") {
