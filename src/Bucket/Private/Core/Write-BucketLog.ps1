@@ -33,7 +33,7 @@
 .PARAMETER Level
     The severity level of the log message
     Valid values: Verbose, Debug, Info, Warning, Error, Fatal
-    Default: Verbose
+    Default: Info
 #>
 function Write-BucketLog {
     [CmdletBinding()]
@@ -44,18 +44,18 @@ function Write-BucketLog {
 
         [Parameter(Mandatory = $false)]
         [ValidateSet('Verbose', 'Debug', 'Info', 'Warning', 'Error', 'Fatal')]
-        [string]$Level = 'Verbose'
+        [string]$Level = 'Info'
     )
 
     process {
         # Log the data with the specified level
         switch ($Level) {
-            'Verbose' { Write-VerboseLog $Data }
-            'Debug'   { Write-DebugLog $Data }
-            'Info'    { Write-InfoLog $Data }
-            'Warning' { Write-WarningLog $Data }
-            'Error'   { Write-ErrorLog $Data }
-            'Fatal'   { Write-FatalLog $Data }
+            'Verbose' { Write-VerboseLog $Data }  # Use for implementation details (e.g., "Creating temporary variables")
+            'Debug'   { Write-DebugLog $Data }    # Use for important values (e.g., "Working path: X")
+            'Info'    { Write-InfoLog $Data }     # Use for main steps (e.g., "Initialization complete")
+            'Warning' { Write-WarningLog $Data }  # Use for suboptimal situations (e.g., "Folder already exists, using existing folder")
+            'Error'   { Write-ErrorLog $Data }    # Use for operation failures (e.g., "Unable to create folder")
+            'Fatal'   { Write-FatalLog $Data }    # Use for critical conditions (e.g., "Incompatible configuration detected")
         }
     }
 }

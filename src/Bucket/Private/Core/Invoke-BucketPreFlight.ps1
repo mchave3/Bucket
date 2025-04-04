@@ -56,41 +56,38 @@ function Invoke-BucketPreFlight {
         }
         catch {
             Write-Error "Failed to initialize logger: $_" -ErrorAction Stop
+            exit 1
         }
         #endregion Initialize Logging
 
         #region Log Initialization Status
-        Write-BucketLog -Data "Logger initialized successfully." -Level Info
+        Write-BucketLog -Data "========== BUCKET INITIALIZATION ==========" -Level Info
+        Write-BucketLog -Data "Logger initialized successfully" -Level Info
         Write-BucketLog -Data "Working directory: $script:workingDirectory" -Level Debug
-        Write-BucketLog -Data "Log file: $logFile" -Level Debug
-        Write-BucketLog -Data "Log directory: $logDirectory" -Level Debug
-        Write-BucketLog -Data "Logger started successfully." -Level Info
-        Write-BucketLog -Data "Starting pre-flight checks..." -Level Info
         #endregion Log Initialization Status
 
         #region Check Administrator Privileges
+        Write-BucketLog -Data "---------- Administrator Check ----------" -Level Info
         try {
             $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
             $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
             
-            Write-BucketLog -Data "Checking administrator privileges..." -Level Debug
-            
             if (-not $isAdmin) {
                 $errorMsg = "Bucket requires administrator privileges. Please restart PowerShell as Administrator."
                 Write-BucketLog -Data $errorMsg -Level Error
-                Write-Error $errorMsg -ErrorAction Stop
+                exit 1
             }
             
-            Write-BucketLog -Data "Administrator privileges verified." -Level Info
+            Write-BucketLog -Data "Administrator privileges verified" -Level Info
         }
         catch {
-            $errorMsg = "Failed to verify administrator privileges: $_"
-            Write-BucketLog -Data $errorMsg -Level Error
-            Write-Error $errorMsg -ErrorAction Stop
+            Write-BucketLog -Data "Error: $_" -Level Error
+            exit 1
         }
         #endregion Check Administrator Privileges
 
         #region Create Required Directories
+        Write-BucketLog -Data "---------- Directory Structure ----------" -Level Info
         # Create and verify required directories
         $requiredFolders = @(
             @{Path = "Updates"; Description = "Updates"},
@@ -107,7 +104,7 @@ function Invoke-BucketPreFlight {
                 if (-not (Test-Path -Path $folderPath)) {
                     $result = New-Item -Path $folderPath -ItemType Directory -Force -ErrorAction Stop
                     if ($result) {
-                        Write-BucketLog -Data "Created folder: $($folder.Description) at $folderPath" -Level Info
+                        Write-BucketLog -Data "Created: $($folder.Description) directory" -Level Info
                     }
                 } 
                 else {
@@ -116,25 +113,26 @@ function Invoke-BucketPreFlight {
                     try {
                         $null = New-Item -Path $testFile -ItemType File -ErrorAction Stop
                         Remove-Item -Path $testFile -Force -ErrorAction SilentlyContinue | Out-Null
-                        Write-BucketLog -Data "Folder already exists: $($folder.Description) at $folderPath" -Level Debug
+                        Write-BucketLog -Data "Verified: $($folder.Description) directory (exists)" -Level Debug
                     }
                     catch {
-                        Write-BucketLog -Data "Warning: Folder exists but may not be writeable: $($folder.Description) at $folderPath" -Level Warning
+                        Write-BucketLog -Data "Warning: $($folder.Description) directory may not be writeable" -Level Warning
                         Write-BucketLog -Data "Permission error: $_" -Level Debug
                     }
                 }
             }
             catch {
-                $errorMsg = "Failed to create or verify directory: $($folder.Description) at $folderPath. Error: $_"
+                $errorMsg = "Failed to verify directory: $($folder.Description). Error: $_"
                 Write-BucketLog -Data $errorMsg -Level Error
-                throw $errorMsg
+                exit 1
             }
         }
         #endregion Create Required Directories
 
         #region Finalize Pre-Flight
-        Write-BucketLog -Data "Bucket pre-flight checks completed." -Level Info
-        Write-BucketLog -Data "Bucket is ready for use." -Level Info
+        Write-BucketLog -Data "Bucket is ready for use" -Level Info
+        Write-BucketLog -Data "========== PRE-FLIGHT COMPLETE ==========" -Level Info
+        Write-BucketLog -Data "" -Level Info
         #endregion Finalize Pre-Flight
     }
 }

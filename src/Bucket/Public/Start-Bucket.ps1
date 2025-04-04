@@ -29,6 +29,10 @@ function Start-Bucket {
 
     )
 
+    begin {
+        Clear-Host
+    }
+
     process {
         if ($PSCmdlet.ShouldProcess("Starting Bucket", "Initialize Bucket module")) {
             # Start the Bucket module Pre-flight checks and setup
