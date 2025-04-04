@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:pages="clr-namespace:Bucket.GUI.Pages"
         Title="Bucket - Windows Image Customization Tool" 
         Width="1000" 
         Height="700"
@@ -38,44 +39,71 @@
                     <Separator Margin="0,15,0,15" Background="#5074B1" />
                 </StackPanel>
                 
-                <!-- Menu de Navigation -->
-                <StackPanel>
-                    <Controls:Tile x:Name="DashboardTile"
-                                  Margin="10,5"
-                                  Background="#1E3A5F" 
-                                  Height="60">
-                        <TextBlock Text="Tableau de bord" 
-                                   FontSize="16" 
-                                   Foreground="White"/>
-                    </Controls:Tile>
+                <!-- Menu de Navigation avec TabControl -->
+                <TabControl x:Name="NavigationTabControl" 
+                           Background="Transparent" 
+                           BorderThickness="0"
+                           TabStripPlacement="Left">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border x:Name="Border" 
+                                                Margin="10,5" 
+                                                Height="60" 
+                                                Background="#3A6EAF">
+                                            <ContentPresenter x:Name="ContentSite"
+                                                             ContentSource="Header"
+                                                             VerticalAlignment="Center"
+                                                             HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#1E3A5F"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#4A7EBF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TabControl.Resources>
                     
-                    <Controls:Tile x:Name="ImageTile"
-                                  Margin="10,5"
-                                  Background="#3A6EAF" 
-                                  Height="60">
-                        <TextBlock Text="Gestion des images" 
-                                   FontSize="16" 
-                                   Foreground="White"/>
-                    </Controls:Tile>
+                    <TabItem x:Name="DashboardTab">
+                        <TabItem.Header>
+                            <TextBlock Text="Tableau de bord" 
+                                       FontSize="16" 
+                                       Foreground="White"/>
+                        </TabItem.Header>
+                    </TabItem>
                     
-                    <Controls:Tile x:Name="CustomizeTile"
-                                  Margin="10,5"
-                                  Background="#3A6EAF" 
-                                  Height="60">
-                        <TextBlock Text="Personnalisation" 
-                                   FontSize="16" 
-                                   Foreground="White"/>
-                    </Controls:Tile>
+                    <TabItem x:Name="ImageTab">
+                        <TabItem.Header>
+                            <TextBlock Text="Gestion des images" 
+                                       FontSize="16" 
+                                       Foreground="White"/>
+                        </TabItem.Header>
+                    </TabItem>
                     
-                    <Controls:Tile x:Name="SettingsTile"
-                                  Margin="10,5"
-                                  Background="#3A6EAF" 
-                                  Height="60">
-                        <TextBlock Text="Paramètres" 
-                                   FontSize="16" 
-                                   Foreground="White"/>
-                    </Controls:Tile>
-                </StackPanel>
+                    <TabItem x:Name="CustomizeTab">
+                        <TabItem.Header>
+                            <TextBlock Text="Personnalisation" 
+                                       FontSize="16" 
+                                       Foreground="White"/>
+                        </TabItem.Header>
+                    </TabItem>
+                    
+                    <TabItem x:Name="SettingsTab">
+                        <TabItem.Header>
+                            <TextBlock Text="Paramètres" 
+                                       FontSize="16" 
+                                       Foreground="White"/>
+                        </TabItem.Header>
+                    </TabItem>
+                </TabControl>
             </DockPanel>
         </Border>
         
@@ -96,17 +124,7 @@
             </StackPanel>
             
             <!-- Contenu principal -->
-            <Grid Grid.Row="1">
-                <TextBlock Text="Bienvenue dans Bucket" 
-                           FontSize="22" 
-                           HorizontalAlignment="Center" 
-                           VerticalAlignment="Center"/>
-                <TextBlock Text="Sélectionnez une option dans le menu pour commencer" 
-                           FontSize="16" 
-                           HorizontalAlignment="Center" 
-                           VerticalAlignment="Center" 
-                           Margin="0,50,0,0"/>
-            </Grid>
+            <ContentControl x:Name="MainContent" Grid.Row="1" />
         </Grid>
     </Grid>
 </Window>
