@@ -6,7 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:Bucket"
         mc:Ignorable="d"
-        Title="WimWitch Reloaded - BucketVer" 
+        Title="Bucket - BucketVer" 
         Width="800"
         Height="500"
         WindowStartupLocation="CenterScreen"

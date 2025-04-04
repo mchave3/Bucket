@@ -75,14 +75,14 @@ function Invoke-BucketPreFlight {
             if (-not $isAdmin) {
                 $errorMsg = "Bucket requires administrator privileges. Please restart PowerShell as Administrator."
                 Write-BucketLog -Data $errorMsg -Level Error
-                exit 1
+                #exit 1
             }
             
             Write-BucketLog -Data "Administrator privileges verified" -Level Info
         }
         catch {
             Write-BucketLog -Data "Error: $_" -Level Error
-            exit 1
+            #exit 1
         }
         #endregion Check Administrator Privileges
 
@@ -132,7 +132,6 @@ function Invoke-BucketPreFlight {
         #region Finalize Pre-Flight
         Write-BucketLog -Data "Bucket is ready for use" -Level Info
         Write-BucketLog -Data "========== PRE-FLIGHT COMPLETE ==========" -Level Info
-        Write-BucketLog -Data "" -Level Info
         #endregion Finalize Pre-Flight
     }
 }

@@ -53,14 +53,11 @@ function Start-Bucket {
 
         $reader = (New-Object System.Xml.XmlNodeReader $xaml)
         try {
-        $form = [Windows.Markup.XamlReader]::Load($reader)
-        } catch {
-        Write-Warning @"
-Unable to parse XML, with error: $($Error[0])
-Ensure that there are NO SelectionChanged or TextChanged properties in your textboxes
-(PowerShell cannot process them)
-"@
-            throw
+            $form = [Windows.Markup.XamlReader]::Load($reader)
+        }
+        catch {
+            Write-BucketLog -Data "Failed to load XAML: $_" -Level Error
+            exit 1
         }
 
         # Load the XAML objects into variables
