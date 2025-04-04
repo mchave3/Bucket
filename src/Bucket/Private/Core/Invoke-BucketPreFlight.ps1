@@ -114,7 +114,5 @@ function Invoke-BucketPreFlight {
         Write-BucketLog -Data "Bucket pre-flight checks completed." -Level Info
         Write-BucketLog -Data "Bucket is ready for use." -Level Info
         #endregion Finalize Pre-Flight
-
     }
-
 }
