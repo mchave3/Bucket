@@ -44,7 +44,15 @@ function Start-Bucket {
 
         #region XAML
         # Load the XAML file for the GUI
-        $inputXaml = Get-Content -Path "$PSScriptRoot\GUI\MainWindow.xaml" -Raw
+        $moduleRoot = Split-Path -Parent $PSScriptRoot
+        $xamlPath = Join-Path -Path $moduleRoot -ChildPath "GUI\MainWindow.xaml"
+        
+        if (-not (Test-Path -Path $xamlPath)) {
+            Write-BucketLog -Data "Could not find MainWindow.xaml at $xamlPath" -Level Error
+            exit 1
+        }
+        
+        $inputXaml = Get-Content -Path $xamlPath -Raw
 
         $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', '' -replace 'x:N', 'N' -replace '^<Win.*', '<Window' -replace 'BucketVer', $script:BucketVersion
         [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')

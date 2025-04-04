@@ -11,16 +11,31 @@
         Height="500"
         WindowStartupLocation="CenterScreen"
         WindowState="Normal"
-        ResizeMode="CanMinimize">
+        ResizeMode="CanMinimize"
+        Background="{ui:ThemeResource ApplicationBackgroundBrush}"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <ui:TitleBar
             x:Name="TitleBar"
             Title="Bucket - BucketVer"
             Grid.Row="0"
-            CloseWindowByDoubleClickOnIcon="True">
-        </ui:TitleBar>
+            CloseWindowByDoubleClickOnIcon="True"
+            UseSnapLayout="True" />
+        
+        <!-- Main content area -->
+        <Grid Grid.Row="1" Margin="12">
+            <TextBlock 
+                Text="Bucket - Windows Image Customization Tool" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                FontSize="24"
+                FontWeight="SemiBold" />
+        </Grid>
     </Grid>
 </Window>

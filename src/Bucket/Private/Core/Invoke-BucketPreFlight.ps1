@@ -29,7 +29,17 @@ function Invoke-BucketPreFlight {
     process {
         #region Initialize Logging
         try {
+            # Ensure working directory variable is correctly initialized
+            if (-not $script:workingDirectory) {
+                $script:workingDirectory = Join-Path -Path $env:ProgramData -ChildPath 'Bucket'
+                Write-Verbose "Working directory was not initialized, setting to: $script:workingDirectory"
+            }
+            
             # Ensure working directory structure exists
+            if (-not (Test-Path -Path $script:workingDirectory)) {
+                New-Item -Path $script:workingDirectory -ItemType Directory -Force -ErrorAction Stop | Out-Null
+            }
+            
             $logDirectory = Join-Path -Path $script:workingDirectory -ChildPath "Logs"
             $logFile = Join-Path -Path $logDirectory -ChildPath "Bucket.log"
             
@@ -115,9 +125,17 @@ function Invoke-BucketPreFlight {
                 
                 # Try to manually load the assembly
                 try {
-                    $assemblyPath = Join-Path -Path $PSScriptRoot -ChildPath "$PSScriptRoot\Assemblies\Wpf.Ui.dll" -Resolve
-                    Add-Type -Path $assemblyPath -ErrorAction Stop
-                    Write-BucketLog -Data "Wpf.Ui assembly loaded manually from: $assemblyPath" -Level Info
+                    # Fix path to avoid duplication of $PSScriptRoot
+                    $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+                    $assemblyPath = Join-Path -Path $moduleRoot -ChildPath "Assemblies\Wpf.Ui.dll"
+                    
+                    if (Test-Path -Path $assemblyPath) {
+                        Add-Type -Path $assemblyPath -ErrorAction Stop
+                        Write-BucketLog -Data "Wpf.Ui assembly loaded manually from: $assemblyPath" -Level Info
+                    }
+                    else {
+                        Write-BucketLog -Data "Warning: Could not find Wpf.Ui assembly at $assemblyPath" -Level Warning
+                    }
                 }
                 catch {
                     Write-BucketLog -Data "Error: Failed to load Wpf.Ui assembly: $_" -Level Error
