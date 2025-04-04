@@ -86,6 +86,49 @@ function Invoke-BucketPreFlight {
         }
         #endregion Check Administrator Privileges
 
+        #region Check Required Assemblies
+        Write-BucketLog -Data "---------- Required Assemblies Check ----------" -Level Info
+        try {
+            # Verify Wpf.Ui assembly is loaded
+            $wpfUiAssembly = [System.AppDomain]::CurrentDomain.GetAssemblies() | 
+                Where-Object { $_.GetName().Name -eq 'Wpf.Ui' }
+            
+            if ($wpfUiAssembly) {
+                Write-BucketLog -Data "Wpf.Ui assembly loaded successfully: v$($wpfUiAssembly.GetName().Version)" -Level Info
+                
+                # Try to access a type from the assembly to verify it's working correctly
+                try {
+                    $uiType = $wpfUiAssembly.GetType('Wpf.Ui.Controls.SymbolIcon')
+                    if ($uiType) {
+                        Write-BucketLog -Data "Wpf.Ui assembly functionality verified" -Level Info
+                    }
+                    else {
+                        Write-BucketLog -Data "Warning: Could not verify Wpf.Ui assembly functionality" -Level Warning
+                    }
+                }
+                catch {
+                    Write-BucketLog -Data "Warning: Error accessing Wpf.Ui types: $_" -Level Warning
+                }
+            }
+            else {
+                Write-BucketLog -Data "Warning: Wpf.Ui assembly is not loaded" -Level Warning
+                
+                # Try to manually load the assembly
+                try {
+                    $assemblyPath = Join-Path -Path $PSScriptRoot -ChildPath "$PSScriptRoot\Assemblies\Wpf.Ui.dll" -Resolve
+                    Add-Type -Path $assemblyPath -ErrorAction Stop
+                    Write-BucketLog -Data "Wpf.Ui assembly loaded manually from: $assemblyPath" -Level Info
+                }
+                catch {
+                    Write-BucketLog -Data "Error: Failed to load Wpf.Ui assembly: $_" -Level Error
+                }
+            }
+        }
+        catch {
+            Write-BucketLog -Data "Error checking required assemblies: $_" -Level Error
+        }
+        #endregion Check Required Assemblies
+
         #region Create Required Directories
         Write-BucketLog -Data "---------- Directory Structure ----------" -Level Info
         # Create and verify required directories
