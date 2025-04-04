@@ -99,51 +99,86 @@ function Invoke-BucketPreFlight {
         #region Check Required Assemblies
         Write-BucketLog -Data "---------- Required Assemblies Check ----------" -Level Info
         try {
-            # Verify Wpf.Ui assembly is loaded
-            $wpfUiAssembly = [System.AppDomain]::CurrentDomain.GetAssemblies() | 
-                Where-Object { $_.GetName().Name -eq 'Wpf.Ui' }
+            # Get the module root directory
+            $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+            $assembliesFolder = Join-Path -Path $moduleRoot -ChildPath "Assemblies"
             
-            if ($wpfUiAssembly) {
-                Write-BucketLog -Data "Wpf.Ui assembly loaded successfully: v$($wpfUiAssembly.GetName().Version)" -Level Info
+            if (Test-Path -Path $assembliesFolder) {
+                # Get all DLLs in the Assemblies folder and its subfolders
+                $dllFiles = Get-ChildItem -Path $assembliesFolder -Filter "*.dll" -Recurse -ErrorAction Stop
                 
-                # Try to access a type from the assembly to verify it's working correctly
-                try {
-                    $uiType = $wpfUiAssembly.GetType('Wpf.Ui.Controls.SymbolIcon')
-                    if ($uiType) {
-                        Write-BucketLog -Data "Wpf.Ui assembly functionality verified" -Level Info
-                    }
-                    else {
-                        Write-BucketLog -Data "Warning: Could not verify Wpf.Ui assembly functionality" -Level Warning
+                if ($dllFiles.Count -eq 0) {
+                    Write-BucketLog -Data "Warning: No DLL files found in the Assemblies folder" -Level Warning
+                } 
+                else {
+                    Write-BucketLog -Data "Found $($dllFiles.Count) DLL files in the Assemblies folder" -Level Info
+                    
+                    # Check each DLL
+                    foreach ($dllFile in $dllFiles) {
+                        $assemblyName = [System.IO.Path]::GetFileNameWithoutExtension($dllFile.Name)
+                        $isLoaded = [System.AppDomain]::CurrentDomain.GetAssemblies() | 
+                            Where-Object { $_.GetName().Name -eq $assemblyName }
+                        
+                        if ($isLoaded) {
+                            Write-BucketLog -Data "Assembly '$assemblyName' is already loaded: v$($isLoaded.GetName().Version)" -Level Info
+                        } 
+                        else {
+                            # Attempt to load the assembly
+                            try {
+                                Add-Type -Path $dllFile.FullName -ErrorAction Stop
+                                Write-BucketLog -Data "Successfully loaded assembly: $assemblyName" -Level Info
+                            } 
+                            catch {
+                                Write-BucketLog -Data "Error loading assembly $assemblyName`: $_" -Level Error
+                            }
+                        }
                     }
                 }
-                catch {
-                    Write-BucketLog -Data "Warning: Error accessing Wpf.Ui types: $_" -Level Warning
+            } 
+            else {
+                Write-BucketLog -Data "Warning: Assemblies folder not found at $assembliesFolder" -Level Warning
+            }
+            
+            # Check if any assemblies from the manifest's RequiredAssemblies are not loaded
+            $manifestPath = Join-Path -Path $moduleRoot -ChildPath "Bucket.psd1"
+            if (Test-Path -Path $manifestPath) {
+                $manifest = Import-PowerShellDataFile -Path $manifestPath -ErrorAction Stop
+                
+                if ($manifest.RequiredAssemblies -and $manifest.RequiredAssemblies.Count -gt 0) {
+                    Write-BucketLog -Data "Verifying manifest required assemblies..." -Level Info
+                    
+                    foreach ($requiredAssembly in $manifest.RequiredAssemblies) {
+                        $assemblyPath = Join-Path -Path $moduleRoot -ChildPath $requiredAssembly
+                        $assemblyName = [System.IO.Path]::GetFileNameWithoutExtension($assemblyPath)
+                        
+                        $isLoaded = [System.AppDomain]::CurrentDomain.GetAssemblies() | 
+                            Where-Object { $_.GetName().Name -eq $assemblyName }
+                            
+                        if (-not $isLoaded -and (Test-Path -Path $assemblyPath)) {
+                            try {
+                                Add-Type -Path $assemblyPath -ErrorAction Stop
+                                Write-BucketLog -Data "Loaded required assembly from manifest: $assemblyName" -Level Info
+                            } 
+                            catch {
+                                Write-BucketLog -Data "Error loading required assembly $assemblyName`: $_" -Level Error
+                            }
+                        }
+                    }
+                    
+                    Write-BucketLog -Data "Manifest required assemblies verification complete" -Level Info
+                }
+                else {
+                    Write-BucketLog -Data "No required assemblies specified in the manifest" -Level Debug
                 }
             }
             else {
-                Write-BucketLog -Data "Warning: Wpf.Ui assembly is not loaded" -Level Warning
-                
-                # Try to manually load the assembly
-                try {
-                    # Fix path to avoid duplication of $PSScriptRoot
-                    $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-                    $assemblyPath = Join-Path -Path $moduleRoot -ChildPath "Assemblies\Wpf.Ui.dll"
-                    
-                    if (Test-Path -Path $assemblyPath) {
-                        Add-Type -Path $assemblyPath -ErrorAction Stop
-                        Write-BucketLog -Data "Wpf.Ui assembly loaded manually from: $assemblyPath" -Level Info
-                    }
-                    else {
-                        Write-BucketLog -Data "Warning: Could not find Wpf.Ui assembly at $assemblyPath" -Level Warning
-                    }
-                }
-                catch {
-                    Write-BucketLog -Data "Error: Failed to load Wpf.Ui assembly: $_" -Level Error
-                }
+                Write-BucketLog -Data "Warning: Module manifest not found at $manifestPath" -Level Warning
             }
-        }
+            
+            Write-BucketLog -Data "Assembly verification complete" -Level Info
+        } 
         catch {
-            Write-BucketLog -Data "Error checking required assemblies: $_" -Level Error
+            Write-BucketLog -Data "Error during assembly verification: $_" -Level Error
         }
         #endregion Check Required Assemblies
 
