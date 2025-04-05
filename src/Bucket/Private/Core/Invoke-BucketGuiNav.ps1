@@ -48,8 +48,8 @@ function Invoke-BucketGuiNav {
             $simplePageName = $pageName.Split('.')[-1]  # Extract just the page name part
             
             # Construct the path to the XAML file
-            $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-            $xamlFilePath = Join-Path -Path $moduleRoot -ChildPath "GUI\$simplePageName.xaml"
+            #$moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+            $xamlFilePath = "$PSScriptRoot\GUI\$simplePageName.xaml"
             
             Write-BucketLog -Data "Looking for XAML file: $xamlFilePath" -Level Debug
             
