@@ -99,6 +99,11 @@ function Invoke-BucketPreFlight {
         #region Check Required Assemblies
         Write-BucketLog -Data "---------- Required Assemblies Check ----------" -Level Info
         try {
+            # Load basic required assemblies for WPF
+            [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
+            [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
+            Write-BucketLog -Data "Loaded basic system assemblies: presentationframework, System.Windows.Forms" -Level Info
+            
             # Get the module root directory
             $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
             $assembliesFolder = Join-Path -Path $moduleRoot -ChildPath "Assemblies"
@@ -117,11 +122,13 @@ function Invoke-BucketPreFlight {
                     # PowerShell 7.0-7.3 uses .NET 6.0
                     Write-BucketLog -Data "PowerShell 7.0-7.3 detected - using .NET 6.0 assemblies" -Level Info
                     "net6.0"
-                } elseif ($psVersion.Minor -lt 5) {
+                } 
+                elseif ($psVersion.Minor -lt 5) {
                     # PowerShell 7.4+ can use .NET 8.0 assemblies
                     Write-BucketLog -Data "PowerShell 7.4+ detected - using .NET 8.0 assemblies" -Level Info
                     "net8.0"
-                } else {
+                } 
+                else {
                     # PowerShell 7.5+ can use .NET 9.0 assemblies
                     Write-BucketLog -Data "PowerShell 7.5+ detected - using .NET 9.0 assemblies" -Level Info
                     "net9.0"
@@ -173,12 +180,14 @@ function Invoke-BucketPreFlight {
                                     
                                     if ($isLoaded) {
                                         Write-BucketLog -Data "Assembly '$assemblyName' is already loaded: v$($isLoaded.GetName().Version)" -Level Info
-                                    } else {
+                                    } 
+                                    else {
                                         # Try to load the assembly
                                         try {
                                             Add-Type -Path $dllFile.FullName -ErrorAction Stop
                                             Write-BucketLog -Data "Successfully loaded assembly: $assemblyName (from $netFrameworkFolder)" -Level Info
-                                        } catch {
+                                        } 
+                                        catch {
                                             $assemblyLoadSuccess = $false
                                             Write-BucketLog -Data "Error loading assembly $assemblyName`: $_" -Level Error
                                             
@@ -192,12 +201,12 @@ function Invoke-BucketPreFlight {
                                                     Add-Type -Path $fallbackDllPath -ErrorAction Stop
                                                     Write-BucketLog -Data "Successfully loaded fallback assembly: $assemblyName (from $fallbackFramework)" -Level Info
                                                     $assemblyLoadSuccess = $true
-                                                } catch {
+                                                } 
+                                                catch {
                                                     Write-BucketLog -Data "Fallback to $fallbackFramework failed: $_" -Level Error
                                                     
                                                     # Try any other available framework as a last resort
-                                                    $otherFrameworks = Get-ChildItem -Path $versionDir.FullName -Directory | 
-                                                                        Where-Object { $_.Name -ne $netFrameworkFolder -and $_.Name -ne $fallbackFramework }
+                                                    $otherFrameworks = Get-ChildItem -Path $versionDir.FullName -Directory | Where-Object { $_.Name -ne $netFrameworkFolder -and $_.Name -ne $fallbackFramework }
                                                     
                                                     foreach ($otherFramework in $otherFrameworks) {
                                                         $otherDllPath = Join-Path -Path $otherFramework.FullName -ChildPath $dllFile.Name
@@ -209,7 +218,8 @@ function Invoke-BucketPreFlight {
                                                                 Write-BucketLog -Data "Successfully loaded alternative assembly: $assemblyName (from $($otherFramework.Name))" -Level Info
                                                                 $assemblyLoadSuccess = $true
                                                                 break
-                                                            } catch {
+                                                            } 
+                                                            catch {
                                                                 Write-BucketLog -Data "Alternative load failed: $_" -Level Error
                                                             }
                                                         }
@@ -219,10 +229,12 @@ function Invoke-BucketPreFlight {
                                         }
                                     }
                                 }
-                            } else {
+                            } 
+                            else {
                                 Write-BucketLog -Data "No assemblies found in $frameworkPath" -Level Warning
                             }
-                        } else {
+                        } 
+                        else {
                             Write-BucketLog -Data "Framework directory not found: $frameworkPath" -Level Warning
                             
                             # Try using fallback framework path
@@ -243,20 +255,24 @@ function Invoke-BucketPreFlight {
                                         
                                         if ($isLoaded) {
                                             Write-BucketLog -Data "Assembly '$assemblyName' is already loaded: v$($isLoaded.GetName().Version)" -Level Info
-                                        } else {
+                                        } 
+                                        else {
                                             try {
                                                 Add-Type -Path $fallbackDll.FullName -ErrorAction Stop
                                                 Write-BucketLog -Data "Successfully loaded fallback assembly: $assemblyName (from $fallbackFramework)" -Level Info
-                                            } catch {
+                                            } 
+                                            catch {
                                                 Write-BucketLog -Data "Error loading fallback assembly $assemblyName`: $_" -Level Error
                                                 $assemblyLoadSuccess = $false
                                             }
                                         }
                                     }
-                                } else {
+                                } 
+                                else {
                                     Write-BucketLog -Data "No assemblies found in fallback path: $fallbackPath" -Level Warning
                                 }
-                            } else {
+                            } 
+                            else {
                                 Write-BucketLog -Data "Fallback framework directory not found: $fallbackPath" -Level Warning
                                 
                                 # Check if any other framework versions are available
@@ -282,18 +298,21 @@ function Invoke-BucketPreFlight {
                                             
                                             if ($isLoaded) {
                                                 Write-BucketLog -Data "Assembly '$assemblyName' is already loaded: v$($isLoaded.GetName().Version)" -Level Info
-                                            } else {
+                                            } 
+                                            else {
                                                 try {
                                                     Add-Type -Path $altDll.FullName -ErrorAction Stop
                                                     Write-BucketLog -Data "Successfully loaded alternative assembly: $assemblyName (from $($availableFrameworks[0].Name))" -Level Info
-                                                } catch {
+                                                } 
+                                                catch {
                                                     Write-BucketLog -Data "Error loading alternative assembly $assemblyName`: $_" -Level Error
                                                     $assemblyLoadSuccess = $false
                                                 }
                                             }
                                         }
                                     }
-                                } else {
+                                } 
+                                else {
                                     Write-BucketLog -Data "No framework versions available for $packageName v$packageVersion" -Level Error
                                     $assemblyLoadSuccess = $false
                                 }
@@ -301,7 +320,8 @@ function Invoke-BucketPreFlight {
                         }
                     }
                 }
-            } else {
+            } 
+            else {
                 Write-BucketLog -Data "Assemblies folder not found: $assembliesFolder" -Level Error
                 $assemblyLoadSuccess = $false
             }
@@ -325,7 +345,8 @@ function Invoke-BucketPreFlight {
                             try {
                                 Add-Type -Path $assemblyPath -ErrorAction Stop
                                 Write-BucketLog -Data "Loaded required assembly from manifest: $assemblyName" -Level Info
-                            } catch {
+                            } 
+                            catch {
                                 Write-BucketLog -Data "Error loading required assembly $assemblyName`: $_" -Level Error
                                 $assemblyLoadSuccess = $false
                             }
@@ -333,7 +354,8 @@ function Invoke-BucketPreFlight {
                     }
                     
                     Write-BucketLog -Data "Manifest required assemblies verification complete" -Level Info
-                } else {
+                } 
+                else {
                     Write-BucketLog -Data "No required assemblies specified in the manifest" -Level Debug
                 }
             }
@@ -341,10 +363,12 @@ function Invoke-BucketPreFlight {
             # Final assembly load status
             if ($assemblyLoadSuccess) {
                 Write-BucketLog -Data "All assemblies loaded successfully" -Level Info
-            } else {
+            } 
+            else {
                 Write-BucketLog -Data "Some assemblies failed to load - UI functionality may be limited" -Level Warning
             }
-        } catch {
+        } 
+        catch {
             Write-BucketLog -Data "Error during assembly verification: $_" -Level Error
         }
         #endregion Check Required Assemblies
