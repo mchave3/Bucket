@@ -56,8 +56,6 @@ function Start-Bucket {
 
         $inputXaml = $inputXaml -replace 'BucketVer', $script:BucketVersion
 
-        Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms, System.Drawing 
-
         [void][System.Reflection.Assembly]::LoadWithPartialName('presentationframework')
         [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
