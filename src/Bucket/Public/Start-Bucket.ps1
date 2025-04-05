@@ -54,37 +54,75 @@ function Start-Bucket {
         
         $inputXaml = Get-Content -Path $xamlPath -Raw
         $inputXaml = $inputXaml -replace 'BucketVer', $script:BucketVersion
-
-        [xml]$xaml = $inputXaml
-
-        $reader = (New-Object System.Xml.XmlNodeReader $xaml)
-        Write-BucketLog -Data "$reader" -Level Verbose
-        Write-BucketLog -Data "$xaml" -Level Verbose
+        
+        # Clean up the XAML for PowerShell's XML parser by removing problematic namespace declarations
+        $inputXaml = $inputXaml -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
+        $inputXaml = $inputXaml -replace 'xmlns:d="http://schemas.microsoft.com/expression/blend/2008"', ''
+        $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', ''
+        $inputXaml = $inputXaml -replace 'x:Class="[^"]*"', ''
+        
+        # Create the XML document
+        $xamlDoc = New-Object System.Xml.XmlDocument
+        $xamlDoc.LoadXml($inputXaml)
+        
+        # Add namespaces for XPath queries
+        $nsManager = New-Object System.Xml.XmlNamespaceManager($xamlDoc.NameTable)
+        $nsManager.AddNamespace('x', 'http://schemas.microsoft.com/winfx/2006/xaml')
+        
+        Write-BucketLog -Data "XAML parsed successfully" -Level Verbose
+        
         try {
+            # Load XAML as a WPF object
+            $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
             $form = [Windows.Markup.XamlReader]::Load($reader)
+            Write-BucketLog -Data "XAML loaded successfully" -Level Info
         }
         catch {
             Write-BucketLog -Data "Failed to load XAML: $_" -Level Error
             exit 1
         }
-
+        
         # Load the XAML objects into variables
-        $xaml.SelectNodes('//*[@Name]') | ForEach-Object { "trying item $($_.Name)" | Out-Null
-            try { Set-Variable -Name "WPF$($_.Name)" -Value $form.FindName($_.Name) -ErrorAction Stop }
-            catch { throw }
+        $namedNodes = $xamlDoc.SelectNodes("//*[@x:Name]", $nsManager)
+        
+        if ($namedNodes -and $namedNodes.Count -gt 0) {
+            Write-BucketLog -Data "Found $($namedNodes.Count) named elements in XAML" -Level Debug
+            
+            foreach ($node in $namedNodes) {
+                $elementName = $node.GetAttribute('Name', 'http://schemas.microsoft.com/winfx/2006/xaml')
+                Write-BucketLog -Data "Processing XAML element: $elementName" -Level Verbose
+                
+                try {
+                    $element = $form.FindName($elementName)
+                    if ($element) {
+                        $varName = "WPF$elementName"
+                        Set-Variable -Name $varName -Value $element -Scope Script
+                        Write-BucketLog -Data "Found UI element: $elementName -> $varName" -Level Debug
+                    }
+                    else {
+                        Write-BucketLog -Data "UI element not found in form: $elementName" -Level Warning
+                    }
+                }
+                catch {
+                    Write-BucketLog -Data "Error processing UI element $elementName : $_" -Level Error
+                }
+            }
+        }
+        else {
+            Write-BucketLog -Data "No named elements found in XAML" -Level Warning
         }
         #endregion XAML
 
         #region GUI Events
-        # Create a hashtable to store page types
+        # Create a hashtable to store page references - using strings, not type objects
         $script:pages = @{
-            homePage          = [type]"Bucket.GUI.HomePage"
-            selectImagePage   = [type]"Bucket.GUI.SelectImagePage"
-            customizationPage = [type]"Bucket.GUI.CustomizationPage"
-            applicationsPage  = [type]"Bucket.GUI.ApplicationsPage"
-            driversPage       = [type]"Bucket.GUI.DriversPage"
-            configPage        = [type]"Bucket.GUI.ConfigPage"
-            aboutPage         = [type]"Bucket.GUI.AboutPage"
+            homePage          = "Bucket.GUI.HomePage" 
+            selectImagePage   = "Bucket.GUI.SelectImagePage"
+            customizationPage = "Bucket.GUI.CustomizationPage"
+            applicationsPage  = "Bucket.GUI.ApplicationsPage"
+            driversPage       = "Bucket.GUI.DriversPage"
+            configPage        = "Bucket.GUI.ConfigPage"
+            aboutPage         = "Bucket.GUI.AboutPage"
         }
 
         # Create a data context for binding
@@ -103,36 +141,88 @@ function Start-Bucket {
         }
 
         # Initialize navigation events
-        $WPFRootNavigation.add_Loaded({
-                param($sender, $e)
-                # Set the initial page to home page
-                Invoke-BucketGuiNav -PageTag "homePage"
-            })
+        if ($WPFNavHome) {
+            $WPFNavHome.add_Click({
+                    Invoke-BucketGuiNav -PageTag "homePage"
+                })
+        } 
+        else {
+            Write-BucketLog -Data "WPFNavHome UI element not found" -Level Warning
+        }
 
-        # Handle navigation item selection
-        $WPFRootNavigation.add_ItemInvoked({
-                param($sender, $e)
-                Invoke-BucketGuiNav -PageTag $e.InvokedItem.Tag
-            })
+        # Handle navigation for other UI elements
+        if ($WPFNavSelectImage) {
+            $WPFNavSelectImage.add_Click({
+                    Invoke-BucketGuiNav -PageTag "selectImagePage"
+                })
+        }
+        
+        if ($WPFNavCustomization) {
+            $WPFNavCustomization.add_Click({
+                    Invoke-BucketGuiNav -PageTag "customizationPage"
+                })
+        }
+        
+        if ($WPFNavApplications) {
+            $WPFNavApplications.add_Click({
+                    Invoke-BucketGuiNav -PageTag "applicationsPage"
+                })
+        }
+        
+        if ($WPFNavDrivers) {
+            $WPFNavDrivers.add_Click({
+                    Invoke-BucketGuiNav -PageTag "driversPage"
+                })
+        }
+        
+        if ($WPFNavSettings) {
+            $WPFNavSettings.add_Click({
+                    Invoke-BucketGuiNav -PageTag "configPage"
+                })
+        }
+        
+        if ($WPFNavAbout) {
+            $WPFNavAbout.add_Click({
+                    Invoke-BucketGuiNav -PageTag "aboutPage"
+                })
+        }
 
-        # Handle menu items in the tray
-        $WPFMenuShowWindow.add_Click({
-                $form.Show()
-                $form.WindowState = "Normal"
-            })
-
-        $WPFMenuAbout.add_Click({
-                Invoke-BucketGuiNav -PageTag "aboutPage"
-                $form.Show()
-                $form.WindowState = "Normal"
-            })
-
-        $WPFMenuExit.add_Click({
-                $form.Close()
-            })
+        # Handle window control buttons if they exist
+        if ($WPFBtnMinimize) {
+            $WPFBtnMinimize.add_Click({
+                    $form.WindowState = "Minimized"
+                })
+        }
+        
+        if ($WPFBtnMaximize) {
+            $WPFBtnMaximize.add_Click({
+                    if ($form.WindowState -eq "Maximized") {
+                        $form.WindowState = "Normal"
+                        $WPFBtnMaximize.Content = "🗖"
+                    } 
+                    else {
+                        $form.WindowState = "Maximized" 
+                        $WPFBtnMaximize.Content = "🗗"
+                    }
+                })
+        }
+        
+        if ($WPFBtnClose) {
+            $WPFBtnClose.add_Click({
+                    $form.Close()
+                })
+        }
 
         # Set window title with version info
         $form.Title = "Bucket $($script:BucketVersion) - Windows Image Customizer"
+
+        # Set the initial page to home page when the form is loaded
+        $form.add_Loaded({
+                if ($WPFRootFrame) {
+                    Write-BucketLog -Data "Form loaded, navigating to home page" -Level Info
+                    Invoke-BucketGuiNav -PageTag "homePage"
+                }
+            })
         #endregion GUI Events
 
         #region Start GUI
