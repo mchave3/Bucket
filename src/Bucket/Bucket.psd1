@@ -54,10 +54,7 @@ PowerShellVersion = '5.1'
 RequiredModules = @('PoShLog')
 
 # Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @(
-    'Assemblies\MahApps.Metro.dll',
-    'Assemblies\ControlzEx.dll'
-)
+# RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
