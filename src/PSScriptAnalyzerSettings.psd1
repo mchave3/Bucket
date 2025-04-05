@@ -8,7 +8,9 @@
         'PSMissingModuleManifestField',
         'PSAvoidUsingWriteHost',
         'PSAvoidUsingInvokeExpression',
-        'PSUseToExportFieldsInManifest'
+        'PSUseToExportFieldsInManifest',
+        'PSReviewUnusedParameter',
+        'PSAvoidAssignmentToAutomaticVariable'
     )
     #IncludeRules = @(
     #    'PSAvoidUsingWriteHost',

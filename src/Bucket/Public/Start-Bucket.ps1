@@ -75,6 +75,66 @@ function Start-Bucket {
         }
         #endregion XAML
 
+        #region GUI Events
+        # Create a hashtable to store page types
+        $script:pages = @{
+            homePage          = [type]"Bucket.GUI.HomePage"
+            selectImagePage   = [type]"Bucket.GUI.SelectImagePage"
+            customizationPage = [type]"Bucket.GUI.CustomizationPage"
+            applicationsPage  = [type]"Bucket.GUI.ApplicationsPage"
+            driversPage       = [type]"Bucket.GUI.DriversPage"
+            configPage        = [type]"Bucket.GUI.ConfigPage"
+            aboutPage         = [type]"Bucket.GUI.AboutPage"
+        }
+
+        # Create a data context for binding
+        $script:dataContext = [PSCustomObject]@{
+            BucketVersion          = $script:BucketVersion
+            WorkingDirectory       = $script:workingDirectory
+            MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
+            CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
+            DiskSpaceInfo          = "Espace disponible: $(Get-PSDrive -Name 'C').Free / $(Get-PSDrive -Name 'C').Used"
+            MountedImagesCount     = 0
+            ImageMountStatus       = "Aucune image montée"
+            CurrentImageInfo       = "Veuillez sélectionner et monter une image Windows pour commencer la personnalisation."
+            PendingDriversCount    = 0
+            InstalledDriversCount  = 0
+            SelectedAppsCount      = 0
+        }
+
+        # Initialize navigation events
+        $WPFRootNavigation.add_Loaded({
+                param($sender, $e)
+                # Set the initial page to home page
+                Invoke-BucketGuiNav -PageTag "homePage"
+            })
+
+        # Handle navigation item selection
+        $WPFRootNavigation.add_ItemInvoked({
+                param($sender, $e)
+                Invoke-BucketGuiNav -PageTag $e.InvokedItem.Tag
+            })
+
+        # Handle menu items in the tray
+        $WPFMenuShowWindow.add_Click({
+                $form.Show()
+                $form.WindowState = "Normal"
+            })
+
+        $WPFMenuAbout.add_Click({
+                Invoke-BucketGuiNav -PageTag "aboutPage"
+                $form.Show()
+                $form.WindowState = "Normal"
+            })
+
+        $WPFMenuExit.add_Click({
+                $form.Close()
+            })
+
+        # Set window title with version info
+        $form.Title = "Bucket $($script:BucketVersion) - Windows Image Customizer"
+        #endregion GUI Events
+
         #region Start GUI
         $form.ShowDialog() | Out-Null
         #endregion Start GUI

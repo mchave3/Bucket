@@ -1,0 +1,590 @@
+﻿<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="Bucket.GUI.ApplicationsPage"
+    Title="Applications"
+    Background="#F9F9F9">
+
+    <Page.Resources>
+        <!-- Style pour les titres -->
+        <Style x:Key="TitleStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+        
+        <!-- Style pour les cartes -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#20000000" BlurRadius="10" ShadowDepth="1" Opacity="0.2" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style pour les boutons -->
+        <Style x:Key="ButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center" 
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                                <Setter Property="BorderBrush" Value="#BDBDBD"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#E0E0E0"/>
+                                <Setter Property="BorderBrush" Value="#9E9E9E"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                                <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style pour les boutons primaires -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="#2979FF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center" 
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1565C0"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#0D47A1"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#BDBDBD"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style pour les boutons danger -->
+        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#F44336"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D32F2F"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#C62828"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Style pour les onglets -->
+        <Style x:Key="TabControlStyle" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="TabStripPlacement" Value="Top"/>
+        </Style>
+        
+        <Style x:Key="TabItemStyle" TargetType="TabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Border" 
+                                BorderThickness="0,0,0,2" 
+                                BorderBrush="Transparent" 
+                                Background="Transparent"
+                                Margin="0,0,24,0"
+                                Padding="0,8,0,8">
+                            <ContentPresenter x:Name="ContentSite"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                ContentSource="Header"
+                                RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#2979FF"/>
+                                <Setter TargetName="ContentSite" Property="TextElement.FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="ContentSite" Property="TextElement.Foreground" Value="#2979FF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="Transparent"/>
+                                <Setter TargetName="ContentSite" Property="TextElement.FontWeight" Value="Normal"/>
+                                <Setter TargetName="ContentSite" Property="TextElement.Foreground" Value="#616161"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ContentSite" Property="TextElement.Foreground" Value="#2979FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style pour les étiquettes d'information -->
+        <Style x:Key="InfoLabelStyle" TargetType="Border">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="16,8"/>
+        </Style>
+        
+        <!-- Style pour les zones de texte -->
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#BDBDBD"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                          Focusable="False" 
+                                          HorizontalScrollBarVisibility="Hidden" 
+                                          VerticalScrollBarVisibility="Hidden"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#757575"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#2979FF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" TargetName="border" Value="0.56"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style pour les cartes d'applications -->
+        <Style x:Key="AppCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        
+        <!-- Style pour les cases à cocher -->
+        <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,4,0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="CheckBorder" 
+                                    Grid.Column="0" 
+                                    Width="18" 
+                                    Height="18" 
+                                    BorderBrush="#BDBDBD" 
+                                    BorderThickness="1" 
+                                    Background="White"
+                                    CornerRadius="2">
+                                <Path x:Name="CheckMark" 
+                                      Fill="#2979FF" 
+                                      Data="M 4,10 L 8,14 L 14,4" 
+                                      Stretch="Uniform" 
+                                      Width="10" 
+                                      Height="10" 
+                                      Visibility="Collapsed"/>
+                            </Border>
+                            <ContentPresenter Grid.Column="1" 
+                                              VerticalAlignment="Center" 
+                                              Margin="8,0,0,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckBorder" Property="Background" Value="#F5F5F5"/>
+                                <Setter TargetName="CheckBorder" Property="BorderBrush" Value="#2979FF"/>
+                                <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <TextBlock 
+            Grid.Row="0"
+            Text="Gestion des applications"
+            Style="{StaticResource TitleStyle}" />
+
+        <!-- Info sur l'image actuelle -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="📦" FontSize="24" Margin="0,0,16,0" VerticalAlignment="Center" />
+                
+                <StackPanel Grid.Column="1">
+                    <Grid>
+                        <TextBlock Text="Applications" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding SelectedAppsCount, StringFormat='{}{0} application(s) sélectionnée(s)'}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock Text="{Binding CurrentImageInfo}" Opacity="0.7" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
+                
+                <Button 
+                    Grid.Column="2"
+                    Content="Appliquer" 
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Name="BtnApplyAppChanges"
+                    VerticalAlignment="Center"
+                    Margin="16,0,0,0">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💾" FontSize="14" Margin="0,0,8,0" />
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Onglets pour différents types d'applications -->
+        <TabControl Grid.Row="2" Style="{StaticResource TabControlStyle}">
+            <!-- Onglet Applications Windows -->
+            <TabItem Header="Applications Windows" Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Filtres et recherche -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBox 
+                            Grid.Column="0" 
+                            Name="TxtSearchWinApps" 
+                            Style="{StaticResource TextBoxStyle}">
+                            <TextBox.Resources>
+                                <VisualBrush x:Key="HintBrush" TileMode="None" Opacity="0.5" Stretch="None" AlignmentX="Left">
+                                    <VisualBrush.Visual>
+                                        <TextBlock Text="Rechercher des applications..." Margin="4,2,0,0" />
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </TextBox.Resources>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}">
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="">
+                                            <Setter Property="Background" Value="{StaticResource HintBrush}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        
+                        <ComboBox 
+                            Grid.Column="1" 
+                            Name="CmbWinAppCategories" 
+                            Width="200" 
+                            Margin="10,0,0,0"
+                            Padding="8,6">
+                            <ComboBoxItem Content="Toutes les catégories" IsSelected="True" />
+                            <ComboBoxItem Content="Productivité" />
+                            <ComboBoxItem Content="Utilitaires" />
+                            <ComboBoxItem Content="Divertissement" />
+                            <ComboBoxItem Content="Communication" />
+                        </ComboBox>
+                    </Grid>
+                    
+                    <!-- Liste des applications -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Groupe 1: Applications Microsoft -->
+                            <Expander Header="Applications Microsoft" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Microsoft Office" Style="{StaticResource CheckBoxStyle}" Name="ChkOffice" />
+                                    <CheckBox Content="Microsoft Teams" Style="{StaticResource CheckBoxStyle}" Name="ChkTeams" />
+                                    <CheckBox Content="OneDrive" Style="{StaticResource CheckBoxStyle}" Name="ChkOneDrive" />
+                                    <CheckBox Content="Outlook" Style="{StaticResource CheckBoxStyle}" Name="ChkOutlook" />
+                                    <CheckBox Content="Paint 3D" Style="{StaticResource CheckBoxStyle}" Name="ChkPaint3D" />
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Groupe 2: Applications Système -->
+                            <Expander Header="Applications Système" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Calculatrice" Style="{StaticResource CheckBoxStyle}" Name="ChkCalculator" />
+                                    <CheckBox Content="Photos" Style="{StaticResource CheckBoxStyle}" Name="ChkPhotos" />
+                                    <CheckBox Content="Carte" Style="{StaticResource CheckBoxStyle}" Name="ChkMaps" />
+                                    <CheckBox Content="Films et TV" Style="{StaticResource CheckBoxStyle}" Name="ChkMoviesTV" />
+                                    <CheckBox Content="Météo" Style="{StaticResource CheckBoxStyle}" Name="ChkWeather" />
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Groupe 3: Applications supplémentaires -->
+                            <Expander Header="Applications Supplémentaires" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Spotify" Style="{StaticResource CheckBoxStyle}" Name="ChkSpotify" />
+                                    <CheckBox Content="Netflix" Style="{StaticResource CheckBoxStyle}" Name="ChkNetflix" />
+                                    <CheckBox Content="Adobe Reader" Style="{StaticResource CheckBoxStyle}" Name="ChkAdobeReader" />
+                                    <CheckBox Content="VLC Media Player" Style="{StaticResource CheckBoxStyle}" Name="ChkVLC" />
+                                    <CheckBox Content="7-Zip" Style="{StaticResource CheckBoxStyle}" Name="Chk7Zip" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+            
+            <!-- Onglet Bloatware (applications préinstallées à supprimer) -->
+            <TabItem Header="Bloatware" Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Infos sur le Bloatware -->
+                    <Border Grid.Row="0" Style="{StaticResource InfoLabelStyle}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap">
+                                <Run Text="❗ " FontWeight="Bold" />
+                                <Run Text="Cette section vous permet de supprimer les applications préinstallées de Windows qui sont souvent considérées comme superflues. Sélectionnez les applications à supprimer." />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Actions rapides -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16">
+                        <Button Content="Tout sélectionner" Style="{StaticResource ButtonStyle}" Name="BtnSelectAllBloatware" Margin="0,0,8,0" />
+                        <Button Content="Tout désélectionner" Style="{StaticResource ButtonStyle}" Name="BtnDeselectAllBloatware" Margin="0,0,8,0" />
+                        <Button Content="Sélection recommandée" Style="{StaticResource ButtonStyle}" Name="BtnRecommendedBloatware" />
+                    </StackPanel>
+                    
+                    <!-- Liste du Bloatware -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Groupe 1: Applications de divertissement -->
+                            <Expander Header="Applications de divertissement" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Candy Crush Saga" Style="{StaticResource CheckBoxStyle}" Name="ChkCandyCrush" IsChecked="True" />
+                                    <CheckBox Content="Solitaire Collection" Style="{StaticResource CheckBoxStyle}" Name="ChkSolitaire" IsChecked="True" />
+                                    <CheckBox Content="Xbox" Style="{StaticResource CheckBoxStyle}" Name="ChkXbox" />
+                                    <CheckBox Content="Groove Musique" Style="{StaticResource CheckBoxStyle}" Name="ChkGrooveMusic" IsChecked="True" />
+                                    <CheckBox Content="Disney+" Style="{StaticResource CheckBoxStyle}" Name="ChkDisneyPlus" IsChecked="True" />
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Groupe 2: Applications Microsoft -->
+                            <Expander Header="Applications Microsoft" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Skype" Style="{StaticResource CheckBoxStyle}" Name="ChkSkype" IsChecked="True" />
+                                    <CheckBox Content="Microsoft News" Style="{StaticResource CheckBoxStyle}" Name="ChkMSNews" IsChecked="True" />
+                                    <CheckBox Content="Mixed Reality Portal" Style="{StaticResource CheckBoxStyle}" Name="ChkMixedReality" IsChecked="True" />
+                                    <CheckBox Content="OneNote" Style="{StaticResource CheckBoxStyle}" Name="ChkOneNote" />
+                                    <CheckBox Content="Office Hub" Style="{StaticResource CheckBoxStyle}" Name="ChkOfficeHub" IsChecked="True" />
+                                </StackPanel>
+                            </Expander>
+                            
+                            <!-- Groupe 3: Autres applications -->
+                            <Expander Header="Autres applications" IsExpanded="True" Margin="0,0,0,10">
+                                <StackPanel Margin="20,10,0,0">
+                                    <CheckBox Content="Feedback Hub" Style="{StaticResource CheckBoxStyle}" Name="ChkFeedbackHub" IsChecked="True" />
+                                    <CheckBox Content="Phone Link" Style="{StaticResource CheckBoxStyle}" Name="ChkPhoneLink" IsChecked="True" />
+                                    <CheckBox Content="Sticky Notes" Style="{StaticResource CheckBoxStyle}" Name="ChkStickyNotes" />
+                                    <CheckBox Content="Tips" Style="{StaticResource CheckBoxStyle}" Name="ChkTips" IsChecked="True" />
+                                    <CheckBox Content="3D Viewer" Style="{StaticResource CheckBoxStyle}" Name="Chk3DViewer" IsChecked="True" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+            
+            <!-- Onglet Installation personnalisée -->
+            <TabItem Header="Installation personnalisée" Style="{StaticResource TabItemStyle}">
+                <Grid Margin="0,16,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Description -->
+                    <TextBlock Grid.Row="0" 
+                               Text="Ajoutez des installateurs personnalisés pour les applications qui ne sont pas disponibles dans la liste standard. Ces applications seront installées automatiquement lors de la configuration de Windows."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16" />
+                    
+                    <!-- Zone d'ajout -->
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBox 
+                            Grid.Column="0" 
+                            Name="TxtInstallerPath" 
+                            Style="{StaticResource TextBoxStyle}">
+                            <TextBox.Resources>
+                                <VisualBrush x:Key="HintBrush" TileMode="None" Opacity="0.5" Stretch="None" AlignmentX="Left">
+                                    <VisualBrush.Visual>
+                                        <TextBlock Text="Chemin vers l'installateur (.exe, .msi)" Margin="4,2,0,0" />
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </TextBox.Resources>
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource TextBoxStyle}">
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="">
+                                            <Setter Property="Background" Value="{StaticResource HintBrush}" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        
+                        <Button 
+                            Grid.Column="1" 
+                            Content="Parcourir" 
+                            Style="{StaticResource ButtonStyle}" 
+                            Name="BtnBrowseInstaller" 
+                            Margin="8,0,0,0" />
+                            
+                        <Button 
+                            Grid.Column="2" 
+                            Content="Ajouter" 
+                            Style="{StaticResource PrimaryButtonStyle}" 
+                            Name="BtnAddInstaller" 
+                            Margin="8,0,0,0" />
+                    </Grid>
+                    
+                    <!-- Liste des installateurs ajoutés -->
+                    <ListView Grid.Row="2" Name="LvInstallers" BorderThickness="1" BorderBrush="#E0E0E0">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Nom" Width="200" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Header="Chemin" Width="300" DisplayMemberBinding="{Binding Path}" />
+                                <GridViewColumn Header="Arguments" Width="150" DisplayMemberBinding="{Binding Arguments}" />
+                                <GridViewColumn Header="Actions" Width="100">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="Supprimer" 
+                                                    Style="{StaticResource DangerButtonStyle}" 
+                                                    Padding="8,4" 
+                                                    Name="BtnRemoveInstaller" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    
+                    <!-- Options supplémentaires -->
+                    <Expander Grid.Row="3" Header="Options d'installation" Margin="0,16,0,0">
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <CheckBox Content="Installation silencieuse" 
+                                          Name="ChkSilentInstall" 
+                                          Style="{StaticResource CheckBoxStyle}" 
+                                          IsChecked="True" />
+                                          
+                                <CheckBox Content="Ignorer les erreurs" 
+                                          Name="ChkIgnoreErrors" 
+                                          Style="{StaticResource CheckBoxStyle}" 
+                                          IsChecked="True" />
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1">
+                                <CheckBox Content="Redémarrer après l'installation" 
+                                          Name="ChkRebootAfterInstall" 
+                                          Style="{StaticResource CheckBoxStyle}" />
+                                          
+                                <CheckBox Content="Créer des raccourcis bureau" 
+                                          Name="ChkCreateShortcuts" 
+                                          Style="{StaticResource CheckBoxStyle}" 
+                                          IsChecked="True" />
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Page>

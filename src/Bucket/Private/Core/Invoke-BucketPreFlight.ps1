@@ -104,6 +104,8 @@ function Invoke-BucketPreFlight {
             [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
             Write-BucketLog -Data "Loaded basic system assemblies: presentationframework, System.Windows.Forms" -Level Info
             
+            <#
+
             # Get the module root directory
             $moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
             $assembliesFolder = Join-Path -Path $moduleRoot -ChildPath "Assemblies"
@@ -367,6 +369,8 @@ function Invoke-BucketPreFlight {
             else {
                 Write-BucketLog -Data "Some assemblies failed to load - UI functionality may be limited" -Level Warning
             }
+
+            #>
         } 
         catch {
             Write-BucketLog -Data "Error during assembly verification: $_" -Level Error

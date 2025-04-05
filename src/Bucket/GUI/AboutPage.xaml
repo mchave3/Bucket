@@ -1,0 +1,168 @@
+﻿<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    x:Class="Bucket.GUI.AboutPage"
+    Title="À propos"
+    Background="{ui:ThemeResource ApplicationBackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- En-tête -->
+        <TextBlock 
+            Grid.Row="0"
+            Text="À propos de Bucket"
+            FontSize="28"
+            FontWeight="SemiBold"
+            Margin="0,0,0,20" />
+
+        <!-- Contenu principal -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="20">
+                <!-- Logo et info version -->
+                <StackPanel HorizontalAlignment="Center" Spacing="12">
+                    <Image 
+                        Source="/Bucket;component/Icon/Icon.png" 
+                        Width="128" 
+                        Height="128" 
+                        Margin="0,0,0,16" />
+                    
+                    <TextBlock 
+                        Text="Bucket" 
+                        FontSize="32" 
+                        FontWeight="SemiBold" 
+                        HorizontalAlignment="Center" />
+                        
+                    <TextBlock 
+                        Text="{Binding BucketVersion, StringFormat='Version {0}'}" 
+                        FontSize="16" 
+                        HorizontalAlignment="Center" 
+                        Opacity="0.8" />
+                </StackPanel>
+                
+                <!-- Description -->
+                <ui:Card>
+                    <TextBlock 
+                        Text="Bucket est un outil puissant conçu pour personnaliser, optimiser et déployer des images Windows. Créez des installations Windows entièrement personnalisées en quelques clics."
+                        TextWrapping="Wrap" 
+                        Margin="16" 
+                        TextAlignment="Center" 
+                        LineHeight="24" />
+                </ui:Card>
+                
+                <!-- Auteur -->
+                <ui:CardExpander Icon="{ui:SymbolIcon Person24}" Header="Auteur">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Mickaël CHAVE" FontWeight="SemiBold" />
+                        <ui:Hyperlink 
+                            Content="GitHub: @mchave3" 
+                            NavigateUri="https://github.com/mchave3"
+                            Margin="0,8,0,0" />
+                    </StackPanel>
+                </ui:CardExpander>
+                
+                <!-- Informations légales -->
+                <ui:CardExpander Icon="{ui:SymbolIcon Document24}" Header="Informations légales">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Licence: MIT" FontWeight="SemiBold" />
+                        <TextBlock 
+                            Text="Copyright © 2025 Mickaël CHAVE. Tous droits réservés."
+                            TextWrapping="Wrap" />
+                        <ui:Hyperlink 
+                            Content="Voir la licence complète" 
+                            NavigateUri="https://github.com/mchave3/Bucket/blob/main/LICENSE"
+                            Margin="0,8,0,0" />
+                    </StackPanel>
+                </ui:CardExpander>
+                
+                <!-- Bibliothèques utilisées -->
+                <ui:CardExpander Icon="{ui:SymbolIcon Library24}" Header="Bibliothèques utilisées">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Wpf.Ui" />
+                            <TextBlock Grid.Column="1" Text="4.0.2" />
+                        </Grid>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="PoShLog" />
+                            <TextBlock Grid.Column="1" Text="2.1.1" />
+                        </Grid>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="MahApps.Metro" />
+                            <TextBlock Grid.Column="1" Text="2.4.10" />
+                        </Grid>
+                    </StackPanel>
+                </ui:CardExpander>
+                
+                <!-- Liens -->
+                <ui:CardExpander Icon="{ui:SymbolIcon Globe24}" Header="Liens">
+                    <StackPanel Spacing="16">
+                        <ui:Button 
+                            Content="Site web"
+                            Icon="{ui:SymbolIcon Globe24}"
+                            Appearance="Primary"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Name="BtnWebsite" />
+                        
+                        <ui:Button 
+                            Content="Dépôt GitHub"
+                            Icon="{ui:SymbolIcon Code24}"
+                            Appearance="Primary"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Name="BtnGitHub" />
+                        
+                        <ui:Button 
+                            Content="Signaler un problème"
+                            Icon="{ui:SymbolIcon BugReport24}"
+                            Appearance="Secondary"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Name="BtnReportIssue" />
+                        
+                        <ui:Button 
+                            Content="Documentation"
+                            Icon="{ui:SymbolIcon Book24}"
+                            Appearance="Secondary"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Name="BtnDocumentation" />
+                    </StackPanel>
+                </ui:CardExpander>
+                
+                <!-- Remerciements -->
+                <ui:CardControl>
+                    <StackPanel>
+                        <TextBlock 
+                            Text="Remerciements"
+                            FontWeight="SemiBold"
+                            Margin="0,0,0,8" />
+                        <TextBlock 
+                            Text="Merci à tous les contributeurs et à la communauté pour leur support dans le développement de cet outil."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </ui:CardControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
