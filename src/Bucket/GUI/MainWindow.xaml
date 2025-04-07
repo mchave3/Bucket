@@ -123,62 +123,6 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-
-                        <Button x:Name="NavCustomization" 
-                                Content="Customization" 
-                                Tag="customizationPage"
-                                Style="{StaticResource MenuButtonStyle}">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="🎨" FontSize="16" Margin="0,0,10,0" />
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <Button x:Name="NavApplications" 
-                                Content="Applications" 
-                                Tag="applicationsPage"
-                                Style="{StaticResource MenuButtonStyle}">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="📦" FontSize="16" Margin="0,0,10,0" />
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <Button x:Name="NavDrivers" 
-                                Content="Drivers" 
-                                Tag="driversPage"
-                                Style="{StaticResource MenuButtonStyle}">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="🔌" FontSize="16" Margin="0,0,10,0" />
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
-
-                        <Button x:Name="NavSettings" 
-                                Content="Settings" 
-                                Tag="configPage"
-                                Style="{StaticResource MenuButtonStyle}">
-                            <Button.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="⚙️" FontSize="16" Margin="0,0,10,0" />
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </Button.ContentTemplate>
-                        </Button>
                     </StackPanel>
 
                     <!-- Bottom element -->

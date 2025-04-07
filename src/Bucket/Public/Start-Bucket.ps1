@@ -116,13 +116,9 @@ function Start-Bucket {
         #region GUI Events
         # Create a hashtable to store page references
         $script:pages = @{
-            homePage          = "Bucket.GUI.HomePage" 
-            selectImagePage   = "Bucket.GUI.SelectImagePage"
-            customizationPage = "Bucket.GUI.CustomizationPage"
-            applicationsPage  = "Bucket.GUI.ApplicationsPage"
-            driversPage       = "Bucket.GUI.DriversPage"
-            configPage        = "Bucket.GUI.ConfigPage"
-            aboutPage         = "Bucket.GUI.AboutPage"
+            homePage        = "Bucket.GUI.HomePage" 
+            selectImagePage = "Bucket.GUI.SelectImagePage"
+            aboutPage       = "Bucket.GUI.AboutPage"
         }
 
         # Create a data context for binding
@@ -154,30 +150,6 @@ function Start-Bucket {
         if ($WPFNavSelectImage) {
             $WPFNavSelectImage.add_Click({
                     Invoke-BucketGuiNav -PageTag "selectImagePage"
-                })
-        }
-        
-        if ($WPFNavCustomization) {
-            $WPFNavCustomization.add_Click({
-                    Invoke-BucketGuiNav -PageTag "customizationPage"
-                })
-        }
-        
-        if ($WPFNavApplications) {
-            $WPFNavApplications.add_Click({
-                    Invoke-BucketGuiNav -PageTag "applicationsPage"
-                })
-        }
-        
-        if ($WPFNavDrivers) {
-            $WPFNavDrivers.add_Click({
-                    Invoke-BucketGuiNav -PageTag "driversPage"
-                })
-        }
-        
-        if ($WPFNavSettings) {
-            $WPFNavSettings.add_Click({
-                    Invoke-BucketGuiNav -PageTag "configPage"
                 })
         }
         

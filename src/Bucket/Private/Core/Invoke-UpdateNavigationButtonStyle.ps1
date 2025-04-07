@@ -72,30 +72,6 @@ function Invoke-UpdateNavigationButtonStyle {
                         Write-BucketLog -Data "Set selected style for: NavSelectImage" -Level Verbose
                     }
                 }
-                "customizationPage" { 
-                    if ($WPFNavCustomization) { 
-                        $WPFNavCustomization.Style = $selectedStyle 
-                        Write-BucketLog -Data "Set selected style for: NavCustomization" -Level Verbose
-                    }
-                }
-                "applicationsPage" { 
-                    if ($WPFNavApplications) { 
-                        $WPFNavApplications.Style = $selectedStyle 
-                        Write-BucketLog -Data "Set selected style for: NavApplications" -Level Verbose
-                    }
-                }
-                "driversPage" { 
-                    if ($WPFNavDrivers) { 
-                        $WPFNavDrivers.Style = $selectedStyle 
-                        Write-BucketLog -Data "Set selected style for: NavDrivers" -Level Verbose
-                    }
-                }
-                "configPage" { 
-                    if ($WPFNavSettings) { 
-                        $WPFNavSettings.Style = $selectedStyle 
-                        Write-BucketLog -Data "Set selected style for: NavSettings" -Level Verbose
-                    }
-                }
                 "aboutPage" { 
                     if ($WPFNavAbout) { 
                         $WPFNavAbout.Style = $selectedStyle 
