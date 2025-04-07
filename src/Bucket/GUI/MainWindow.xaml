@@ -81,30 +81,6 @@
                                Opacity="0.8" 
                                VerticalAlignment="Center" />
                 </StackPanel>
-                
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,10,0">
-                    <Button x:Name="BtnMinimize" 
-                            Content="🗕" 
-                            Foreground="White" 
-                            Background="Transparent" 
-                            BorderThickness="0" 
-                            Padding="8,0" 
-                            Cursor="Hand" />
-                    <Button x:Name="BtnMaximize" 
-                            Content="🗖" 
-                            Foreground="White" 
-                            Background="Transparent" 
-                            BorderThickness="0" 
-                            Padding="8,0" 
-                            Cursor="Hand" />
-                    <Button x:Name="BtnClose" 
-                            Content="✕" 
-                            Foreground="White" 
-                            Background="Transparent" 
-                            BorderThickness="0" 
-                            Padding="8,0" 
-                            Cursor="Hand" />
-                </StackPanel>
             </Grid>
         </Border>
 
@@ -133,7 +109,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        
+
                         <Button x:Name="NavSelectImage" 
                                 Content="Sélection de l'image" 
                                 Tag="selectImagePage"
@@ -147,7 +123,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        
+
                         <Button x:Name="NavCustomization" 
                                 Content="Personnalisation" 
                                 Tag="customizationPage"
@@ -161,7 +137,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        
+
                         <Button x:Name="NavApplications" 
                                 Content="Applications" 
                                 Tag="applicationsPage"
@@ -175,7 +151,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        
+
                         <Button x:Name="NavDrivers" 
                                 Content="Pilotes" 
                                 Tag="driversPage"
@@ -189,7 +165,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        
+
                         <Button x:Name="NavSettings" 
                                 Content="Configuration" 
                                 Tag="configPage"

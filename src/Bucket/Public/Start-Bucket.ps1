@@ -187,32 +187,6 @@ function Start-Bucket {
                 })
         }
 
-        # Handle window control buttons if they exist
-        if ($WPFBtnMinimize) {
-            $WPFBtnMinimize.add_Click({
-                    $form.WindowState = "Minimized"
-                })
-        }
-        
-        if ($WPFBtnMaximize) {
-            $WPFBtnMaximize.add_Click({
-                    if ($form.WindowState -eq "Maximized") {
-                        $form.WindowState = "Normal"
-                        $WPFBtnMaximize.Content = "🗖"
-                    } 
-                    else {
-                        $form.WindowState = "Maximized" 
-                        $WPFBtnMaximize.Content = "🗗"
-                    }
-                })
-        }
-        
-        if ($WPFBtnClose) {
-            $WPFBtnClose.add_Click({
-                    $form.Close()
-                })
-        }
-
         # Set window title with version info
         $form.Title = "Bucket $($script:BucketVersion) - Windows Image Customizer"
 
