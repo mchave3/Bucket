@@ -131,7 +131,7 @@ function Start-Bucket {
             WorkingDirectory       = $script:workingDirectory
             MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
             CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
-            DiskSpaceInfo          = "Available space: $(Get-PSDrive -Name 'C').Free / $(Get-PSDrive -Name 'C').Used"
+            DiskSpaceInfo          = "C: Drive - Available space: $([math]::Round($(Get-PSDrive -Name 'C').Free/1GB, 2)) GB / $([math]::Round(($(Get-PSDrive -Name 'C').Free + $(Get-PSDrive -Name 'C').Used)/1GB, 2)) GB"
             MountedImagesCount     = 0
             ImageMountStatus       = "No image mounted"
             CurrentImageInfo       = "Please select and mount a Windows image to begin customization."
