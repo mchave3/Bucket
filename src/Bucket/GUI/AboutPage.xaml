@@ -3,10 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     x:Class="Bucket.GUI.AboutPage"
-    Title="À propos"
-    Background="{ui:ThemeResource ApplicationBackgroundBrush}">
+    Title="About"
+    Background="#F9F9F9">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -14,19 +13,19 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- En-tête -->
+        <!-- Header -->
         <TextBlock 
             Grid.Row="0"
-            Text="À propos de Bucket"
+            Text="About Bucket"
             FontSize="28"
             FontWeight="SemiBold"
             Margin="0,0,0,20" />
 
-        <!-- Contenu principal -->
+        <!-- Main content -->
         <ScrollViewer Grid.Row="1">
-            <StackPanel Spacing="20">
-                <!-- Logo et info version -->
-                <StackPanel HorizontalAlignment="Center" Spacing="12">
+            <StackPanel Margin="0,0,0,20">
+                <!-- Logo and description -->
+                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,30">
                     <Image 
                         Source="/Bucket;component/Icon/Icon.png" 
                         Width="128" 
@@ -43,125 +42,196 @@
                         Text="{Binding BucketVersion, StringFormat='Version {0}'}" 
                         FontSize="16" 
                         HorizontalAlignment="Center" 
-                        Opacity="0.8" />
+                        Opacity="0.8"
+                        Margin="0,5,0,0" />
                 </StackPanel>
                 
                 <!-- Description -->
-                <ui:Card>
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,20" 
+                    Padding="20">
                     <TextBlock 
-                        Text="Bucket est un outil puissant conçu pour personnaliser, optimiser et déployer des images Windows. Créez des installations Windows entièrement personnalisées en quelques clics."
+                        Text="Bucket is a powerful tool designed to customize, optimize and deploy Windows images. Create fully customized Windows installations in just a few clicks."
                         TextWrapping="Wrap" 
-                        Margin="16" 
                         TextAlignment="Center" 
                         LineHeight="24" />
-                </ui:Card>
+                </Border>
                 
-                <!-- Auteur -->
-                <ui:CardExpander Icon="{ui:SymbolIcon Person24}" Header="Auteur">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Mickaël CHAVE" FontWeight="SemiBold" />
-                        <ui:Hyperlink 
-                            Content="GitHub: @mchave3" 
-                            NavigateUri="https://github.com/mchave3"
-                            Margin="0,8,0,0" />
-                    </StackPanel>
-                </ui:CardExpander>
+                <!-- Author -->
+                <Expander Header="Author" Margin="0,0,0,10" IsExpanded="False">
+                    <Border 
+                        Background="White" 
+                        CornerRadius="8" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        Padding="15">
+                        <StackPanel>
+                            <TextBlock Text="Mickaël CHAVE" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,8,0,0">
+                                <Hyperlink NavigateUri="https://github.com/mchave3">
+                                    GitHub: @mchave3
+                                </Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </Expander>
                 
-                <!-- Informations légales -->
-                <ui:CardExpander Icon="{ui:SymbolIcon Document24}" Header="Informations légales">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Licence: MIT" FontWeight="SemiBold" />
-                        <TextBlock 
-                            Text="Copyright © 2025 Mickaël CHAVE. Tous droits réservés."
-                            TextWrapping="Wrap" />
-                        <ui:Hyperlink 
-                            Content="Voir la licence complète" 
-                            NavigateUri="https://github.com/mchave3/Bucket/blob/main/LICENSE"
-                            Margin="0,8,0,0" />
-                    </StackPanel>
-                </ui:CardExpander>
+                <!-- Legal Information -->
+                <Expander Header="Legal Information" Margin="0,0,0,10" IsExpanded="False">
+                    <Border 
+                        Background="White" 
+                        CornerRadius="8" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        Padding="15">
+                        <StackPanel>
+                            <TextBlock Text="License: MIT" FontWeight="SemiBold" />
+                            <TextBlock 
+                                Text="Copyright © 2025 Mickaël CHAVE. All rights reserved."
+                                TextWrapping="Wrap"
+                                Margin="0,8,0,0" />
+                            <TextBlock Margin="0,8,0,0">
+                                <Hyperlink NavigateUri="https://github.com/mchave3/Bucket/blob/main/LICENSE">
+                                    View full license
+                                </Hyperlink>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </Expander>
                 
-                <!-- Bibliothèques utilisées -->
-                <ui:CardExpander Icon="{ui:SymbolIcon Library24}" Header="Bibliothèques utilisées">
-                    <StackPanel Spacing="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Wpf.Ui" />
-                            <TextBlock Grid.Column="1" Text="4.0.2" />
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="PoShLog" />
-                            <TextBlock Grid.Column="1" Text="2.1.1" />
-                        </Grid>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="MahApps.Metro" />
-                            <TextBlock Grid.Column="1" Text="2.4.10" />
-                        </Grid>
-                    </StackPanel>
-                </ui:CardExpander>
+                <!-- Libraries Used -->
+                <Expander Header="Libraries Used" Margin="0,0,0,10" IsExpanded="False">
+                    <Border 
+                        Background="White" 
+                        CornerRadius="8" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        Padding="15">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="PoShLog" />
+                                <TextBlock Grid.Column="1" Text="2.1.1" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Expander>
                 
-                <!-- Liens -->
-                <ui:CardExpander Icon="{ui:SymbolIcon Globe24}" Header="Liens">
-                    <StackPanel Spacing="16">
-                        <ui:Button 
-                            Content="Site web"
-                            Icon="{ui:SymbolIcon Globe24}"
-                            Appearance="Primary"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Stretch"
-                            Name="BtnWebsite" />
-                        
-                        <ui:Button 
-                            Content="Dépôt GitHub"
-                            Icon="{ui:SymbolIcon Code24}"
-                            Appearance="Primary"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Stretch"
-                            Name="BtnGitHub" />
-                        
-                        <ui:Button 
-                            Content="Signaler un problème"
-                            Icon="{ui:SymbolIcon BugReport24}"
-                            Appearance="Secondary"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Stretch"
-                            Name="BtnReportIssue" />
-                        
-                        <ui:Button 
-                            Content="Documentation"
-                            Icon="{ui:SymbolIcon Book24}"
-                            Appearance="Secondary"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Stretch"
-                            Name="BtnDocumentation" />
-                    </StackPanel>
-                </ui:CardExpander>
+                <!-- Links -->
+                <Expander Header="Links" Margin="0,0,0,10" IsExpanded="False">
+                    <Border 
+                        Background="White" 
+                        CornerRadius="8" 
+                        BorderBrush="#E0E0E0" 
+                        BorderThickness="1" 
+                        Padding="15">
+                        <StackPanel>
+                            <Button 
+                                Content="Website"
+                                Name="BtnWebsite"
+                                Margin="0,0,0,16"
+                                Padding="12,8"
+                                Height="40"
+                                Background="#2979FF"
+                                Foreground="White"
+                                BorderThickness="0"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                            
+                            <Button 
+                                Content="GitHub Repository"
+                                Name="BtnGitHub"
+                                Margin="0,0,0,16"
+                                Padding="12,8"
+                                Height="40"
+                                Background="#2979FF"
+                                Foreground="White"
+                                BorderThickness="0"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                            
+                            <Button 
+                                Content="Report an Issue"
+                                Name="BtnReportIssue"
+                                Margin="0,0,0,16"
+                                Padding="12,8"
+                                Height="40"
+                                Background="#F5F5F5"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                            
+                            <Button 
+                                Content="Documentation"
+                                Name="BtnDocumentation"
+                                Padding="12,8"
+                                Height="40"
+                                Background="#F5F5F5"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Expander>
                 
-                <!-- Remerciements -->
-                <ui:CardControl>
+                <!-- Acknowledgments -->
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Padding="20">
                     <StackPanel>
                         <TextBlock 
-                            Text="Remerciements"
+                            Text="Acknowledgments"
                             FontWeight="SemiBold"
                             Margin="0,0,0,8" />
                         <TextBlock 
-                            Text="Merci à tous les contributeurs et à la communauté pour leur support dans le développement de cet outil."
+                            Text="Thanks to all contributors and the community for their support in the development of this tool."
                             TextWrapping="Wrap" />
                     </StackPanel>
-                </ui:CardControl>
+                </Border>
+                
+                <!-- Footer -->
+                <TextBlock 
+                    Text="Developed by Mickaël CHAVE - © 2025" 
+                    FontSize="12" 
+                    Opacity="0.6" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,0" />
             </StackPanel>
         </ScrollViewer>
     </Grid>
