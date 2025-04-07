@@ -10,7 +10,7 @@
     Background="#F9F9F9">
 
     <Window.Resources>
-        <!-- Style pour les boutons du menu principal -->
+        <!-- Style for main menu buttons -->
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Margin" Value="5,2" />
             <Setter Property="Padding" Value="10" />
@@ -55,7 +55,7 @@
             </Setter>
         </Style>
 
-        <!-- Style pour les boutons sélectionnés du menu -->
+        <!-- Style for selected menu buttons -->
         <Style x:Key="SelectedMenuButtonStyle" TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}">
             <Setter Property="Background" Value="#E3F2FD" />
             <Setter Property="Foreground" Value="#1976D2" />
@@ -70,7 +70,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Barre de titre personnalisée -->
+        <!-- Custom title bar -->
         <Border Grid.Row="0" Background="#2979FF" Height="40">
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
@@ -84,20 +84,20 @@
             </Grid>
         </Border>
 
-        <!-- Contenu principal avec navigation sur la gauche -->
+        <!-- Main content with navigation on the left -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Menu de navigation sur la gauche -->
+            <!-- Navigation menu on the left -->
             <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
                 <DockPanel LastChildFill="True">
-                    <!-- Menu principal -->
+                    <!-- Main menu -->
                     <StackPanel DockPanel.Dock="Top" Margin="0,15,0,0">
                         <Button x:Name="NavHome" 
-                                Content="Accueil" 
+                                Content="Home" 
                                 Tag="homePage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -111,7 +111,7 @@
                         </Button>
 
                         <Button x:Name="NavSelectImage" 
-                                Content="Sélection de l'image" 
+                                Content="Image Selection" 
                                 Tag="selectImagePage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -125,7 +125,7 @@
                         </Button>
 
                         <Button x:Name="NavCustomization" 
-                                Content="Personnalisation" 
+                                Content="Customization" 
                                 Tag="customizationPage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -153,7 +153,7 @@
                         </Button>
 
                         <Button x:Name="NavDrivers" 
-                                Content="Pilotes" 
+                                Content="Drivers" 
                                 Tag="driversPage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -167,7 +167,7 @@
                         </Button>
 
                         <Button x:Name="NavSettings" 
-                                Content="Configuration" 
+                                Content="Settings" 
                                 Tag="configPage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -181,10 +181,10 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- Élément du bas -->
+                    <!-- Bottom element -->
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,15">
                         <Button x:Name="NavAbout" 
-                                Content="À propos" 
+                                Content="About" 
                                 Tag="aboutPage"
                                 Style="{StaticResource MenuButtonStyle}">
                             <Button.ContentTemplate>
@@ -198,7 +198,7 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- Logo et informations en bas de la navigation -->
+                    <!-- Logo and information at the bottom of navigation -->
                     <Border VerticalAlignment="Bottom" Padding="10" Margin="5">
                         <StackPanel>
                             <TextBlock Text="Bucket" FontWeight="Bold" HorizontalAlignment="Center" />
@@ -208,7 +208,7 @@
                 </DockPanel>
             </Border>
 
-            <!-- Contenu principal sur la droite -->
+            <!-- Main content on the right -->
             <Frame Grid.Column="1" x:Name="RootFrame" NavigationUIVisibility="Hidden" Background="#F9F9F9" />
         </Grid>
     </Grid>
