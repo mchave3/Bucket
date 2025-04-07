@@ -55,7 +55,7 @@ function Start-Bucket {
         $inputXaml = Get-Content -Path $xamlPath -Raw
         $inputXaml = $inputXaml -replace 'BucketVer', $script:BucketVersion
         
-        # Clean up the XAML for PowerShell's XML parser by removing problematic namespace declarations
+        # Clean up the XAML for PowerShell's XML parser
         $inputXaml = $inputXaml -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
         $inputXaml = $inputXaml -replace 'xmlns:d="http://schemas.microsoft.com/expression/blend/2008"', ''
         $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', ''
@@ -114,7 +114,7 @@ function Start-Bucket {
         #endregion XAML
 
         #region GUI Events
-        # Create a hashtable to store page references - using strings, not type objects
+        # Create a hashtable to store page references
         $script:pages = @{
             homePage          = "Bucket.GUI.HomePage" 
             selectImagePage   = "Bucket.GUI.SelectImagePage"
@@ -131,10 +131,10 @@ function Start-Bucket {
             WorkingDirectory       = $script:workingDirectory
             MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
             CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
-            DiskSpaceInfo          = "Espace disponible: $(Get-PSDrive -Name 'C').Free / $(Get-PSDrive -Name 'C').Used"
+            DiskSpaceInfo          = "Available space: $(Get-PSDrive -Name 'C').Free / $(Get-PSDrive -Name 'C').Used"
             MountedImagesCount     = 0
-            ImageMountStatus       = "Aucune image montée"
-            CurrentImageInfo       = "Veuillez sélectionner et monter une image Windows pour commencer la personnalisation."
+            ImageMountStatus       = "No image mounted"
+            CurrentImageInfo       = "Please select and mount a Windows image to begin customization."
             PendingDriversCount    = 0
             InstalledDriversCount  = 0
             SelectedAppsCount      = 0
