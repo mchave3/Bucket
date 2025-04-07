@@ -36,7 +36,7 @@ function Invoke-BucketGuiNav {
         }
 
         # Get a reference to the frame
-        $rootFrame = $WPFRootFrame
+        $rootFrame = $WPF_RootFrame
         if (-not $rootFrame) {
             Write-BucketLog -Data "RootFrame UI element not found" -Level Error
             return

@@ -95,7 +95,7 @@ function Start-Bucket {
                 try {
                     $element = $form.FindName($elementName)
                     if ($element) {
-                        $varName = "WPF$elementName"
+                        $varName = "WPF_$elementName"
                         Set-Variable -Name $varName -Value $element -Scope Script
                         Write-BucketLog -Data "Found UI element: $elementName -> $varName" -Level Debug
                     }
@@ -137,8 +137,8 @@ function Start-Bucket {
         }
 
         # Initialize navigation events
-        if ($WPFNavHome) {
-            $WPFNavHome.add_Click({
+        if ($WPF_NavHome) {
+            $WPF_NavHome.add_Click({
                     Invoke-BucketGuiNav -PageTag "homePage"
                 })
         } 
@@ -147,14 +147,14 @@ function Start-Bucket {
         }
 
         # Handle navigation for other UI elements
-        if ($WPFNavSelectImage) {
-            $WPFNavSelectImage.add_Click({
+        if ($WPF_NavSelectImage) {
+            $WPF_NavSelectImage.add_Click({
                     Invoke-BucketGuiNav -PageTag "selectImagePage"
                 })
         }
         
-        if ($WPFNavAbout) {
-            $WPFNavAbout.add_Click({
+        if ($WPF_NavAbout) {
+            $WPF_NavAbout.add_Click({
                     Invoke-BucketGuiNav -PageTag "aboutPage"
                 })
         }
@@ -164,7 +164,7 @@ function Start-Bucket {
 
         # Set the initial page to home page when the form is loaded
         $form.add_Loaded({
-                if ($WPFRootFrame) {
+                if ($WPF_RootFrame) {
                     Write-BucketLog -Data "Form loaded, navigating to home page" -Level Info
                     Invoke-BucketGuiNav -PageTag "homePage"
                 }
