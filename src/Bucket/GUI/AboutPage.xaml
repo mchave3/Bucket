@@ -26,12 +26,6 @@
             <StackPanel Margin="0,0,0,20">
                 <!-- Logo and description -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,30">
-                    <Image 
-                        Source="/Bucket;component/Icon/Icon.png" 
-                        Width="128" 
-                        Height="128" 
-                        Margin="0,0,0,16" />
-                    
                     <TextBlock 
                         Text="Bucket" 
                         FontSize="32" 
@@ -62,13 +56,20 @@
                 </Border>
                 
                 <!-- Author -->
-                <Expander Header="Author" Margin="0,0,0,10" IsExpanded="False">
-                    <Border 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Padding="15">
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,20" 
+                    Padding="20">
+                    <StackPanel>
+                        <TextBlock 
+                            Text="Author" 
+                            FontSize="18" 
+                            FontWeight="SemiBold" 
+                            Margin="0,0,0,15" />
+                        
                         <StackPanel>
                             <TextBlock Text="Mickaël CHAVE" FontWeight="SemiBold" />
                             <TextBlock Margin="0,8,0,0">
@@ -77,17 +78,24 @@
                                 </Hyperlink>
                             </TextBlock>
                         </StackPanel>
-                    </Border>
-                </Expander>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Legal Information -->
-                <Expander Header="Legal Information" Margin="0,0,0,10" IsExpanded="False">
-                    <Border 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Padding="15">
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,20" 
+                    Padding="20">
+                    <StackPanel>
+                        <TextBlock 
+                            Text="Legal Information" 
+                            FontSize="18" 
+                            FontWeight="SemiBold" 
+                            Margin="0,0,0,15" />
+                        
                         <StackPanel>
                             <TextBlock Text="License: MIT" FontWeight="SemiBold" />
                             <TextBlock 
@@ -100,18 +108,34 @@
                                 </Hyperlink>
                             </TextBlock>
                         </StackPanel>
-                    </Border>
-                </Expander>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Libraries Used -->
-                <Expander Header="Libraries Used" Margin="0,0,0,10" IsExpanded="False">
-                    <Border 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Padding="15">
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,20" 
+                    Padding="20">
+                    <StackPanel>
+                        <TextBlock 
+                            Text="Libraries Used" 
+                            FontSize="18" 
+                            FontWeight="SemiBold" 
+                            Margin="0,0,0,15" />
+                        
                         <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Wpf.Ui" />
+                                <TextBlock Grid.Column="1" Text="4.0.2" />
+                            </Grid>
+                            
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -120,18 +144,34 @@
                                 <TextBlock Grid.Column="0" Text="PoShLog" />
                                 <TextBlock Grid.Column="1" Text="2.1.1" />
                             </Grid>
+                            
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="MahApps.Metro" />
+                                <TextBlock Grid.Column="1" Text="2.4.10" />
+                            </Grid>
                         </StackPanel>
-                    </Border>
-                </Expander>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Links -->
-                <Expander Header="Links" Margin="0,0,0,10" IsExpanded="False">
-                    <Border 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Padding="15">
+                <Border 
+                    Background="White" 
+                    CornerRadius="8" 
+                    BorderBrush="#E0E0E0" 
+                    BorderThickness="1" 
+                    Margin="0,0,0,20" 
+                    Padding="20">
+                    <StackPanel>
+                        <TextBlock 
+                            Text="Links" 
+                            FontSize="18" 
+                            FontWeight="SemiBold" 
+                            Margin="0,0,0,15" />
+                        
                         <StackPanel>
                             <Button 
                                 Content="Website"
@@ -204,8 +244,8 @@
                                 </Button.Resources>
                             </Button>
                         </StackPanel>
-                    </Border>
-                </Expander>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Acknowledgments -->
                 <Border 
@@ -218,7 +258,8 @@
                         <TextBlock 
                             Text="Acknowledgments"
                             FontWeight="SemiBold"
-                            Margin="0,0,0,8" />
+                            FontSize="18"
+                            Margin="0,0,0,15" />
                         <TextBlock 
                             Text="Thanks to all contributors and the community for their support in the development of this tool."
                             TextWrapping="Wrap" />
