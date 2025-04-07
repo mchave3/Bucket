@@ -32,9 +32,9 @@ function Invoke-UpdateNavigationButtonStyle {
             
             # Reference to all navigation buttons
             $navButtons = @(
-                $WPF_NavHome,
-                $WPF_NavSelectImage,
-                $WPF_NavAbout
+                $WPF_MainWindow_NavHome,
+                $WPF_MainWindow_NavSelectImage,
+                $WPF_MainWindow_NavAbout
             )
             
             # Try to get styles from form resources
@@ -57,20 +57,20 @@ function Invoke-UpdateNavigationButtonStyle {
             # Set the selected button style based on the page tag
             switch ($selectedTag) {
                 "homePage" { 
-                    if ($WPF_NavHome) { 
-                        $WPF_NavHome.Style = $selectedStyle 
+                    if ($WPF_MainWindow_NavHome) { 
+                        $WPF_MainWindow_NavHome.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavHome" -Level Verbose
                     }
                 }
                 "selectImagePage" { 
-                    if ($WPF_NavSelectImage) { 
-                        $WPF_NavSelectImage.Style = $selectedStyle 
+                    if ($WPF_MainWindow_NavSelectImage) { 
+                        $WPF_MainWindow_NavSelectImage.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavSelectImage" -Level Verbose
                     }
                 }
                 "aboutPage" { 
-                    if ($WPF_NavAbout) { 
-                        $WPF_NavAbout.Style = $selectedStyle 
+                    if ($WPF_MainWindow_NavAbout) { 
+                        $WPF_MainWindow_NavAbout.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavAbout" -Level Verbose
                     }
                 }
