@@ -92,21 +92,22 @@
                       SelectionMode="Extended"
                       SelectionUnit="FullRow"
                       VerticalAlignment="Stretch">
-                <DataGrid.Columns>
+                <DataGrid.Columns>                    
                     <DataGridTemplateColumn Header="Select" Width="Auto" MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                <CheckBox IsChecked="{Binding SelectImage_Images_IsSelected, UpdateSourceTrigger=PropertyChanged}" 
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="100" />
-                    <DataGridTextColumn Header="File Path" Binding="{Binding Path}" Width="Auto" MinWidth="150" />
-                    <DataGridTextColumn Header="Version (Index 1)" Binding="{Binding Version}" Width="Auto" MinWidth="100" />
-                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding Size}" Width="Auto" MinWidth="80" />
-                    <DataGridTextColumn Header="Import Date" Binding="{Binding ImportDate}" Width="*" MinWidth="120" />
+
+                    <DataGridTextColumn Header="Name" Binding="{Binding SelectImage_Images_Name}" Width="Auto" MinWidth="100" />
+                    <DataGridTextColumn Header="File Path" Binding="{Binding SelectImage_Images_Path}" Width="Auto" MinWidth="150" />
+                    <DataGridTextColumn Header="Version (Index 1)" Binding="{Binding SelectImage_Images_Version}" Width="Auto" MinWidth="100" />
+                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding SelectImage_Images_Size}" Width="Auto" MinWidth="80" />
+                    <DataGridTextColumn Header="Import Date" Binding="{Binding SelectImage_Images_ImportDate}" Width="*" MinWidth="120" />
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -147,17 +148,17 @@
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
-                              VerticalAlignment="Stretch">
-
+                              VerticalAlignment="Stretch">                        
+                        
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="Auto" MinWidth="80" />
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="100" />
-                            <DataGridTextColumn Header="Architecture" Binding="{Binding Architecture}" Width="Auto" MinWidth="120" />
-                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="Auto" MinWidth="120" />
-                            <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="Auto" MinWidth="120" />
-                            <DataGridTextColumn Header="Languages" Binding="{Binding Languages}" Width="Auto" MinWidth="120" />
-                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto" MinWidth="200" />
-                            <DataGridTextColumn Header="Size (MB)" Binding="{Binding Size}" Width="*" MinWidth="100" />
+                            <DataGridTextColumn Header="Index" Binding="{Binding SelectImage_Details_Index}" Width="Auto" MinWidth="80" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding SelectImage_Details_Name}" Width="Auto" MinWidth="100" />
+                            <DataGridTextColumn Header="Architecture" Binding="{Binding SelectImage_Details_Architecture}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Edition" Binding="{Binding SelectImage_Details_Edition}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Version" Binding="{Binding SelectImage_Details_Version}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Languages" Binding="{Binding SelectImage_Details_Languages}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding SelectImage_Details_Description}" Width="Auto" MinWidth="200" />
+                            <DataGridTextColumn Header="Size (MB)" Binding="{Binding SelectImage_Details_Size}" Width="*" MinWidth="100" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
