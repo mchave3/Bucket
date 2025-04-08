@@ -20,21 +20,30 @@
             Text="Import and Customize Your Image"
             FontSize="28"
             FontWeight="SemiBold"
-            Margin="0,0,0,20" />
-
+            Margin="0,0,0,20" />        
+            
         <!-- Main content -->
-        <StackPanel Grid.Row="1">
+        <Grid Grid.Row="1">            
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <!-- Import Buttons -->
+                <RowDefinition Height="Auto" /> <!-- Table Header -->
+                <RowDefinition Height="Auto" /> <!-- Select All/Delete Buttons -->
+                <RowDefinition Height="*" MinHeight="150" /> <!-- DataGrid -->
+                <RowDefinition Height="5" /> <!-- GridSplitter -->
+                <RowDefinition Height="2*" MinHeight="150" /> <!-- Details Section -->
+            </Grid.RowDefinitions>
+            
             <!-- Import Buttons -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
                 <Button x:Name="SelectImage_ImportISOButton" Content="Import ISO" Width="120" Padding="15,8" Margin="0,0,20,0" />
                 <Button x:Name="SelectImage_ImportWIMButton" Content="Import WIM" Width="120" Padding="15,8" />
             </StackPanel>
 
             <!-- WIM Images Table -->
-            <TextBlock Text="Available Images" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10" />
+            <TextBlock Grid.Row="1" Text="Available Images" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10" />
 
             <!-- Select All Option and Delete Button -->
-            <Grid Margin="0,10,0,0">
+            <Grid Grid.Row="2" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -58,56 +67,70 @@
                         Grid.Column="2"
                         Padding="10,5"
                         Width="120" />
-            </Grid>
-
+            </Grid>            
+            
             <!-- DataGrid for displaying images -->
             <DataGrid x:Name="SelectImage_ImagesDataGrid" 
-                        AutoGenerateColumns="False" 
-                        HeadersVisibility="Column"
-                        GridLinesVisibility="Horizontal"
-                        Background="White"
-                        BorderThickness="1"
-                        BorderBrush="#DDDDDD"
-                        CanUserAddRows="False"
-                        CanUserDeleteRows="False"
-                        SelectionMode="Extended"
-                        SelectionUnit="FullRow"
-                        MaxHeight="400"
-                        Margin="0,10,0,0">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="Select" Width="60">
+                      Grid.Row="3"
+                      AutoGenerateColumns="False" 
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="All"
+                      Background="White"
+                      BorderThickness="1"
+                      BorderBrush="#DDDDDD"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      SelectionMode="Extended"
+                      SelectionUnit="FullRow"
+                      VerticalAlignment="Stretch">
+                <DataGrid.Columns>                    
+                    <DataGridTemplateColumn Header="Select" Width="Auto" MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center" />
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*" />
-                    <DataGridTextColumn Header="File Path" Binding="{Binding Path}" Width="3*" />
-                    <DataGridTextColumn Header="Version (Index 1)" Binding="{Binding Version}" Width="1*" />
-                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding Size}" Width="80" />
-                    <DataGridTextColumn Header="Import Date" Binding="{Binding ImportDate}" Width="120" />
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="100" />
+                    <DataGridTextColumn Header="File Path" Binding="{Binding Path}" Width="Auto" MinWidth="150" />
+                    <DataGridTextColumn Header="Version (Index 1)" Binding="{Binding Version}" Width="Auto" MinWidth="100" />
+                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding Size}" Width="Auto" MinWidth="80" />
+                    <DataGridTextColumn Header="Import Date" Binding="{Binding ImportDate}" Width="*" MinWidth="120" />
                 </DataGrid.Columns>
             </DataGrid>
+            
+            <!-- GridSplitter to resize the sections -->
+            <GridSplitter Grid.Row="4" 
+                          Height="5" 
+                          Background="#DDDDDD" 
+                          HorizontalAlignment="Stretch" 
+                          VerticalAlignment="Center"/>
 
             <!-- Image Details Section -->
-            <Border BorderBrush="#DDDDDD" 
+            <Border Grid.Row="5"
+                    BorderBrush="#DDDDDD" 
                     BorderThickness="1" 
-                    Margin="0,20,0,0" 
                     Padding="15" 
                     Background="#F5F5F5">
-                <StackPanel>
-                    <TextBlock Text="Image Details" 
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0"
+                               Text="Image Details" 
                                FontSize="16" 
                                FontWeight="SemiBold" 
                                Margin="0,0,0,10" />
 
-                    <DataGrid x:Name="SelectImage_DetailsDataGrid" 
+                        <DataGrid Grid.Row="1"
+                              x:Name="SelectImage_DetailsDataGrid" 
                               AutoGenerateColumns="False" 
                               HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal"
+                              GridLinesVisibility="All"
                               Background="White"
                               BorderThickness="1"
                               BorderBrush="#DDDDDD"
@@ -115,21 +138,22 @@
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
-                              MaxHeight="250">
+                              VerticalAlignment="Stretch">                        
+                        
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="80" />
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
-                            <DataGridTextColumn Header="Architecture" Binding="{Binding Architecture}" Width="120" />
-                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="120" />
-                            <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="120" />
-                            <DataGridTextColumn Header="Languages" Binding="{Binding Languages}" Width="120" />
-                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="200" />
-                            <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="100" />
+                            <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="Auto" MinWidth="80" />
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="100" />
+                            <DataGridTextColumn Header="Architecture" Binding="{Binding Architecture}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Languages" Binding="{Binding Languages}" Width="Auto" MinWidth="120" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="Auto" MinWidth="200" />
+                            <DataGridTextColumn Header="Size (MB)" Binding="{Binding Size}" Width="*" MinWidth="100" />
                         </DataGrid.Columns>
                     </DataGrid>
-                </StackPanel>
+                </Grid>
             </Border>
-        </StackPanel>
+        </Grid>
 
         <!-- Footer -->
         <StackPanel 
