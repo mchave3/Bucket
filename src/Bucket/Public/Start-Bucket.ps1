@@ -121,7 +121,7 @@ function Start-Bucket {
             aboutPage       = "Bucket.GUI.AboutPage"
         }
 
-        # Create a data context for binding
+        # Common data context for the GUI
         $script:dataContext = [PSCustomObject]@{
             BucketVersion          = $script:BucketVersion
             WorkingDirectory       = $script:workingDirectory
