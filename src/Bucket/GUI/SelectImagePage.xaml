@@ -17,24 +17,30 @@
         <!-- Header -->
         <TextBlock 
             Grid.Row="0"
-            Text="Import and Customize Your Image"
+            Text="Import and select your image"
             FontSize="28"
             FontWeight="SemiBold"
-            Margin="0,0,0,20" />        
-            
+            Margin="0,0,0,20" />
+
         <!-- Main content -->
-        <Grid Grid.Row="1">            
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Import Buttons -->
-                <RowDefinition Height="Auto" /> <!-- Table Header -->
-                <RowDefinition Height="Auto" /> <!-- Select All/Delete Buttons -->
-                <RowDefinition Height="*" MinHeight="150" /> <!-- DataGrid -->
-                <RowDefinition Height="5" /> <!-- GridSplitter -->
-                <RowDefinition Height="2*" MinHeight="150" /> <!-- Details Section -->
+                <RowDefinition Height="Auto" />
+                <!-- Import Buttons -->
+                <RowDefinition Height="Auto" />
+                <!-- Table Header -->
+                <RowDefinition Height="Auto" />
+                <!-- Select All/Delete Buttons -->
+                <RowDefinition Height="*" MinHeight="150" />
+                <!-- DataGrid -->
+                <RowDefinition Height="5" />
+                <!-- GridSplitter -->
+                <RowDefinition Height="2*" MinHeight="150" />
+                <!-- Details Section -->
             </Grid.RowDefinitions>
-            
+
             <!-- Import Buttons -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
                 <Button x:Name="SelectImage_ImportISOButton" Content="Import ISO" Width="120" Padding="15,8" Margin="0,0,20,0" />
                 <Button x:Name="SelectImage_ImportWIMButton" Content="Import WIM" Width="120" Padding="15,8" />
             </StackPanel>
@@ -60,15 +66,18 @@
                         Grid.Column="1"
                         Padding="10,5"
                         Width="100"
-                        Margin="0,0,10,0" />
-
+                        Margin="0,0,10,0" />                
+                        
                 <Button x:Name="SelectImage_DeleteButton" 
-                        Content="Delete Selected"
+                        Content="Delete"
                         Grid.Column="2"
                         Padding="10,5"
-                        Width="120" />
-            </Grid>            
-            
+                        Width="120"
+                        Background="#E74C3C"
+                        Foreground="White"
+                        FontWeight="SemiBold" />
+            </Grid>
+
             <!-- DataGrid for displaying images -->
             <DataGrid x:Name="SelectImage_ImagesDataGrid" 
                       Grid.Row="3"
@@ -83,7 +92,7 @@
                       SelectionMode="Extended"
                       SelectionUnit="FullRow"
                       VerticalAlignment="Stretch">
-                <DataGrid.Columns>                    
+                <DataGrid.Columns>
                     <DataGridTemplateColumn Header="Select" Width="Auto" MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -100,7 +109,7 @@
                     <DataGridTextColumn Header="Import Date" Binding="{Binding ImportDate}" Width="*" MinWidth="120" />
                 </DataGrid.Columns>
             </DataGrid>
-            
+
             <!-- GridSplitter to resize the sections -->
             <GridSplitter Grid.Row="4" 
                           Height="5" 
@@ -119,14 +128,14 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    
+
                     <TextBlock Grid.Row="0"
                                Text="Image Details" 
                                FontSize="16" 
                                FontWeight="SemiBold" 
                                Margin="0,0,0,10" />
 
-                        <DataGrid Grid.Row="1"
+                    <DataGrid Grid.Row="1"
                               x:Name="SelectImage_DetailsDataGrid" 
                               AutoGenerateColumns="False" 
                               HeadersVisibility="Column"
@@ -138,8 +147,8 @@
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
-                              VerticalAlignment="Stretch">                        
-                        
+                              VerticalAlignment="Stretch">
+
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="Auto" MinWidth="80" />
                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="100" />
