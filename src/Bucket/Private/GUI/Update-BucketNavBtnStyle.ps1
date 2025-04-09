@@ -1,12 +1,12 @@
 ﻿<#
 .SYNOPSIS
-    Met à jour les styles des boutons de navigation
+    Updates the navigation button styles
 
 .DESCRIPTION
-    Cette fonction met à jour les styles des boutons de navigation pour indiquer visuellement quelle page est actuellement sélectionnée.
+    This function updates the navigation button styles to visually indicate which page is currently selected.
 
 .NOTES
-    Name:        Invoke-UpdateNavigationButtonStyle.ps1
+    Name:        Update-BucketNavBtnStyle.ps1
     Author:      Mickaël CHAVE
     Created:     04/06/2025
     Version:     1.0.0
@@ -17,10 +17,10 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Invoke-UpdateNavigationButtonStyle -selectedTag "homePage"
+    Update-BucketNavBtnStyle -selectedTag "homePage"
 #>
-function Invoke-UpdateNavigationButtonStyle {
-    [CmdletBinding()]
+function Update-BucketNavBtnStyle {
+    [CmdletBinding(SupportsShouldProcess=$true)]
     param(
         [Parameter(Mandatory = $true)]
         [string]$selectedTag
@@ -48,28 +48,30 @@ function Invoke-UpdateNavigationButtonStyle {
             }
             
             # Reset all navigation buttons to default style
-            foreach ($button in $navButtons) {
-                if ($button) {
-                    $button.Style = $defaultStyle
+            if ($PSCmdlet.ShouldProcess("Navigation buttons", "Reset to default style")) {
+                foreach ($button in $navButtons) {
+                    if ($button) {
+                        $button.Style = $defaultStyle
+                    }
                 }
             }
             
             # Set the selected button style based on the page tag
             switch ($selectedTag) {
                 "homePage" { 
-                    if ($WPF_MainWindow_NavHome) { 
+                    if ($WPF_MainWindow_NavHome -and $PSCmdlet.ShouldProcess("NavHome button", "Set selected style")) { 
                         $WPF_MainWindow_NavHome.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavHome" -Level Verbose
                     }
                 }
                 "selectImagePage" { 
-                    if ($WPF_MainWindow_NavSelectImage) { 
+                    if ($WPF_MainWindow_NavSelectImage -and $PSCmdlet.ShouldProcess("NavSelectImage button", "Set selected style")) { 
                         $WPF_MainWindow_NavSelectImage.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavSelectImage" -Level Verbose
                     }
                 }
                 "aboutPage" { 
-                    if ($WPF_MainWindow_NavAbout) { 
+                    if ($WPF_MainWindow_NavAbout -and $PSCmdlet.ShouldProcess("NavAbout button", "Set selected style")) { 
                         $WPF_MainWindow_NavAbout.Style = $selectedStyle 
                         Write-BucketLog -Data "Set selected style for: NavAbout" -Level Verbose
                     }

@@ -125,11 +125,11 @@ function Invoke-BucketGuiNav {
             }
             
             # Update the navigation button styles
-            if (Get-Command -Name "Invoke-UpdateNavigationButtonStyle" -ErrorAction SilentlyContinue) {
-                Invoke-UpdateNavigationButtonStyle -selectedTag $PageTag
+            if (Get-Command -Name "Update-BucketNavBtnStyle" -ErrorAction SilentlyContinue) {
+                Update-BucketNavBtnStyle -selectedTag $PageTag
             }
             else {
-                Write-BucketLog -Data "Invoke-UpdateNavigationButtonStyle function not found" -Level Warning
+                Write-BucketLog -Data "Update-BucketNavBtnStyle function not found" -Level Warning
             }
         }
         catch {
