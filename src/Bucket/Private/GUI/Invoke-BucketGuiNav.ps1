@@ -28,7 +28,10 @@ function Invoke-BucketGuiNav {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$PageTag
+        [string]$PageTag,
+
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$DataContext
     )
 
     process {
@@ -53,7 +56,6 @@ function Invoke-BucketGuiNav {
             $simplePageName = $pageName.Split('.')[-1]  # Extract just the page name part
             
             # Construct the path to the XAML file
-            #$moduleRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
             $xamlFilePath = "$PSScriptRoot\GUI\$simplePageName.xaml"
             
             Write-BucketLog -Data "Looking for XAML file: $xamlFilePath" -Level Debug
@@ -79,8 +81,35 @@ function Invoke-BucketGuiNav {
                 $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
                 $page = [Windows.Markup.XamlReader]::Load($reader)
                 
-                # Add the data context to the page
-                $page.DataContext = $script:dataContext
+                # Handle the DataContext for the page
+                # If a custom DataContext is provided, we need to merge it with the global one
+                if ($null -ne $DataContext) {
+                    # Create a shallow copy of the global data context properties
+                    $properties = @{}
+                    
+                    # Add global context properties first (if available)
+                    if ($null -ne $script:globalDataContext) {
+                        foreach ($property in $script:globalDataContext.PSObject.Properties) {
+                            $properties[$property.Name] = $property.Value
+                        }
+                    }
+                    
+                    # Add/override with custom context properties
+                    foreach ($property in $DataContext.PSObject.Properties) {
+                        $properties[$property.Name] = $property.Value
+                    }
+                    
+                    # Create new PSObject with combined properties
+                    $mergedContext = New-Object PSObject -Property $properties
+                    $page.DataContext = $mergedContext
+                    
+                    Write-BucketLog -Data "Created merged DataContext for page $simplePageName" -Level Debug
+                }
+                else {
+                    # No custom context, just use global
+                    $page.DataContext = $script:globalDataContext
+                    Write-BucketLog -Data "Using global DataContext for page $simplePageName" -Level Debug
+                }
                 
                 # Navigate to the page
                 $rootFrame.Navigate($page)
@@ -106,14 +135,14 @@ function Invoke-BucketGuiNav {
                 
                 # Add description text
                 $descBlock = New-Object -TypeName System.Windows.Controls.TextBlock
-                $descBlock.Text = "Le fichier XAML pour cette page ($simplePageName.xaml) n'a pas été trouvé."
+                $descBlock.Text = "The XAML file for this page ($simplePageName.xaml) was not found."
                 $descBlock.FontSize = 16
                 $descBlock.TextWrapping = "Wrap"
                 $stackPanel.Children.Add($descBlock)
                 
-                # Ajouter le chemin du fichier qui était recherché
+                # Add the path of the file that was being searched for
                 $pathBlock = New-Object -TypeName System.Windows.Controls.TextBlock
-                $pathBlock.Text = "Chemin recherché: $xamlFilePath"
+                $pathBlock.Text = "Path searched: $xamlFilePath"
                 $pathBlock.FontSize = 12
                 $pathBlock.Opacity = 0.7
                 $pathBlock.TextWrapping = "Wrap"
@@ -122,7 +151,7 @@ function Invoke-BucketGuiNav {
                 
                 # Add the StackPanel to the Page
                 $page.Content = $stackPanel
-                $page.DataContext = $script:dataContext
+                $page.DataContext = $script:globalDataContext
                 
                 # Navigate to the page
                 $rootFrame.Navigate($page)

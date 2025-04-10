@@ -121,12 +121,12 @@ function Start-Bucket {
             aboutPage       = "Bucket.GUI.AboutPage"
         }
 
-        # Common data context for the GUI
-        $script:dataContext = [PSCustomObject]@{
+        # Global data context for the GUI
+        $script:globalDataContext = [PSCustomObject]@{
             BucketVersion          = $script:BucketVersion
             WorkingDirectory       = $script:workingDirectory
-            MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
-            CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
+            #MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
+            #CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
             DiskSpaceInfo          = "C: Drive - Available space: $([math]::Round($(Get-PSDrive -Name 'C').Free/1GB, 2)) GB / $([math]::Round(($(Get-PSDrive -Name 'C').Free + $(Get-PSDrive -Name 'C').Used)/1GB, 2)) GB"
             MountedImagesCount     = 0
             ImageMountStatus       = "No image mounted"
