@@ -18,7 +18,7 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Example of how to use this script/function
+    Invoke-BucketPreFlight
 #>
 function Invoke-BucketPreFlight {
     [CmdletBinding()]

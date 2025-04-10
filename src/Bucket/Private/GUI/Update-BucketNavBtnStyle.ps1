@@ -17,18 +17,18 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Update-BucketNavBtnStyle -selectedTag "homePage"
+    Update-BucketNavBtnStyle --PageTag "homePage"
 #>
 function Update-BucketNavBtnStyle {
     [CmdletBinding(SupportsShouldProcess=$true)]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$selectedTag
+        [string]$PageTag
     )
     
     process {
         try {
-            Write-BucketLog -Data "Updating navigation button styles for: $selectedTag" -Level Debug
+            Write-BucketLog -Data "Updating navigation button styles for: $PageTag" -Level Debug
             
             # Reference to all navigation buttons
             $navButtons = @(
@@ -57,7 +57,7 @@ function Update-BucketNavBtnStyle {
             }
             
             # Set the selected button style based on the page tag
-            switch ($selectedTag) {
+            switch ($PageTag) {
                 "homePage" { 
                     if ($WPF_MainWindow_NavHome -and $PSCmdlet.ShouldProcess("NavHome button", "Set selected style")) { 
                         $WPF_MainWindow_NavHome.Style = $selectedStyle 
@@ -77,7 +77,7 @@ function Update-BucketNavBtnStyle {
                     }
                 }
                 default {
-                    Write-BucketLog -Data "Unknown page tag: $selectedTag" -Level Warning
+                    Write-BucketLog -Data "Unknown page tag: $PageTag" -Level Warning
                 }
             }
             

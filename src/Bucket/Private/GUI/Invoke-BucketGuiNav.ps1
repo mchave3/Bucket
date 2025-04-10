@@ -1,9 +1,13 @@
 ﻿<#
 .SYNOPSIS
-    Brief description of the script purpose
+    Navigates to a specified page in the Bucket GUI application
 
 .DESCRIPTION
-    Detailed description of what the script/function does
+    Handles navigation between pages in the Bucket WPF application by dynamically loading
+    XAML files based on a page tag. The function looks up the page name in a dictionary,
+    constructs the path to the appropriate XAML file, and loads it into the main application frame.
+    If the XAML file is not found, it creates a fallback page with an error message.
+    This function also updates navigation button styles to reflect the current page.
 
 .NOTES
     Name:        Invoke-BucketGuiNav.ps1
@@ -17,7 +21,8 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Example of how to use this script/function
+    Invoke-BucketGuiNav -PageTag "homePage"
+    # Navigates to the Home page by loading its XAML file and updating the navigation UI
 #>
 function Invoke-BucketGuiNav {
     [CmdletBinding()]
@@ -126,7 +131,7 @@ function Invoke-BucketGuiNav {
             
             # Update the navigation button styles
             if (Get-Command -Name "Update-BucketNavBtnStyle" -ErrorAction SilentlyContinue) {
-                Update-BucketNavBtnStyle -selectedTag $PageTag
+                Update-BucketNavBtnStyle -PageTag $PageTag
             }
             else {
                 Write-BucketLog -Data "Update-BucketNavBtnStyle function not found" -Level Warning
