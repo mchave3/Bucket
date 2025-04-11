@@ -133,17 +133,13 @@ function Start-Bucket {
             })
 
         # Handle navigation for other UI elements
-        if ($WPF_MainWindow_NavSelectImage) {
-            $WPF_MainWindow_NavSelectImage.add_Click({
-                    Invoke-BucketGuiNav -PageTag "selectImagePage"
-                })
-        }
+        $WPF_MainWindow_NavSelectImage.add_Click({
+                Invoke-BucketSelectImagePage
+            })
         
-        if ($WPF_MainWindow_NavAbout) {
-            $WPF_MainWindow_NavAbout.add_Click({
-                    Invoke-BucketGuiNav -PageTag "aboutPage"
-                })
-        }
+        $WPF_MainWindow_NavAbout.add_Click({
+                Invoke-BucketAboutPage
+            })
 
         # Set window title with version info
         $form.Title = "Bucket $($script:BucketVersion) - Windows Image Customizer"

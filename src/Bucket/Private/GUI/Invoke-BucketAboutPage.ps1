@@ -1,14 +1,14 @@
 ﻿<#
 .SYNOPSIS
-    Invokes the Bucket Home Page in the GUI interface
+    Invokes the Bucket About Page in the GUI interface
 
 .DESCRIPTION
-    This function displays the main home page of the Bucket application.
-    It renders the UI layout for the home page including navigation elements,
+    This function displays the about page of the Bucket application.
+    It renders the UI layout for the select about page including navigation elements,
     statistics, and recent activities.
 
 .NOTES
-    Name:        Invoke-BucketHomePage.ps1
+    Name:        Invoke-BucketAboutPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/11/2025
     Version:     1.0.0
@@ -19,9 +19,9 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Invoke-BucketHomePage
+    Invoke-BucketAboutPage
 #>
-function Invoke-BucketHomePage {
+function Invoke-BucketAboutPage {
     [CmdletBinding()]
     param(
 
@@ -40,6 +40,6 @@ function Invoke-BucketHomePage {
             SelectedAppsCount      = 0
         }
 
-        Invoke-BucketGuiNav -PageTag "homePage" -DataContext $DataContext
+        Invoke-BucketGuiNav -PageTag "aboutPage" -DataContext $DataContext
     }
 }
