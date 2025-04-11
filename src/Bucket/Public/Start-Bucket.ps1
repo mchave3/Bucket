@@ -123,28 +123,14 @@ function Start-Bucket {
 
         # Global data context for the GUI
         $script:globalDataContext = [PSCustomObject]@{
-            BucketVersion          = $script:BucketVersion
-            WorkingDirectory       = $script:workingDirectory
-            #MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
-            #CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
-            DiskSpaceInfo          = "C: Drive - Available space: $([math]::Round($(Get-PSDrive -Name 'C').Free/1GB, 2)) GB / $([math]::Round(($(Get-PSDrive -Name 'C').Free + $(Get-PSDrive -Name 'C').Used)/1GB, 2)) GB"
-            MountedImagesCount     = 0
-            ImageMountStatus       = "No image mounted"
-            CurrentImageInfo       = "Please select and mount a Windows image to begin customization."
-            PendingDriversCount    = 0
-            InstalledDriversCount  = 0
-            SelectedAppsCount      = 0
+            BucketVersion    = $script:BucketVersion
+            WorkingDirectory = $script:workingDirectory
         }
 
-        # Initialize navigation events
-        if ($WPF_MainWindow_NavHome) {
-            $WPF_MainWindow_NavHome.add_Click({
-                    Invoke-BucketGuiNav -PageTag "homePage"
-                })
-        } 
-        else {
-            Write-BucketLog -Data "WPFNavHome UI element not found" -Level Warning
-        }
+        # Navigation function to handle page changes
+        $WPF_MainWindow_NavHome.add_Click({
+                Invoke-BucketHomePage
+            })
 
         # Handle navigation for other UI elements
         if ($WPF_MainWindow_NavSelectImage) {
@@ -166,7 +152,7 @@ function Start-Bucket {
         $form.add_Loaded({
                 if ($WPF_MainWindow_RootFrame) {
                     Write-BucketLog -Data "Form loaded, navigating to home page" -Level Info
-                    Invoke-BucketGuiNav -PageTag "homePage"
+                    Invoke-BucketHomePage
                 }
             })
         #endregion GUI Events
