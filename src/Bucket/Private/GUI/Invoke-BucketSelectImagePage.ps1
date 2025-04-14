@@ -37,18 +37,18 @@ function Invoke-BucketSelectImagePage {
             $images = @(
                 [PSCustomObject]@{
                     SelectImage_Images_IsSelected = $false
-                    SelectImage_Images_Name = "Windows 11 Enterprise"
-                    SelectImage_Images_Path = "C:\Images\Windows11.wim"
-                    SelectImage_Images_Version = "22H2"
-                    SelectImage_Images_Size = "4500"
+                    SelectImage_Images_Name       = "Windows 11 Enterprise"
+                    SelectImage_Images_Path       = "C:\Images\Windows11.wim"
+                    SelectImage_Images_Version    = "22H2"
+                    SelectImage_Images_Size       = "4500"
                     SelectImage_Images_ImportDate = (Get-Date).AddDays(-5).ToString("yyyy-MM-dd")
                 },
                 [PSCustomObject]@{
                     SelectImage_Images_IsSelected = $false
-                    SelectImage_Images_Name = "Windows 10 Pro"
-                    SelectImage_Images_Path = "C:\Images\Windows10.wim"
-                    SelectImage_Images_Version = "21H2"
-                    SelectImage_Images_Size = "3800"
+                    SelectImage_Images_Name       = "Windows 10 Pro"
+                    SelectImage_Images_Path       = "C:\Images\Windows10.wim"
+                    SelectImage_Images_Version    = "21H2"
+                    SelectImage_Images_Size       = "3800"
                     SelectImage_Images_ImportDate = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
                 }
             )
@@ -56,14 +56,14 @@ function Invoke-BucketSelectImagePage {
             # Sample image details for the first image
             $imageDetails = @(
                 [PSCustomObject]@{
-                    SelectImage_Details_Index = "1"
-                    SelectImage_Details_Name = "Windows 11 Enterprise"
+                    SelectImage_Details_Index        = "1"
+                    SelectImage_Details_Name         = "Windows 11 Enterprise"
                     SelectImage_Details_Architecture = "x64"
-                    SelectImage_Details_Edition = "Enterprise"
-                    SelectImage_Details_Version = "22H2 (10.0.22621)"
-                    SelectImage_Details_Languages = "en-US"
-                    SelectImage_Details_Description = "Windows 11 Enterprise Edition"
-                    SelectImage_Details_Size = "4500"
+                    SelectImage_Details_Edition      = "Enterprise"
+                    SelectImage_Details_Version      = "22H2 (10.0.22621)"
+                    SelectImage_Details_Languages    = "en-US"
+                    SelectImage_Details_Description  = "Windows 11 Enterprise Edition"
+                    SelectImage_Details_Size         = "4500"
                 }
             )
         }
@@ -189,23 +189,23 @@ function Invoke-BucketSelectImagePage {
         # Create data context with all required properties
         $DataContext = [PSCustomObject]@{
             # Image data
-            SelectImage_Images = $images
-            SelectImage_Details = $imageDetails
+            SelectImage_Images                          = $images
+            SelectImage_Details                         = $imageDetails
             
             # Event handlers
-            SelectImage_ImportISOButton_Click = $importISOHandler
-            SelectImage_ImportWIMButton_Click = $importWIMHandler
-            SelectImage_RefreshButton_Click = $refreshHandler
-            SelectImage_DeleteButton_Click = $deleteHandler
-            SelectImage_SelectAllCheckbox_Changed = $selectAllHandler
-            SelectImage_NextButton_Click = $nextHandler
-            SelectImage_PreviousButton_Click = $previousHandler
-            SelectImage_SkipButton_Click = $skipHandler
-            SelectImage_SummaryButton_Click = $summaryHandler
+            SelectImage_ImportISOButton_Click           = $importISOHandler
+            SelectImage_ImportWIMButton_Click           = $importWIMHandler
+            SelectImage_RefreshButton_Click             = $refreshHandler
+            SelectImage_DeleteButton_Click              = $deleteHandler
+            SelectImage_SelectAllCheckbox_Changed       = $selectAllHandler
+            SelectImage_NextButton_Click                = $nextHandler
+            SelectImage_PreviousButton_Click            = $previousHandler
+            SelectImage_SkipButton_Click                = $skipHandler
+            SelectImage_SummaryButton_Click             = $summaryHandler
             SelectImage_ImagesDataGrid_SelectionChanged = $imageSelectionChangedHandler
             
             # Helper properties
-            SelectImage_HasSelectedImages = $false
+            SelectImage_HasSelectedImages               = $false
         }
 
         # Navigate to the Select Image page
