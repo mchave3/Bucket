@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Repair PlatyPS generated markdown files.
 .NOTES
@@ -134,4 +134,6 @@ function Repair-PlatyPSMarkdown {
     $null = Add-MissingCommonParameterToMarkdown @Parameters
     return
 }
+
+
 

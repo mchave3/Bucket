@@ -1,18 +1,15 @@
 ﻿<#
 .SYNOPSIS
-    Navigates to a specified page in the Bucket GUI application
+    Core navigation service for Bucket application
 
 .DESCRIPTION
-    Handles navigation between pages in the Bucket WPF application by dynamically loading
-    XAML files based on a page tag. The function looks up the page name in a dictionary,
-    constructs the path to the appropriate XAML file, and loads it into the main application frame.
-    If the XAML file is not found, it creates a fallback page with an error message.
-    This function also updates navigation button styles to reflect the current page.
+    Provides centralized navigation functionality for the Bucket application.
+    This service handles page loading, navigation between pages, and maintaining navigation state.
 
 .NOTES
-    Name:        Invoke-BucketGuiNav.ps1
+    Name:        Invoke-BucketNavigationService.ps1
     Author:      Mickaël CHAVE
-    Created:     04/05/2025
+    Created:     04/14/2025
     Version:     1.0.0
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
@@ -21,10 +18,9 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Invoke-BucketGuiNav -PageTag "homePage"
-    # Navigates to the Home page by loading its XAML file and updating the navigation UI
+    Invoke-BucketNavigationService -PageTag "homePage"
 #>
-function Invoke-BucketGuiNav {
+function Invoke-BucketNavigationService {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -35,7 +31,7 @@ function Invoke-BucketGuiNav {
     )
 
     process {
-        Write-BucketLog -Data "Navigating to page: $PageTag" -Level Debug
+        Write-BucketLog -Data "Navigation service: Navigating to page: $PageTag" -Level Debug
 
         # Ensure the page tag exists in our dictionary
         if (-not $script:pages.ContainsKey($PageTag)) {
@@ -111,9 +107,22 @@ function Invoke-BucketGuiNav {
                     Write-BucketLog -Data "Using global DataContext for page $simplePageName" -Level Debug
                 }
                 
+                # Store the current page for reference
+                $script:currentPage = $page
+                $script:currentPageTag = $PageTag
+                
+                # Add the Loaded event handler if provided in DataContext
+                if ($DataContext -and $DataContext.PSObject.Properties['PageLoaded']) {
+                    $page.Add_Loaded($DataContext.PageLoaded)
+                    Write-BucketLog -Data "Added PageLoaded event handler for $simplePageName" -Level Debug
+                }
+                
                 # Navigate to the page
                 $rootFrame.Navigate($page)
                 Write-BucketLog -Data "Successfully navigated to XAML page: $simplePageName" -Level Info
+                
+                # Update the navigation button styles
+                Update-BucketNavButtonStyle -PageTag $PageTag
             }
             else {
                 Write-BucketLog -Data "XAML file not found: $xamlFilePath - Creating fallback page" -Level Warning
@@ -156,14 +165,6 @@ function Invoke-BucketGuiNav {
                 # Navigate to the page
                 $rootFrame.Navigate($page)
                 Write-BucketLog -Data "Successfully navigated to fallback page for: $simplePageName" -Level Info
-            }
-            
-            # Update the navigation button styles
-            if (Get-Command -Name "Update-BucketNavBtnStyle" -ErrorAction SilentlyContinue) {
-                Update-BucketNavBtnStyle -PageTag $PageTag
-            }
-            else {
-                Write-BucketLog -Data "Update-BucketNavBtnStyle function not found" -Level Warning
             }
         }
         catch {

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     An Invoke-Build Build file.
 .DESCRIPTION
@@ -668,5 +668,7 @@ Add-BuildTask Archive {
 
     Write-Build Green '        ...Archive Complete!'
 } #Archive
+
+
 
 

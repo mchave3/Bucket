@@ -1,4 +1,4 @@
-﻿<#
+<#
 BeforeAll {
     Set-Location -Path $PSScriptRoot
     $ModuleName = 'Bucket'
@@ -60,3 +60,4 @@ Describe $ModuleName {
     } #context_CommandHelp
 }
 #>
+

@@ -1,4 +1,4 @@
-﻿<#
+<#
 BeforeDiscovery {
     Set-Location -Path $PSScriptRoot
     $ModuleName = 'Bucket'
@@ -37,3 +37,4 @@ InModuleScope 'Bucket' {
     } #describe_Get-HelloWorld
 } #inModule
 #>
+
