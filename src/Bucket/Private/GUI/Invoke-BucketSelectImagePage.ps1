@@ -25,7 +25,9 @@ function Invoke-BucketSelectImagePage {
     [CmdletBinding()]
     param(
 
-    )    process {
+    )    
+    
+    process {
         # Initialize image data arrays
         $images = @()
         $imageDetails = @()
@@ -71,144 +73,171 @@ function Invoke-BucketSelectImagePage {
             Write-BucketLog -Data "Error loading image data: $_" -Level "Error"
         }
         
-        # Define event handlers
-        $importISOHandler = {
+        # Create a scriptblock to set up event handlers after page is loaded
+        $pageLoadedHandler = {
             param($sender, $e)
             
-            # TODO: Implement ISO import logic
-            Write-BucketLog -Data "Import ISO button clicked" -Level "Info"
+            Write-BucketLog -Data "SelectImagePage loaded, setting up handlers" -Level "Info"
             
-            # Show file dialog to select ISO file
-            $dialog = New-Object Microsoft.Win32.OpenFileDialog
-            $dialog.Filter = "ISO files (*.iso)|*.iso"
-            $dialog.Title = "Select ISO file"
+            # Get the page itself
+            $page = $sender
             
-            if ($dialog.ShowDialog()) {
-                $isoPath = $dialog.FileName
-                Write-BucketLog -Data "Selected ISO: $isoPath" -Level "Info"
+            # Get references to UI elements
+            $importISOButton = $page.FindName("SelectImage_ImportISOButton")
+            $importWIMButton = $page.FindName("SelectImage_ImportWIMButton")
+            $refreshButton = $page.FindName("SelectImage_RefreshButton")
+            $deleteButton = $page.FindName("SelectImage_DeleteButton")
+            $selectAllCheckbox = $page.FindName("SelectImage_SelectAllCheckbox")
+            $nextButton = $page.FindName("SelectImage_NextButton")
+            $previousButton = $page.FindName("SelectImage_PreviousButton")
+            $skipButton = $page.FindName("SelectImage_SkipButton")
+            $summaryButton = $page.FindName("SelectImage_SummaryButton")
+            $imagesDataGrid = $page.FindName("SelectImage_ImagesDataGrid")
+            $detailsDataGrid = $page.FindName("SelectImage_DetailsDataGrid")
+            
+            # Set data sources directly
+            if ($imagesDataGrid) {
+                $imagesDataGrid.ItemsSource = $images
+                $imagesDataGrid.Add_SelectionChanged({
+                        param($sender, $e)
+                        
+                        $selectedItem = $sender.SelectedItem
+                        if ($null -ne $selectedItem) {
+                            Write-BucketLog -Data "Selected image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
+                            # For now, just use the same image details
+                            # In a real implementation, you would load actual details
+                        }
+                    })
+            }
+            
+            if ($detailsDataGrid) {
+                $detailsDataGrid.ItemsSource = $imageDetails
+            }
+            
+            # Set up button event handlers
+            if ($importISOButton) {
+                $importISOButton.Add_Click({
+                        param($sender, $e)
+                        
+                        Write-BucketLog -Data "Import ISO button clicked" -Level "Info"
+                        # Show file dialog to select ISO file
+                        $dialog = New-Object Microsoft.Win32.OpenFileDialog
+                        $dialog.Filter = "ISO files (*.iso)|*.iso"
+                        $dialog.Title = "Select ISO file"
+                        
+                        if ($dialog.ShowDialog()) {
+                            $isoPath = $dialog.FileName
+                            Write-BucketLog -Data "Selected ISO: $isoPath" -Level "Info"
+                        }
+                    })
+            }
+            
+            if ($importWIMButton) {
+                $importWIMButton.Add_Click({
+                        param($sender, $e)
+                        
+                        Write-BucketLog -Data "Import WIM button clicked" -Level "Info"
+                        # Show file dialog to select WIM file
+                        $dialog = New-Object Microsoft.Win32.OpenFileDialog
+                        $dialog.Filter = "WIM files (*.wim)|*.wim"
+                        $dialog.Title = "Select WIM file"
+                        
+                        if ($dialog.ShowDialog()) {
+                            $wimPath = $dialog.FileName
+                            Write-BucketLog -Data "Selected WIM: $wimPath" -Level "Info"
+                        }
+                    })
+            }
+            
+            if ($refreshButton) {
+                $refreshButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Refresh button clicked" -Level "Info"
+                    })
+            }
+            
+            if ($deleteButton) {
+                $deleteButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Delete button clicked" -Level "Info"
+                    })
+            }
+            
+            if ($selectAllCheckbox) {
+                $selectAllCheckbox.Add_Checked({
+                        param($sender, $e)
+                        $isChecked = $sender.IsChecked
+                        Write-BucketLog -Data "Select All checkbox changed to $isChecked" -Level "Info"
+                        
+                        if ($imagesDataGrid -and $imagesDataGrid.ItemsSource) {
+                            foreach ($image in $imagesDataGrid.ItemsSource) {
+                                $image.SelectImage_Images_IsSelected = $true
+                            }
+                            $imagesDataGrid.Items.Refresh()
+                        }
+                    })
                 
-                # Process the ISO file
-                # TODO: Add actual ISO processing logic
+                $selectAllCheckbox.Add_Unchecked({
+                        param($sender, $e)
+                        $isChecked = $sender.IsChecked
+                        Write-BucketLog -Data "Select All checkbox changed to $isChecked" -Level "Info"
+                        
+                        if ($imagesDataGrid -and $imagesDataGrid.ItemsSource) {
+                            foreach ($image in $imagesDataGrid.ItemsSource) {
+                                $image.SelectImage_Images_IsSelected = $false
+                            }
+                            $imagesDataGrid.Items.Refresh()
+                        }
+                    })
             }
-        }
-        
-        $importWIMHandler = {
-            param($sender, $e)
             
-            # TODO: Implement WIM import logic
-            Write-BucketLog -Data "Import WIM button clicked" -Level "Info"
-            
-            # Show file dialog to select WIM file
-            $dialog = New-Object Microsoft.Win32.OpenFileDialog
-            $dialog.Filter = "WIM files (*.wim)|*.wim"
-            $dialog.Title = "Select WIM file"
-            
-            if ($dialog.ShowDialog()) {
-                $wimPath = $dialog.FileName
-                Write-BucketLog -Data "Selected WIM: $wimPath" -Level "Info"
-                
-                # Process the WIM file
-                # TODO: Add actual WIM processing logic
+            if ($nextButton) {
+                $nextButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Next button clicked" -Level "Info"
+                        # TODO: Add navigation logic
+                    })
             }
-        }
-        
-        $refreshHandler = {
-            param($sender, $e)
             
-            Write-BucketLog -Data "Refresh button clicked" -Level "Info"
-            
-            # TODO: Implement refresh logic
-            # This should reload the images list
-        }
-        
-        $deleteHandler = {
-            param($sender, $e)
-            
-            Write-BucketLog -Data "Delete button clicked" -Level "Info"
-            
-            # TODO: Implement delete logic
-            # This should delete selected images
-        }
-        
-        $selectAllHandler = {
-            param($sender, $e)
-            
-            $isChecked = $sender.IsChecked
-            Write-BucketLog -Data "Select All checkbox changed to $isChecked" -Level "Info"
-            
-            # Update all image selection checkboxes
-            foreach ($image in $DataContext.SelectImage_Images) {
-                $image.SelectImage_Images_IsSelected = $isChecked
+            if ($previousButton) {
+                $previousButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Previous button clicked" -Level "Info"
+                        # TODO: Add navigation logic
+                    })
             }
-        }
-        
-        $nextHandler = {
-            param($sender, $e)
             
-            Write-BucketLog -Data "Next button clicked" -Level "Info"
-            # Navigate to the next page
-            # TODO: Replace with actual navigation logic
-        }
-        
-        $previousHandler = {
-            param($sender, $e)
-            
-            Write-BucketLog -Data "Previous button clicked" -Level "Info"
-            # Navigate to the previous page
-            # TODO: Replace with actual navigation logic
-        }
-        
-        $skipHandler = {
-            param($sender, $e)
-            
-            Write-BucketLog -Data "Skip button clicked" -Level "Info"
-            # Skip this step
-            # TODO: Replace with actual skip logic
-        }
-        
-        $summaryHandler = {
-            param($sender, $e)
-            
-            Write-BucketLog -Data "Summary button clicked" -Level "Info"
-            # Navigate to the summary page
-            # TODO: Replace with actual navigation logic
-        }
-        
-        $imageSelectionChangedHandler = {
-            param($sender, $e)
-            
-            $selectedItem = $sender.SelectedItem
-            if ($null -ne $selectedItem) {
-                Write-BucketLog -Data "Selected image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
-                
-                # Update details grid based on selected image
-                # TODO: Replace with actual image details loading logic
+            if ($skipButton) {
+                $skipButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Skip button clicked" -Level "Info"
+                        # TODO: Add navigation logic
+                    })
             }
+            
+            if ($summaryButton) {
+                $summaryButton.Add_Click({
+                        param($sender, $e)
+                        Write-BucketLog -Data "Summary button clicked" -Level "Info"
+                        # TODO: Add navigation logic
+                    })
+            }
+            
+            Write-BucketLog -Data "SelectImagePage event handlers configured successfully" -Level "Info"
         }
         
-        # Create data context with all required properties
-        $DataContext = [PSCustomObject]@{
-            # Image data
-            SelectImage_Images                          = $images
-            SelectImage_Details                         = $imageDetails
+        # Create a custom data context
+        $customDataContext = [PSCustomObject]@{
+            # Image data for initial binding
+            SelectImage_Images  = $images
+            SelectImage_Details = $imageDetails
             
-            # Event handlers
-            SelectImage_ImportISOButton_Click           = $importISOHandler
-            SelectImage_ImportWIMButton_Click           = $importWIMHandler
-            SelectImage_RefreshButton_Click             = $refreshHandler
-            SelectImage_DeleteButton_Click              = $deleteHandler
-            SelectImage_SelectAllCheckbox_Changed       = $selectAllHandler
-            SelectImage_NextButton_Click                = $nextHandler
-            SelectImage_PreviousButton_Click            = $previousHandler
-            SelectImage_SkipButton_Click                = $skipHandler
-            SelectImage_SummaryButton_Click             = $summaryHandler
-            SelectImage_ImagesDataGrid_SelectionChanged = $imageSelectionChangedHandler
-            
-            # Helper properties
-            SelectImage_HasSelectedImages               = $false
+            # PageLoaded handler
+            PageLoaded          = $pageLoadedHandler
         }
-
-        # Navigate to the Select Image page
-        Invoke-BucketGuiNav -PageTag "selectImagePage" -DataContext $DataContext
+        
+        # Navigate to the Select Image page with our custom data context
+        Write-BucketLog -Data "Navigating to SelectImagePage with data context" -Level "Info"
+        Invoke-BucketGuiNav -PageTag "selectImagePage" -DataContext $customDataContext
     }
 }

@@ -5,7 +5,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Class="Bucket.GUI.SelectImagePage"
     Title="Home"
-    Background="#F9F9F9">
+    Background="#F9F9F9"
+    Loaded="{Binding PageLoaded}">
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
