@@ -122,29 +122,17 @@ function Start-Bucket {
         }
 
         # Initialize the global data context using the dedicated function
-        $dataContextPath = Join-Path -Path $PSScriptRoot -ChildPath "..\Private\GUI\Initialize-BucketDataContext.ps1"
-        if (Test-Path -Path $dataContextPath) {
-            . $dataContextPath
+        if (Get-Command -Name "Initialize-BucketDataContext" -ErrorAction SilentlyContinue) {
             $script:globalDataContext = Initialize-BucketDataContext -WorkingDirectory $script:workingDirectory -BucketVersion $script:BucketVersion
             Write-BucketLog -Data "Global data context initialized successfully" -Level Info
         }
         else {
-            Write-BucketLog -Data "Data context initializer not found at: $dataContextPath" -Level Warning
+            Write-BucketLog -Data "Initialize-BucketDataContext function not found" -Level Warning
             # Fallback to direct initialization
             $script:globalDataContext = [PSCustomObject]@{
                 BucketVersion    = $script:BucketVersion
                 WorkingDirectory = $script:workingDirectory
             }
-        }
-        
-        # Load enhanced navigation system
-        $navigationSystemPath = Join-Path -Path $PSScriptRoot -ChildPath "..\Private\GUI\Initialize-BucketNavigationSystem.ps1"
-        if (Test-Path -Path $navigationSystemPath) {
-            . $navigationSystemPath
-            Write-BucketLog -Data "Enhanced navigation system loaded successfully" -Level Info
-        }
-        else {
-            Write-BucketLog -Data "Enhanced navigation system not found at: $navigationSystemPath" -Level Warning
         }
 
         # Navigation function to handle page changes
@@ -169,10 +157,8 @@ function Start-Bucket {
                 if ($WPF_MainWindow_RootFrame) {
                     Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to home page" -Level Info
                     
-                    # Initialize the navigation system
-                    if (Get-Command -Name "Initialize-BucketNavigationSystem" -ErrorAction SilentlyContinue) {
-                        Initialize-BucketNavigationSystem
-                    }
+                    # Note: Navigation system initialization is no longer needed as all components
+                    # are automatically loaded by the module
                     
                     # Navigate to home page
                     Invoke-BucketHomePage
