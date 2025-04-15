@@ -106,10 +106,10 @@ function Initialize-SelectImagePage {
             }
             else {
                 # Create a hashtable to store details for each WIM file and make it accessible in script scope
-                $script:allWimDetails = @{}
+                $script:selectImagePage_AllWimDetails = @{}
                 
                 # Windows 11 Consumer Editions (4 indexes)
-                $script:allWimDetails["C:\Images\Windows11Consumer.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\Windows11Consumer.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows 11 Home"
@@ -153,7 +153,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Windows 11 Business Editions (3 indexes)
-                $script:allWimDetails["C:\Images\Windows11Business.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\Windows11Business.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows 11 Enterprise"
@@ -187,7 +187,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Windows 10 Consumer Editions (4 indexes)
-                $script:allWimDetails["C:\Images\Windows10Consumer.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\Windows10Consumer.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows 10 Home"
@@ -231,7 +231,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Windows 10 Business Editions (3 indexes)
-                $script:allWimDetails["C:\Images\Windows10Business.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\Windows10Business.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows 10 Enterprise"
@@ -265,7 +265,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Windows 10 LTSC (2 indexes)
-                $script:allWimDetails["C:\Images\Windows10LTSC.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\Windows10LTSC.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows 10 Enterprise LTSC"
@@ -289,7 +289,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Windows Server 2022 (4 indexes)
-                $script:allWimDetails["C:\Images\WindowsServer2022.wim"] = @(
+                $script:selectImagePage_AllWimDetails["C:\Images\WindowsServer2022.wim"] = @(
                     [PSCustomObject]@{
                         SelectImage_Details_Index        = "1"
                         SelectImage_Details_Name         = "Windows Server 2022 Standard"
@@ -333,7 +333,7 @@ function Initialize-SelectImagePage {
                 )
                 
                 # Use the details for the first WIM file as the initial details data
-                $imageDetails = $script:allWimDetails[$images[0].SelectImage_Images_Path]
+                $imageDetails = $script:selectImagePage_AllWimDetails[$images[0].SelectImage_Images_Path]
                 #endregion Sample Data
             }
         }
@@ -342,8 +342,8 @@ function Initialize-SelectImagePage {
         }
         
         # Store images and details in script scope so they're accessible in the event handler
-        $script:selectImagePageImages = $images
-        $script:selectImagePageDetails = $imageDetails
+        $script:selectImagePage_Images = $images
+        $script:selectImagePage_Details = $imageDetails
 
         #region Event Handlers
         # Create the page loaded event handler
@@ -387,7 +387,7 @@ function Initialize-SelectImagePage {
             # Set data sources for DataGrids
             if ($imagesDataGrid) {
                 # Access the script-scoped variables for images
-                $imagesToUse = $script:selectImagePageImages
+                $imagesToUse = $script:selectImagePage_Images
                 Write-BucketLog -Data "Setting up ImagesDataGrid with $($imagesToUse.Count) items" -Level Info
                 
                 try {
@@ -417,12 +417,12 @@ function Initialize-SelectImagePage {
                 }
                 
                 # Store DataGrids in script scope so they can be accessed in event handlers
-                $script:imagesDataGridRef = $imagesDataGrid
-                $script:detailsDataGridRef = $detailsDataGrid
+                $script:selectImagePage_ImagesDataGridRef = $imagesDataGrid
+                $script:selectImagePage_DetailsDataGridRef = $detailsDataGrid
                 
                 #region Image Details Update Function
                 # Dedicated function to update image details - for better troubleshooting
-                $script:UpdateImageDetails = {
+                $script:selectImagePage_UpdateImageDetails = {
                     param($selectedItem)
                     
                     if ($null -eq $selectedItem) {
@@ -446,22 +446,22 @@ function Initialize-SelectImagePage {
                             Write-BucketLog -Data "Using mock data for $imagePath" -Level "Debug"
                             
                             # Make sure the hashtable exists and contains the key
-                            if (-not $script:allWimDetails) {
+                            if (-not $script:selectImagePage_AllWimDetails) {
                                 Write-BucketLog -Data "allWimDetails variable not found" -Level "Error"
                                 return
                             }
                             
-                            if (-not $script:allWimDetails.ContainsKey($imagePath)) {
+                            if (-not $script:selectImagePage_AllWimDetails.ContainsKey($imagePath)) {
                                 Write-BucketLog -Data "No details found for path: $imagePath" -Level "Warning"
                                 return
                             }
                             
-                            $details = $script:allWimDetails[$imagePath]
+                            $details = $script:selectImagePage_AllWimDetails[$imagePath]
                             Write-BucketLog -Data "Found $($details.Count) indexes for $imagePath" -Level "Info"
                         }
                         
                         # Get reference to the details grid
-                        $detailsGrid = $script:detailsDataGridRef
+                        $detailsGrid = $script:selectImagePage_DetailsDataGridRef
                         if ($null -eq $detailsGrid) {
                             Write-BucketLog -Data "Details DataGrid reference is null" -Level "Error"
                             return
@@ -508,7 +508,7 @@ function Initialize-SelectImagePage {
                             Write-BucketLog -Data "Selected image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
                             
                             # Call our update function
-                            & $script:UpdateImageDetails $selectedItem
+                            & $script:selectImagePage_UpdateImageDetails $selectedItem
                         }
                     })
             }
@@ -516,7 +516,7 @@ function Initialize-SelectImagePage {
             #region Detail DataGrid Setup
             if ($detailsDataGrid) {
                 # Access the script-scoped variables for image details
-                $detailsToUse = $script:selectImagePageDetails
+                $detailsToUse = $script:selectImagePage_Details
                 Write-BucketLog -Data "Setting up DetailsDataGrid with $($detailsToUse.Count) items" -Level Info
                 
                 try {
@@ -730,7 +730,7 @@ function Initialize-SelectImagePage {
                         $selectedImage = $imagesDataGrid.SelectedItem
                         if ($selectedImage) {
                             # Store the selected image information in the global context
-                            $script:selectedImage = $selectedImage
+                            $script:selectImagePage_SelectedImage = $selectedImage
                             
                             # Navigate to the next page
                             # TODO: Replace with actual next page when implemented
