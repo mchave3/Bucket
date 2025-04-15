@@ -91,7 +91,8 @@
                       CanUserDeleteRows="False"
                       SelectionMode="Extended"
                       SelectionUnit="FullRow"
-                      VerticalAlignment="Stretch">
+                      VerticalAlignment="Stretch"
+                      IsReadOnly="True">
                 <DataGrid.Columns>                    
                     <DataGridTemplateColumn Header="Select" Width="Auto" MinWidth="60">
                         <DataGridTemplateColumn.CellTemplate>
@@ -148,7 +149,8 @@
                               CanUserDeleteRows="False"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
-                              VerticalAlignment="Stretch">                        
+                              VerticalAlignment="Stretch"
+                              IsReadOnly="True">                        
                         
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Index" Binding="{Binding SelectImage_Details_Index}" Width="Auto" MinWidth="80" />
