@@ -26,6 +26,16 @@ function Invoke-BucketAboutPage {
 
     process {
         Write-BucketLog -Data "Navigating to About Page" -Level Info
-        Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $script:globalDataContext
+
+        # Check if the initialization function exists
+        if (Get-Command -Name "Initialize-AboutPage" -ErrorAction SilentlyContinue) {
+            # Call the initialization function that will set up data and events
+            Initialize-AboutPage
+        }
+        else {
+            # Fallback if the initialization function doesn't exist
+            Write-BucketLog -Data "Initialize-AboutPage not found, using basic navigation" -Level Warning
+            Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $script:globalDataContext
+        }
     }
 }
