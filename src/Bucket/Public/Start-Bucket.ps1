@@ -150,9 +150,6 @@ function Start-Bucket {
                 if ($WPF_MainWindow_RootFrame) {
                     Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to home page" -Level Info
                     
-                    # Note: Navigation system initialization is no longer needed as all components
-                    # are automatically loaded by the module
-                    
                     # Navigate to home page
                     Invoke-BucketHomePage
                 }
@@ -164,4 +161,3 @@ function Start-Bucket {
         #endregion Start GUI
     }
 }
-
