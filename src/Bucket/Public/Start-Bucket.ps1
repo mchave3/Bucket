@@ -44,7 +44,6 @@ function Start-Bucket {
 
         #region XAML
         # Load the XAML file for the GUI
-        #$moduleRoot = Split-Path -Parent $PSScriptRoot
         $xamlPath = "$PSScriptRoot\GUI\MainWindow.xaml"
         
         if (-not (Test-Path -Path $xamlPath)) {
@@ -121,18 +120,12 @@ function Start-Bucket {
             aboutPage       = "Bucket.GUI.AboutPage"
         }
 
-        # Initialize the global data context using the dedicated function
-        if (Get-Command -Name "Initialize-BucketDataContext" -ErrorAction SilentlyContinue) {
-            $script:globalDataContext = Initialize-BucketDataContext -WorkingDirectory $script:workingDirectory -BucketVersion $script:BucketVersion
-            Write-BucketLog -Data "Global data context initialized successfully" -Level Info
-        }
-        else {
-            Write-BucketLog -Data "Initialize-BucketDataContext function not found" -Level Warning
-            # Fallback to direct initialization
-            $script:globalDataContext = [PSCustomObject]@{
-                BucketVersion    = $script:BucketVersion
-                WorkingDirectory = $script:workingDirectory
-            }
+        # Initialize the global data context
+        $script:globalDataContext  = [PSCustomObject]@{
+            BucketVersion          = $script:BucketVersion
+            WorkingDirectory       = $script:workingDirectory
+            MountDirectory         = Join-Path -Path $WorkingDirectory -ChildPath "Mount"
+            CompletedWimsDirectory = Join-Path -Path $WorkingDirectory -ChildPath "CompletedWIMs"
         }
 
         # Navigation function to handle page changes
