@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Function to navigate to the Select Image page in the Bucket application
 

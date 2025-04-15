@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Function to navigate to the About page in the Bucket application
 

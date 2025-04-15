@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Function to navigate to the Home page in the Bucket application
 

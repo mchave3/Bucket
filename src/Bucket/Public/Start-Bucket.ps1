@@ -52,7 +52,6 @@ function Start-Bucket {
         }
         
         $inputXaml = Get-Content -Path $xamlPath -Raw
-        $inputXaml = $inputXaml -replace 'BucketVer', $script:BucketVersion
         
         # Clean up the XAML for PowerShell's XML parser
         $inputXaml = $inputXaml -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
