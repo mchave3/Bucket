@@ -72,11 +72,12 @@
                         
                         <StackPanel>
                             <TextBlock Text="{Binding Author}" FontWeight="SemiBold" />
-                            <TextBlock Margin="0,8,0,0">
-                                <Hyperlink NavigateUri="https://github.com/mchave3">
-                                    GitHub: @mchave3
-                                </Hyperlink>
-                            </TextBlock>
+                            <TextBlock Name="About_GitHubProfileLink" 
+                                     Text="GitHub: @mchave3" 
+                                     Foreground="#2979FF" 
+                                     Cursor="Hand" 
+                                     TextDecorations="Underline" 
+                                     Margin="0,8,0,0" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -213,24 +214,7 @@
                             Margin="0,0,0,15" />
                         
                         <StackPanel>
-                            <Button 
-                                Content="Website"
-                                Name="About_WebsiteButton"
-                                Margin="0,0,0,16"
-                                Padding="12,8"
-                                Height="40"
-                                Background="#2979FF"
-                                Foreground="White"
-                                BorderThickness="0"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Stretch">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="4"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
-                            
+
                             <Button 
                                 Content="GitHub Repository"
                                 Name="About_GitHubButton"

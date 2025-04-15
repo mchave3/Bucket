@@ -72,8 +72,8 @@ function Initialize-AboutPage {
             $githubButton = $page.FindName("About_GitHubButton")
             $licenseButton = $page.FindName("About_LicenseButton")
             $issueButton = $page.FindName("About_ReportIssueButton")
-            $websiteButton = $page.FindName("About_WebsiteButton")
             $checkUpdateButton = $page.FindName("About_CheckUpdateButton")
+            $githubProfileLink = $page.FindName("About_GitHubProfileLink")
             $modulesDataGrid = $page.FindName("About_ModulesDataGrid")
             #endregion UI Element References
 
@@ -138,16 +138,6 @@ function Initialize-AboutPage {
                     })
             }
 
-            # Set up Website button event
-            if ($websiteButton) {
-                $websiteButton.Add_Click({
-                        param($senderObj, $e)
-
-                        Write-BucketLog -Data "Website button clicked" -Level "Info"
-                        Start-Process "https://github.com/mchave3/Bucket"
-                    })
-            }
-
             # Set up Check for Updates button event
             if ($checkUpdateButton) {
                 $checkUpdateButton.Add_Click({
@@ -195,6 +185,21 @@ function Initialize-AboutPage {
                                 [System.Windows.MessageBoxImage]::Information
                             )
                         }
+                    })
+            }
+
+            # Set up GitHub Profile link event
+            if ($githubProfileLink) {
+                $githubProfileLink.Add_MouseLeftButtonDown({
+                        param($senderObj, $e)
+
+                        Write-BucketLog -Data "GitHub Profile link clicked" -Level "Info"
+
+                        # Mark the event as handled
+                        $e.Handled = $true
+
+                        # Open the GitHub profile URL in the default browser
+                        Start-Process "https://github.com/mchave3"
                     })
             }
             #endregion Button Event Handlers
