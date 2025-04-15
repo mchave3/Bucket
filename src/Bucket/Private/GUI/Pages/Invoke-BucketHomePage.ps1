@@ -21,7 +21,7 @@
 function Invoke-BucketHomePage {
     [CmdletBinding()]
     param(
-        
+
     )
 
     process {

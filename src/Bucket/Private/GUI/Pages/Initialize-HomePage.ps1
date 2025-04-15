@@ -23,19 +23,19 @@
 function Initialize-HomePage {
     [CmdletBinding()]
     param()
-    
+
     process {
         Write-BucketLog -Data "Initializing Home Page" -Level Info
-        
+
         # Create the page loaded event handler
         $pageLoadedHandler = {
             param($senderObj, $e)
-            
+
             Write-BucketLog -Data "Home Page loaded, setting up handlers" -Level Info
-            
+
             # Get the page itself
             $page                = $senderObj
-            
+
             # Get references to UI elements
             $btnSelectImage      = $page.FindName("BtnSelectImage")
             $btnAppManagement    = $page.FindName("BtnAppManagement")
@@ -44,7 +44,7 @@ function Initialize-HomePage {
             $btnCompletedWIMs    = $page.FindName("BtnCompletedWIMs")
             $btnSettings         = $page.FindName("BtnSettings")
             $btnHelp             = $page.FindName("BtnHelp")
-            
+
             # Set up button event handlers
             if ($btnSelectImage) {
                 $btnSelectImage.Add_Click({
@@ -53,7 +53,7 @@ function Initialize-HomePage {
                         Invoke-BucketSelectImagePage
                     })
             }
-            
+
             if ($btnAppManagement) {
                 $btnAppManagement.Add_Click({
                         param($senderObj, $e)
@@ -61,7 +61,7 @@ function Initialize-HomePage {
                         # TODO: Navigate to App Management page when implemented
                     })
             }
-            
+
             if ($btnDriverManagement) {
                 $btnDriverManagement.Add_Click({
                         param($senderObj, $e)
@@ -69,7 +69,7 @@ function Initialize-HomePage {
                         # TODO: Navigate to Driver Management page when implemented
                     })
             }
-            
+
             if ($btnCustomization) {
                 $btnCustomization.Add_Click({
                         param($senderObj, $e)
@@ -77,7 +77,7 @@ function Initialize-HomePage {
                         # TODO: Navigate to Customization page when implemented
                     })
             }
-            
+
             if ($btnCompletedWIMs) {
                 $btnCompletedWIMs.Add_Click({
                         param($senderObj, $e)
@@ -85,7 +85,7 @@ function Initialize-HomePage {
                         # TODO: Navigate to Completed WIMs page when implemented
                     })
             }
-            
+
             if ($btnSettings) {
                 $btnSettings.Add_Click({
                         param($senderObj, $e)
@@ -93,7 +93,7 @@ function Initialize-HomePage {
                         # TODO: Navigate to Settings page when implemented
                     })
             }
-            
+
             if ($btnHelp) {
                 $btnHelp.Add_Click({
                         param($senderObj, $e)
@@ -101,34 +101,34 @@ function Initialize-HomePage {
                         # TODO: Navigate to Help page when implemented
                     })
             }
-            
+
             Write-BucketLog -Data "Home Page event handlers configured successfully" -Level Info
         }
-        
+
         # Create the data context for the page
         $dataContext = [PSCustomObject]@{
             # System information
             MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
             CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
             WorkingDirectory       = $script:workingDirectory
-            
+
             # Disk space information
             DiskSpaceInfo          = "C: Drive - Available space: $([math]::Round($(Get-PSDrive -Name 'C').Free/1GB, 2)) GB / $([math]::Round(($(Get-PSDrive -Name 'C').Free + $(Get-PSDrive -Name 'C').Used)/1GB, 2)) GB"
-            
+
             # Image status
             MountedImagesCount     = 0
             ImageMountStatus       = "No image mounted"
             CurrentImageInfo       = "Please select and mount a Windows image to begin customization."
-            
+
             # Statistics
             PendingDriversCount    = 0
             InstalledDriversCount  = 0
             SelectedAppsCount      = 0
-            
+
             # Event handler
             PageLoaded             = $pageLoadedHandler
         }
-        
+
         # Add mount directory and completed WIMs directory to data context
         $dataContext | Add-Member -MemberType NoteProperty -Name "MountDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'Mount') -Force
         $dataContext | Add-Member -MemberType NoteProperty -Name "CompletedWIMsDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs') -Force

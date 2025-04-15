@@ -29,14 +29,14 @@ function Get-BucketVersion {
     process {
         # First check currently loaded module (module in use)
         $loadedModule = Get-Module -Name "Bucket"
-        
+
         if ($loadedModule) {
             # We found the currently loaded module
             $module = $loadedModule
         }
         else {
             # If not loaded, search in available modules
-            $module = Get-Module -Name "Bucket" -ListAvailable | 
+            $module = Get-Module -Name "Bucket" -ListAvailable |
                 ForEach-Object {
                     # Create full semantic version including prerelease
                     $fullVersionStr = $_.Version.ToString()
@@ -78,4 +78,3 @@ function Get-BucketVersion {
         }
     }
 }
-

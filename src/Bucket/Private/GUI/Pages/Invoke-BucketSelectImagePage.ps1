@@ -21,12 +21,12 @@
 function Invoke-BucketSelectImagePage {
     [CmdletBinding()]
     param(
-        
+
     )
 
     process {
         Write-BucketLog -Data "Navigating to Select Image Page" -Level Info
-        
+
         # Check if the initialization function exists
         if (Get-Command -Name "Initialize-SelectImagePage" -ErrorAction SilentlyContinue) {
             # Call the initialization function that will set up data and events

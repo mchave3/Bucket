@@ -2,4 +2,7 @@
     "powershell.scriptAnalysis.settingsPath": ".\\src\\PSScriptAnalyzerSettings.psd1",
     "powershell.scriptAnalysis.enable": true,
     "files.encoding": "utf8bom",
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "files.trimTrailingWhitespaceInRegexAndStrings": true,
 }

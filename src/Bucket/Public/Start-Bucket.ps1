@@ -45,30 +45,30 @@ function Start-Bucket {
         #region XAML
         # Load the XAML file for the GUI
         $xamlPath = "$PSScriptRoot\GUI\MainWindow.xaml"
-        
+
         if (-not (Test-Path -Path $xamlPath)) {
             Write-BucketLog -Data "Could not find MainWindow.xaml at $xamlPath" -Level Error
             exit 1
         }
-        
+
         $inputXaml = Get-Content -Path $xamlPath -Raw
-        
+
         # Clean up the XAML for PowerShell's XML parser
         $inputXaml = $inputXaml -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
         $inputXaml = $inputXaml -replace 'xmlns:d="http://schemas.microsoft.com/expression/blend/2008"', ''
         $inputXaml = $inputXaml -replace 'mc:Ignorable="d"', ''
         $inputXaml = $inputXaml -replace 'x:Class="[^"]*"', ''
-        
+
         # Create the XML document
         $xamlDoc = New-Object System.Xml.XmlDocument
         $xamlDoc.LoadXml($inputXaml)
-        
+
         # Add namespaces for XPath queries
         $nsManager = New-Object System.Xml.XmlNamespaceManager($xamlDoc.NameTable)
         $nsManager.AddNamespace('x', 'http://schemas.microsoft.com/winfx/2006/xaml')
-        
+
         Write-BucketLog -Data "XAML parsed successfully" -Level Verbose
-        
+
         try {
             # Load XAML as a WPF object
             $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
@@ -79,17 +79,17 @@ function Start-Bucket {
             Write-BucketLog -Data "Failed to load XAML: $_" -Level Error
             exit 1
         }
-        
+
         # Load the XAML objects into variables
         $namedNodes = $xamlDoc.SelectNodes("//*[@x:Name]", $nsManager)
-        
+
         if ($namedNodes -and $namedNodes.Count -gt 0) {
             Write-BucketLog -Data "Found $($namedNodes.Count) named elements in XAML" -Level Debug
-            
+
             foreach ($node in $namedNodes) {
                 $elementName = $node.GetAttribute('Name', 'http://schemas.microsoft.com/winfx/2006/xaml')
                 Write-BucketLog -Data "Processing XAML element: $elementName" -Level Verbose
-                
+
                 try {
                     $element = $form.FindName($elementName)
                     if ($element) {
@@ -114,7 +114,7 @@ function Start-Bucket {
         #region GUI Events
         # Create a hashtable to store page references
         $script:pages = @{
-            homePage        = "Bucket.GUI.HomePage" 
+            homePage        = "Bucket.GUI.HomePage"
             selectImagePage = "Bucket.GUI.SelectImagePage"
             aboutPage       = "Bucket.GUI.AboutPage"
         }
@@ -136,7 +136,7 @@ function Start-Bucket {
         $WPF_MainWindow_NavSelectImage.add_Click({
                 Invoke-BucketSelectImagePage
             })
-        
+
         $WPF_MainWindow_NavAbout.add_Click({
                 Invoke-BucketAboutPage
             })
@@ -148,7 +148,7 @@ function Start-Bucket {
         $form.add_Loaded({
                 if ($WPF_MainWindow_RootFrame) {
                     Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to home page" -Level Info
-                    
+
                     # Navigate to home page
                     Invoke-BucketHomePage
                 }

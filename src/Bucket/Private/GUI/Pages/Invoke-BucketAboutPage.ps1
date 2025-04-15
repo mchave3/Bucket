@@ -21,7 +21,7 @@
 function Invoke-BucketAboutPage {
     [CmdletBinding()]
     param(
-        
+
     )
 
     process {
