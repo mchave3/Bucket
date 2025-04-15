@@ -18,6 +18,7 @@
     https://github.com/mchave3/Bucket
 #>
 
+#region Home Page Navigation
 function Invoke-BucketHomePage {
     [CmdletBinding()]
     param()
@@ -27,7 +28,9 @@ function Invoke-BucketHomePage {
         Invoke-BucketNavigationService -PageTag "homePage" -DataContext $script:globalDataContext
     }
 }
+#endregion Home Page Navigation
 
+#region Image Selection Page Navigation
 function Invoke-BucketSelectImagePage {
     [CmdletBinding()]
     param()
@@ -35,19 +38,21 @@ function Invoke-BucketSelectImagePage {
     process {
         Write-BucketLog -Data "Navigating to Select Image Page" -Level Info
         
-        # Vérifier si la fonction d'initialisation existe
+        # Check if the initialization function exists
         if (Get-Command -Name "Initialize-SelectImagePage" -ErrorAction SilentlyContinue) {
-            # Appeler la fonction d'initialisation qui configurera les données et les événements
+            # Call the initialization function that will set up data and events
             Initialize-SelectImagePage
         }
         else {
-            # Fallback si la fonction d'initialisation n'existe pas
+            # Fallback if the initialization function doesn't exist
             Write-BucketLog -Data "Initialize-SelectImagePage not found, using basic navigation" -Level Warning
             Invoke-BucketNavigationService -PageTag "selectImagePage" -DataContext $script:globalDataContext
         }
     }
 }
+#endregion Image Selection Page Navigation
 
+#region About Page Navigation
 function Invoke-BucketAboutPage {
     [CmdletBinding()]
     param()
@@ -57,4 +62,5 @@ function Invoke-BucketAboutPage {
         Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $script:globalDataContext
     }
 }
+#endregion About Page Navigation
 
