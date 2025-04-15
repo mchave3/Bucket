@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock 
+        <TextBlock
             Grid.Row="0"
             Text="Welcome to Bucket"
             FontSize="28"
@@ -26,29 +26,23 @@
             <StackPanel>
                 <!-- Logo and description -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,30">
-                    <Image 
-                        Source="/Bucket;component/Icon/Icon.png" 
-                        Width="128" 
-                        Height="128" 
-                        Margin="0,0,0,16" />
-                    
-                    <TextBlock 
-                        Text="Bucket" 
-                        FontSize="32" 
-                        FontWeight="SemiBold" 
+                    <TextBlock
+                        Text="Bucket"
+                        FontSize="32"
+                        FontWeight="SemiBold"
                         HorizontalAlignment="Center" />
-                        
-                    <TextBlock 
-                        Text="{Binding BucketVersion, StringFormat='Version {0}'}" 
-                        FontSize="16" 
-                        HorizontalAlignment="Center" 
-                        Opacity="0.8" 
+
+                    <TextBlock
+                        Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                        FontSize="16"
+                        HorizontalAlignment="Center"
+                        Opacity="0.8"
                         Margin="0,5,0,0" />
-                    
-                    <TextBlock 
-                        Text="Windows Image Customizer" 
-                        FontSize="18" 
-                        HorizontalAlignment="Center" 
+
+                    <TextBlock
+                        Text="Windows Image Customizer"
+                        FontSize="18"
+                        HorizontalAlignment="Center"
                         Margin="0,5,0,0" />
                 </StackPanel>
 
@@ -58,37 +52,37 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    
+
                     <!-- Image status card -->
-                    <Border 
-                        Grid.Column="0" 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Margin="0,0,10,0" 
+                    <Border
+                        Grid.Column="0"
+                        Background="White"
+                        CornerRadius="8"
+                        BorderBrush="#E0E0E0"
+                        BorderThickness="1"
+                        Margin="0,0,10,0"
                         Padding="20">
                         <StackPanel>
-                            <TextBlock 
-                                Text="Image Status" 
-                                FontSize="18" 
-                                FontWeight="SemiBold" 
+                            <TextBlock
+                                Text="Image Status"
+                                FontSize="18"
+                                FontWeight="SemiBold"
                                 Margin="0,0,0,10" />
-                            
-                            <TextBlock 
-                                Text="{Binding ImageMountStatus}" 
-                                FontSize="14" 
+
+                            <TextBlock
+                                Text="{Binding ImageMountStatus}"
+                                FontSize="14"
                                 Margin="0,0,0,5" />
-                            
-                            <TextBlock 
-                                Text="{Binding CurrentImageInfo}" 
-                                FontSize="12" 
-                                TextWrapping="Wrap" 
-                                Opacity="0.7" 
+
+                            <TextBlock
+                                Text="{Binding CurrentImageInfo}"
+                                FontSize="12"
+                                TextWrapping="Wrap"
+                                Opacity="0.7"
                                 Margin="0,0,0,15" />
-                            
-                            <Button 
-                                x:Name="BtnSelectImage" 
+
+                            <Button
+                                x:Name="Home_SelectImageButton"
                                 Content="Select an Image"
                                 Padding="12,8"
                                 Background="#2979FF"
@@ -104,71 +98,71 @@
                             </Button>
                         </StackPanel>
                     </Border>
-                    
+
                     <!-- Disk space card -->
-                    <Border 
-                        Grid.Column="1" 
-                        Background="White" 
-                        CornerRadius="8" 
-                        BorderBrush="#E0E0E0" 
-                        BorderThickness="1" 
-                        Margin="10,0,0,0" 
+                    <Border
+                        Grid.Column="1"
+                        Background="White"
+                        CornerRadius="8"
+                        BorderBrush="#E0E0E0"
+                        BorderThickness="1"
+                        Margin="10,0,0,0"
                         Padding="20">
                         <StackPanel>
-                            <TextBlock 
-                                Text="Disk Space" 
-                                FontSize="18" 
-                                FontWeight="SemiBold" 
+                            <TextBlock
+                                Text="Disk Space"
+                                FontSize="18"
+                                FontWeight="SemiBold"
                                 Margin="0,0,0,10" />
-                            
-                            <TextBlock 
-                                Text="{Binding DiskSpaceInfo}" 
-                                FontSize="14" 
+
+                            <TextBlock
+                                Text="{Binding DiskSpaceInfo}"
+                                FontSize="14"
                                 Margin="0,0,0,5" />
-                            
-                            <TextBlock 
-                                Text="Working Directory:" 
-                                FontSize="12" 
-                                Margin="0,10,0,2" 
+
+                            <TextBlock
+                                Text="Working Directory:"
+                                FontSize="12"
+                                Margin="0,10,0,2"
                                 FontWeight="SemiBold" />
-                            
-                            <TextBlock 
-                                Text="{Binding WorkingDirectory}" 
-                                FontSize="12" 
+
+                            <TextBlock
+                                Text="{Binding WorkingDirectory}"
+                                FontSize="12"
                                 TextWrapping="Wrap" />
-                            
-                            <TextBlock 
-                                Text="Mount Directory:" 
-                                FontSize="12" 
-                                Margin="0,10,0,2" 
+
+                            <TextBlock
+                                Text="Mount Directory:"
+                                FontSize="12"
+                                Margin="0,10,0,2"
                                 FontWeight="SemiBold" />
-                            
-                            <TextBlock 
-                                Text="{Binding MountDirectory}" 
-                                FontSize="12" 
+
+                            <TextBlock
+                                Text="{Binding MountDirectory}"
+                                FontSize="12"
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </Grid>
-                
+
                 <!-- Quick actions -->
-                <Border 
-                    Background="White" 
-                    CornerRadius="8" 
-                    BorderBrush="#E0E0E0" 
-                    BorderThickness="1" 
-                    Margin="0,0,0,20" 
+                <Border
+                    Background="White"
+                    CornerRadius="8"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
+                    Margin="0,0,0,20"
                     Padding="20">
                     <StackPanel>
-                        <TextBlock 
-                            Text="Quick Actions" 
-                            FontSize="18" 
-                            FontWeight="SemiBold" 
+                        <TextBlock
+                            Text="Quick Actions"
+                            FontSize="18"
+                            FontWeight="SemiBold"
                             Margin="0,0,0,15" />
-                        
+
                         <UniformGrid Rows="2" Columns="3">
-                            <Button 
-                                x:Name="BtnAppManagement" 
+                            <Button
+                                x:Name="Home_AppManagementButton"
                                 Content="Applications"
                                 Margin="5"
                                 Padding="10"
@@ -182,9 +176,9 @@
                                     </Style>
                                 </Button.Resources>
                             </Button>
-                            
-                            <Button 
-                                x:Name="BtnDriverManagement" 
+
+                            <Button
+                                x:Name="Home_DriverManagementButton"
                                 Content="Drivers"
                                 Margin="5"
                                 Padding="10"
@@ -198,9 +192,9 @@
                                     </Style>
                                 </Button.Resources>
                             </Button>
-                            
-                            <Button 
-                                x:Name="BtnCustomization" 
+
+                            <Button
+                                x:Name="Home_CustomizationButton"
                                 Content="Customization"
                                 Margin="5"
                                 Padding="10"
@@ -214,9 +208,9 @@
                                     </Style>
                                 </Button.Resources>
                             </Button>
-                            
-                            <Button 
-                                x:Name="BtnCompletedWIMs" 
+
+                            <Button
+                                x:Name="Home_CompletedWIMsButton"
                                 Content="Images"
                                 Margin="5"
                                 Padding="10"
@@ -230,9 +224,9 @@
                                     </Style>
                                 </Button.Resources>
                             </Button>
-                            
-                            <Button 
-                                x:Name="BtnSettings" 
+
+                            <Button
+                                x:Name="Home_SettingsButton"
                                 Content="Settings"
                                 Margin="5"
                                 Padding="10"
@@ -246,9 +240,9 @@
                                     </Style>
                                 </Button.Resources>
                             </Button>
-                            
-                            <Button 
-                                x:Name="BtnHelp" 
+
+                            <Button
+                                x:Name="Home_HelpButton"
                                 Content="Help"
                                 Margin="5"
                                 Padding="10"
@@ -265,79 +259,79 @@
                         </UniformGrid>
                     </StackPanel>
                 </Border>
-                
+
                 <!-- Simple statistics -->
-                <Border 
-                    Background="White" 
-                    CornerRadius="8" 
-                    BorderBrush="#E0E0E0" 
-                    BorderThickness="1" 
+                <Border
+                    Background="White"
+                    CornerRadius="8"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="1"
                     Padding="20">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
-                        <TextBlock 
+
+                        <TextBlock
                             Grid.Row="0"
-                            Text="Statistics" 
-                            FontSize="18" 
-                            FontWeight="SemiBold" 
+                            Text="Statistics"
+                            FontSize="18"
+                            FontWeight="SemiBold"
                             Margin="0,0,0,15" />
-                        
+
                         <UniformGrid Grid.Row="1" Rows="1" Columns="3">
                             <StackPanel Margin="5">
-                                <TextBlock 
-                                    Text="Mounted Images" 
-                                    FontSize="14" 
-                                    Opacity="0.8" 
+                                <TextBlock
+                                    Text="Mounted Images"
+                                    FontSize="14"
+                                    Opacity="0.8"
                                     HorizontalAlignment="Center"/>
-                                <TextBlock 
-                                    Text="{Binding MountedImagesCount}" 
-                                    FontSize="24" 
-                                    FontWeight="Bold" 
+                                <TextBlock
+                                    Text="{Binding MountedImagesCount}"
+                                    FontSize="24"
+                                    FontWeight="Bold"
                                     HorizontalAlignment="Center"
                                     Margin="0,5,0,0" />
                             </StackPanel>
-                            
+
                             <StackPanel Margin="5">
-                                <TextBlock 
-                                    Text="Drivers" 
-                                    FontSize="14" 
-                                    Opacity="0.8" 
+                                <TextBlock
+                                    Text="Drivers"
+                                    FontSize="14"
+                                    Opacity="0.8"
                                     HorizontalAlignment="Center"/>
-                                <TextBlock 
-                                    Text="{Binding InstalledDriversCount}" 
-                                    FontSize="24" 
-                                    FontWeight="Bold" 
+                                <TextBlock
+                                    Text="{Binding InstalledDriversCount}"
+                                    FontSize="24"
+                                    FontWeight="Bold"
                                     HorizontalAlignment="Center"
                                     Margin="0,5,0,0" />
                             </StackPanel>
-                            
+
                             <StackPanel Margin="5">
-                                <TextBlock 
-                                    Text="Applications" 
-                                    FontSize="14" 
-                                    Opacity="0.8" 
+                                <TextBlock
+                                    Text="Applications"
+                                    FontSize="14"
+                                    Opacity="0.8"
                                     HorizontalAlignment="Center"/>
-                                <TextBlock 
-                                    Text="{Binding SelectedAppsCount}" 
-                                    FontSize="24" 
-                                    FontWeight="Bold" 
+                                <TextBlock
+                                    Text="{Binding SelectedAppsCount}"
+                                    FontSize="24"
+                                    FontWeight="Bold"
                                     HorizontalAlignment="Center"
                                     Margin="0,5,0,0" />
                             </StackPanel>
                         </UniformGrid>
                     </Grid>
                 </Border>
-                
+
                 <!-- Footer -->
-                <TextBlock 
-                    Text="Developed by Mickaël CHAVE - © 2025" 
-                    FontSize="12" 
-                    Opacity="0.6" 
-                    HorizontalAlignment="Center" 
+                <TextBlock
+                    Text="Developed by Mickaël CHAVE - © 2025"
+                    FontSize="12"
+                    Opacity="0.6"
+                    HorizontalAlignment="Center"
                     Margin="0,20,0,0" />
             </StackPanel>
         </ScrollViewer>

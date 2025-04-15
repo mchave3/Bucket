@@ -26,6 +26,16 @@ function Invoke-BucketHomePage {
 
     process {
         Write-BucketLog -Data "Navigating to Home Page" -Level Info
-        Invoke-BucketNavigationService -PageTag "homePage" -DataContext $script:globalDataContext
+
+        # Check if the initialization function exists
+        if (Get-Command -Name "Initialize-HomePage" -ErrorAction SilentlyContinue) {
+            # Call the initialization function that will set up data and events
+            Initialize-HomePage
+        }
+        else {
+            # Fallback if the initialization function doesn't exist
+            Write-BucketLog -Data "Initialize-HomePage not found, using basic navigation" -Level Warning
+            Invoke-BucketNavigationService -PageTag "homePage" -DataContext $script:globalDataContext
+        }
     }
 }

@@ -27,113 +27,160 @@ function Initialize-HomePage {
     process {
         Write-BucketLog -Data "Initializing Home Page" -Level Info
 
+        #region Data Initialization
+        # Initialize system information
+        $script:homePage_AppVersion = $script:BucketVersion # Pour le binding AppVersion dans le XAML
+        $script:homePage_MountDirectory = Join-Path -Path $script:workingDirectory -ChildPath 'Mount'
+        $script:homePage_CompletedWIMsDirectory = Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs'
+
+        # Initialize disk space information (refresh at load time)
+        try {
+            $cDrive = Get-PSDrive -Name 'C' -ErrorAction SilentlyContinue
+            $availableGB = [math]::Round($cDrive.Free/1GB, 2)
+            $totalGB = [math]::Round(($cDrive.Free + $cDrive.Used)/1GB, 2)
+            $script:homePage_DiskSpaceInfo = "C: Drive - Available space: $availableGB GB / $totalGB GB"
+        }
+        catch {
+            Write-BucketLog -Data "Error getting disk space information: $_" -Level "Warning"
+            $script:homePage_DiskSpaceInfo = "Disk space information unavailable"
+        }
+
+        # Initialize image status
+        $script:homePage_MountedImagesCount = 0
+        $script:homePage_ImageMountStatus = "No image mounted"
+        $script:homePage_CurrentImageInfo = "Please select and mount a Windows image to begin customization."
+
+        # Initialize statistics
+        $script:homePage_PendingDriversCount = 0
+        $script:homePage_InstalledDriversCount = 0
+        $script:homePage_SelectedAppsCount = 0
+        #endregion Data Initialization
+
+        #region Event Handlers
         # Create the page loaded event handler
         $pageLoadedHandler = {
             param($senderObj, $e)
 
-            Write-BucketLog -Data "Home Page loaded, setting up handlers" -Level Info
+            Write-BucketLog -Data "HomePage loaded, setting up handlers" -Level "Info"
 
+            #region UI Element References
             # Get the page itself
-            $page                = $senderObj
+            $page = $senderObj
 
             # Get references to UI elements
-            $btnSelectImage      = $page.FindName("BtnSelectImage")
-            $btnAppManagement    = $page.FindName("BtnAppManagement")
-            $btnDriverManagement = $page.FindName("BtnDriverManagement")
-            $btnCustomization    = $page.FindName("BtnCustomization")
-            $btnCompletedWIMs    = $page.FindName("BtnCompletedWIMs")
-            $btnSettings         = $page.FindName("BtnSettings")
-            $btnHelp             = $page.FindName("BtnHelp")
+            $selectImageButton = $page.FindName("Home_SelectImageButton")
+            $appManagementButton = $page.FindName("Home_AppManagementButton")
+            $driverManagementButton = $page.FindName("Home_DriverManagementButton")
+            $customizationButton = $page.FindName("Home_CustomizationButton")
+            $completedWIMsButton = $page.FindName("Home_CompletedWIMsButton")
+            $settingsButton = $page.FindName("Home_SettingsButton")
+            $helpButton = $page.FindName("Home_HelpButton")
+            #endregion UI Element References
 
-            # Set up button event handlers
-            if ($btnSelectImage) {
-                $btnSelectImage.Add_Click({
+            #region Button Event Handlers
+            # Set up Select Image button event
+            if ($selectImageButton) {
+                $selectImageButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Select Image button clicked from Home Page" -Level Info
+
+                        Write-BucketLog -Data "Select Image button clicked from Home Page" -Level "Info"
                         Invoke-BucketSelectImagePage
                     })
             }
 
-            if ($btnAppManagement) {
-                $btnAppManagement.Add_Click({
+            # Set up App Management button event
+            if ($appManagementButton) {
+                $appManagementButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "App Management button clicked" -Level Info
+
+                        Write-BucketLog -Data "App Management button clicked" -Level "Info"
                         # TODO: Navigate to App Management page when implemented
                     })
             }
 
-            if ($btnDriverManagement) {
-                $btnDriverManagement.Add_Click({
+            # Set up Driver Management button event
+            if ($driverManagementButton) {
+                $driverManagementButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Driver Management button clicked" -Level Info
+
+                        Write-BucketLog -Data "Driver Management button clicked" -Level "Info"
                         # TODO: Navigate to Driver Management page when implemented
                     })
             }
 
-            if ($btnCustomization) {
-                $btnCustomization.Add_Click({
+            # Set up Customization button event
+            if ($customizationButton) {
+                $customizationButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Customization button clicked" -Level Info
+
+                        Write-BucketLog -Data "Customization button clicked" -Level "Info"
                         # TODO: Navigate to Customization page when implemented
                     })
             }
 
-            if ($btnCompletedWIMs) {
-                $btnCompletedWIMs.Add_Click({
+            # Set up Completed WIMs button event
+            if ($completedWIMsButton) {
+                $completedWIMsButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Completed WIMs button clicked" -Level Info
+
+                        Write-BucketLog -Data "Completed WIMs button clicked" -Level "Info"
                         # TODO: Navigate to Completed WIMs page when implemented
                     })
             }
 
-            if ($btnSettings) {
-                $btnSettings.Add_Click({
+            # Set up Settings button event
+            if ($settingsButton) {
+                $settingsButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Settings button clicked" -Level Info
+
+                        Write-BucketLog -Data "Settings button clicked" -Level "Info"
                         # TODO: Navigate to Settings page when implemented
                     })
             }
 
-            if ($btnHelp) {
-                $btnHelp.Add_Click({
+            # Set up Help button event
+            if ($helpButton) {
+                $helpButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "Help button clicked" -Level Info
+
+                        Write-BucketLog -Data "Help button clicked" -Level "Info"
                         # TODO: Navigate to Help page when implemented
                     })
             }
+            #endregion Button Event Handlers
 
-            Write-BucketLog -Data "Home Page event handlers configured successfully" -Level Info
+            Write-BucketLog -Data "HomePage event handlers configured successfully" -Level "Info"
         }
+        #endregion Event Handlers
 
-        # Create the data context for the page
+        #region Data Context Creation
+        # Create the data context for the page with necessary data and handlers
         $dataContext = [PSCustomObject]@{
             # System information
-            MountDirectory         = (Join-Path -Path $script:workingDirectory -ChildPath 'Mount')
-            CompletedWIMsDirectory = (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs')
+            MountDirectory         = $script:homePage_MountDirectory
+            CompletedWIMsDirectory = $script:homePage_CompletedWIMsDirectory
             WorkingDirectory       = $script:workingDirectory
+            AppVersion             = $script:homePage_AppVersion
 
             # Disk space information
-            DiskSpaceInfo          = "C: Drive - Available space: $([math]::Round($(Get-PSDrive -Name 'C').Free/1GB, 2)) GB / $([math]::Round(($(Get-PSDrive -Name 'C').Free + $(Get-PSDrive -Name 'C').Used)/1GB, 2)) GB"
+            DiskSpaceInfo          = $script:homePage_DiskSpaceInfo
 
             # Image status
-            MountedImagesCount     = 0
-            ImageMountStatus       = "No image mounted"
-            CurrentImageInfo       = "Please select and mount a Windows image to begin customization."
+            MountedImagesCount     = $script:homePage_MountedImagesCount
+            ImageMountStatus       = $script:homePage_ImageMountStatus
+            CurrentImageInfo       = $script:homePage_CurrentImageInfo
 
             # Statistics
-            PendingDriversCount    = 0
-            InstalledDriversCount  = 0
-            SelectedAppsCount      = 0
+            PendingDriversCount    = $script:homePage_PendingDriversCount
+            InstalledDriversCount  = $script:homePage_InstalledDriversCount
+            SelectedAppsCount      = $script:homePage_SelectedAppsCount
 
             # Event handler
             PageLoaded             = $pageLoadedHandler
         }
 
-        # Add mount directory and completed WIMs directory to data context
-        $dataContext | Add-Member -MemberType NoteProperty -Name "MountDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'Mount') -Force
-        $dataContext | Add-Member -MemberType NoteProperty -Name "CompletedWIMsDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs') -Force
-
-        # Navigate to the page
+        # Navigate to the Home page with our custom data context
         Invoke-BucketNavigationService -PageTag "homePage" -DataContext $dataContext
+        #endregion Data Context Creation
     }
 }
