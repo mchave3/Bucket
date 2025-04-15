@@ -132,9 +132,8 @@ function Initialize-HomePage {
         # Add mount directory and completed WIMs directory to data context
         $dataContext | Add-Member -MemberType NoteProperty -Name "MountDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'Mount') -Force
         $dataContext | Add-Member -MemberType NoteProperty -Name "CompletedWIMsDirectory" -Value (Join-Path -Path $script:workingDirectory -ChildPath 'CompletedWIMs') -Force
-        
+
         # Navigate to the page
         Invoke-BucketNavigationService -PageTag "homePage" -DataContext $dataContext
     }
 }
-

@@ -79,4 +79,3 @@ function Initialize-AboutPage {
         Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $dataContext
     }
 }
-
