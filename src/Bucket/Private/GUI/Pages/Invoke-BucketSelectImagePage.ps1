@@ -28,13 +28,13 @@ function Invoke-BucketSelectImagePage {
         Write-BucketLog -Data "Navigating to Select Image Page" -Level Info
 
         # Check if the initialization function exists
-        if (Get-Command -Name "Initialize-SelectImagePage" -ErrorAction SilentlyContinue) {
+        if (Get-Command -Name "Initialize-BucketSelectImagePage" -ErrorAction SilentlyContinue) {
             # Call the initialization function that will set up data and events
-            Initialize-SelectImagePage
+            Initialize-BucketSelectImagePage
         }
         else {
             # Fallback if the initialization function doesn't exist
-            Write-BucketLog -Data "Initialize-SelectImagePage not found, using basic navigation" -Level Warning
+            Write-BucketLog -Data "Initialize-BucketSelectImagePage not found, using basic navigation" -Level Warning
             Invoke-BucketNavigationService -PageTag "selectImagePage" -DataContext $script:globalDataContext
         }
     }

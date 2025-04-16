@@ -8,7 +8,7 @@
     DataGrid functionality and button actions.
 
 .NOTES
-    Name:        Initialize-SelectImagePage.ps1
+    Name:        Initialize-BucketSelectImagePage.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
     Version:     1.0.0
@@ -19,9 +19,9 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Initialize-SelectImagePage
+    Initialize-BucketSelectImagePage
 #>
-function Initialize-SelectImagePage {
+function Initialize-BucketSelectImagePage {
     [CmdletBinding()]
     param()
 

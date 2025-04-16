@@ -7,7 +7,7 @@
     and handles all event bindings for UI elements on the page.
 
 .NOTES
-    Name:        Initialize-AboutPage.ps1
+    Name:        Initialize-BucketAboutPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
     Version:     1.0.0
@@ -18,9 +18,9 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Initialize-AboutPage
+    Initialize-BucketAboutPage
 #>
-function Initialize-AboutPage {
+function Initialize-BucketAboutPage {
     [CmdletBinding()]
     param()
 
