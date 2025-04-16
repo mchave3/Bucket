@@ -420,7 +420,54 @@ function Invoke-BucketPreFlight {
         }
         #endregion Create Required Directories
 
+        #region WIMs.xml Structure Setup
+        Write-BucketLog -Data "---------- WIMs Structure ----------" -Level Info
+
+        $wimsXmlPath = Join-Path -Path $script:workingDirectory -ChildPath "Configs\WIMs.xml"
+        $defaultWimsXml = @"
+<?xml version="1.0" encoding="utf-8"?>
+<WIMs>
+</WIMs>
+"@
+
+        $createWimsXml = $false
+
+        if (-not (Test-Path -Path $wimsXmlPath)) {
+            $createWimsXml = $true
+            Write-BucketLog -Data "WIMs.xml file not found, will create a new one." -Level Debug
+        }
+        else {
+            # Check if the file is valid XML
+            try {
+                [xml]$xmlTest = Get-Content -Path $wimsXmlPath -Raw
+                if ($null -eq $xmlTest.WIMs) {
+                    Write-BucketLog -Data "WIMs.xml file is invalid, will recreate." -Level Warning
+                    $createWimsXml = $true
+                }
+                else {
+                    Write-BucketLog -Data "Verified: WIMs.xml file (exists and valid)" -Level Debug
+                }
+            }
+            catch {
+                Write-BucketLog -Data "WIMs.xml file is corrupted or unreadable: $_" -Level Warning
+                $createWimsXml = $true
+            }
+        }
+
+        if ($createWimsXml) {
+            try {
+                $defaultWimsXml | Out-File -FilePath $wimsXmlPath -Encoding UTF8 -Force -ErrorAction Stop
+                Write-BucketLog -Data "Created or repaired: WIMs.xml file" -Level Info
+            }
+            catch {
+                Write-BucketLog -Data "Failed to create or repair WIMs.xml file: $_" -Level Error
+                exit 1
+            }
+        }
+        #endregion WIMs.xml Structure Setup
+
         #region Finalize Pre-Flight
+        Write-BucketLog -Data "----------   ----------" -Level Info
         Write-BucketLog -Data "Bucket is ready for use" -Level Info
         Write-BucketLog -Data "========== PRE-FLIGHT COMPLETE ==========" -Level Info
         #endregion Finalize Pre-Flight
