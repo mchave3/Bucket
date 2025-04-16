@@ -26,13 +26,24 @@ function Import-BucketISO {
     )
 
     process {
+        # Prevent multiple instances from being opened simultaneously
+        if ($script:ImportISO_WindowOpen) {
+            Write-BucketLog -Data "ISO import window already open, bringing to front" -Level Info
+            return
+        }
+
+        # Set window state
+        $script:ImportISO_WindowOpen = $true
         #region XAML
         # Load the XAML file for the GUI
-        $xamlPath = "$PSScriptRoot\GUI\ImageManagement\MainWindow_ImportISO.xaml"
+        $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement\MainWindow_ImportISO.xaml"
+
+        Write-BucketLog -Data "Chemin du fichier XAML: $xamlPath" -Level Debug
 
         if (-not (Test-Path -Path $xamlPath)) {
             Write-BucketLog -Data "Could not find MainWindow_ImportISO.xaml at $xamlPath" -Level Error
-            exit 1
+            $script:ImportISO_WindowOpen = $false
+            return
         }
 
         $inputXaml = Get-Content -Path $xamlPath -Raw
@@ -96,46 +107,133 @@ function Import-BucketISO {
         #endregion XAML
 
         #region GUI Events
-        # Create a hashtable to store page references
+        # Create a hashtable to store page references for ISO import wizard
         $script:ImportISOPages = @{
-            dataSourcePage = "Bucket.GUI.ImageManagement.ImportISO_DataSourcePage"
+            # Follow existing naming conventions for pages
+            dataSourcePage  = "Bucket.GUI.ImageManagement.ImportISO_DataSourcePage"
+            selectIndexPage = "Bucket.GUI.ImageManagement.ImportISO_SelectIndexPage"
+            summaryPage     = "Bucket.GUI.ImageManagement.ImportISO_SummaryPage"
+            progressPage    = "Bucket.GUI.ImageManagement.ImportISO_ProgressPage"
+            completionPage  = "Bucket.GUI.ImageManagement.ImportISO_CompletionPage"
         }
 
-        # Initialize the global data context
-        <#
-        $script:globalDataContext  = [PSCustomObject]@{
+        # Initialize the data context for the ISO import wizard
+        # Define default paths
+        $defaultImportedWimsPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
+
+        $script:ImportISODataContext = [PSCustomObject]@{
+            # Common properties
             BucketVersion          = $script:BucketVersion
             WorkingDirectory       = $script:workingDirectory
-            MountDirectory         = Join-Path -Path $WorkingDirectory -ChildPath "Mount"
-            CompletedWimsDirectory = Join-Path -Path $WorkingDirectory -ChildPath "CompletedWIMs"
+            MountDirectory         = Join-Path -Path $script:workingDirectory -ChildPath "Mount"
+            CompletedWimsDirectory = Join-Path -Path $script:workingDirectory -ChildPath "CompletedWIMs"
+            DefaultImportedWims    = $defaultImportedWimsPath
+
+            # ISO import specific properties
+            ISOSourcePath          = ""
+            SelectedIndex          = ""
+            OutputPath             = $defaultImportedWimsPath  # Initialize with default path when UseDefaultLocation is true
+            UseDefaultLocation     = $true  # Default: use default location
+            UseCustomLocation      = $false # Default: don't use custom location
+            AvailableIndices       = @()
+            CurrentPage            = "dataSourcePage"
+            ProcessComplete        = $false
+            ExtractedWimPath       = ""
         }
-        #>
 
-        # Navigation function to handle page changes
-        $WPF_MainWindow_NavHome.add_Click({
-                Invoke-BucketHomePage
+        # Configure navigation buttons
+        # Previous button
+        $WPF_MainWindow_ImportISO_PreviousButton.add_Click({
+                # Get previous page based on current page
+                $previousPage = switch ($script:ImportISODataContext.CurrentPage) {
+                    "selectIndexPage" { "dataSourcePage" }
+                    "summaryPage" { "selectIndexPage" }
+                    "progressPage" { "summaryPage" }
+                    "completionPage" { "progressPage" }
+                    default { $null }
+                }
+
+                if ($previousPage) {
+                    Invoke-BucketISOPage -PageTag $previousPage
+                }
             })
 
-        # Handle navigation for other UI elements
-        $WPF_MainWindow_NavSelectImage.add_Click({
-                Invoke-BucketSelectImagePage
+        # Next button
+        $WPF_MainWindow_ImportISO_NextButton.add_Click({
+                # Validate current page before proceeding
+                $canContinue = $true
+
+                # Validation logic based on current page
+                switch ($script:ImportISODataContext.CurrentPage) {
+                    "dataSourcePage" {
+                        if ([string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -or
+                            [string]::IsNullOrWhiteSpace($script:ImportISODataContext.OutputPath)) {
+                            [System.Windows.MessageBox]::Show("Please select both an ISO file and output directory.", "Missing Information", "OK", "Warning")
+                            $canContinue = $false
+                        }
+                    }
+                    "selectIndexPage" {
+                        if ([string]::IsNullOrWhiteSpace($script:ImportISODataContext.SelectedIndex)) {
+                            [System.Windows.MessageBox]::Show("Please select a Windows edition.", "Missing Information", "OK", "Warning")
+                            $canContinue = $false
+                        }
+                    }
+                }
+
+                if ($canContinue) {
+                    # Get next page based on current page
+                    $nextPage = switch ($script:ImportISODataContext.CurrentPage) {
+                        "dataSourcePage" { "selectIndexPage" }
+                        "selectIndexPage" { "summaryPage" }
+                        "summaryPage" { "progressPage" }
+                        "progressPage" { "completionPage" }
+                        default { $null }
+                    }
+
+                    if ($nextPage) {
+                        Invoke-BucketISOPage -PageTag $nextPage
+                    }
+                }
             })
 
-        $WPF_MainWindow_NavAbout.add_Click({
-                Invoke-BucketAboutPage
+        # Summary button - direct navigation to summary page if data is available
+        $WPF_MainWindow_ImportISO_SummaryButton.add_Click({
+                if (-not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -and
+                    -not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.SelectedIndex)) {
+                    Invoke-BucketISOPage -PageTag "summaryPage"
+                }
+                else {
+                    [System.Windows.MessageBox]::Show("Please complete the previous steps before viewing the summary.", "Missing Information", "OK", "Warning")
+                }
             })
 
-        # Set the initial page to home page when the form is loaded
+        # Cancel button - close the window
+        $WPF_MainWindow_ImportISO_CancelButton.add_Click({
+                $form.Close()
+            })
+
+        # The navigation functions have been moved to separate files:
+        # - Invoke-BucketISOPage.ps1: Handles navigation between pages
+        # - Update-BucketISONavigationUI.ps1: Updates sidebar styling
+        # - Update-BucketISOButtonVisibility.ps1: Controls navigation button visibility
+
+        # Set the initial page when the form is loaded
         $form.add_Loaded({
                 if ($WPF_MainWindow_ImportISO_MainFrame) {
                     Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to data source page" -Level Info
 
-                    # Navigate to data source page
+                    # Navigate to the first page
+                    Invoke-BucketISOPage -PageTag "dataSourcePage"
                 }
             })
         #endregion GUI Events
 
         #region Start GUI
+        $form.Add_Closed({
+                $script:ImportISO_WindowOpen = $false
+                Write-BucketLog -Data "ISO import window closed" -Level Info
+            })
+
         $form.ShowDialog() | Out-Null
         #endregion Start GUI
     }

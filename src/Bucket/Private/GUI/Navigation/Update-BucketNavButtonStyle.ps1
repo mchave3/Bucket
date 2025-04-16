@@ -40,18 +40,30 @@ function Update-BucketNavButtonStyle {
                 )
 
                 # Try to get styles from form resources
-                $defaultStyle = $form.FindResource("MenuButtonStyle")
-                $selectedStyle = $form.FindResource("SelectedMenuButtonStyle")
+                try {
+                    $defaultStyle = $form.FindResource("MenuButtonStyle")
+                    $selectedStyle = $form.FindResource("SelectedMenuButtonStyle")
+                }
+                catch {
+                    # Silently handle missing resource in Import ISO window
+                    Write-BucketLog -Data "Could not find styles in current form" -Level Debug
+                }
 
                 # If styles are not found, try to get them from the main window
                 if ((-not $defaultStyle -or -not $selectedStyle) -and $WPF_MainWindow) {
-                    $defaultStyle = $WPF_MainWindow.FindResource("MenuButtonStyle")
-                    $selectedStyle = $WPF_MainWindow.FindResource("SelectedMenuButtonStyle")
+                    try {
+                        $defaultStyle = $WPF_MainWindow.FindResource("MenuButtonStyle")
+                        $selectedStyle = $WPF_MainWindow.FindResource("SelectedMenuButtonStyle")
+                    }
+                    catch {
+                        # Silently handle missing resource
+                        Write-BucketLog -Data "Could not find styles in main window" -Level Debug
+                    }
                 }
 
                 # If styles are still not found, log warning and exit
                 if (-not $defaultStyle -or -not $selectedStyle) {
-                    Write-BucketLog -Data "Navigation styles not found in resources" -Level Warning
+                    Write-BucketLog -Data "Navigation styles not found in resources, skipping style update" -Level Warning
                     return
                 }
 

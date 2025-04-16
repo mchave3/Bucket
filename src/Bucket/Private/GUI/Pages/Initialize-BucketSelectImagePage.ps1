@@ -553,32 +553,7 @@ function Initialize-BucketSelectImagePage {
 
                         Write-BucketLog -Data "Import ISO button clicked" -Level "Debug"
 
-                        # Show file dialog to select ISO file
-                        $dialog = New-Object Microsoft.Win32.OpenFileDialog
-                        $dialog.Filter = "ISO files (*.iso)|*.iso"
-                        $dialog.Title = "Select ISO file"
-
-                        if ($dialog.ShowDialog()) {
-                            $isoPath = $dialog.FileName
-                            Write-BucketLog -Data "Selected ISO: $isoPath" -Level "Info"
-
-                            # Process the ISO file
-                            if (Get-Command -Name "Import-BucketISO" -ErrorAction SilentlyContinue) {
-                                try {
-                                    $result = Import-BucketISO -Path $isoPath
-                                    if ($result) {
-                                        # Refresh the DataGrid
-                                        if (Get-Command -Name "Get-BucketImages" -ErrorAction SilentlyContinue) {
-                                            $newImages = Get-BucketImages
-                                            $imagesDataGrid.ItemsSource = $newImages
-                                        }
-                                    }
-                                }
-                                catch {
-                                    Write-BucketLog -Data "Error importing ISO: $_" -Level "Error"
-                                }
-                            }
-                        }
+                        Import-BucketISO
                     })
             }
 

@@ -1,4 +1,4 @@
-﻿<Window
+<Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -29,7 +29,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <StackPanel Grid.Column="0" Margin="10" Width="150" Background="#F0F0F0">
+            <StackPanel x:Name="MainWindow_ImportISO_SidebarPanel" Grid.Column="0" Margin="10" Width="150" Background="#F0F0F0">
                 <TextBlock Text="Data Source" Margin="10,15" FontWeight="SemiBold" />
                 <TextBlock Text="Select index" Margin="10,15" />
                 <TextBlock Text="Summary" Margin="10,15" />

@@ -385,6 +385,7 @@ function Invoke-BucketPreFlight {
             @{Path = "Staging"; Description = "Staging"},
             @{Path = "Mount"; Description = "Mount"},
             @{Path = "CompletedWIMs"; Description = "CompletedWIMs"},
+            @{Path = "ImportedWIMs"; Description = "ImportedWIMs"},
             @{Path = "Configs"; Description = "Configs"}
         )
 
