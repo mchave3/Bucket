@@ -1,16 +1,17 @@
 ﻿<#
 .SYNOPSIS
-    Core navigation service for Bucket application
+    Generic navigation service for Bucket application
 
 .DESCRIPTION
     Provides centralized navigation functionality for the Bucket application.
     This service handles page loading, navigation between pages, and maintaining navigation state.
+    The service is designed to work with any window and frame configuration.
 
 .NOTES
     Name:        Invoke-BucketNavigationService.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
-    Version:     1.0.0
+    Version:     1.1.0
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -18,7 +19,12 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Invoke-BucketNavigationService -PageTag "homePage"
+    # For MainWindow navigation
+    Invoke-BucketNavigationService -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame
+
+.EXAMPLE
+    # For ISO import wizard navigation
+    Invoke-BucketNavigationService -PageTag "importStep1" -RootFrame $WPF_ImportWizard_RootFrame -XamlBasePath "$PSScriptRoot\ISO\Wizard"
 #>
 function Invoke-BucketNavigationService {
     [CmdletBinding()]
@@ -26,33 +32,61 @@ function Invoke-BucketNavigationService {
         [Parameter(Mandatory = $true)]
         [string]$PageTag,
 
+        [Parameter(Mandatory = $true)]
+        [System.Windows.Controls.Frame]$RootFrame,
+
         [Parameter(Mandatory = $false)]
-        [PSCustomObject]$DataContext
+        [string]$XamlBasePath,
+
+        [Parameter(Mandatory = $false)]
+        [hashtable]$PageDictionary,
+
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$DataContext,
+
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]$GlobalDataContext,
+
+        [Parameter(Mandatory = $false)]
+        [scriptblock]$OnNavigationComplete
     )
 
     process {
         Write-BucketLog -Data "Navigation service: Navigating to page: $PageTag" -Level Debug
 
+        # Determine which page dictionary to use
+        $pages = $PageDictionary
+        if (-not $pages) {
+            # Fall back to global script-level pages dictionary if available
+            $pages = $script:pages
+        }
+
         # Ensure the page tag exists in our dictionary
-        if (-not $script:pages.ContainsKey($PageTag)) {
+        if (-not $pages.ContainsKey($PageTag)) {
             Write-BucketLog -Data "Page $PageTag not found in page dictionary." -Level Error
             return
         }
 
-        # Get a reference to the frame
-        $rootFrame = $WPF_MainWindow_RootFrame
-        if (-not $rootFrame) {
-            Write-BucketLog -Data "RootFrame UI element not found" -Level Error
+        # Verify that we have a valid frame
+        if (-not $RootFrame) {
+            Write-BucketLog -Data "RootFrame UI element not provided or is null" -Level Error
             return
         }
 
         try {
             # Get the page name
-            $pageName = $script:pages[$PageTag]
+            $pageName = $pages[$PageTag]
             $simplePageName = $pageName.Split('.')[-1]  # Extract just the page name part
 
+            # Determine base path for XAML files
+            $basePath = $XamlBasePath
+            if (-not $basePath) {
+                # Default to standard GUI path if not specified
+                $basePath = "$PSScriptRoot\GUI"
+            }
+
             # Construct the path to the XAML file
-            $xamlFilePath = "$PSScriptRoot\GUI\$simplePageName.xaml"
+            $xamlFilePath = "$basePath\$simplePageName.xaml"
 
             Write-BucketLog -Data "Looking for XAML file: $xamlFilePath" -Level Debug
 
@@ -83,9 +117,16 @@ function Invoke-BucketNavigationService {
                     # Create a shallow copy of the global data context properties
                     $properties = @{}
 
+                    # Determine which global context to use
+                    $globalContext = $GlobalDataContext
+                    if ($null -eq $globalContext) {
+                        # Fall back to script level global context if available
+                        $globalContext = $script:globalDataContext
+                    }
+
                     # Add global context properties first (if available)
-                    if ($null -ne $script:globalDataContext) {
-                        foreach ($property in $script:globalDataContext.PSObject.Properties) {
+                    if ($null -ne $globalContext) {
+                        foreach ($property in $globalContext.PSObject.Properties) {
                             $properties[$property.Name] = $property.Value
                         }
                     }
@@ -102,14 +143,15 @@ function Invoke-BucketNavigationService {
                     Write-BucketLog -Data "Created merged DataContext for page $simplePageName" -Level Debug
                 }
                 else {
-                    # No custom context, just use global
-                    $page.DataContext = $script:globalDataContext
+                    # No custom context, use the provided global or fall back to script level
+                    $globalContext = $GlobalDataContext
+                    if ($null -eq $globalContext) {
+                        # Fall back to script level global context if available
+                        $globalContext = $script:globalDataContext
+                    }
+                    $page.DataContext = $globalContext
                     Write-BucketLog -Data "Using global DataContext for page $simplePageName" -Level Debug
                 }
-
-                # Store the current page for reference
-                $script:currentPage = $page
-                $script:currentPageTag = $PageTag
 
                 # Add the Loaded event handler if provided in DataContext
                 if ($DataContext -and $DataContext.PSObject.Properties['PageLoaded']) {
@@ -118,11 +160,17 @@ function Invoke-BucketNavigationService {
                 }
 
                 # Navigate to the page
-                $rootFrame.Navigate($page)
+                $RootFrame.Navigate($page)
                 Write-BucketLog -Data "Successfully navigated to XAML page: $simplePageName" -Level Info
 
-                # Update the navigation button styles
-                Update-BucketNavButtonStyle -PageTag $PageTag
+                # Execute OnNavigationComplete if provided
+                if ($OnNavigationComplete) {
+                    & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
+                }
+                # Fall back to the default navigation button style update if available
+                elseif (Get-Command 'Update-BucketNavButtonStyle' -ErrorAction SilentlyContinue) {
+                    Update-BucketNavButtonStyle -PageTag $PageTag
+                }
             }
             else {
                 Write-BucketLog -Data "XAML file not found: $xamlFilePath - Creating fallback page" -Level Warning
@@ -163,8 +211,13 @@ function Invoke-BucketNavigationService {
                 $page.DataContext = $script:globalDataContext
 
                 # Navigate to the page
-                $rootFrame.Navigate($page)
+                $RootFrame.Navigate($page)
                 Write-BucketLog -Data "Successfully navigated to fallback page for: $simplePageName" -Level Info
+
+                # Execute OnNavigationComplete if provided
+                if ($OnNavigationComplete) {
+                    & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
+                }
             }
         }
         catch {

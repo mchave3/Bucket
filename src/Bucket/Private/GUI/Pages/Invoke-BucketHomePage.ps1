@@ -35,7 +35,7 @@ function Invoke-BucketHomePage {
         else {
             # Fallback if the initialization function doesn't exist
             Write-BucketLog -Data "Initialize-BucketHomePage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "homePage" -DataContext $script:globalDataContext
+            Invoke-BucketNavigationService -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
         }
     }
 }

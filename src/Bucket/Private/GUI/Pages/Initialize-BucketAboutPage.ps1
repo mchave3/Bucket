@@ -231,7 +231,7 @@ function Initialize-BucketAboutPage {
         }
 
         # Navigate to the About page with our custom data context
-        Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $dataContext
+        Invoke-BucketNavigationService -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $dataContext
         #endregion Data Context Creation
     }
 }

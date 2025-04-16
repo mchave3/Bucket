@@ -180,7 +180,7 @@ function Initialize-BucketHomePage {
         }
 
         # Navigate to the Home page with our custom data context
-        Invoke-BucketNavigationService -PageTag "homePage" -DataContext $dataContext
+        Invoke-BucketNavigationService -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $dataContext
         #endregion Data Context Creation
     }
 }

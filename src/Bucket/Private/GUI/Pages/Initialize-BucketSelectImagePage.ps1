@@ -801,7 +801,7 @@ function Initialize-BucketSelectImagePage {
         Write-BucketLog -Data "Created SelectImagePage data context with $($images.Count) images and $($imageDetails.Count) detail items" -Level Info
 
         # Navigate to the Select Image page with our custom data context
-        Invoke-BucketNavigationService -PageTag "selectImagePage" -DataContext $dataContext
+        Invoke-BucketNavigationService -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $dataContext
         #endregion Data Context Creation
     }
 }

@@ -35,7 +35,7 @@ function Invoke-BucketAboutPage {
         else {
             # Fallback if the initialization function doesn't exist
             Write-BucketLog -Data "Initialize-BucketAboutPage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "aboutPage" -DataContext $script:globalDataContext
+            Invoke-BucketNavigationService -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
         }
     }
 }

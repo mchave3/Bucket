@@ -35,7 +35,7 @@ function Invoke-BucketSelectImagePage {
         else {
             # Fallback if the initialization function doesn't exist
             Write-BucketLog -Data "Initialize-BucketSelectImagePage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "selectImagePage" -DataContext $script:globalDataContext
+            Invoke-BucketNavigationService -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
         }
     }
 }
