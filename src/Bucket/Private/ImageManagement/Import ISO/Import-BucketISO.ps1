@@ -26,7 +26,7 @@ function Import-BucketISO {
     )
 
     process {
-#region XAML
+        #region XAML
         # Load the XAML file for the GUI
         $xamlPath = "$PSScriptRoot\GUI\ImageManagement\MainWindow_ImportISO.xaml"
 
