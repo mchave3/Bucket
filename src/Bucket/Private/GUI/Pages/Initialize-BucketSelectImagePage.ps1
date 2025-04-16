@@ -551,7 +551,7 @@ function Initialize-BucketSelectImagePage {
                 $importISOButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Import ISO button clicked" -Level "Info"
+                        Write-BucketLog -Data "Import ISO button clicked" -Level "Debug"
 
                         # Show file dialog to select ISO file
                         $dialog = New-Object Microsoft.Win32.OpenFileDialog
