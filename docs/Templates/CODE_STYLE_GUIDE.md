@@ -62,6 +62,29 @@ finally {
 - Always check for file existence before loading XAML.
 - Use FindName to bind named XAML elements to PowerShell variables.
 
+## WPF Controls Indentation (PowerShell)
+- When working with WPF controls and event handlers in PowerShell, always indent the script block passed to Add_Click (or similar event methods) one level further to the right than the surrounding if statement.
+- This ensures clear visual separation between the control structure and the event handler logic.
+- Example (correct):
+
+if ($issueButton) {
+    $issueButton.Add_Click({
+            param($senderObj, $e)
+            Write-BucketLog -Data "[About] Report Issue button clicked" -Level Info
+            Start-Process "https://github.com/mchave3/Bucket/issues/new"
+        })
+}
+
+- Example (incorrect):
+
+if ($licenseButton) {
+    $licenseButton.Add_Click({
+        param($senderObj, $e)
+        Write-BucketLog -Data "[About] License button clicked" -Level Info
+        Start-Process "https://github.com/mchave3/Bucket/blob/main/LICENSE"
+    })
+}
+
 ## Error Handling
 - Use try/catch for all file, IO, or UI operations that may fail.
 - Log all errors with Write-BucketLog at Error level.
@@ -70,6 +93,7 @@ finally {
 ## Function Header Consistency
 - Ensure that in the header of each PowerShell function, the SYNOPSIS, DESCRIPTION, and EXAMPLE fields are accurate and consistent with the actual code and usage.
 - Do not modify the NOTES or LINK fields.
+- Do not remove the NOTES or LINK fields from the function header under any circumstances.
 - Add line breaks in these fields as needed to improve readability and clarity of the header.
 
 ## Example

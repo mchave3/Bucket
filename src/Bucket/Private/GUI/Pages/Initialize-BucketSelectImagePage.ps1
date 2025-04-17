@@ -1,11 +1,9 @@
-﻿<#
+﻿<#[
 .SYNOPSIS
     Initializes the Select Image Page for the Bucket application
 
 .DESCRIPTION
-    This function initializes the Select Image Page, sets up its data context,
-    and handles all event bindings for UI elements on the page including
-    DataGrid functionality and button actions.
+    Initializes the Select Image Page, sets up its data context, and handles all event bindings for UI elements on the page including DataGrid functionality and button actions.
 
 .NOTES
     Name:        Initialize-BucketSelectImagePage.ps1
@@ -26,7 +24,7 @@ function Initialize-BucketSelectImagePage {
     param()
 
     process {
-        Write-BucketLog -Data "Initializing Select Image Page" -Level Info
+        Write-BucketLog -Data "[SelectImage] Initializing Select Image Page" -Level Info
 
         #region Data Initialization
         # Initialize image data arrays
@@ -338,7 +336,7 @@ function Initialize-BucketSelectImagePage {
             }
         }
         catch {
-            Write-BucketLog -Data "Error loading image data: $_" -Level "Error"
+            Write-BucketLog -Data "[SelectImage] Error loading image data: $_" -Level Error
         }
 
         # Store images and details in script scope so they're accessible in the event handler
@@ -350,7 +348,7 @@ function Initialize-BucketSelectImagePage {
         $pageLoadedHandler = {
             param($senderObj, $e)
 
-            Write-BucketLog -Data "SelectImagePage loaded, setting up handlers" -Level "Info"
+            Write-BucketLog -Data "[SelectImage] SelectImagePage loaded, setting up handlers" -Level Info
 
             #region DataGrid Setup
             # Get the page itself
@@ -371,25 +369,24 @@ function Initialize-BucketSelectImagePage {
 
             # Check if DataGrids are properly found
             if ($null -eq $imagesDataGrid) {
-                Write-BucketLog -Data "CRITICAL ERROR: ImagesDataGrid not found in page" -Level Error
+                Write-BucketLog -Data "[SelectImage] CRITICAL ERROR: ImagesDataGrid not found in page" -Level Error
             }
             else {
-                Write-BucketLog -Data "ImagesDataGrid successfully found: $($imagesDataGrid.GetType().FullName)" -Level Info
+                Write-BucketLog -Data "[SelectImage] ImagesDataGrid successfully found: $($imagesDataGrid.GetType().FullName)" -Level Info
             }
 
             if ($null -eq $detailsDataGrid) {
-                Write-BucketLog -Data "CRITICAL ERROR: DetailsDataGrid not found in page" -Level Error
+                Write-BucketLog -Data "[SelectImage] CRITICAL ERROR: DetailsDataGrid not found in page" -Level Error
             }
             else {
-                Write-BucketLog -Data "DetailsDataGrid successfully found: $($detailsDataGrid.GetType().FullName)" -Level Info
+                Write-BucketLog -Data "[SelectImage] DetailsDataGrid successfully found: $($detailsDataGrid.GetType().FullName)" -Level Info
             }
 
             # Set data sources for DataGrids
             if ($imagesDataGrid) {
                 # Access the script-scoped variables for images
                 $imagesToUse = $script:selectImagePage_Images
-                Write-BucketLog -Data "Setting up ImagesDataGrid with $($imagesToUse.Count) items" -Level Info
-
+                Write-BucketLog -Data "[SelectImage] Setting up ImagesDataGrid with $($imagesToUse.Count) items" -Level Info
                 try {
                     # Create a list of type System.Collections.IList for better compatibility
                     $imagesList = New-Object System.Collections.ArrayList
@@ -410,10 +407,10 @@ function Initialize-BucketSelectImagePage {
                         $imagesDataGrid.SelectedIndex = 0
                     }
 
-                    Write-BucketLog -Data "ImagesDataGrid ItemsSource successfully set ($($imagesList.Count) items)" -Level Info
+                    Write-BucketLog -Data "[SelectImage] ImagesDataGrid ItemsSource successfully set ($($imagesList.Count) items)" -Level Info
                 }
                 catch {
-                    Write-BucketLog -Data "Error setting ItemsSource for ImagesDataGrid: $_" -Level Error
+                    Write-BucketLog -Data "[SelectImage] Error setting ItemsSource for ImagesDataGrid: $_" -Level Error
                 }
 
                 # Store DataGrids in script scope so they can be accessed in event handlers
@@ -426,11 +423,11 @@ function Initialize-BucketSelectImagePage {
                     param($selectedItem)
 
                     if ($null -eq $selectedItem) {
-                        Write-BucketLog -Data "No item selected" -Level "Warning"
+                        Write-BucketLog -Data "[SelectImage] No item selected" -Level "Warning"
                         return
                     }
 
-                    Write-BucketLog -Data "Updating details for image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
+                    Write-BucketLog -Data "[SelectImage] Updating details for image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
 
                     # Get the correct image path
                     $imagePath = $selectedItem.SelectImage_Images_Path
@@ -443,27 +440,27 @@ function Initialize-BucketSelectImagePage {
                         }
                         else {
                             # Otherwise use our mock data
-                            Write-BucketLog -Data "Using mock data for $imagePath" -Level "Debug"
+                            Write-BucketLog -Data "[SelectImage] Using mock data for $imagePath" -Level "Debug"
 
                             # Make sure the hashtable exists and contains the key
                             if (-not $script:selectImagePage_AllWimDetails) {
-                                Write-BucketLog -Data "allWimDetails variable not found" -Level "Error"
+                                Write-BucketLog -Data "[SelectImage] allWimDetails variable not found" -Level "Error"
                                 return
                             }
 
                             if (-not $script:selectImagePage_AllWimDetails.ContainsKey($imagePath)) {
-                                Write-BucketLog -Data "No details found for path: $imagePath" -Level "Warning"
+                                Write-BucketLog -Data "[SelectImage] No details found for path: $imagePath" -Level "Warning"
                                 return
                             }
 
                             $details = $script:selectImagePage_AllWimDetails[$imagePath]
-                            Write-BucketLog -Data "Found $($details.Count) indexes for $imagePath" -Level "Info"
+                            Write-BucketLog -Data "[SelectImage] Found $($details.Count) indexes for $imagePath" -Level "Info"
                         }
 
                         # Get reference to the details grid
                         $detailsGrid = $script:selectImagePage_DetailsDataGridRef
                         if ($null -eq $detailsGrid) {
-                            Write-BucketLog -Data "Details DataGrid reference is null" -Level "Error"
+                            Write-BucketLog -Data "[SelectImage] Details DataGrid reference is null" -Level "Error"
                             return
                         }
 
@@ -488,10 +485,10 @@ function Initialize-BucketSelectImagePage {
                                 }
                             })
 
-                        Write-BucketLog -Data "Successfully updated details grid with $($detailsList.Count) indexes" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Successfully updated details grid with $($detailsList.Count) indexes" -Level "Info"
                     }
                     catch {
-                        Write-BucketLog -Data "Error updating image details: $_" -Level "Error"
+                        Write-BucketLog -Data "[SelectImage] Error updating image details: $_" -Level "Error"
                     }
                 }
                 #endregion Image Details Update Function
@@ -502,10 +499,10 @@ function Initialize-BucketSelectImagePage {
 
                         # Get the selected item
                         $selectedItem = $senderObj.SelectedItem
-                        Write-BucketLog -Data "Selection changed event triggered" -Level "Debug"
+                        Write-BucketLog -Data "[SelectImage] Selection changed event triggered" -Level Debug
 
                         if ($null -ne $selectedItem) {
-                            Write-BucketLog -Data "Selected image: $($selectedItem.SelectImage_Images_Name)" -Level "Info"
+                            Write-BucketLog -Data "[SelectImage] Selected image: $($selectedItem.SelectImage_Images_Name)" -Level Info
 
                             # Call our update function
                             & $script:selectImagePage_UpdateImageDetails $selectedItem
@@ -517,7 +514,7 @@ function Initialize-BucketSelectImagePage {
             if ($detailsDataGrid) {
                 # Access the script-scoped variables for image details
                 $detailsToUse = $script:selectImagePage_Details
-                Write-BucketLog -Data "Setting up DetailsDataGrid with $($detailsToUse.Count) items" -Level Info
+                Write-BucketLog -Data "[SelectImage] Setting up DetailsDataGrid with $($detailsToUse.Count) items" -Level Info
 
                 try {
                     # Create a list of type System.Collections.IList for better compatibility
@@ -539,10 +536,10 @@ function Initialize-BucketSelectImagePage {
                         $detailsDataGrid.SelectedIndex = 0
                     }
 
-                    Write-BucketLog -Data "DetailsDataGrid ItemsSource successfully set ($($detailsList.Count) items)" -Level Info
+                    Write-BucketLog -Data "[SelectImage] DetailsDataGrid ItemsSource successfully set ($($detailsList.Count) items)" -Level Info
                 }
                 catch {
-                    Write-BucketLog -Data "Error setting ItemsSource for DetailsDataGrid: $_" -Level Error
+                    Write-BucketLog -Data "[SelectImage] Error setting ItemsSource for DetailsDataGrid: $_" -Level Error
                 }
             }
 
@@ -551,7 +548,7 @@ function Initialize-BucketSelectImagePage {
                 $importISOButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Import ISO button clicked" -Level "Debug"
+                        Write-BucketLog -Data "[SelectImage] Import ISO button clicked" -Level Debug
 
                         Import-BucketISO
                     })
@@ -562,7 +559,7 @@ function Initialize-BucketSelectImagePage {
                 $importWIMButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Import WIM button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Import WIM button clicked" -Level Info
 
                         # Show file dialog to select WIM file
                         $dialog = New-Object Microsoft.Win32.OpenFileDialog
@@ -571,7 +568,7 @@ function Initialize-BucketSelectImagePage {
 
                         if ($dialog.ShowDialog()) {
                             $wimPath = $dialog.FileName
-                            Write-BucketLog -Data "Selected WIM: $wimPath" -Level "Info"
+                            Write-BucketLog -Data "[SelectImage] Selected WIM: $wimPath" -Level Info
 
                             # Process the WIM file
                             if (Get-Command -Name "Import-BucketWIM" -ErrorAction SilentlyContinue) {
@@ -586,7 +583,7 @@ function Initialize-BucketSelectImagePage {
                                     }
                                 }
                                 catch {
-                                    Write-BucketLog -Data "Error importing WIM: $_" -Level "Error"
+                                    Write-BucketLog -Data "[SelectImage] Error importing WIM: $_" -Level Error
                                 }
                             }
                         }
@@ -597,7 +594,7 @@ function Initialize-BucketSelectImagePage {
                 $refreshButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Refresh button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Refresh button clicked" -Level Info
 
                         # Refresh the images list
                         if (Get-Command -Name "Get-BucketImages" -ErrorAction SilentlyContinue) {
@@ -613,7 +610,7 @@ function Initialize-BucketSelectImagePage {
                                 $imagesDataGrid.ItemsSource = $observableImages
                             }
                             catch {
-                                Write-BucketLog -Data "Error refreshing images: $_" -Level "Error"
+                                Write-BucketLog -Data "[SelectImage] Error refreshing images: $_" -Level Error
                             }
                         }
                     })
@@ -623,7 +620,7 @@ function Initialize-BucketSelectImagePage {
                 $deleteButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Delete button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Delete button clicked" -Level Info
 
                         # Get selected images
                         $selectedImages = $imagesDataGrid.ItemsSource | Where-Object { $_.SelectImage_Images_IsSelected -eq $true }
@@ -651,7 +648,7 @@ function Initialize-BucketSelectImagePage {
                                         }
                                     }
                                     catch {
-                                        Write-BucketLog -Data "Error deleting images: $_" -Level "Error"
+                                        Write-BucketLog -Data "[SelectImage] Error deleting images: $_" -Level Error
                                     }
                                 }
                             }
@@ -671,7 +668,7 @@ function Initialize-BucketSelectImagePage {
                 $selectAllCheckbox.Add_Checked({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Select All checkbox checked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Select All checkbox checked" -Level Info
 
                         if ($imagesDataGrid -and $imagesDataGrid.ItemsSource) {
                             foreach ($image in $imagesDataGrid.ItemsSource) {
@@ -684,7 +681,7 @@ function Initialize-BucketSelectImagePage {
                 $selectAllCheckbox.Add_Unchecked({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Select All checkbox unchecked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Select All checkbox unchecked" -Level Info
 
                         if ($imagesDataGrid -and $imagesDataGrid.ItemsSource) {
                             foreach ($image in $imagesDataGrid.ItemsSource) {
@@ -699,7 +696,7 @@ function Initialize-BucketSelectImagePage {
                 $nextButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Next button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Next button clicked" -Level Info
 
                         # Check if an image is selected
                         $selectedImage = $imagesDataGrid.SelectedItem
@@ -726,7 +723,7 @@ function Initialize-BucketSelectImagePage {
                 $previousButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Previous button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Previous button clicked" -Level Info
 
                         # Navigate to the previous page
                         Invoke-BucketHomePage
@@ -737,7 +734,7 @@ function Initialize-BucketSelectImagePage {
                 $skipButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Skip button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Skip button clicked" -Level Info
 
                         # Navigate to the next page without selecting an image
                         # TODO: Replace with actual next page when implemented
@@ -749,7 +746,7 @@ function Initialize-BucketSelectImagePage {
                 $summaryButton.Add_Click({
                         param($senderObj, $e)
 
-                        Write-BucketLog -Data "Summary button clicked" -Level "Info"
+                        Write-BucketLog -Data "[SelectImage] Summary button clicked" -Level Info
 
                         # Navigate to the summary page
                         # TODO: Replace with actual summary page when implemented
@@ -757,25 +754,17 @@ function Initialize-BucketSelectImagePage {
                     })
             }
 
-            Write-BucketLog -Data "SelectImagePage event handlers configured successfully" -Level "Info"
+            Write-BucketLog -Data "[SelectImage] SelectImagePage event handlers configured successfully" -Level Info
         }
         #endregion Event Handlers
 
         #region Data Context Creation
-        # Create the data context for the page with necessary data and handlers
         $dataContext = [PSCustomObject]@{
-            # Image data for initial binding (make it accessible in the page context)
             SelectImage_Images  = $images
             SelectImage_Details = $imageDetails
-
-            # Event handler for page loaded event
             PageLoaded          = $pageLoadedHandler
         }
-
-        # Log the data context creation for debugging
-        Write-BucketLog -Data "Created SelectImagePage data context with $($images.Count) images and $($imageDetails.Count) detail items" -Level Info
-
-        # Navigate to the Select Image page with our custom data context
+        Write-BucketLog -Data "[SelectImage] Created SelectImagePage data context with $($images.Count) images and $($imageDetails.Count) detail items" -Level Info
         Invoke-BucketNavigationService -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $dataContext
         #endregion Data Context Creation
     }

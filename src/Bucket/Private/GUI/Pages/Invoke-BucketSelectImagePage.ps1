@@ -1,10 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Function to navigate to the Select Image page in the Bucket application
+    Navigates to the Select Image page in the Bucket application
 
 .DESCRIPTION
-    This function navigates to the select image page in the Bucket application.
-    It calls the central navigation service with the appropriate page tag.
+    Navigates to the Select Image page by calling the central navigation service with the appropriate page tag and initialization function.
 
 .NOTES
     Name:        Invoke-BucketSelectImagePage.ps1
@@ -17,12 +16,12 @@
 .LINK
     https://github.com/mchave3/Bucket
 #>
-
 function Invoke-BucketSelectImagePage {
     [CmdletBinding()]
     param()
 
     process {
+        Write-BucketLog -Data "[SelectImage] Navigating to Select Image page" -Level Info
         Invoke-BucketPage -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketSelectImagePage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }

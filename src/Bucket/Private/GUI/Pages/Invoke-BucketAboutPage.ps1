@@ -1,10 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Function to navigate to the About page in the Bucket application
+    Navigates to the About page in the Bucket application
 
 .DESCRIPTION
-    This function navigates to the About page in the Bucket application.
-    It calls the central navigation service with the appropriate page tag.
+    Navigates to the About page by calling the central navigation service with the appropriate page tag and initialization function.
 
 .NOTES
     Name:        Invoke-BucketAboutPage.ps1
@@ -17,12 +16,12 @@
 .LINK
     https://github.com/mchave3/Bucket
 #>
-
 function Invoke-BucketAboutPage {
     [CmdletBinding()]
     param()
 
     process {
+        Write-BucketLog -Data "[About] Navigating to About page" -Level Info
         Invoke-BucketPage -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketAboutPage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }
