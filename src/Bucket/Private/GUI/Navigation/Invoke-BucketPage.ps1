@@ -16,25 +16,35 @@
 .EXAMPLE
     Invoke-BucketPage -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketHomePage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
 #>
+
 function Invoke-BucketPage {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$PageTag,
+
         [Parameter(Mandatory = $true)]
         [System.Windows.Controls.Frame]$RootFrame,
+
         [Parameter(Mandatory = $true)]
         [string]$InitFunction,
+
         [Parameter(Mandatory = $false)]
         [hashtable]$NavigationServiceParams = @{}
     )
+
     process {
-        Write-BucketLog -Data "Invoke-BucketPage: Navigating to $PageTag via $InitFunction" -Level Debug
+        # Log navigation attempt
+        Write-BucketLog -Data "[Navigation] Invoke-BucketPage: Navigating to $PageTag via $InitFunction" -Level Debug
+
+        #region Main Logic
+        # Check if the initialization function exists, otherwise fallback to navigation service
         if (Get-Command -Name $InitFunction -ErrorAction SilentlyContinue) {
+            # Call the initialization function for the page
             & $InitFunction
         }
         else {
-            Write-BucketLog -Data "$InitFunction not found, using navigation service fallback" -Level Warning
+            Write-BucketLog -Data "[Navigation] $InitFunction not found, using navigation service fallback" -Level Warning
             $params = @{
                 PageTag   = $PageTag
                 RootFrame = $RootFrame
@@ -44,5 +54,6 @@ function Invoke-BucketPage {
             }
             Invoke-BucketNavigationService @params
         }
+        #endregion Main Logic
     }
 }

@@ -52,123 +52,112 @@ function Invoke-BucketNavigationService {
     )
 
     process {
-        Write-BucketLog -Data "Navigation service: Navigating to page: $PageTag" -Level Debug
+        #region Navigation Service Entry
+        # Log the navigation request for traceability
+        Write-BucketLog -Data "[Navigation] Navigating to page: $PageTag" -Level Debug
+        #endregion
 
-        # Determine which page dictionary to use
+        #region Page Dictionary Resolution
+        # Select the page dictionary (custom or script-scope)
         $pages = $PageDictionary
         if (-not $pages) {
-            # Fall back to global script-level pages dictionary if available
             $pages = $script:pages
         }
+        #endregion
 
-        # Ensure the page tag exists in our dictionary
+        #region PageTag & Frame Validation
+        # Validate page existence and frame
         if (-not $pages.ContainsKey($PageTag)) {
-            Write-BucketLog -Data "Page $PageTag not found in page dictionary." -Level Error
+            Write-BucketLog -Data "[Navigation] Page $PageTag not found in page dictionary." -Level Error
             return
         }
-
-        # Verify that we have a valid frame
         if (-not $RootFrame) {
-            Write-BucketLog -Data "RootFrame UI element not provided or is null" -Level Error
+            Write-BucketLog -Data "[Navigation] RootFrame UI element not provided or is null" -Level Error
             return
         }
+        #endregion
 
         try {
-            # Get the page name
+            #region XAML Path & Loading
+            # Build XAML file path and clean up design-time attributes
             $pageName = $pages[$PageTag]
-            $simplePageName = $pageName.Split('.')[-1]  # Extract just the page name part
-
-            # Determine base path for XAML files
+            $simplePageName = $pageName.Split('.')[-1]
             $basePath = $XamlBasePath
             if (-not $basePath) {
-                # Default to standard GUI path if not specified
-                $basePath = "$PSScriptRoot\GUI"
+                $basePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI"
             }
-
-            # Construct the path to the XAML file
             $xamlFilePath = "$basePath\$simplePageName.xaml"
+            Write-BucketLog -Data "[Navigation] Looking for XAML file: $xamlFilePath" -Level Debug
+            #endregion
 
-            Write-BucketLog -Data "Looking for XAML file: $xamlFilePath" -Level Debug
-
-            # Check if the XAML file exists
             if (Test-Path -Path $xamlFilePath) {
-                Write-BucketLog -Data "Loading XAML file: $xamlFilePath" -Level Debug
-
-                # Load the XAML content
+                #region XAML Loading
+                # Load and parse the XAML file
+                Write-BucketLog -Data "[Navigation] Loading XAML file: $xamlFilePath" -Level Debug
                 $xamlContent = Get-Content -Path $xamlFilePath -Raw
-
-                # Clean up the XAML for PowerShell's XML parser
                 $xamlContent = $xamlContent -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
                 $xamlContent = $xamlContent -replace 'xmlns:d="http://schemas.microsoft.com/expression/blend/2008"', ''
                 $xamlContent = $xamlContent -replace 'mc:Ignorable="d"', ''
                 $xamlContent = $xamlContent -replace 'x:Class="[^"]*"', ''
-
-                # Create the XML document
                 $xamlDoc = New-Object System.Xml.XmlDocument
                 $xamlDoc.LoadXml($xamlContent)
-
-                # Create the page object from XAML
                 $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
                 $page = [Windows.Markup.XamlReader]::Load($reader)
+                #endregion
 
-                # Handle the DataContext for the page
-                # If a custom DataContext is provided, we need to merge it with the global one
+                #region DataContext Handling
+                # Merge DataContext with global context if provided
                 if ($null -ne $DataContext) {
-                    # Create a shallow copy of the global data context properties
                     $properties = @{}
-
-                    # Determine which global context to use
                     $globalContext = $GlobalDataContext
                     if ($null -eq $globalContext) {
-                        # Fall back to script level global context if available
                         $globalContext = $script:globalDataContext
                     }
-
-                    # Add global context properties first (if available)
                     if ($null -ne $globalContext) {
                         foreach ($property in $globalContext.PSObject.Properties) {
                             $properties[$property.Name] = $property.Value
                         }
                     }
-
-                    # Add/override with custom context properties
                     foreach ($property in $DataContext.PSObject.Properties) {
                         $properties[$property.Name] = $property.Value
                     }
-
-                    # Create new PSObject with combined properties
                     $mergedContext = New-Object PSObject -Property $properties
                     $page.DataContext = $mergedContext
-
-                    Write-BucketLog -Data "Created merged DataContext for page $simplePageName" -Level Debug
+                    Write-BucketLog -Data "[Navigation] Created merged DataContext for page $simplePageName" -Level Debug
                 }
                 else {
-                    # No custom context, use the provided global or fall back to script level
                     $globalContext = $GlobalDataContext
                     if ($null -eq $globalContext) {
-                        # Fall back to script level global context if available
                         $globalContext = $script:globalDataContext
                     }
                     $page.DataContext = $globalContext
-                    Write-BucketLog -Data "Using global DataContext for page $simplePageName" -Level Debug
+                    Write-BucketLog -Data "[Navigation] Using global DataContext for page $simplePageName" -Level Debug
                 }
+                #endregion
 
-                # Add the Loaded event handler if provided in DataContext
+                #region PageLoaded Event
+                # Attach PageLoaded event handler if present
                 if ($DataContext -and $DataContext.PSObject.Properties['PageLoaded']) {
                     $page.Add_Loaded($DataContext.PageLoaded)
-                    Write-BucketLog -Data "Added PageLoaded event handler for $simplePageName" -Level Debug
+                    Write-BucketLog -Data "[Navigation] Added PageLoaded event handler for $simplePageName" -Level Debug
                 }
+                #endregion
 
-                # Navigate to the page
+                #region Navigation
+                # Navigate to the loaded page
                 $RootFrame.Navigate($page)
-                Write-BucketLog -Data "Successfully navigated to XAML page: $simplePageName" -Level Info
+                Write-BucketLog -Data "[Navigation] Successfully navigated to XAML page: $simplePageName" -Level Info
+                #endregion
 
-                # Execute OnNavigationComplete if provided
+                #region Navigation Completion Callback
+                # Call navigation completion callback if provided
                 if ($OnNavigationComplete) {
                     & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
                 }
-                # Fall back to the default navigation button style update if available
-                # Prepare the navigation button mapping for the main window
+                #endregion
+
+                #region Navigation Button Style
+                # Optionally update navigation button styles if available
                 $mainNavButtons = @{
                     "homePage"        = $WPF_MainWindow_NavHome
                     "selectImagePage" = $WPF_MainWindow_NavSelectImage
@@ -177,33 +166,26 @@ function Invoke-BucketNavigationService {
                 if (Get-Command 'Update-BucketNavigationStyle' -ErrorAction SilentlyContinue) {
                     Update-BucketNavigationStyle -PageTag $PageTag -ButtonMap $mainNavButtons -ResourceContext $WPF_MainWindow
                 }
+                #endregion
             }
             else {
-                Write-BucketLog -Data "XAML file not found: $xamlFilePath - Creating fallback page" -Level Warning
-
-                # Create a fallback page
+                #region Fallback Page
+                # Show a simple error page if XAML is missing
+                Write-BucketLog -Data "[Navigation] XAML file not found: $xamlFilePath - Creating fallback page" -Level Warning
                 $page = New-Object -TypeName System.Windows.Controls.Page
-
-                # Create a StackPanel for page content
                 $stackPanel = New-Object -TypeName System.Windows.Controls.StackPanel
                 $stackPanel.Margin = New-Object -TypeName System.Windows.Thickness -ArgumentList 20
-
-                # Create a TextBlock with the page name
                 $titleBlock = New-Object -TypeName System.Windows.Controls.TextBlock
                 $titleBlock.Text = $simplePageName
                 $titleBlock.FontSize = 24
                 $titleBlock.FontWeight = "Bold"
                 $titleBlock.Margin = New-Object -TypeName System.Windows.Thickness -ArgumentList 0, 0, 0, 20
                 $stackPanel.Children.Add($titleBlock)
-
-                # Add description text
                 $descBlock = New-Object -TypeName System.Windows.Controls.TextBlock
                 $descBlock.Text = "The XAML file for this page ($simplePageName.xaml) was not found."
                 $descBlock.FontSize = 16
                 $descBlock.TextWrapping = "Wrap"
                 $stackPanel.Children.Add($descBlock)
-
-                # Add the path of the file that was being searched for
                 $pathBlock = New-Object -TypeName System.Windows.Controls.TextBlock
                 $pathBlock.Text = "Path searched: $xamlFilePath"
                 $pathBlock.FontSize = 12
@@ -211,23 +193,21 @@ function Invoke-BucketNavigationService {
                 $pathBlock.TextWrapping = "Wrap"
                 $pathBlock.Margin = New-Object -TypeName System.Windows.Thickness -ArgumentList 0, 5, 0, 0
                 $stackPanel.Children.Add($pathBlock)
-
-                # Add the StackPanel to the Page
                 $page.Content = $stackPanel
                 $page.DataContext = $script:globalDataContext
-
-                # Navigate to the page
                 $RootFrame.Navigate($page)
-                Write-BucketLog -Data "Successfully navigated to fallback page for: $simplePageName" -Level Info
-
-                # Execute OnNavigationComplete if provided
+                Write-BucketLog -Data "[Navigation] Successfully navigated to fallback page for: $simplePageName" -Level Info
                 if ($OnNavigationComplete) {
                     & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
                 }
+                #endregion
             }
         }
         catch {
-            Write-BucketLog -Data "Failed to navigate to page $PageTag : $_" -Level Error
+            #region Error Handling
+            # Log any navigation errors
+            Write-BucketLog -Data "[Navigation] Failed to navigate to page $PageTag : $_" -Level Error
+            #endregion
         }
     }
 }

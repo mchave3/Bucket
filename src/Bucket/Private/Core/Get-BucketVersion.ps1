@@ -22,23 +22,19 @@
 #>
 function Get-BucketVersion {
     [CmdletBinding()]
-    param(
-
-    )
+    param()
 
     process {
-        # First check currently loaded module (module in use)
+        #region Module Lookup
+        # Check if the Bucket module is currently loaded
         $loadedModule = Get-Module -Name "Bucket"
-
         if ($loadedModule) {
-            # We found the currently loaded module
             $module = $loadedModule
         }
         else {
             # If not loaded, search in available modules
             $module = Get-Module -Name "Bucket" -ListAvailable |
                 ForEach-Object {
-                    # Create full semantic version including prerelease
                     $fullVersionStr = $_.Version.ToString()
                     if ($_.PrivateData.PSData.Prerelease) {
                         $fullVersionStr += "-$($_.PrivateData.PSData.Prerelease)"
@@ -47,12 +43,10 @@ function Get-BucketVersion {
                 } |
                 Sort-Object { [System.Management.Automation.SemanticVersion]$_.FullVersionString } -Descending |
                 Select-Object -First 1
-
             if (-not $module) {
                 # Search by partial match if exact module not found
                 $module = Get-Module -ListAvailable | Where-Object { $_.Name -match "Bucket" } |
                     ForEach-Object {
-                        # Create full semantic version including prerelease
                         $fullVersionStr = $_.Version.ToString()
                         if ($_.PrivateData.PSData.Prerelease) {
                             $fullVersionStr += "-$($_.PrivateData.PSData.Prerelease)"
@@ -63,18 +57,20 @@ function Get-BucketVersion {
                     Select-Object -First 1
             }
         }
+        #endregion
 
-        # Check version and include pre-release if available
+        #region Version Assignment & Logging
         if ($module) {
             $script:BucketVersion = $module.Version.ToString()
             if ($module.PrivateData.PSData.Prerelease) {
                 $script:BucketVersion += "-$($module.PrivateData.PSData.Prerelease)"
             }
-            Write-BucketLog -Data "Bucket version: $script:BucketVersion" -Level Verbose
+            Write-BucketLog -Data "[Bucket] Version: $script:BucketVersion" -Level Verbose
         }
         else {
             $script:BucketVersion = "Version not found"
-            Write-BucketLog -Data "Bucket module not found or not loaded" -Level Warning
+            Write-BucketLog -Data "[Bucket] Module not found or not loaded" -Level Warning
         }
+        #endregion
     }
 }

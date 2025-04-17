@@ -20,45 +20,46 @@
 .EXAMPLE
     Update-BucketNavigationStyle -PageTag "homePage" -ButtonMap $mainNavButtons -ResourceContext $WPF_MainWindow
 #>
+
 function Update-BucketNavigationStyle {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory = $true)]
         [string]$PageTag,
+
         [Parameter(Mandatory = $true)]
         [hashtable]$ButtonMap,
+
         [Parameter(Mandatory = $false)]
         $ResourceContext = $null,
+
         [Parameter(Mandatory = $false)]
         [string]$DefaultStyleKey = 'MenuButtonStyle',
+
         [Parameter(Mandatory = $false)]
         [string]$SelectedStyleKey = 'SelectedMenuButtonStyle'
     )
     process {
         if ($PSCmdlet.ShouldProcess("Navigation button for page $PageTag", "Update style")) {
             try {
-                Write-BucketLog -Data "Updating navigation button style for: $PageTag" -Level Debug
-                # Collect all buttons
-                $allButtons = $ButtonMap.Values | Where-Object { $_ }
+                Write-BucketLog -Data "[Navigation] Updating navigation button style for: $PageTag" -Level Debug
 
-                # Improved strategy to find resource context
+                #region Collect Buttons
+                # Gather all valid button objects from the provided map
+                $allButtons = $ButtonMap.Values | Where-Object { $_ }
+                #endregion
+
+                #region Resource Context Resolution
+                # Build a list of potential resource contexts for style lookup
                 $defaultStyle = $null
                 $selectedStyle = $null
-
-                # Hierarchical search for styles across multiple possible contexts
                 $potentialContexts = @()
-
-                # 1. Explicitly provided context
                 if ($ResourceContext) {
                     $potentialContexts += $ResourceContext
                 }
-
-                # 2. Button templates
                 if ($allButtons.Count -gt 0) {
                     $potentialContexts += $allButtons | ForEach-Object { $_.TemplatedParent }
                 }
-
-                # 3. Button parents (traverse up the WPF tree)
                 if ($allButtons.Count -gt 0) {
                     $potentialContexts += $allButtons | ForEach-Object {
                         $parent = $_.Parent
@@ -68,27 +69,21 @@ function Update-BucketNavigationStyle {
                         }
                     }
                 }
-
-                # 4. Application itself (global level)
                 if ([System.Windows.Application]::Current) {
                     $potentialContexts += [System.Windows.Application]::Current
                     $potentialContexts += [System.Windows.Application]::Current.MainWindow
                 }
-
-                # 5. Known scope variables that might contain MainWindow
                 if (Get-Variable -Name WPF_MainWindow -ErrorAction SilentlyContinue) {
                     $potentialContexts += Get-Variable -Name WPF_MainWindow -ValueOnly -ErrorAction SilentlyContinue
                 }
-
-                # Clean up duplicates and null objects
+                # Remove duplicates and nulls
                 $potentialContexts = $potentialContexts | Where-Object { $_ -ne $null } | Select-Object -Unique
+                #endregion
 
-                # Look for styles in each context until found
+                #region Style Lookup
+                # Attempt to find the required styles in the available contexts
                 foreach ($context in $potentialContexts) {
-                    if ($defaultStyle -and $selectedStyle) {
-                        break  # Already found, stop searching
-                    }
-
+                    if ($defaultStyle -and $selectedStyle) { break }
                     try {
                         if (-not $defaultStyle) {
                             $defaultStyle = $context.FindResource($DefaultStyleKey)
@@ -98,20 +93,20 @@ function Update-BucketNavigationStyle {
                         }
                     }
                     catch {
-                        Write-BucketLog -Data "Failed to find styles in context: $_" -Level Warning
+                        Write-BucketLog -Data "[Navigation] Failed to find styles in context: $_" -Level Warning
                     }
                 }
+                #endregion
 
-                # Plan B: If no styles found, try dynamic creation
+                #region Fallback Style Creation
+                # If styles are not found, create basic fallback styles for buttons
                 if (-not $defaultStyle -or -not $selectedStyle) {
-                    Write-BucketLog -Data "Trying alternative style lookup method..." -Level Debug
+                    Write-BucketLog -Data "[Navigation] Trying alternative style lookup method..." -Level Debug
                     try {
-                        # Create basic default style as fallback
                         if (-not $defaultStyle) {
                             $defaultStyle = New-Object System.Windows.Style([System.Windows.Controls.Button])
                         }
                         if (-not $selectedStyle) {
-                            # Create selected style based on default
                             $selectedStyle = New-Object System.Windows.Style([System.Windows.Controls.Button])
                             $selectedStyle.BasedOn = $defaultStyle
                             $bgSetter = New-Object System.Windows.Setter([System.Windows.Controls.Control]::BackgroundProperty, [System.Windows.Media.Brushes]::LightBlue)
@@ -119,28 +114,33 @@ function Update-BucketNavigationStyle {
                         }
                     }
                     catch {
-                        Write-BucketLog -Data "Failed to create fallback styles: $_" -Level Warning
+                        Write-BucketLog -Data "[Navigation] Failed to create fallback styles: $_" -Level Warning
                     }
                 }
+                #endregion
 
-                # Final verification
+                #region Style Application
+                # Abort if styles are still missing
                 if (-not $defaultStyle -or -not $selectedStyle) {
-                    Write-BucketLog -Data "Navigation styles not found in any resource context, skipping style update" -Level Warning
+                    Write-BucketLog -Data "[Navigation] Navigation styles not found in any resource context, skipping style update" -Level Warning
                     return
                 }
-                # Reset all buttons to default style
+                # Apply default style to all buttons
                 foreach ($btn in $allButtons) {
                     $btn.Style = $defaultStyle
                 }
-                # Set selected style for the current page
+                # Apply selected style to the button for the current page
                 if ($ButtonMap.ContainsKey($PageTag) -and $ButtonMap[$PageTag]) {
                     $ButtonMap[$PageTag].Style = $selectedStyle
-                    Write-BucketLog -Data "Set selected style for: $PageTag" -Level Verbose
+                    Write-BucketLog -Data "[Navigation] Set selected style for: $PageTag" -Level Verbose
                 }
-                Write-BucketLog -Data "Navigation button style updated successfully" -Level Debug
+                Write-BucketLog -Data "[Navigation] Navigation button style updated successfully" -Level Debug
+                #endregion
             }
             catch {
-                Write-BucketLog -Data "Failed to update navigation button style: $_" -Level Error
+                #region Error Handling
+                Write-BucketLog -Data "[Navigation] Failed to update navigation button style: $_" -Level Error
+                #endregion
             }
         }
     }
