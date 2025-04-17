@@ -8,7 +8,7 @@
 
 .NOTES
     Name:        Update-BucketISOButtonVisibility.ps1
-    Author:      Mickau00ebl CHAVE
+    Author:      Mickaël CHAVE
     Created:     04/16/2025
     Version:     1.0.0
     Repository:  https://github.com/mchave3/Bucket
@@ -28,14 +28,15 @@ function Update-BucketISOButtonVisibility {
     )
 
     process {
+        #region Button Visibility Logic
         if ($PSCmdlet.ShouldProcess("Navigation buttons", "Update visibility for '$CurrentPage' page")) {
-            # Default visibility for buttons
+            # Set default visibility for all navigation buttons
             $previousVisible = $true
             $nextVisible = $true
             $summaryVisible = $true
             $cancelVisible = $true
 
-            # Adjust visibility based on current page
+            # Adjust visibility based on the current page
             switch ($CurrentPage) {
                 "dataSourcePage" {
                     $previousVisible = $false
@@ -49,20 +50,19 @@ function Update-BucketISOButtonVisibility {
                 "completionPage" {
                     $previousVisible = $false
                     $nextVisible = $false
-                    # Rename Cancel button to "Close" on completion page
                     $WPF_MainWindow_ImportISO_CancelButton.Content = "Close"
                 }
                 default {
-                    # Reset Cancel button text for other pages
                     $WPF_MainWindow_ImportISO_CancelButton.Content = "Cancel"
                 }
             }
 
-            # Apply visibility settings
+            # Apply visibility settings to UI
             $WPF_MainWindow_ImportISO_PreviousButton.Visibility = if ($previousVisible) { "Visible" } else { "Collapsed" }
             $WPF_MainWindow_ImportISO_NextButton.Visibility = if ($nextVisible) { "Visible" } else { "Collapsed" }
             $WPF_MainWindow_ImportISO_SummaryButton.Visibility = if ($summaryVisible) { "Visible" } else { "Collapsed" }
             $WPF_MainWindow_ImportISO_CancelButton.Visibility = if ($cancelVisible) { "Visible" } else { "Collapsed" }
         }
+        #endregion
     }
 }

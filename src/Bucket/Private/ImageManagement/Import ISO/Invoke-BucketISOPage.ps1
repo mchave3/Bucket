@@ -25,31 +25,34 @@ function Invoke-BucketISOPage {
     param(
         [Parameter(Mandatory = $true)]
         [string]$PageTag,
-
         [Parameter(Mandatory = $false)]
         [PSCustomObject]$PageDataContext
     )
 
     process {
+        #region Navigation State & UI Update
         $script:ImportISODataContext.CurrentPage = $PageTag
         Update-BucketISONavigationUI -CurrentPage $PageTag
         Update-BucketISOButtonVisibility -CurrentPage $PageTag
+        #endregion
+
+        #region DataContext Preparation
         $initializeFunctionName = "Initialize-BucketISO_$($PageTag)"
         $navParams = @{ DataContext = $script:ImportISODataContext }
         if ($PageDataContext) {
-            # Merge the DataContext page-specific properties with the global DataContext
+            # Merge page-specific properties with the global DataContext
             $properties = @{}
             foreach ($property in $script:ImportISODataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             foreach ($property in $PageDataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             $navParams.DataContext = [PSCustomObject]$properties
         }
-        # Add the page dictionary to navigation parameters
         $navParams.PageDictionary = $script:ImportISOPages
-
-        # Get XAML base path for ImportISO pages
         $xamlBasePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement"
         $navParams.XamlBasePath = $xamlBasePath
+        #endregion
 
+        #region Page Invocation
         Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_MainWindow_ImportISO_MainFrame -InitFunction $initializeFunctionName -NavigationServiceParams $navParams
+        #endregion
     }
 }

@@ -3,7 +3,11 @@
     Initializes the Data Source Page for Bucket ISO import
 
 .DESCRIPTION
-    Sets up the data context and event handlers for the Bucket ISO import data source page
+    Sets up the UI elements and event handlers for the Data Source Page
+    in the Bucket ISO import wizard. This includes handling file selection,
+    output path configuration, and radio button state management.
+    The page is designed to allow users to select an ISO file and specify
+    the output directory for extracted WIM files.
 
 .NOTES
     Name:        Initialize-BucketISO_DataSourcePage.ps1
@@ -24,25 +28,21 @@ function Initialize-BucketISO_DataSourcePage {
     param()
 
     process {
-        Write-BucketLog -Data "Initializing ISO import data source page" -Level Info
-
-        #region Page Setup
-        # Get the default ImportedWIMs directory
+        #region Initialization
+        Write-BucketLog -Data "[ISO Import] Initializing data source page" -Level Info
         $defaultOutputPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
         $script:ImportISODataContext.DefaultImportedWims = $defaultOutputPath
+        #endregion
 
-        # Store page reference globally so event handlers can access it
-
-        # Page loaded event handler
+        #region Page Logic
         $pageLoadedHandler = {
             param($senderObj, $e)
 
-            # Store page reference for access in events
+            # Store page reference for event access
             $script:importISOCurrentPage = $senderObj
+            Write-BucketLog -Data "[ISO Import] Data source page loaded" -Level Info
 
-            Write-BucketLog -Data "ISO import data source page loaded" -Level Info
-
-            # Find UI controls
+            # Retrieve UI controls
             $browseISOButton = $senderObj.FindName("ImportISO_DataSource_BrowseISOButton")
             $browseOutputButton = $senderObj.FindName("ImportISO_DataSource_BrowseOutputButton")
             $useDefaultLocation = $senderObj.FindName("ImportISO_DataSource_UseDefaultLocation")
@@ -50,143 +50,97 @@ function Initialize-BucketISO_DataSourcePage {
             $isoPathTextBox = $senderObj.FindName("ImportISO_DataSource_ISOPathTextBox")
             $outputPathTextBox = $senderObj.FindName("ImportISO_DataSource_OutputPathTextBox")
 
-            # Set initial values
+            # Set initial values for textboxes and output path
             if ($isoPathTextBox -and -not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath)) {
                 $isoPathTextBox.Text = $script:ImportISODataContext.ISOSourcePath
             }
-
-            # Initialize default path if not set
             if (-not $script:ImportISODataContext.OutputPath) {
                 $script:ImportISODataContext.OutputPath = $defaultOutputPath
             }
-
             if ($outputPathTextBox) {
                 $outputPathTextBox.Text = $script:ImportISODataContext.OutputPath
             }
 
-            # Set radio button states - Always select default location first
-            if ($useDefaultLocation) {
-                $useDefaultLocation.IsChecked = $true
-            }
-
-            if ($useCustomLocation) {
-                $useCustomLocation.IsChecked = $false
-            }
-
-            # Now update the output path based on the selected radio button
+            # Set radio button states (default: use default location)
+            if ($useDefaultLocation) { $useDefaultLocation.IsChecked = $true }
+            if ($useCustomLocation) { $useCustomLocation.IsChecked = $false }
             $script:ImportISODataContext.UseCustomLocation = $false
-
-            # Ensure output path is set to default path
             $script:ImportISODataContext.OutputPath = $defaultOutputPath
 
-            # Set up event handlers for buttons
+            # ISO file browse button event
             if ($browseISOButton) {
                 $browseISOButton.Add_Click({
                         $openFileDialog = New-Object Microsoft.Win32.OpenFileDialog
                         $openFileDialog.Filter = "ISO Files (*.iso)|*.iso|All Files (*.*)|*.*"
                         $openFileDialog.Title = "Select an ISO file"
-
                         if ($openFileDialog.ShowDialog()) {
                             $script:ImportISODataContext.ISOSourcePath = $openFileDialog.FileName
-
-                            # Access the TextBox through the stored page reference
                             $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_ISOPathTextBox")
-                            if ($textBox) {
-                                $textBox.Text = $openFileDialog.FileName
-                            }
-
-                            Write-BucketLog -Data "Selected ISO file: $($openFileDialog.FileName)" -Level Info
+                            if ($textBox) { $textBox.Text = $openFileDialog.FileName }
+                            Write-BucketLog -Data "[ISO Import] ISO file selected: $($openFileDialog.FileName)" -Level Info
                         }
                     })
             }
 
+            # Output directory browse button event
             if ($browseOutputButton) {
                 $browseOutputButton.Add_Click({
                         $folderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog
                         $folderBrowserDialog.Description = "Select output directory for extracted WIM"
-
                         if ($folderBrowserDialog.ShowDialog() -eq 'OK') {
                             $script:ImportISODataContext.OutputPath = $folderBrowserDialog.SelectedPath
-
-                            # Access the TextBox through the stored page reference
                             $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
-                            if ($textBox) {
-                                $textBox.Text = $folderBrowserDialog.SelectedPath
-                            }
-
-                            Write-BucketLog -Data "Selected custom output directory: $($folderBrowserDialog.SelectedPath)" -Level Info
+                            if ($textBox) { $textBox.Text = $folderBrowserDialog.SelectedPath }
+                            Write-BucketLog -Data "[ISO Import] Custom output directory selected: $($folderBrowserDialog.SelectedPath)" -Level Info
                         }
                     })
             }
 
-            # Radio button change events
+            # Radio button event: use default location
             if ($useDefaultLocation) {
                 $useDefaultLocation.Add_Checked({
                         $script:ImportISODataContext.UseCustomLocation = $false
                         $script:ImportISODataContext.OutputPath = $defaultOutputPath
-
-                        # Update the browse button state directly (disable it)
                         $browseBtn = $script:importISOCurrentPage.FindName("ImportISO_DataSource_BrowseOutputButton")
-                        if ($browseBtn) {
-                            $browseBtn.IsEnabled = $false
-                        }
-
-                        # Also update the output textbox state (disable it)
+                        if ($browseBtn) { $browseBtn.IsEnabled = $false }
                         $outputTxt = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
-                        if ($outputTxt) {
-                            $outputTxt.IsEnabled = $false
-                        }
-
-                        Write-BucketLog -Data "Using default output directory $defaultOutputPath" -Level Info
+                        if ($outputTxt) { $outputTxt.IsEnabled = $false }
+                        Write-BucketLog -Data "[ISO Import] Using default output directory: $defaultOutputPath" -Level Info
                     })
             }
-
+            # Radio button event: use custom location
             if ($useCustomLocation) {
                 $useCustomLocation.Add_Checked({
                         $script:ImportISODataContext.UseCustomLocation = $true
-
-                        # Update the browse button state directly
                         $browseBtn = $script:importISOCurrentPage.FindName("ImportISO_DataSource_BrowseOutputButton")
-                        if ($browseBtn) {
-                            $browseBtn.IsEnabled = $true
-                        }
-
-                        # Also update the output textbox state
+                        if ($browseBtn) { $browseBtn.IsEnabled = $true }
                         $outputTxt = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
-                        if ($outputTxt) {
-                            $outputTxt.IsEnabled = $true
-                        }
-
-                        Write-BucketLog -Data "Using custom output directory" -Level Info
+                        if ($outputTxt) { $outputTxt.IsEnabled = $true }
+                        Write-BucketLog -Data "[ISO Import] Using custom output directory" -Level Info
                     })
             }
 
-            Write-BucketLog -Data "ISO import data source page event handlers configured" -Level Info
+            Write-BucketLog -Data "[ISO Import] Data source page event handlers configured" -Level Debug
         }
+        #endregion
 
-        # Create the data context for the page with necessary data and handlers
+        #region DataContext & Navigation
         $dataContext = [PSCustomObject]@{
-            # Data properties (bound to UI) - these should match what the XAML expects
             ISOSourcePath       = $script:ImportISODataContext.ISOSourcePath
             OutputPath          = $script:ImportISODataContext.OutputPath
-            UseCustomLocation   = $false # Default to not using custom location
+            UseCustomLocation   = $false
             DefaultLocationText = "Use default Bucket directory: $defaultOutputPath"
-
-            # Event handler for page loaded event
             PageLoaded          = $pageLoadedHandler
         }
+        Write-BucketLog -Data "[ISO Import] Data context for data source page created" -Level Debug
 
-        # Log the data context creation for debugging
-        Write-BucketLog -Data "Created ISO import data source page context" -Level Info
-
-        # Use the generic navigation service - the Next button is already handled in Import-BucketISO.ps1
         Invoke-BucketNavigationService -PageTag "dataSourcePage" `
             -RootFrame $WPF_MainWindow_ImportISO_MainFrame `
             -XamlBasePath (Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement") `
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `
             -GlobalDataContext $script:ImportISODataContext
-
-        Write-BucketLog -Data "Data source page navigation initiated" -Level Debug
+        Write-BucketLog -Data "[ISO Import] Data source page navigation started" -Level Debug
+        #endregion
     }
 }
