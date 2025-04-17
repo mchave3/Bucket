@@ -68,17 +68,17 @@
         
         <!-- Option to choose output location -->
         <StackPanel Grid.Row="5" Margin="0,0,0,15">
-            <RadioButton x:Name="UseDefaultLocation" 
+            <RadioButton x:Name="ImportISO_DataSource_UseDefaultLocation" 
                          Margin="0,0,0,10"
-                         IsChecked="{Binding UseDefaultLocation}"
+                         IsChecked="True"
                          GroupName="OutputLocation" >
                 <TextBlock Text="{Binding DefaultLocationText}" TextWrapping="Wrap" />
             </RadioButton>
             
-            <RadioButton x:Name="UseCustomLocation" 
+            <RadioButton x:Name="ImportISO_DataSource_UseCustomLocation" 
                          Content="Specify custom directory"
                          Margin="0,0,0,10"
-                         IsChecked="{Binding UseCustomLocation}"
+                         IsChecked="False"
                          GroupName="OutputLocation" />
         </StackPanel>
         

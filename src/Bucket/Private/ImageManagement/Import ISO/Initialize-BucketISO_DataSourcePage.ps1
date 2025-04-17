@@ -32,7 +32,6 @@ function Initialize-BucketISO_DataSourcePage {
         $script:ImportISODataContext.DefaultImportedWims = $defaultOutputPath
 
         # Store page reference globally so event handlers can access it
-        $script:importISOCurrentPage = $null
 
         # Page loaded event handler
         $pageLoadedHandler = {
@@ -46,8 +45,8 @@ function Initialize-BucketISO_DataSourcePage {
             # Find UI controls
             $browseISOButton = $senderObj.FindName("ImportISO_DataSource_BrowseISOButton")
             $browseOutputButton = $senderObj.FindName("ImportISO_DataSource_BrowseOutputButton")
-            $useDefaultLocation = $senderObj.FindName("UseDefaultLocation")
-            $useCustomLocation = $senderObj.FindName("UseCustomLocation")
+            $useDefaultLocation = $senderObj.FindName("ImportISO_DataSource_UseDefaultLocation")
+            $useCustomLocation = $senderObj.FindName("ImportISO_DataSource_UseCustomLocation")
             $isoPathTextBox = $senderObj.FindName("ImportISO_DataSource_ISOPathTextBox")
             $outputPathTextBox = $senderObj.FindName("ImportISO_DataSource_OutputPathTextBox")
 
@@ -65,17 +64,20 @@ function Initialize-BucketISO_DataSourcePage {
                 $outputPathTextBox.Text = $script:ImportISODataContext.OutputPath
             }
 
-            # Set radio button states
-            if ($useDefaultLocation -and $useCustomLocation) {
-                if ($script:ImportISODataContext.OutputPath -eq $defaultOutputPath) {
-                    $useDefaultLocation.IsChecked = $true
-                    $useCustomLocation.IsChecked = $false
-                }
-                else {
-                    $useDefaultLocation.IsChecked = $false
-                    $useCustomLocation.IsChecked = $true
-                }
+            # Set radio button states - Always select default location first
+            if ($useDefaultLocation) {
+                $useDefaultLocation.IsChecked = $true
             }
+
+            if ($useCustomLocation) {
+                $useCustomLocation.IsChecked = $false
+            }
+
+            # Now update the output path based on the selected radio button
+            $script:ImportISODataContext.UseCustomLocation = $false
+
+            # Ensure output path is set to default path
+            $script:ImportISODataContext.OutputPath = $defaultOutputPath
 
             # Set up event handlers for buttons
             if ($browseISOButton) {
@@ -120,34 +122,39 @@ function Initialize-BucketISO_DataSourcePage {
             # Radio button change events
             if ($useDefaultLocation) {
                 $useDefaultLocation.Add_Checked({
-                        $script:ImportISODataContext.UseDefaultLocation = $true
                         $script:ImportISODataContext.UseCustomLocation = $false
                         $script:ImportISODataContext.OutputPath = $defaultOutputPath
 
-                        # Access the TextBox through the stored page reference
-                        $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
-                        if ($textBox) {
-                            $textBox.Text = $defaultOutputPath
+                        # Update the browse button state directly (disable it)
+                        $browseBtn = $script:importISOCurrentPage.FindName("ImportISO_DataSource_BrowseOutputButton")
+                        if ($browseBtn) {
+                            $browseBtn.IsEnabled = $false
                         }
 
-                        Write-BucketLog -Data "Using default output directory: $defaultOutputPath" -Level Info
+                        # Also update the output textbox state (disable it)
+                        $outputTxt = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
+                        if ($outputTxt) {
+                            $outputTxt.IsEnabled = $false
+                        }
+
+                        Write-BucketLog -Data "Using default output directory $defaultOutputPath" -Level Info
                     })
             }
 
             if ($useCustomLocation) {
                 $useCustomLocation.Add_Checked({
                         $script:ImportISODataContext.UseCustomLocation = $true
-                        $script:ImportISODataContext.UseDefaultLocation = $false
 
-                        # If switching to custom but no path set, clear it so user picks one
-                        if ($script:ImportISODataContext.OutputPath -eq $defaultOutputPath) {
-                            $script:ImportISODataContext.OutputPath = ""
+                        # Update the browse button state directly
+                        $browseBtn = $script:importISOCurrentPage.FindName("ImportISO_DataSource_BrowseOutputButton")
+                        if ($browseBtn) {
+                            $browseBtn.IsEnabled = $true
+                        }
 
-                            # Access the TextBox through the stored page reference
-                            $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
-                            if ($textBox) {
-                                $textBox.Text = ""
-                            }
+                        # Also update the output textbox state
+                        $outputTxt = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
+                        if ($outputTxt) {
+                            $outputTxt.IsEnabled = $true
                         }
 
                         Write-BucketLog -Data "Using custom output directory" -Level Info
@@ -162,7 +169,6 @@ function Initialize-BucketISO_DataSourcePage {
             # Data properties (bound to UI) - these should match what the XAML expects
             ISOSourcePath       = $script:ImportISODataContext.ISOSourcePath
             OutputPath          = $script:ImportISODataContext.OutputPath
-            UseDefaultLocation  = $true  # Default to using the default location
             UseCustomLocation   = $false # Default to not using custom location
             DefaultLocationText = "Use default Bucket directory: $defaultOutputPath"
 

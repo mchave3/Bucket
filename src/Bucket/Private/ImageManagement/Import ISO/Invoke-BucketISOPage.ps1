@@ -43,6 +43,13 @@ function Invoke-BucketISOPage {
             foreach ($property in $PageDataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             $navParams.DataContext = [PSCustomObject]$properties
         }
-        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_ImportWizard_RootFrame -InitFunction $initializeFunctionName -NavigationServiceParams $navParams
+        # Add the page dictionary to navigation parameters
+        $navParams.PageDictionary = $script:ImportISOPages
+
+        # Get XAML base path for ImportISO pages
+        $xamlBasePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement"
+        $navParams.XamlBasePath = $xamlBasePath
+
+        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_MainWindow_ImportISO_MainFrame -InitFunction $initializeFunctionName -NavigationServiceParams $navParams
     }
 }

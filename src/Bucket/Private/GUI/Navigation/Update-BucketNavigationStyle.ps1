@@ -137,9 +137,6 @@ function Update-BucketNavigationStyle {
                     $ButtonMap[$PageTag].Style = $selectedStyle
                     Write-BucketLog -Data "Set selected style for: $PageTag" -Level Verbose
                 }
-                else {
-                    Write-BucketLog -Data "Unknown page tag: $PageTag (no matching button)" -Level Warning
-                }
                 Write-BucketLog -Data "Navigation button style updated successfully" -Level Debug
             }
             catch {

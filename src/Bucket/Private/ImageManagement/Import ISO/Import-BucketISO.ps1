@@ -135,6 +135,7 @@ function Import-BucketISO {
             OutputPath             = $defaultImportedWimsPath  # Initialize with default path when UseDefaultLocation is true
             UseDefaultLocation     = $true  # Default: use default location
             UseCustomLocation      = $false # Default: don't use custom location
+            DefaultLocationText    = "Use default location: $defaultImportedWimsPath"  # Text to display for default location
             AvailableIndices       = @()
             CurrentPage            = "dataSourcePage"
             ProcessComplete        = $false
@@ -163,13 +164,43 @@ function Import-BucketISO {
                 # Validate current page before proceeding
                 $canContinue = $true
 
-                # Validation logic based on current page
+                # Check if the current page is data source or select index page
                 switch ($script:ImportISODataContext.CurrentPage) {
                     "dataSourcePage" {
+                        if ($script:importISOCurrentPage) {
+                            $isoPathTextBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_ISOPathTextBox")
+                            $outputPathTextBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
+
+                            # Synchronize UI values with data context if needed
+                            if ($isoPathTextBox -and -not [string]::IsNullOrWhiteSpace($isoPathTextBox.Text)) {
+                                $script:ImportISODataContext.ISOSourcePath = $isoPathTextBox.Text
+                                Write-BucketLog -Data "Synchronized ISO path from UI: $($isoPathTextBox.Text)" -Level Debug
+                            }
+
+                            # For output path, check if we're using default location or custom location
+                            if ($script:ImportISODataContext.UseCustomLocation) {
+                                # Custom location - get from UI
+                                if ($outputPathTextBox -and -not [string]::IsNullOrWhiteSpace($outputPathTextBox.Text)) {
+                                    $script:ImportISODataContext.OutputPath = $outputPathTextBox.Text
+                                    Write-BucketLog -Data "Synchronized custom output path from UI: $($outputPathTextBox.Text)" -Level Debug
+                                }
+                            }
+                            else {
+                                # Default location - make sure we use the default path
+                                $defaultPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
+                                $script:ImportISODataContext.OutputPath = $defaultPath
+                                Write-BucketLog -Data "Using default output path: $defaultPath" -Level Debug
+                            }
+                        }
+
+                        # Now perform the validation with potentially updated values
                         if ([string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -or
                             [string]::IsNullOrWhiteSpace($script:ImportISODataContext.OutputPath)) {
                             [System.Windows.MessageBox]::Show("Please select both an ISO file and output directory.", "Missing Information", "OK", "Warning")
                             $canContinue = $false
+
+                            # Log the current values for debugging
+                            Write-BucketLog -Data "Validation failed - ISO path: '$($script:ImportISODataContext.ISOSourcePath)', Output path: '$($script:ImportISODataContext.OutputPath)'" -Level Warning
                         }
                     }
                     "selectIndexPage" {
