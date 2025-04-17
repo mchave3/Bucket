@@ -20,22 +20,9 @@
 
 function Invoke-BucketAboutPage {
     [CmdletBinding()]
-    param(
-
-    )
+    param()
 
     process {
-        Write-BucketLog -Data "Navigating to About Page" -Level Info
-
-        # Check if the initialization function exists
-        if (Get-Command -Name "Initialize-BucketAboutPage" -ErrorAction SilentlyContinue) {
-            # Call the initialization function that will set up data and events
-            Initialize-BucketAboutPage
-        }
-        else {
-            # Fallback if the initialization function doesn't exist
-            Write-BucketLog -Data "Initialize-BucketAboutPage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
-        }
+        Invoke-BucketPage -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketAboutPage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }

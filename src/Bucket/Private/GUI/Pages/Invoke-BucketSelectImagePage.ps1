@@ -20,22 +20,9 @@
 
 function Invoke-BucketSelectImagePage {
     [CmdletBinding()]
-    param(
-
-    )
+    param()
 
     process {
-        Write-BucketLog -Data "Navigating to Select Image Page" -Level Info
-
-        # Check if the initialization function exists
-        if (Get-Command -Name "Initialize-BucketSelectImagePage" -ErrorAction SilentlyContinue) {
-            # Call the initialization function that will set up data and events
-            Initialize-BucketSelectImagePage
-        }
-        else {
-            # Fallback if the initialization function doesn't exist
-            Write-BucketLog -Data "Initialize-BucketSelectImagePage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
-        }
+        Invoke-BucketPage -PageTag "selectImagePage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketSelectImagePage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }

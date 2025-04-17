@@ -20,22 +20,9 @@
 
 function Invoke-BucketHomePage {
     [CmdletBinding()]
-    param(
-
-    )
-
+    param()
+    
     process {
-        Write-BucketLog -Data "Navigating to Home Page" -Level Info
-
-        # Check if the initialization function exists
-        if (Get-Command -Name "Initialize-BucketHomePage" -ErrorAction SilentlyContinue) {
-            # Call the initialization function that will set up data and events
-            Initialize-BucketHomePage
-        }
-        else {
-            # Fallback if the initialization function doesn't exist
-            Write-BucketLog -Data "Initialize-BucketHomePage not found, using basic navigation" -Level Warning
-            Invoke-BucketNavigationService -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame -DataContext $script:globalDataContext
-        }
+        Invoke-BucketPage -PageTag "homePage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketHomePage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }

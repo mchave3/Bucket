@@ -31,53 +31,18 @@ function Invoke-BucketISOPage {
     )
 
     process {
-        # Update the current page in the data context
         $script:ImportISODataContext.CurrentPage = $PageTag
-
-        # Update the UI to highlight the current step
         Update-BucketISONavigationUI -CurrentPage $PageTag
-
-        # Update button visibility/state based on current page
         Update-BucketISOButtonVisibility -CurrentPage $PageTag
-
-        # Check if we have an Initialize function for this page
         $initializeFunctionName = "Initialize-BucketISO_$($PageTag)"
-
-        if (Get-Command -Name $initializeFunctionName -ErrorAction SilentlyContinue) {
-            # Call the initialization function that will set up data and events
-            & $initializeFunctionName
+        $navParams = @{ DataContext = $script:ImportISODataContext }
+        if ($PageDataContext) {
+            # Merge the DataContext page-specific properties with the global DataContext
+            $properties = @{}
+            foreach ($property in $script:ImportISODataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
+            foreach ($property in $PageDataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
+            $navParams.DataContext = [PSCustomObject]$properties
         }
-        else {
-            # Fallback if the initialization function doesn't exist
-            Write-BucketLog -Data "$initializeFunctionName not found, using basic navigation" -Level Warning
-
-            # Combine page-specific context with global if provided
-            $dataContext = $script:ImportISODataContext
-            if ($PageDataContext) {
-                # Create a shallow copy of the global context
-                $properties = @{}
-                foreach ($property in $script:ImportISODataContext.PSObject.Properties) {
-                    $properties[$property.Name] = $property.Value
-                }
-
-                # Add page-specific properties
-                foreach ($property in $PageDataContext.PSObject.Properties) {
-                    $properties[$property.Name] = $property.Value
-                }
-
-                $dataContext = New-Object PSObject -Property $properties
-            }
-
-            # Use the generic navigation service
-            $xamlBasePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement"
-            Write-BucketLog -Data "Using XAML base path: $xamlBasePath" -Level "Debug"
-
-            Invoke-BucketNavigationService -PageTag $PageTag `
-                -RootFrame $WPF_MainWindow_ImportISO_MainFrame `
-                -XamlBasePath $xamlBasePath `
-                -PageDictionary $script:ImportISOPages `
-                -DataContext $dataContext `
-                -GlobalDataContext $script:ImportISODataContext
-        }
+        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_ImportWizard_RootFrame -InitFunction $initializeFunctionName -NavigationServiceParams $navParams
     }
 }

@@ -44,11 +44,12 @@ function Initialize-BucketAboutPage {
         $script:aboutPage_Modules = @()
         try {
             # Try to get info about dependencies
+            $poShLogModule = Get-Module -Name "PoShLog" -ErrorAction SilentlyContinue
             $script:aboutPage_Modules = @(
                 [PSCustomObject]@{
                     About_Modules_Name    = "PoShLog"
-                    About_Modules_Version = (Get-Module -Name "PoShLog" -ErrorAction SilentlyContinue).Version.ToString()
-                    About_Modules_Status  = (Get-Module -Name "PoShLog" -ErrorAction SilentlyContinue) ? "Loaded" : "Not Loaded"
+                    About_Modules_Version = if ($poShLogModule) { $poShLogModule.Version.ToString() } else { "" }
+                    About_Modules_Status  = if ($poShLogModule) { "Loaded" } else { "Not Loaded" }
                 }
             )
         }

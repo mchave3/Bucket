@@ -168,8 +168,14 @@ function Invoke-BucketNavigationService {
                     & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
                 }
                 # Fall back to the default navigation button style update if available
-                elseif (Get-Command 'Update-BucketNavButtonStyle' -ErrorAction SilentlyContinue) {
-                    Update-BucketNavButtonStyle -PageTag $PageTag
+                # Prepare the navigation button mapping for the main window
+                $mainNavButtons = @{
+                    "homePage"        = $WPF_MainWindow_NavHome
+                    "selectImagePage" = $WPF_MainWindow_NavSelectImage
+                    "aboutPage"       = $WPF_MainWindow_NavAbout
+                }
+                if (Get-Command 'Update-BucketNavigationStyle' -ErrorAction SilentlyContinue) {
+                    Update-BucketNavigationStyle -PageTag $PageTag -ButtonMap $mainNavButtons -ResourceContext $WPF_MainWindow
                 }
             }
             else {
