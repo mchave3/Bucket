@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Brief description of the script purpose
+    Start the Bucket GUI application.
 
 .DESCRIPTION
-    Detailed description of what the script/function does
+    Initializes and launches the Bucket GUI application, performing necessary pre-flight checks and loading the user interface.
 
 .NOTES
     Name:        Start-Bucket.ps1
@@ -17,7 +17,7 @@
     https://github.com/mchave3/Bucket
 
 .EXAMPLE
-    Example of how to use this script/function
+    Start-Bucket
 #>
 function Start-Bucket {
     #Requires -Version 5.1
