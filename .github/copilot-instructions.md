@@ -12,14 +12,15 @@ This document is a style and structure guide for you, GitHub Copilot, to follow 
 
 ### Logging
 - All log messages must be harmonized: start with a context tag in square brackets (e.g. [Navigation], [ISO Import], [Pre-Flight], [Bucket]).
-- Use Write-BucketLog for all logging, and choose the appropriate log level (Info, Debug, Warning, Error, Verbose).
+- Use Write-BucketLog for all logging, and choose the appropriate log level (Verbose, Debug, Info, Warning, Error, Fatal).
 - Log key actions, errors, and important state changes.
 - Follow these guidelines for log levels:
-  - **Info**: Normal application flow information (user actions, navigation events)
-  - **Debug**: Detailed information helpful when troubleshooting
-  - **Warning**: Potential issues that don't stop execution but might indicate problems
-  - **Error**: Exceptions and failures that impact functionality
-  - **Verbose**: Extremely detailed information (data dumps, object states)
+  - **Verbose**: Implementation details and fine-grained execution information (e.g., "Creating temporary variables")
+  - **Debug**: Important values and state information (e.g., "Working path: X")
+  - **Info**: Main steps and normal application flow (e.g., "Initialization complete", user actions, navigation events)
+  - **Warning**: Suboptimal situations that don't stop execution (e.g., "Folder already exists, using existing folder")
+  - **Error**: Operation failures and exceptions that impact functionality (e.g., "Unable to create folder")
+  - **Fatal**: Critical conditions that prevent the application from functioning (e.g., "Incompatible configuration detected")
 - Include relevant variable values in log messages to provide context.
 - For UI operations, log both the user action and the outcome.
 
@@ -149,34 +150,34 @@ finally {
 - Do not remove the NOTES or LINK fields from the function header under any circumstances.
 - Add line breaks in these fields as needed to improve readability and clarity of the header.
 - Include a proper function header structure for all functions:
-  ```powershell
-  <#
-  .SYNOPSIS
-  Brief description of what the function does.
+```powershell
+<#
+    .SYNOPSIS
+    Brief description of what the function does.
 
-  .DESCRIPTION
-  Detailed description of the function's purpose, functionality, and usage patterns.
-  Include any important information about how the function works.
+    .DESCRIPTION
+    Detailed description of the function's purpose, functionality, and usage patterns.
+    Include any important information about how the function works.
 
-  .NOTES
-  Name: Function-Name.ps1
-  Author: Mickaël CHAVE
-  Created: MM/DD/YYYY
-  Version: 1.0.0
-  Repository: https://github.com/mchave3/Bucket
-  License: MIT License
+    .NOTES
+    Name: Function-Name.ps1
+    Author: Mickaël CHAVE
+    Created: MM/DD/YYYY
+    Version: 1.0.0
+    Repository: https://github.com/mchave3/Bucket
+    License: MIT License
 
-  .LINK
-  https://github.com/mchave3/Bucket
+    .LINK
+    https://github.com/mchave3/Bucket
 
     .PARAMETER ParameterName
-  Description of the parameter and its purpose.
+    Description of the parameter and its purpose.
 
-  .EXAMPLE
-  Invoke-BucketFunction -Parameter Value
-  Description of what this example does and expected result.
-  #>
-  ```
+    .EXAMPLE
+    Invoke-BucketFunction -Parameter Value
+    Description of what this example does and expected result.
+#>
+```
 - Ensure all parameters are documented in the function header.
 - Include practical examples that demonstrate common usage patterns.
 
