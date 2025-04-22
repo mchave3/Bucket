@@ -8,21 +8,41 @@ This document is a style and structure guide for you, GitHub Copilot, to follow 
 - Use English for all code, comments, and log messages.
 - Favor readability and explicitness over cleverness.
 - Do not use global-scope variables (avoid $global:). Prefer script-scope ($script:) or local variables.
+- Follow Windows PowerShell 5.1+ compatibility practices, while also ensuring code works in PowerShell Core (7+).
 
 ### Logging
 - All log messages must be harmonized: start with a context tag in square brackets (e.g. [Navigation], [ISO Import], [Pre-Flight], [Bucket]).
 - Use Write-BucketLog for all logging, and choose the appropriate log level (Info, Debug, Warning, Error, Verbose).
 - Log key actions, errors, and important state changes.
+- Follow these guidelines for log levels:
+  - **Info**: Normal application flow information (user actions, navigation events)
+  - **Debug**: Detailed information helpful when troubleshooting
+  - **Warning**: Potential issues that don't stop execution but might indicate problems
+  - **Error**: Exceptions and failures that impact functionality
+  - **Verbose**: Extremely detailed information (data dumps, object states)
+- Include relevant variable values in log messages to provide context.
+- For UI operations, log both the user action and the outcome.
 
 ### XAML & UI
 - When loading XAML, always clean up design-time namespaces and x:Class attributes for compatibility.
 - Always check for file existence before loading XAML.
 - Use FindName to bind named XAML elements to PowerShell variables.
+- Organize UI structure following the Page architecture model:
+  1. XAML file for the UI definition (`PageNamePage.xaml`)
+  2. Initialization script for data and events (`Initialize-BucketPageNamePage.ps1`)
+  3. Invocation script for page navigation (`Invoke-BucketPageNamePage.ps1`)
+- Follow the recommended UI control naming pattern: `PageName_ControlTypeDescriptor` (e.g., `UserSettings_SaveButton`).
+- Use consistent style attributes across UI controls for a unified look.
+- When working with data binding, ensure properties are properly defined in the DataContext.
 
 ### Error Handling
 - Use try/catch for all file, IO, or UI operations that may fail.
 - Log all errors with Write-BucketLog at Error level.
 - Use exit 1 for unrecoverable errors in entry-point scripts.
+- Include specific error messages that describe what failed and why.
+- For UI operations, inform the user of errors through appropriate UI mechanisms.
+- Handle exceptions at the appropriate level - don't catch exceptions too early if they should be handled by a higher-level function.
+- When appropriate, clean up resources in finally blocks to ensure they're properly released regardless of errors.
 
 ## Indentation
 ### WPF Controls Indentation (PowerShell)
@@ -58,6 +78,13 @@ if ($licenseButton) {
 - Use parameter validation attributes (e.g. [Parameter(Mandatory = $true)]) for all function parameters.
 - Use [CmdletBinding()] for advanced functions.
 - **For all control structures (e.g., if/else, elseif, try/catch/finally, switch), always place the opening brace on the same line as the statement. The else, elseif, catch, and finally keywords must always appear on a new line, directly after the closing brace of the previous block.**
+- Organize code in logical sections using region blocks that match the application's architecture.
+- Follow a consistent pattern for function organization:
+  1. Function header (with SYNOPSIS, DESCRIPTION, etc.)
+  2. Parameter block
+  3. Begin block (for initialization, if needed)
+  4. Process block (main logic)
+  5. End block (cleanup and output handling, if needed)
 
 #### Example:
 ```powershell
@@ -87,6 +114,11 @@ finally {
 - Use camelCase for local variables, PascalCase for script/global variables.
 - Prefix script-global variables with $script: as appropriate.
 - Use descriptive names for all variables and parameters.
+- For XAML-related functions, use consistent naming patterns:
+  - Initialize-BucketPageNamePage.ps1 for page initialization
+  - Invoke-BucketPageNamePage.ps1 for page navigation
+- For UI control variables in WPF pages, use the pattern: `$pageName_ControlTypeDescriptor` (e.g., `$aboutPage_ReportIssueButton`).
+- For script variables in UI pages, use the prefix `$script:pageNameLower_` to avoid conflicts between pages.
 
 ### Comments
 - Use concise comments to explain the purpose of each logical block, function, or non-obvious code section.
@@ -94,12 +126,59 @@ finally {
 - Do not place a region block immediately above the function definition. Regions should only be used inside the function body to group major logical sections.
 - Always add a comment before complex or critical logic.
 - If comments are not consistent with the code, you are allowed to modify or rewrite them to ensure they accurately describe the logic.
+- For UI event handlers, include a comment describing what the event does and any side effects.
+- Use consistent region naming patterns, particularly for UI pages:
+  ```powershell
+  #region Data Initialization
+  # Initialize data and variables
+  #endregion Data Initialization
+
+  #region Event Handlers
+  # Define UI event handlers
+  #endregion Event Handlers
+
+  #region Page Navigation
+  # Handle navigation and context
+  #endregion Page Navigation
+  ```
+- Comment any code that works around specific PowerShell version limitations or compatibility issues.
 
 ### Function Header Consistency
 - Ensure that in the header of each PowerShell function, the SYNOPSIS, DESCRIPTION, and EXAMPLE fields are accurate and consistent with the actual code and usage.
 - Do not modify the NOTES or LINK fields.
 - Do not remove the NOTES or LINK fields from the function header under any circumstances.
 - Add line breaks in these fields as needed to improve readability and clarity of the header.
+- Include a proper function header structure for all functions:
+  ```powershell
+  <#
+  .SYNOPSIS
+  Brief description of what the function does.
+
+  .DESCRIPTION
+  Detailed description of the function's purpose, functionality, and usage patterns.
+  Include any important information about how the function works.
+
+  .NOTES
+  Name: Function-Name.ps1
+  Author: Mickaël CHAVE
+  Created: MM/DD/YYYY
+  Version: 1.0.0
+  Repository: https://github.com/mchave3/Bucket
+  License: MIT License
+
+  .LINK
+  https://github.com/mchave3/Bucket
+
+    .PARAMETER ParameterName
+  Description of the parameter and its purpose.
+
+  .EXAMPLE
+  Invoke-BucketFunction -Parameter Value
+  Description of what this example does and expected result.
+  #>
+  ```
+- Ensure all parameters are documented in the function header.
+- Include practical examples that demonstrate common usage patterns.
 
 ## Reference
 - Reference implementations for testing and best practices can be found in: Initialize-BucketISO_DataSourcePage.ps1, Import-BucketISO.ps1, Start-Bucket.ps1, Invoke-BucketPreFlight.ps1, and Get-BucketVersion.ps1.
