@@ -37,7 +37,7 @@ function Invoke-BucketISOPage {
         #endregion
 
         #region DataContext Preparation
-        $initializeFunctionName = "Initialize-BucketISO_$($PageTag)"
+        $InitFunction = "Initialize-BucketISO_$($PageTag)"
         $navParams = @{ DataContext = $script:ImportISODataContext }
         if ($PageDataContext) {
             # Merge page-specific properties with the global DataContext
@@ -45,14 +45,27 @@ function Invoke-BucketISOPage {
             foreach ($property in $script:ImportISODataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             foreach ($property in $PageDataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             $navParams.DataContext = [PSCustomObject]$properties
-        }
-        $navParams.PageDictionary = $script:ImportISOPages
-        $xamlBasePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement"
-        $navParams.XamlBasePath = $xamlBasePath
+        }        $navParams.PageDictionary = $script:ImportISOPages
+
+        $navParams.XamlBasePath = Join-Path -Path (Split-Path $PSScriptRoot -Parent) -ChildPath "GUI\ImageManagement"
         #endregion
 
         #region Page Invocation
-        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_MainWindow_ImportISO_MainFrame -InitFunction $initializeFunctionName -NavigationServiceParams $navParams
+        $xamlFileName = $script:ImportISOPages[$PageTag] + ".xaml"
+        $xamlPath = Join-Path $navParams.XamlBasePath $xamlFileName
+        Write-BucketLog -Data "[ISO Import] XAML file path used: $xamlPath" -Level Debug
+        Write-BucketLog -Data "[ISO Import] XAML file exists: $(Test-Path $xamlPath)" -Level Debug
+        if (Test-Path $xamlPath) {
+            try {
+                $xamlContent = Get-Content $xamlPath -Raw
+                [xml]$xamlDoc = $xamlContent
+                Write-BucketLog -Data "[ISO Import] XAML root node: $($xamlDoc.DocumentElement.Name)" -Level Debug
+            }
+            catch {
+                Write-BucketLog -Data "[ISO Import] Could not parse XAML for root node: $_" -Level Warning
+            }
+        }
+        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_MainWindow_ImportISO_MainFrame -InitFunction $InitFunction -NavigationServiceParams $navParams
         #endregion
     }
 }

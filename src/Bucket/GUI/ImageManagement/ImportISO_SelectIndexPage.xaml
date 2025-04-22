@@ -1,0 +1,53 @@
+<Page x:Class="Bucket.GUI.ImageManagement.ImportISO_SelectIndexPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      MinHeight="350" MinWidth="600">
+    <Grid Margin="20">
+        <!-- Waiting Overlay -->
+        <Grid x:Name="ImportISO_SelectIndex_WaitOverlay" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Width="200" Height="18" IsIndeterminate="True"/>
+                <TextBlock Text="Please wait, extracting editions from the ISO..." Margin="0,10,0,0" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="ImportISO_SelectIndex_HelpText"
+                   Grid.Row="0"
+                   FontWeight="Bold"
+                   Margin="0,0,0,10"
+                   Text="If no edition is selected, all editions will be included in the final WIM."/>
+        <DataGrid x:Name="ImportISO_SelectIndex_DataGrid"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  SelectionMode="Extended"
+                  Margin="0,0,0,10"
+                  IsReadOnly="False">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Include" Binding="{Binding Include, Mode=TwoWay}" Width="60"/>
+                <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="50" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Architecture" Binding="{Binding Architecture}" Width="80" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="80" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
+            <Button x:Name="ImportISO_SelectIndex_SelectAllButton" Content="Select All" Width="90" Margin="0,0,10,0"/>
+            <Button x:Name="ImportISO_SelectIndex_DeselectAllButton" Content="Deselect All" Width="90"/>
+        </StackPanel>
+        <TextBlock x:Name="ImportISO_SelectIndex_SummaryLabel"
+                   Grid.Row="3"
+                   FontStyle="Italic"
+                   Margin="0,0,0,0"
+                   Text="All editions will be included in the final WIM."/>
+    </Grid>
+</Page>
