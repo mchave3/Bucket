@@ -129,6 +129,7 @@ function Invoke-BucketPreFlight {
                 exit 1
             }
         }
+        Write-BucketLog -Data "[Pre-Flight] Verified: Directory structure" -Level Info
         #endregion
 
         #region WIMs.xml Structure
