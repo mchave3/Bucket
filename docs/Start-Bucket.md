@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Brief description of the script purpose
+Start the Bucket GUI application.
 
 ## SYNTAX
 
@@ -19,14 +19,14 @@ Start-Bucket [-WhatIf] [-Confirm] [<CommonParameters>]
 
 ## DESCRIPTION
 
-Detailed description of what the script/function does
+Initializes and launches the Bucket GUI application, performing necessary pre-flight checks and loading the user interface.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 
 ```powershell
-Example of how to use this script/function
+Start-Bucket
 ```
 
 ## PARAMETERS

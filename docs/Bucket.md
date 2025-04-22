@@ -12,4 +12,4 @@ Bucket is a PowerShell module for customizing Windows images. Automate, tweak, a
 
 ## Bucket Cmdlets
 ### [Start-Bucket](Start-Bucket.md)
-Brief description of the script purpose
+Start the Bucket GUI application.
