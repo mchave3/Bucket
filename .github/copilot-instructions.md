@@ -45,10 +45,7 @@ This document is a style and structure guide for you, GitHub Copilot, to follow 
 - Handle exceptions at the appropriate level - don't catch exceptions too early if they should be handled by a higher-level function.
 - When appropriate, clean up resources in finally blocks to ensure they're properly released regardless of errors.
 
-## Indentation
-### WPF Controls Indentation (PowerShell)
-- When working with WPF controls and event handlers in PowerShell, always indent the script block passed to Add_Click (or similar event methods) one level further to the right than the surrounding if statement.
-- This ensures clear visual separation between the control structure and the event handler logic.
+## Coding style
 
 #### Example (correct):
 ```powershell
@@ -73,6 +70,34 @@ if ($licenseButton) {
 ```
 
 ## Coding style
+
+### Indentation
+#### WPF Controls Indentation (PowerShell)
+- When working with WPF controls and event handlers in PowerShell, always indent the script block passed to Add_Click (or similar event methods) one level further to the right than the surrounding if statement.
+- This ensures clear visual separation between the control structure and the event handler logic.
+
+##### Example (correct):
+```powershell
+if ($issueButton) {
+    $issueButton.Add_Click({
+            param($senderObj, $e)
+            Write-BucketLog -Data "[About] Report Issue button clicked" -Level Info
+            Start-Process "https://github.com/mchave3/Bucket/issues/new"
+        })
+}
+```
+
+##### Example (incorrect):
+```powershell
+if ($licenseButton) {
+    $licenseButton.Add_Click({
+        param($senderObj, $e)
+        Write-BucketLog -Data "[About] License button clicked" -Level Info
+        Start-Process "https://github.com/mchave3/Bucket/blob/main/LICENSE"
+    })
+}
+```
+
 ### Structure
 - Use a clear and consistent order for function blocks: param, begin (if needed), process, end (if needed).
 - Separate logical blocks with blank lines for readability.
@@ -180,6 +205,37 @@ finally {
 ```
 - Ensure all parameters are documented in the function header.
 - Include practical examples that demonstrate common usage patterns.
+
+### Module Structure and File Organization
+- Follow the standard PowerShell module structure with clear separation between Public and Private functions:
+  - `Public/` - Contains all functions that are exported by the module
+  - `Private/` - Contains all internal helper functions used by the module
+  - `Classes/` - Contains all PowerShell class definitions
+  - `GUI/` - Contains all XAML files for UI components
+  - `Variables/` - Contains scripts that define module variables
+  - `en-US/` - Contains localization files and help documentation
+- Each function should be in its own file with the same name as the function (e.g., `Get-BucketVersion.ps1` contains the `Get-BucketVersion` function).
+- Organize related functions into subdirectories that reflect their purpose (e.g., `Private/Core/`, `Private/GUI/Navigation/`).
+- When adding a new feature or component, create a dedicated directory structure following the existing patterns:
+  ```
+  Private/
+    FeatureName/
+      Invoke-BucketFeatureFunction.ps1
+      Get-BucketFeatureData.ps1
+  GUI/
+    FeatureName/
+      FeatureNamePage.xaml
+  ```
+- Always include core function components in the following order within each file:
+  1. File header comment with filepath
+  2. Function header with documentation
+  3. Function definition with parameter block
+  4. Function implementation with appropriate regions
+- When importing modules or adding dependencies:
+  - Document all dependencies in the module manifest (.psd1)
+  - Use Import-Module with the -Force parameter only when necessary
+  - Prefer RequiredModules in the module manifest over explicit imports within scripts
+- Maintain a consistent folder depth and naming convention across the project
 
 ## Reference
 - Reference implementations for testing and best practices can be found in: Initialize-BucketISO_DataSourcePage.ps1, Import-BucketISO.ps1, Start-Bucket.ps1, Invoke-BucketPreFlight.ps1, and Get-BucketVersion.ps1.
