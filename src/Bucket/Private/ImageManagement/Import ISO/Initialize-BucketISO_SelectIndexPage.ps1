@@ -90,11 +90,15 @@ function Initialize-BucketISO_SelectIndexPage {
             #endregion
 
             #region Event Handlers
+            # Create script:level variables for event handlers to access
+            $script:importISO_DataGrid = $dataGrid
+            $script:importISO_SummaryLabel = $summaryLabel
+
             # Setup DataGrid selection changed event
             if ($dataGrid) {
                 $dataGrid.Add_SelectionChanged({
                         param($senderObj, $e)
-                        Update-BucketISOSelectIndexSummary -DataGrid $dataGrid -SummaryLabel $summaryLabel
+                        Update-BucketISOSelectIndexSummary -DataGrid $script:importISO_DataGrid -SummaryLabel $script:importISO_SummaryLabel
                     })
             }
 
@@ -103,10 +107,10 @@ function Initialize-BucketISO_SelectIndexPage {
                 $selectAllButton.Add_Click({
                         param($senderObj, $e)
                         Write-BucketLog -Data "[ISO Import] Select All button clicked" -Level Info
-                        foreach ($item in $dataGrid.Items) {
+                        foreach ($item in $script:importISO_DataGrid.Items) {
                             $item.Include = $true
                         }
-                        Update-BucketISOSelectIndexSummary -DataGrid $dataGrid -SummaryLabel $summaryLabel
+                        Update-BucketISOSelectIndexSummary -DataGrid $script:importISO_DataGrid -SummaryLabel $script:importISO_SummaryLabel
                     })
             }
 
@@ -115,10 +119,10 @@ function Initialize-BucketISO_SelectIndexPage {
                 $deselectAllButton.Add_Click({
                         param($senderObj, $e)
                         Write-BucketLog -Data "[ISO Import] Deselect All button clicked" -Level Info
-                        foreach ($item in $dataGrid.Items) {
+                        foreach ($item in $script:importISO_DataGrid.Items) {
                             $item.Include = $false
                         }
-                        Update-BucketISOSelectIndexSummary -DataGrid $dataGrid -SummaryLabel $summaryLabel
+                        Update-BucketISOSelectIndexSummary -DataGrid $script:importISO_DataGrid -SummaryLabel $script:importISO_SummaryLabel
                     })
             }
             #endregion
@@ -126,6 +130,12 @@ function Initialize-BucketISO_SelectIndexPage {
         #endregion
 
         #region DataContext & Navigation
+        # Ensure SelectedIndices property exists in the data context
+        if (-not (Get-Member -InputObject $script:ImportISODataContext -Name "SelectedIndices" -MemberType NoteProperty)) {
+            $script:ImportISODataContext | Add-Member -MemberType NoteProperty -Name "SelectedIndices" -Value @()
+            Write-BucketLog -Data "[ISO Import] SelectedIndices property initialized in ImportISODataContext" -Level Debug
+        }
+
         $dataContext = [PSCustomObject]@{
             AvailableIndices = $script:ImportISODataContext.AvailableIndices
             SelectedIndices  = $script:ImportISODataContext.SelectedIndices

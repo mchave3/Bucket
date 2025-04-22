@@ -6,19 +6,19 @@
       mc:Ignorable="d"
       MinHeight="350" MinWidth="600">
     <Grid Margin="20">
-        <!-- Waiting Overlay -->
-        <Grid x:Name="ImportISO_SelectIndex_WaitOverlay" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="100">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <ProgressBar Width="200" Height="18" IsIndeterminate="True"/>
-                <TextBlock Text="Please wait, extracting editions from the ISO..." Margin="0,10,0,0" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
-            </StackPanel>
-        </Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <!-- Waiting Overlay -->
+        <Grid x:Name="ImportISO_SelectIndex_WaitOverlay" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="100" Grid.RowSpan="4">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Width="200" Height="18" IsIndeterminate="True"/>
+                <TextBlock Text="Please wait, extracting editions from the ISO..." Margin="0,10,0,0" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
         <TextBlock x:Name="ImportISO_SelectIndex_HelpText"
                    Grid.Row="0"
                    FontWeight="Bold"
