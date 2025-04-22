@@ -7,6 +7,11 @@
         <FileDate>2023-10-01</FileDate>
         <FileHash>abc123</FileHash>
         <FileHashType>SHA256</FileHashType>
+        <ImageCount>1</ImageCount>
+        <CompressionType>Fast</CompressionType>
+        <ImportDate>2025-04-22</ImportDate>
+        <Source>ISO</Source>
+        <Notes>Production image - Approved by IT</Notes>
         <Indexes>
             <Index>
                 <ImageIndex>1</ImageIndex>
@@ -29,9 +34,14 @@
                 <CreatedTime>2023-10-01T12:00:00Z</CreatedTime>
                 <ModifiedTime>2023-10-01T12:00:00Z</ModifiedTime>
                 <Languages>en-US (Default)</Languages>
+                <DefaultLanguage>en-US</DefaultLanguage>
+                <AdditionalLanguages>fr-FR,es-ES</AdditionalLanguages>
+                <UpdateStatus>Current</UpdateStatus>
+                <LastModifiedBy>Administrator</LastModifiedBy>
+                <Capabilities>NetFX3,DirectPlay,IIS</Capabilities>
+                <Features>WindowsMediaPlayer,WindowsSubsystemForLinux</Features>
+                <LicenseType>Volume</LicenseType>
             </Index>
         </Indexes>
-    </WIM>
-    <WIM>
     </WIM>
 </WIMs>
