@@ -39,7 +39,7 @@ function Initialize-BucketISO_DataSourcePage {
             param($senderObj, $e)
 
             # Store page reference for event access
-            $script:importISOCurrentPage = $senderObj
+            $script:ImportISOCurrentPage = $senderObj
             Write-BucketLog -Data "[ISO Import] Data source page loaded" -Level Info
 
             # Retrieve UI controls

@@ -21,10 +21,11 @@ function Initialize-BucketISO_SelectIndexPage {
     param()
 
     process {
-        #region Page Initialization
+        #region Initialization
         Write-BucketLog -Data "[ISO Import] Initializing Select Index page" -Level Info
+        #endregion
 
-        # Create a page loaded handler that will be attached to the page's Loaded event
+        #region Page Logic
         $pageLoadedHandler = {
             param($senderObj, $e)
 
@@ -122,66 +123,23 @@ function Initialize-BucketISO_SelectIndexPage {
             }
             #endregion
         }
+        #endregion
 
-        # Attach the page loaded handler to the page
-        try {
-            if ($WPF_MainWindow_ImportISO_MainFrame) {
-                $currentContent = $WPF_MainWindow_ImportISO_MainFrame.Content
-
-                if ($currentContent) {
-                    Write-BucketLog -Data "[ISO Import] Found current page content, attaching Loaded handler" -Level Debug
-
-                    try {
-                        # Try to add the event handler using Add_Loaded method directly
-                        $currentContent.Add_Loaded($pageLoadedHandler)
-                        Write-BucketLog -Data "[ISO Import] Successfully attached Loaded handler using Add_Loaded method" -Level Debug
-
-                        # If the page is already loaded, invoke the handler directly
-                        if ($currentContent.IsLoaded) {
-                            Write-BucketLog -Data "[ISO Import] Page already loaded, invoking handler directly" -Level Debug
-                            $pageLoadedHandler.Invoke($currentContent, $null)
-                        }
-                    }
-                    catch {
-                        Write-BucketLog -Data "[ISO Import] Failed to attach Loaded handler, falling back to direct invocation: $_" -Level Warning
-                        # If we can't attach the event handler, invoke it directly
-                        $pageLoadedHandler.Invoke($currentContent, $null)
-                    }
-                }
-                else {
-                    Write-BucketLog -Data "[ISO Import] No current content in frame, waiting for ContentRendered event" -Level Warning
-
-                    # Add handler for when content is rendered
-                    try {
-                        $WPF_MainWindow_ImportISO_MainFrame.Add_ContentRendered({
-                                param($sender, $e)
-                                $content = $sender.Content
-                                if ($content) {
-                                    Write-BucketLog -Data "[ISO Import] Frame ContentRendered, attaching Loaded handler" -Level Debug
-                                    try {
-                                        $content.Add_Loaded($pageLoadedHandler)
-                                    }
-                                    catch {
-                                        Write-BucketLog -Data "[ISO Import] Failed to attach Loaded handler to content: $_" -Level Warning
-                                        # Still try to invoke the handler directly
-                                        $pageLoadedHandler.Invoke($content, $null)
-                                    }
-                                }
-                            })
-                        Write-BucketLog -Data "[ISO Import] Successfully attached ContentRendered handler to frame" -Level Debug
-                    }
-                    catch {
-                        Write-BucketLog -Data "[ISO Import] Failed to attach ContentRendered handler to frame: $_" -Level Error
-                    }
-                }
-            }
-            else {
-                Write-BucketLog -Data "[ISO Import] Main frame not found, cannot attach event handler" -Level Error
-            }
+        #region DataContext & Navigation
+        $dataContext = [PSCustomObject]@{
+            AvailableIndices = $script:ImportISODataContext.AvailableIndices
+            SelectedIndices  = $script:ImportISODataContext.SelectedIndices
+            PageLoaded       = $pageLoadedHandler
         }
-        catch {
-            Write-BucketLog -Data "[ISO Import] Error attaching page loaded handler: $_" -Level Error
-        }
-        #endregion Page Initialization
+        Write-BucketLog -Data "[ISO Import] Data context for select index page created" -Level Debug
+
+        Invoke-BucketNavigationService -PageTag "selectIndexPage" `
+            -RootFrame $WPF_MainWindow_ImportISO_MainFrame `
+            -XamlBasePath (Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement") `
+            -PageDictionary $script:ImportISOPages `
+            -DataContext $dataContext `
+            -GlobalDataContext $script:ImportISODataContext
+        Write-BucketLog -Data "[ISO Import] Select index page navigation started" -Level Debug
+        #endregion
     }
 }
