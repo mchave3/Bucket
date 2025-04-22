@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WIMs>
+    <WIM>
+        <FileName>Windows 11 Enterprise</FileName>
+        <FilePath>C:/Temp/install.wim</FilePath>
+        <FileSize>123456789</FileSize>
+        <FileDate>2023-10-01</FileDate>
+        <FileHash>abc123</FileHash>
+        <FileHashType>SHA256</FileHashType>
+        <Indexes>
+            <Index>
+                <ImageIndex>1</ImageIndex>
+                <ImageName>Windows 11 Pro</ImageName>
+                <ImageDescription>Windows 11 Pro</ImageDescription>
+                <ImageSize>123456789</ImageSize>
+                <WIMBoot>False</WIMBoot>
+                <Architecture>x64</Architecture>
+                <Hal></Hal>
+                <Version>10.0.26100.2894</Version>
+                <SPBuild>2894</SPBuild>
+                <SPLevel>0</SPLevel>
+                <EditionId>Professional</EditionId>
+                <InstallationType>Client</InstallationType>
+                <ProductType>WinNT</ProductType>
+                <ProductSuite>Terminal Server</ProductSuite>
+                <SystemRoot>WINDOWS</SystemRoot>
+                <DirectoryCount>12345</DirectoryCount>
+                <FileCount>123456</FileCount>
+                <CreatedTime>2023-10-01T12:00:00Z</CreatedTime>
+                <ModifiedTime>2023-10-01T12:00:00Z</ModifiedTime>
+                <Languages>en-US (Default)</Languages>
+            </Index>
+        </Indexes>
+    </WIM>
+    <WIM>
+    </WIM>
+</WIMs>
