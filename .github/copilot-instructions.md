@@ -101,5 +101,5 @@ finally {
 - Do not remove the NOTES or LINK fields from the function header under any circumstances.
 - Add line breaks in these fields as needed to improve readability and clarity of the header.
 
-## Testing
+## Reference
 - Reference implementations for testing and best practices can be found in: Initialize-BucketISO_DataSourcePage.ps1, Import-BucketISO.ps1, Start-Bucket.ps1, Invoke-BucketPreFlight.ps1, and Get-BucketVersion.ps1.
