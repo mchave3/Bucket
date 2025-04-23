@@ -52,11 +52,6 @@ function Initialize-BucketISO_DataSourcePage {
             if ($isoPathTextBox -and -not [string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.ISOSourcePath)) {
                 $isoPathTextBox.Text = $script:ImportISO_DataContext.ISOSourcePath
             }
-            <#
-            if (-not $script:ImportISO_DataContext.OutputPath) {
-                $script:ImportISO_DataContext.OutputPath = $defaultOutputPath
-            }
-            #>
             if ($outputPathTextBox) {
                 $outputPathTextBox.Text = $script:ImportISO_DataContext.OutputPath
             }
@@ -65,7 +60,6 @@ function Initialize-BucketISO_DataSourcePage {
             if ($useDefaultLocation) { $useDefaultLocation.IsChecked = $true }
             if ($useCustomLocation) { $useCustomLocation.IsChecked = $false }
             $script:ImportISO_DataContext.UseCustomLocation = $false
-            # $script:ImportISO_DataContext.OutputPath = $defaultOutputPath
 
             # ISO file browse button event
             if ($browseISOButton) {
