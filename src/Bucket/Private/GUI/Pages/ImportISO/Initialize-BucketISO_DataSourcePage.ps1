@@ -135,7 +135,7 @@ function Initialize-BucketISO_DataSourcePage {
         Write-BucketLog -Data "[ISO Import] Data context for data source page created" -Level Debug
 
         Invoke-BucketNavigationService -PageTag "dataSourcePage" `
-            -RootFrame $WPF_MainWindow_ImportISO_MainFrame `
+            -RootFrame $WPF_ImportISO_MainWindow_MainFrame `
             -XamlBasePath (Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement") `
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `

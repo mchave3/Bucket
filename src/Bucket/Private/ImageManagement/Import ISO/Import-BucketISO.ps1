@@ -29,6 +29,9 @@ function Import-BucketISO {
 
     process {
         #region Instance Check & XAML Loading
+
+        Write-BucketLog -Data "========== IMPORT-ISO WIZARD ==========" -Level Info
+
         # Prevent multiple instances from being opened simultaneously
         if ($script:ImportISO_WindowOpen) {
             Write-BucketLog -Data "[ISO Import] Window already open, bringing to front" -Level Info
@@ -37,11 +40,11 @@ function Import-BucketISO {
         $script:ImportISO_WindowOpen = $true
 
         # Load the XAML file for the GUI
-        $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement\MainWindow_ImportISO.xaml"
+        $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement\ImportISO_MainWindow.xaml"
         Write-BucketLog -Data "[ISO Import] XAML file path: $xamlPath" -Level Debug
 
         if (-not (Test-Path -Path $xamlPath)) {
-            Write-BucketLog -Data "[ISO Import] Could not find MainWindow_ImportISO.xaml at $xamlPath" -Level Error
+            Write-BucketLog -Data "[ISO Import] Could not find ImportISO_MainWindow.xaml at $xamlPath" -Level Error
             $script:ImportISO_WindowOpen = $false
             return
         }
@@ -130,7 +133,7 @@ function Import-BucketISO {
 
         #region GUI Events
         # Previous button
-        $WPF_MainWindow_ImportISO_PreviousButton.add_Click({
+        $WPF_ImportISO_MainWindow_PreviousButton.add_Click({
                 $previousPage = switch ($script:ImportISODataContext.CurrentPage) {
                     "selectIndexPage" { "dataSourcePage" }
                     "summaryPage" { "selectIndexPage" }
@@ -144,7 +147,7 @@ function Import-BucketISO {
             })
 
         # Next button
-        $WPF_MainWindow_ImportISO_NextButton.add_Click({
+        $WPF_ImportISO_MainWindow_NextButton.add_Click({
                 $canContinue = $true
                 switch ($script:ImportISODataContext.CurrentPage) {
                     "dataSourcePage" {
@@ -196,7 +199,7 @@ function Import-BucketISO {
             })
 
         # Summary button
-        $WPF_MainWindow_ImportISO_SummaryButton.add_Click({
+        $WPF_ImportISO_MainWindow_SummaryButton.add_Click({
                 if (-not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -and
                     -not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.SelectedIndex)) {
                     Invoke-BucketISOPage -PageTag "summaryPage"
@@ -207,13 +210,13 @@ function Import-BucketISO {
             })
 
         # Cancel button
-        $WPF_MainWindow_ImportISO_CancelButton.add_Click({
+        $WPF_ImportISO_MainWindow_CancelButton.add_Click({
                 $form.Close()
             })
 
         # Set the initial page when the form is loaded
         $form.add_Loaded({
-                if ($WPF_MainWindow_ImportISO_MainFrame) {
+                if ($WPF_ImportISO_MainWindow_MainFrame) {
                     Write-BucketLog -Data "[ISO Import] Form loaded, initializing navigation system and navigating to data source page" -Level Info
                     Invoke-BucketISOPage -PageTag "dataSourcePage"
                 }
@@ -224,6 +227,7 @@ function Import-BucketISO {
         $form.Add_Closed({
                 $script:ImportISO_WindowOpen = $false
                 Write-BucketLog -Data "[ISO Import] Window closed" -Level Info
+                Write-BucketLog -Data "========== IMPORT-ISO WIZARD CLOSED =========="
             })
         $form.ShowDialog() | Out-Null
         #endregion

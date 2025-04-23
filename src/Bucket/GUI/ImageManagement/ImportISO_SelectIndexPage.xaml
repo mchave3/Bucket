@@ -1,10 +1,12 @@
-<Page x:Class="Bucket.GUI.ImageManagement.ImportISO_SelectIndexPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      mc:Ignorable="d"
-      MinHeight="350" MinWidth="600">
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="Bucket.GUI.ImageManagement.ImportISO_SelectIndexPage"
+    Title="Select Editions"
+    Background="#F9F9F9">
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -12,6 +14,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
         <!-- Waiting Overlay -->
         <Grid x:Name="ImportISO_SelectIndex_WaitOverlay" Visibility="Collapsed" Background="#80000000" Panel.ZIndex="100" Grid.RowSpan="4">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -19,11 +22,15 @@
                 <TextBlock Text="Please wait, extracting editions from the ISO..." Margin="0,10,0,0" Foreground="White" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
+
+        <!-- Help Text -->
         <TextBlock x:Name="ImportISO_SelectIndex_HelpText"
                    Grid.Row="0"
                    FontWeight="Bold"
                    Margin="0,0,0,10"
                    Text="If no edition is selected, all editions will be included in the final WIM."/>
+
+        <!-- DataGrid for displaying editions -->
         <DataGrid x:Name="ImportISO_SelectIndex_DataGrid"
                   Grid.Row="1"
                   AutoGenerateColumns="False"
@@ -40,10 +47,14 @@
                 <DataGridTextColumn Header="Size" Binding="{Binding Size}" Width="80" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <!-- Buttons for selecting/deselecting all editions -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
             <Button x:Name="ImportISO_SelectIndex_SelectAllButton" Content="Select All" Width="90" Margin="0,0,10,0"/>
             <Button x:Name="ImportISO_SelectIndex_DeselectAllButton" Content="Deselect All" Width="90"/>
         </StackPanel>
+
+        <!-- Summary Label -->
         <TextBlock x:Name="ImportISO_SelectIndex_SummaryLabel"
                    Grid.Row="3"
                    FontStyle="Italic"

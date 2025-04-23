@@ -71,7 +71,7 @@ function Invoke-BucketISOPage {
 
         #region Invoke Navigation
         Write-BucketLog -Data "[ISO Import] Navigating to page: $PageTag (Init: $InitFunction)" -Level Info
-        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_MainWindow_ImportISO_MainFrame -InitFunction $InitFunction -NavigationServiceParams $navParams
+        Invoke-BucketPage -PageTag $PageTag -RootFrame $WPF_ImportISO_MainWindow_MainFrame -InitFunction $InitFunction -NavigationServiceParams $navParams
         #endregion
     }
 }

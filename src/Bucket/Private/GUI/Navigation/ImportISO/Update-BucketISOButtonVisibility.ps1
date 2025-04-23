@@ -50,18 +50,18 @@ function Update-BucketISOButtonVisibility {
                 "completionPage" {
                     $previousVisible = $false
                     $nextVisible = $false
-                    $WPF_MainWindow_ImportISO_CancelButton.Content = "Close"
+                    $WPF_ImportISO_MainWindow_CancelButton.Content = "Close"
                 }
                 default {
-                    $WPF_MainWindow_ImportISO_CancelButton.Content = "Cancel"
+                    $WPF_ImportISO_MainWindow_CancelButton.Content = "Cancel"
                 }
             }
 
             # Apply visibility settings to UI
-            $WPF_MainWindow_ImportISO_PreviousButton.Visibility = if ($previousVisible) { "Visible" } else { "Collapsed" }
-            $WPF_MainWindow_ImportISO_NextButton.Visibility = if ($nextVisible) { "Visible" } else { "Collapsed" }
-            $WPF_MainWindow_ImportISO_SummaryButton.Visibility = if ($summaryVisible) { "Visible" } else { "Collapsed" }
-            $WPF_MainWindow_ImportISO_CancelButton.Visibility = if ($cancelVisible) { "Visible" } else { "Collapsed" }
+            $WPF_ImportISO_MainWindow_PreviousButton.Visibility = if ($previousVisible) { "Visible" } else { "Collapsed" }
+            $WPF_ImportISO_MainWindow_NextButton.Visibility = if ($nextVisible) { "Visible" } else { "Collapsed" }
+            $WPF_ImportISO_MainWindow_SummaryButton.Visibility = if ($summaryVisible) { "Visible" } else { "Collapsed" }
+            $WPF_ImportISO_MainWindow_CancelButton.Visibility = if ($cancelVisible) { "Visible" } else { "Collapsed" }
         }
         #endregion
     }

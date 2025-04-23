@@ -35,7 +35,7 @@ function Update-BucketISONavigationUI {
 
         # Find sidebar panel and update styles
         Write-BucketLog -Data "[ISO Import] Updating navigation UI for page: $CurrentPage" -Level Debug
-        $stackPanel = $form.FindName("MainWindow_ImportISO_SidebarPanel")
+        $stackPanel = $form.FindName("ImportISO_MainWindow_SidebarPanel")
         if ($stackPanel) {
             Write-BucketLog -Data "[ISO Import] Found sidebar panel with $($stackPanel.Children.Count) children" -Level Debug
             $targetText = switch ($CurrentPage) {
@@ -73,7 +73,7 @@ function Update-BucketISONavigationUI {
             }
         }
         else {
-            Write-BucketLog -Data "[ISO Import] Could not find MainWindow_ImportISO_SidebarPanel" -Level Warning
+            Write-BucketLog -Data "[ISO Import] Could not find ImportISO_MainWindow_SidebarPanel" -Level Warning
         }
         #endregion
     }

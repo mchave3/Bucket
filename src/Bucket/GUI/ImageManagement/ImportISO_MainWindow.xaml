@@ -29,7 +29,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
-            <StackPanel x:Name="MainWindow_ImportISO_SidebarPanel" Grid.Column="0" Margin="10" Width="150" Background="#F0F0F0">
+            <StackPanel x:Name="ImportISO_MainWindow_SidebarPanel" Grid.Column="0" Margin="10" Width="150" Background="#F0F0F0">
                 <TextBlock Text="Data Source" Margin="10,15" FontWeight="SemiBold" />
                 <TextBlock Text="Select index" Margin="10,15" />
                 <TextBlock Text="Summary" Margin="10,15" />
@@ -46,7 +46,7 @@
 
                 <!-- Main Frame -->
                 <Frame
-                x:Name="MainWindow_ImportISO_MainFrame"
+                x:Name="ImportISO_MainWindow_MainFrame"
                 Grid.Row="0"
                 NavigationUIVisibility="Hidden"
                 Background="#F9F9F9" />
@@ -57,10 +57,10 @@
                 Orientation="Horizontal"
                 HorizontalAlignment="Right"
                 Margin="0,10,20,20">
-                    <Button x:Name="MainWindow_ImportISO_PreviousButton" Content="Previous" Margin="5,0" Padding="10,5" Width="100" />
-                    <Button x:Name="MainWindow_ImportISO_NextButton" Content="Next" Margin="5,0" Padding="10,5" Width="100" Background="#0078D7" Foreground="White" FontWeight="Bold" />
-                    <Button x:Name="MainWindow_ImportISO_SummaryButton" Content="Summary" Margin="5,0" Padding="10,5" Width="100" />
-                    <Button x:Name="MainWindow_ImportISO_CancelButton" Content="Cancel" Margin="5,0" Padding="10,5" Width="100" />
+                    <Button x:Name="ImportISO_MainWindow_PreviousButton" Content="Previous" Margin="5,0" Padding="10,5" Width="100" />
+                    <Button x:Name="ImportISO_MainWindow_NextButton" Content="Next" Margin="5,0" Padding="10,5" Width="100" Background="#0078D7" Foreground="White" FontWeight="Bold" />
+                    <Button x:Name="ImportISO_MainWindow_SummaryButton" Content="Summary" Margin="5,0" Padding="10,5" Width="100" />
+                    <Button x:Name="ImportISO_MainWindow_CancelButton" Content="Cancel" Margin="5,0" Padding="10,5" Width="100" />
                 </StackPanel>
             </Grid>
         </Grid>

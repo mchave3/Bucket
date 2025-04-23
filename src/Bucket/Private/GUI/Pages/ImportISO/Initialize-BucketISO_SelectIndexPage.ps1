@@ -144,7 +144,7 @@ function Initialize-BucketISO_SelectIndexPage {
         Write-BucketLog -Data "[ISO Import] Data context for select index page created" -Level Debug
 
         Invoke-BucketNavigationService -PageTag "selectIndexPage" `
-            -RootFrame $WPF_MainWindow_ImportISO_MainFrame `
+            -RootFrame $WPF_ImportISO_MainWindow_MainFrame `
             -XamlBasePath (Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement") `
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `
