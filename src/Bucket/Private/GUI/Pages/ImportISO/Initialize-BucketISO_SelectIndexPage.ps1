@@ -60,9 +60,9 @@ function Initialize-BucketISO_SelectIndexPage {
 
             #region Extract WIM Indices
             try {
-                $isoPath = $script:ImportISODataContext.ISOSourcePath
+                $isoPath = $script:ImportISO_DataContext.ISOSourcePath
                 $indices = Get-BucketWimIndex -IsoPath $isoPath
-                $script:ImportISODataContext.AvailableIndices = $indices
+                $script:ImportISO_DataContext.AvailableIndices = $indices
 
                 if ($dataGrid) {
                     $dataGrid.ItemsSource = $indices
@@ -131,14 +131,14 @@ function Initialize-BucketISO_SelectIndexPage {
 
         #region DataContext & Navigation
         # Ensure SelectedIndices property exists in the data context
-        if (-not (Get-Member -InputObject $script:ImportISODataContext -Name "SelectedIndices" -MemberType NoteProperty)) {
-            $script:ImportISODataContext | Add-Member -MemberType NoteProperty -Name "SelectedIndices" -Value @()
+        if (-not (Get-Member -InputObject $script:ImportISO_DataContext -Name "SelectedIndices" -MemberType NoteProperty)) {
+            $script:ImportISO_DataContext | Add-Member -MemberType NoteProperty -Name "SelectedIndices" -Value @()
             Write-BucketLog -Data "[ISO Import] SelectedIndices property initialized in ImportISODataContext" -Level Debug
         }
 
         $dataContext = [PSCustomObject]@{
-            AvailableIndices = $script:ImportISODataContext.AvailableIndices
-            SelectedIndices  = $script:ImportISODataContext.SelectedIndices
+            AvailableIndices = $script:ImportISO_DataContext.AvailableIndices
+            SelectedIndices  = $script:ImportISO_DataContext.SelectedIndices
             PageLoaded       = $pageLoadedHandler
         }
         Write-BucketLog -Data "[ISO Import] Data context for select index page created" -Level Debug
@@ -148,7 +148,7 @@ function Initialize-BucketISO_SelectIndexPage {
             -XamlBasePath (Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement") `
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `
-            -GlobalDataContext $script:ImportISODataContext
+            -GlobalDataContext $script:ImportISO_DataContext
         Write-BucketLog -Data "[ISO Import] Select index page navigation started" -Level Debug
         #endregion
     }

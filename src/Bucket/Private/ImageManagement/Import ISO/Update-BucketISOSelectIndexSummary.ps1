@@ -32,7 +32,7 @@ function Update-BucketISOSelectIndexSummary {
         else {
             "$count edition(s) selected."
         }
-        $script:ImportISODataContext.SelectedIndices = $selected
+        $script:ImportISO_DataContext.SelectedIndices = $selected
         Write-BucketLog -Data "[ISO Import] Selected indices: $($selected | ForEach-Object { $_.Index })" -Level Debug
     }
 }

@@ -111,30 +111,32 @@ function Import-BucketISO {
         }
 
         # Initialize the data context for the ISO import wizard
-        $defaultImportedWimsPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
-        $script:ImportISODataContext = [PSCustomObject]@{
+        $defaultOutputPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
+        $script:ImportISO_DataContext = [PSCustomObject]@{
+            # Main
             BucketVersion          = $script:BucketVersion
             WorkingDirectory       = $script:workingDirectory
             MountDirectory         = Join-Path -Path $script:workingDirectory -ChildPath "Mount"
             CompletedWimsDirectory = Join-Path -Path $script:workingDirectory -ChildPath "CompletedWIMs"
-            DefaultImportedWims    = $defaultImportedWimsPath
+            CurrentPage            = "dataSourcePage"
+
+            # Data Source Page
+            OutputPath             = $defaultOutputPath
             ISOSourcePath          = ""
-            SelectedIndex          = ""
-            OutputPath             = $defaultImportedWimsPath
             UseDefaultLocation     = $true
             UseCustomLocation      = $false
-            DefaultLocationText    = "Use default location: $defaultImportedWimsPath"
+            DefaultLocationText    = "Use default location: $defaultOutputPath"
+
+            # Select Index Page
+            SelectedIndex          = ""
             AvailableIndices       = @()
-            CurrentPage            = "dataSourcePage"
-            ProcessComplete        = $false
-            ExtractedWimPath       = ""
         }
         #endregion
 
         #region GUI Events
         # Previous button
         $WPF_ImportISO_MainWindow_PreviousButton.add_Click({
-                $previousPage = switch ($script:ImportISODataContext.CurrentPage) {
+                $previousPage = switch ($script:ImportISO_DataContext.CurrentPage) {
                     "selectIndexPage" { "dataSourcePage" }
                     "summaryPage" { "selectIndexPage" }
                     "progressPage" { "summaryPage" }
@@ -149,43 +151,43 @@ function Import-BucketISO {
         # Next button
         $WPF_ImportISO_MainWindow_NextButton.add_Click({
                 $canContinue = $true
-                switch ($script:ImportISODataContext.CurrentPage) {
+                switch ($script:ImportISO_DataContext.CurrentPage) {
                     "dataSourcePage" {
                         if ($script:importISOCurrentPage) {
                             $isoPathTextBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_ISOPathTextBox")
                             $outputPathTextBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
                             if ($isoPathTextBox -and -not [string]::IsNullOrWhiteSpace($isoPathTextBox.Text)) {
-                                $script:ImportISODataContext.ISOSourcePath = $isoPathTextBox.Text
+                                $script:ImportISO_DataContext.ISOSourcePath = $isoPathTextBox.Text
                                 Write-BucketLog -Data "[ISO Import] Synchronized ISO path from UI: $($isoPathTextBox.Text)" -Level Debug
                             }
-                            if ($script:ImportISODataContext.UseCustomLocation) {
+                            if ($script:ImportISO_DataContext.UseCustomLocation) {
                                 if ($outputPathTextBox -and -not [string]::IsNullOrWhiteSpace($outputPathTextBox.Text)) {
-                                    $script:ImportISODataContext.OutputPath = $outputPathTextBox.Text
+                                    $script:ImportISO_DataContext.OutputPath = $outputPathTextBox.Text
                                     Write-BucketLog -Data "[ISO Import] Synchronized custom output path from UI: $($outputPathTextBox.Text)" -Level Debug
                                 }
                             }
                             else {
                                 $defaultPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
-                                $script:ImportISODataContext.OutputPath = $defaultPath
+                                $script:ImportISO_DataContext.OutputPath = $defaultPath
                                 Write-BucketLog -Data "[ISO Import] Using default output path: $defaultPath" -Level Debug
                             }
                         }
-                        if ([string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -or
-                            [string]::IsNullOrWhiteSpace($script:ImportISODataContext.OutputPath)) {
+                        if ([string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.ISOSourcePath) -or
+                            [string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.OutputPath)) {
                             [System.Windows.MessageBox]::Show("Please select both an ISO file and output directory.", "Missing Information", "OK", "Warning")
                             $canContinue = $false
-                            Write-BucketLog -Data "[ISO Import] Validation failed - ISO path: '$($script:ImportISODataContext.ISOSourcePath)', Output path: '$($script:ImportISODataContext.OutputPath)'" -Level Warning
+                            Write-BucketLog -Data "[ISO Import] Validation failed - ISO path: '$($script:ImportISO_DataContext.ISOSourcePath)', Output path: '$($script:ImportISO_DataContext.OutputPath)'" -Level Warning
                         }
                     }
                     "selectIndexPage" {
-                        if ([string]::IsNullOrWhiteSpace($script:ImportISODataContext.SelectedIndex)) {
+                        if ([string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.SelectedIndex)) {
                             [System.Windows.MessageBox]::Show("Please select a Windows edition.", "Missing Information", "OK", "Warning")
                             $canContinue = $false
                         }
                     }
                 }
                 if ($canContinue) {
-                    $nextPage = switch ($script:ImportISODataContext.CurrentPage) {
+                    $nextPage = switch ($script:ImportISO_DataContext.CurrentPage) {
                         "dataSourcePage" { "selectIndexPage" }
                         "selectIndexPage" { "summaryPage" }
                         "summaryPage" { "progressPage" }
@@ -200,8 +202,8 @@ function Import-BucketISO {
 
         # Summary button
         $WPF_ImportISO_MainWindow_SummaryButton.add_Click({
-                if (-not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.ISOSourcePath) -and
-                    -not [string]::IsNullOrWhiteSpace($script:ImportISODataContext.SelectedIndex)) {
+                if (-not [string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.ISOSourcePath) -and
+                    -not [string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.SelectedIndex)) {
                     Invoke-BucketISOPage -PageTag "summaryPage"
                 }
                 else {

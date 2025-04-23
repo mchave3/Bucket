@@ -48,7 +48,7 @@ function Invoke-BucketISOPage {
     )
     process {
         #region Navigation State & UI Update
-        $script:ImportISODataContext.CurrentPage = $PageTag
+        $script:ImportISO_DataContext.CurrentPage = $PageTag
         Update-BucketISONavigationUI -CurrentPage $PageTag
         Update-BucketISOButtonVisibility -CurrentPage $PageTag
         #endregion
@@ -56,14 +56,14 @@ function Invoke-BucketISOPage {
         #region Navigation Parameters
         $InitFunction = "Initialize-BucketISO_$($PageTag)"
         $navParams = @{
-            DataContext    = $script:ImportISODataContext
+            DataContext    = $script:ImportISO_DataContext
             PageDictionary = $script:ImportISOPages
             XamlBasePath   = Join-Path -Path (Split-Path $PSScriptRoot -Parent) -ChildPath "GUI\ImageManagement"
         }
         if ($PageDataContext) {
             # Merge global and page-specific DataContext
             $properties = @{}
-            foreach ($property in $script:ImportISODataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
+            foreach ($property in $script:ImportISO_DataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             foreach ($property in $PageDataContext.PSObject.Properties) { $properties[$property.Name] = $property.Value }
             $navParams.DataContext = [PSCustomObject]$properties
         }
