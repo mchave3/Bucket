@@ -1,18 +1,21 @@
-# filepath: c:\DEV\Bucket\src\Bucket\Private\GUI\Pages\ImportISO\Initialize-BucketISO_SelectIndexPage.ps1
 <#
 .SYNOPSIS
     Initializes the Select Index page for the ISO import wizard.
+
 .DESCRIPTION
     Sets up event handlers, populates the DataGrid with available WIM indices, and manages selection logic for exporting selected indices to the final WIM.
+
 .NOTES
     Name:        Initialize-BucketISO_SelectIndexPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     1.0.0
+    Version:     25.6.3.2
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
+
 .LINK
     https://github.com/mchave3/Bucket
+
 .EXAMPLE
     Initialize-BucketISO_SelectIndexPage
 #>
