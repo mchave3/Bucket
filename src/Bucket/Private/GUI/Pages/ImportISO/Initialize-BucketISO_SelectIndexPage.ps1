@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Initializes the Select Index page for the ISO import wizard.
 
@@ -9,7 +9,7 @@
     Name:        Initialize-BucketISO_SelectIndexPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     25.6.3.2
+    Version:     25.6.3.3
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
