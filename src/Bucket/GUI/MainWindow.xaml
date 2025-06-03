@@ -4,8 +4,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Bucket - Windows Image Customizer"
-    Width="1280"
-    Height="720"
+    MinWidth="1280"
+    MinHeight="720"
     WindowStartupLocation="CenterScreen"
     Background="#F9F9F9">
 
