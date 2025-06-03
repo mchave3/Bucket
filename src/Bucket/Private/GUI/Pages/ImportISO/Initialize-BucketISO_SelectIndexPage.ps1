@@ -9,7 +9,7 @@
     Name:        Initialize-BucketISO_SelectIndexPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     25.6.3.3
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -30,14 +30,14 @@ function Initialize-BucketISO_SelectIndexPage {
 
     process {
         #region Initialization
-        Write-BucketLog -Data "[ISO Import] Initializing Select Index page" -Level Info
+        Write-BucketLog -Data "Initializing Select Index page" -Level Info
         #endregion
 
         #region DataContext & Navigation
         # Ensure SelectedIndices property exists in the data context
         if (-not (Get-Member -InputObject $script:ImportISO_DataContext -Name "SelectedIndices" -MemberType NoteProperty)) {
             $script:ImportISO_DataContext | Add-Member -MemberType NoteProperty -Name "SelectedIndices" -Value @()
-            Write-BucketLog -Data "[ISO Import] SelectedIndices property initialized in ImportISODataContext" -Level Debug
+            Write-BucketLog -Data "SelectedIndices property initialized in ImportISODataContext" -Level Debug
         }
 
         # Create a modified page loaded handler that shows waiting overlay immediately
@@ -54,20 +54,20 @@ function Initialize-BucketISO_SelectIndexPage {
 
             # Store page reference for event access
             $script:importISOCurrentPage = $senderObj
-            Write-BucketLog -Data "[ISO Import] Select index page loaded" -Level Info
+            Write-BucketLog -Data "Select index page loaded" -Level Info
 
             # Log control discovery results
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_DataGrid' found: $($null -ne $dataGrid)" -Level Debug
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_SummaryLabel' found: $($null -ne $summaryLabel)" -Level Debug
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_WaitOverlay' found: $($null -ne $waitOverlay)" -Level Debug
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_HelpText' found: $($null -ne $helpText)" -Level Debug
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_SelectAllButton' found: $($null -ne $selectAllButton)" -Level Debug
-            Write-BucketLog -Data "[ISO Import] Control 'ImportISO_SelectIndex_DeselectAllButton' found: $($null -ne $deselectAllButton)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_DataGrid' found: $($null -ne $dataGrid)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_SummaryLabel' found: $($null -ne $summaryLabel)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_WaitOverlay' found: $($null -ne $waitOverlay)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_HelpText' found: $($null -ne $helpText)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_SelectAllButton' found: $($null -ne $selectAllButton)" -Level Debug
+            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_DeselectAllButton' found: $($null -ne $deselectAllButton)" -Level Debug
 
             # Make waiting overlay visible first
             if ($waitOverlay) {
                 $waitOverlay.Visibility = "Visible"
-                Write-BucketLog -Data "[ISO Import] Immediately displaying waiting overlay" -Level Debug
+                Write-BucketLog -Data "Immediately displaying waiting overlay" -Level Debug
             }
             if ($dataGrid) { $dataGrid.Visibility = "Collapsed" }
             if ($selectAllButton) { $selectAllButton.IsEnabled = $false }
@@ -95,7 +95,7 @@ function Initialize-BucketISO_SelectIndexPage {
                 if ($deselectAllButton) { $deselectAllButton.IsEnabled = $true }
                 if ($helpText) { $helpText.Text = "If no edition is selected, all editions will be included in the final WIM." }
 
-                Write-BucketLog -Data "[ISO Import] Populated DataGrid with $($indices.Count) WIM indices" -Level Debug
+                Write-BucketLog -Data "Populated DataGrid with $($indices.Count) WIM indices" -Level Debug
 
                 # Update the summary text
                 if ($dataGrid -and $summaryLabel) {
@@ -103,7 +103,7 @@ function Initialize-BucketISO_SelectIndexPage {
                 }
             }
             catch {
-                Write-BucketLog -Data "[ISO Import] Error extracting WIM indices: $_" -Level Error
+                Write-BucketLog -Data "Error extracting WIM indices: $_" -Level Error
                 if ($waitOverlay) { $waitOverlay.Visibility = "Collapsed" }
                 if ($helpText) { $helpText.Text = "Error extracting WIM indices: $_" }
             }
@@ -126,7 +126,7 @@ function Initialize-BucketISO_SelectIndexPage {
             if ($selectAllButton) {
                 $selectAllButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[ISO Import] Select All button clicked" -Level Info
+                        Write-BucketLog -Data "Select All button clicked" -Level Info
                         foreach ($item in $script:importISO_DataGrid.Items) {
                             $item.Include = $true
                         }
@@ -138,7 +138,7 @@ function Initialize-BucketISO_SelectIndexPage {
             if ($deselectAllButton) {
                 $deselectAllButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[ISO Import] Deselect All button clicked" -Level Info
+                        Write-BucketLog -Data "Deselect All button clicked" -Level Info
                         foreach ($item in $script:importISO_DataGrid.Items) {
                             $item.Include = $false
                         }
@@ -153,7 +153,7 @@ function Initialize-BucketISO_SelectIndexPage {
             SelectedIndices  = $script:ImportISO_DataContext.SelectedIndices
             PageLoaded       = $pageLoadedHandler
         }
-        Write-BucketLog -Data "[ISO Import] Data context for select index page created" -Level Debug
+        Write-BucketLog -Data "Data context for select index page created" -Level Debug
 
         Invoke-BucketNavigationService -PageTag "selectIndexPage" `
             -RootFrame $WPF_ImportISO_MainWindow_MainFrame `
@@ -161,7 +161,7 @@ function Initialize-BucketISO_SelectIndexPage {
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `
             -GlobalDataContext $script:ImportISO_DataContext
-        Write-BucketLog -Data "[ISO Import] Select index page navigation started" -Level Debug
+        Write-BucketLog -Data "Select index page navigation started" -Level Debug
         #endregion
     }
 }

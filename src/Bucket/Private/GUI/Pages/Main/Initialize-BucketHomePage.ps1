@@ -9,7 +9,7 @@
     Name:        Initialize-BucketHomePage.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -24,7 +24,7 @@ function Initialize-BucketHomePage {
     param()
 
     process {
-        Write-BucketLog -Data "[Home] Initializing Home Page" -Level Info
+        Write-BucketLog -Data "Initializing Home Page" -Level Info
 
         #region Data Initialization
         # Initialize system information
@@ -40,7 +40,7 @@ function Initialize-BucketHomePage {
             $script:homePage_DiskSpaceInfo = "C: Drive - Available space: $availableGB GB / $totalGB GB"
         }
         catch {
-            Write-BucketLog -Data "[Home] Error getting disk space information: $_" -Level Warning
+            Write-BucketLog -Data "Error getting disk space information: $_" -Level Warning
             $script:homePage_DiskSpaceInfo = "Disk space information unavailable"
         }
 
@@ -60,7 +60,7 @@ function Initialize-BucketHomePage {
         $pageLoadedHandler = {
             param($senderObj, $e)
 
-            Write-BucketLog -Data "[Home] HomePage loaded, setting up handlers" -Level Info
+            Write-BucketLog -Data "HomePage loaded, setting up handlers" -Level Info
 
             #region UI Element References
             $page = $senderObj
@@ -77,55 +77,55 @@ function Initialize-BucketHomePage {
             if ($selectImageButton) {
                 $selectImageButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Select Image button clicked" -Level Info
+                        Write-BucketLog -Data "Select Image button clicked" -Level Info
                         Invoke-BucketSelectImagePage
                     })
             }
             if ($appManagementButton) {
                 $appManagementButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] App Management button clicked" -Level Info
+                        Write-BucketLog -Data "App Management button clicked" -Level Info
                         # TODO: Navigate to App Management page when implemented
                     })
             }
             if ($driverManagementButton) {
                 $driverManagementButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Driver Management button clicked" -Level Info
+                        Write-BucketLog -Data "Driver Management button clicked" -Level Info
                         # TODO: Navigate to Driver Management page when implemented
                     })
             }
             if ($customizationButton) {
                 $customizationButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Customization button clicked" -Level Info
+                        Write-BucketLog -Data "Customization button clicked" -Level Info
                         # TODO: Navigate to Customization page when implemented
                     })
             }
             if ($completedWIMsButton) {
                 $completedWIMsButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Completed WIMs button clicked" -Level Info
+                        Write-BucketLog -Data "Completed WIMs button clicked" -Level Info
                         # TODO: Navigate to Completed WIMs page when implemented
                     })
             }
             if ($settingsButton) {
                 $settingsButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Settings button clicked" -Level Info
+                        Write-BucketLog -Data "Settings button clicked" -Level Info
                         # TODO: Navigate to Settings page when implemented
                     })
             }
             if ($helpButton) {
                 $helpButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[Home] Help button clicked" -Level Info
+                        Write-BucketLog -Data "Help button clicked" -Level Info
                         # TODO: Navigate to Help page when implemented
                     })
             }
             #endregion Button Event Handlers
 
-            Write-BucketLog -Data "[Home] HomePage event handlers configured successfully" -Level Info
+            Write-BucketLog -Data "HomePage event handlers configured successfully" -Level Info
         }
         #endregion Event Handlers
 

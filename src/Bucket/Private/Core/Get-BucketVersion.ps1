@@ -10,7 +10,7 @@
     Name:        Get-BucketVersion.ps1
     Author:      Mickaël CHAVE
     Created:     04/03/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -65,11 +65,11 @@ function Get-BucketVersion {
             if ($module.PrivateData.PSData.Prerelease) {
                 $script:BucketVersion += "-$($module.PrivateData.PSData.Prerelease)"
             }
-            Write-BucketLog -Data "[Bucket] Version: $script:BucketVersion" -Level Verbose
+            Write-BucketLog -Data "Version: $script:BucketVersion" -Level Verbose
         }
         else {
             $script:BucketVersion = "Version not found"
-            Write-BucketLog -Data "[Bucket] Module not found or not loaded" -Level Warning
+            Write-BucketLog -Data "Module not found or not loaded" -Level Warning
         }
         #endregion
     }

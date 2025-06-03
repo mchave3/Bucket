@@ -10,7 +10,7 @@
     Name:        Update-BucketNavigationStyle.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -42,7 +42,7 @@ function Update-BucketNavigationStyle {
     process {
         if ($PSCmdlet.ShouldProcess("Navigation button for page $PageTag", "Update style")) {
             try {
-                Write-BucketLog -Data "[Navigation] Updating navigation button style for: $PageTag" -Level Debug
+                Write-BucketLog -Data "Updating navigation button style for: $PageTag" -Level Debug
 
                 #region Collect Buttons
                 # Gather all valid button objects from the provided map
@@ -93,7 +93,7 @@ function Update-BucketNavigationStyle {
                         }
                     }
                     catch {
-                        Write-BucketLog -Data "[Navigation] Failed to find styles in context: $_" -Level Warning
+                        Write-BucketLog -Data "Failed to find styles in context: $_" -Level Warning
                     }
                 }
                 #endregion
@@ -101,7 +101,7 @@ function Update-BucketNavigationStyle {
                 #region Fallback Style Creation
                 # If styles are not found, create basic fallback styles for buttons
                 if (-not $defaultStyle -or -not $selectedStyle) {
-                    Write-BucketLog -Data "[Navigation] Trying alternative style lookup method..." -Level Debug
+                    Write-BucketLog -Data "Trying alternative style lookup method..." -Level Debug
                     try {
                         if (-not $defaultStyle) {
                             $defaultStyle = New-Object System.Windows.Style([System.Windows.Controls.Button])
@@ -114,7 +114,7 @@ function Update-BucketNavigationStyle {
                         }
                     }
                     catch {
-                        Write-BucketLog -Data "[Navigation] Failed to create fallback styles: $_" -Level Warning
+                        Write-BucketLog -Data "Failed to create fallback styles: $_" -Level Warning
                     }
                 }
                 #endregion
@@ -122,7 +122,7 @@ function Update-BucketNavigationStyle {
                 #region Style Application
                 # Abort if styles are still missing
                 if (-not $defaultStyle -or -not $selectedStyle) {
-                    Write-BucketLog -Data "[Navigation] Navigation styles not found in any resource context, skipping style update" -Level Warning
+                    Write-BucketLog -Data "Navigation styles not found in any resource context, skipping style update" -Level Warning
                     return
                 }
                 # Apply default style to all buttons
@@ -132,14 +132,14 @@ function Update-BucketNavigationStyle {
                 # Apply selected style to the button for the current page
                 if ($ButtonMap.ContainsKey($PageTag) -and $ButtonMap[$PageTag]) {
                     $ButtonMap[$PageTag].Style = $selectedStyle
-                    Write-BucketLog -Data "[Navigation] Set selected style for: $PageTag" -Level Verbose
+                    Write-BucketLog -Data "Set selected style for: $PageTag" -Level Verbose
                 }
-                Write-BucketLog -Data "[Navigation] Navigation button style updated successfully" -Level Debug
+                Write-BucketLog -Data "Navigation button style updated successfully" -Level Debug
                 #endregion
             }
             catch {
                 #region Error Handling
-                Write-BucketLog -Data "[Navigation] Failed to update navigation button style: $_" -Level Error
+                Write-BucketLog -Data "Failed to update navigation button style: $_" -Level Error
                 #endregion
             }
         }

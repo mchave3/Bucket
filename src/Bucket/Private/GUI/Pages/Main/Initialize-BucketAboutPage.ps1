@@ -9,7 +9,7 @@
     Name:        Initialize-BucketAboutPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -24,7 +24,7 @@ function Initialize-BucketAboutPage {
     param()
 
     process {
-        Write-BucketLog -Data "[About] Initializing About Page" -Level Info
+        Write-BucketLog -Data "Initializing About Page" -Level Info
 
         #region Data Initialization
         # Get application information
@@ -52,7 +52,7 @@ function Initialize-BucketAboutPage {
             )
         }
         catch {
-            Write-BucketLog -Data "[About] Error getting module information: $_" -Level Warning
+            Write-BucketLog -Data "Error getting module information: $_" -Level Warning
         }
         #endregion Data Initialization
 
@@ -60,7 +60,7 @@ function Initialize-BucketAboutPage {
         $pageLoadedHandler = {
             param($senderObj, $e)
 
-            Write-BucketLog -Data "[About] AboutPage loaded, setting up handlers" -Level Info
+            Write-BucketLog -Data "AboutPage loaded, setting up handlers" -Level Info
 
             #region UI Element References
             $page = $senderObj
@@ -75,7 +75,7 @@ function Initialize-BucketAboutPage {
             #region DataGrid Setup
             if ($modulesDataGrid) {
                 $modulesToUse = $script:aboutPage_Modules
-                Write-BucketLog -Data "[About] Setting up ModulesDataGrid with $($modulesToUse.Count) items" -Level Info
+                Write-BucketLog -Data "Setting up ModulesDataGrid with $($modulesToUse.Count) items" -Level Info
                 try {
                     $modulesList = New-Object System.Collections.ArrayList
                     foreach ($module in $modulesToUse) {
@@ -85,10 +85,10 @@ function Initialize-BucketAboutPage {
                     $modulesDataGrid.ItemsSource = $modulesList
                     $modulesDataGrid.UpdateLayout()
                     $modulesDataGrid.Items.Refresh()
-                    Write-BucketLog -Data "[About] ModulesDataGrid ItemsSource set ($($modulesList.Count) items)" -Level Info
+                    Write-BucketLog -Data "ModulesDataGrid ItemsSource set ($($modulesList.Count) items)" -Level Info
                 }
                 catch {
-                    Write-BucketLog -Data "[About] Error setting ItemsSource for ModulesDataGrid: $_" -Level Error
+                    Write-BucketLog -Data "Error setting ItemsSource for ModulesDataGrid: $_" -Level Error
                 }
             }
             #endregion DataGrid Setup
@@ -97,28 +97,28 @@ function Initialize-BucketAboutPage {
             if ($githubButton) {
                 $githubButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[About] GitHub button clicked" -Level Info
+                        Write-BucketLog -Data "GitHub button clicked" -Level Info
                         Start-Process "https://github.com/mchave3/Bucket"
                     })
             }
             if ($licenseButton) {
                 $licenseButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[About] License button clicked" -Level Info
+                        Write-BucketLog -Data "License button clicked" -Level Info
                         Start-Process "https://github.com/mchave3/Bucket/blob/main/LICENSE"
                     })
             }
             if ($issueButton) {
                 $issueButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[About] Report Issue button clicked" -Level Info
+                        Write-BucketLog -Data "Report Issue button clicked" -Level Info
                         Start-Process "https://github.com/mchave3/Bucket/issues/new"
                     })
             }
             if ($checkUpdateButton) {
                 $checkUpdateButton.Add_Click({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[About] Check for Updates button clicked" -Level Info
+                        Write-BucketLog -Data "Check for Updates button clicked" -Level Info
                         if (Get-Command -Name "Test-BucketUpdate" -ErrorAction SilentlyContinue) {
                             try {
                                 $updateResult = Test-BucketUpdate
@@ -140,7 +140,7 @@ function Initialize-BucketAboutPage {
                                 }
                             }
                             catch {
-                                Write-BucketLog -Data "[About] Error checking for updates: $_" -Level Error
+                                Write-BucketLog -Data "Error checking for updates: $_" -Level Error
                                 [System.Windows.MessageBox]::Show(
                                     "An error occurred while checking for updates: $($_.Exception.Message)",
                                     "Update Check Error",
@@ -162,14 +162,14 @@ function Initialize-BucketAboutPage {
             if ($githubProfileLink) {
                 $githubProfileLink.Add_MouseLeftButtonDown({
                         param($senderObj, $e)
-                        Write-BucketLog -Data "[About] GitHub Profile link clicked" -Level Info
+                        Write-BucketLog -Data "GitHub Profile link clicked" -Level Info
                         $e.Handled = $true
                         Start-Process "https://github.com/mchave3"
                     })
             }
             #endregion Button Event Handlers
 
-            Write-BucketLog -Data "[About] AboutPage event handlers configured successfully" -Level Info
+            Write-BucketLog -Data "AboutPage event handlers configured successfully" -Level Info
         }
         #endregion Event Handlers
 

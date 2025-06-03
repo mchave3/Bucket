@@ -11,7 +11,7 @@
     Name:        Invoke-BucketNavigationService.ps1
     Author:      Mickaël CHAVE
     Created:     04/14/2025
-    Version:     1.1.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -54,7 +54,7 @@ function Invoke-BucketNavigationService {
     process {
         #region Navigation Service Entry
         # Log the navigation request for traceability
-        Write-BucketLog -Data "[Navigation] Navigating to page: $PageTag" -Level Debug
+        Write-BucketLog -Data "Navigating to page: $PageTag" -Level Debug
         #endregion
 
         #region Page Dictionary Resolution
@@ -68,11 +68,11 @@ function Invoke-BucketNavigationService {
         #region PageTag & Frame Validation
         # Validate page existence and frame
         if (-not $pages.ContainsKey($PageTag)) {
-            Write-BucketLog -Data "[Navigation] Page $PageTag not found in page dictionary." -Level Error
+            Write-BucketLog -Data "Page $PageTag not found in page dictionary." -Level Error
             return
         }
         if (-not $RootFrame) {
-            Write-BucketLog -Data "[Navigation] RootFrame UI element not provided or is null" -Level Error
+            Write-BucketLog -Data "RootFrame UI element not provided or is null" -Level Error
             return
         }
         #endregion
@@ -87,13 +87,13 @@ function Invoke-BucketNavigationService {
                 $basePath = Join-Path -Path $PSScriptRoot -ChildPath "GUI"
             }
             $xamlFilePath = "$basePath\$simplePageName.xaml"
-            Write-BucketLog -Data "[Navigation] Looking for XAML file: $xamlFilePath" -Level Debug
+            Write-BucketLog -Data "Looking for XAML file: $xamlFilePath" -Level Debug
             #endregion
 
             if (Test-Path -Path $xamlFilePath) {
                 #region XAML Loading
                 # Load and parse the XAML file
-                Write-BucketLog -Data "[Navigation] Loading XAML file: $xamlFilePath" -Level Debug
+                Write-BucketLog -Data "Loading XAML file: $xamlFilePath" -Level Debug
                 $xamlContent = Get-Content -Path $xamlFilePath -Raw
                 $xamlContent = $xamlContent -replace 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"', ''
                 $xamlContent = $xamlContent -replace 'xmlns:d="http://schemas.microsoft.com/expression/blend/2008"', ''
@@ -123,7 +123,7 @@ function Invoke-BucketNavigationService {
                     }
                     $mergedContext = New-Object PSObject -Property $properties
                     $page.DataContext = $mergedContext
-                    Write-BucketLog -Data "[Navigation] Created merged DataContext for page $simplePageName" -Level Debug
+                    Write-BucketLog -Data "Created merged DataContext for page $simplePageName" -Level Debug
                 }
                 else {
                     $globalContext = $GlobalDataContext
@@ -131,7 +131,7 @@ function Invoke-BucketNavigationService {
                         $globalContext = $script:globalDataContext
                     }
                     $page.DataContext = $globalContext
-                    Write-BucketLog -Data "[Navigation] Using global DataContext for page $simplePageName" -Level Debug
+                    Write-BucketLog -Data "Using global DataContext for page $simplePageName" -Level Debug
                 }
                 #endregion
 
@@ -139,14 +139,14 @@ function Invoke-BucketNavigationService {
                 # Attach PageLoaded event handler if present
                 if ($DataContext -and $DataContext.PSObject.Properties['PageLoaded']) {
                     $page.Add_Loaded($DataContext.PageLoaded)
-                    Write-BucketLog -Data "[Navigation] Added PageLoaded event handler for $simplePageName" -Level Debug
+                    Write-BucketLog -Data "Added PageLoaded event handler for $simplePageName" -Level Debug
                 }
                 #endregion
 
                 #region Navigation
                 # Navigate to the loaded page
                 $RootFrame.Navigate($page)
-                Write-BucketLog -Data "[Navigation] Successfully navigated to XAML page: $simplePageName" -Level Info
+                Write-BucketLog -Data "Successfully navigated to XAML page: $simplePageName" -Level Info
                 #endregion
 
                 #region Navigation Completion Callback
@@ -196,7 +196,7 @@ function Invoke-BucketNavigationService {
                 $page.Content = $stackPanel
                 $page.DataContext = $script:globalDataContext
                 $RootFrame.Navigate($page)
-                Write-BucketLog -Data "[Navigation] Successfully navigated to fallback page for: $simplePageName" -Level Info
+                Write-BucketLog -Data "Successfully navigated to fallback page for: $simplePageName" -Level Info
                 if ($OnNavigationComplete) {
                     & $OnNavigationComplete -Page $page -PageTag $PageTag -PageName $simplePageName
                 }
@@ -206,7 +206,7 @@ function Invoke-BucketNavigationService {
         catch {
             #region Error Handling
             # Log any navigation errors
-            Write-BucketLog -Data "[Navigation] Failed to navigate to page $PageTag : $_" -Level Error
+            Write-BucketLog -Data "Failed to navigate to page $PageTag : $_" -Level Error
             #endregion
         }
     }

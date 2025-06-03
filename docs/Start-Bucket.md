@@ -78,7 +78,7 @@ For more information, see about_CommonParameters (http://go.microsoft.com/fwlink
 Name:        Start-Bucket.ps1
 Author:      Mickaël CHAVE
 Created:     04/03/2025
-Version:     1.0.0
+Version:     25.6.3.4
 Repository:  https://github.com/mchave3/Bucket
 License:     MIT License
 

@@ -8,7 +8,7 @@
     Name:        Invoke-BucketPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/17/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 .LINK
@@ -35,7 +35,7 @@ function Invoke-BucketPage {
 
     process {
         # Log navigation attempt
-        Write-BucketLog -Data "[Navigation] Invoke-BucketPage: Navigating to $PageTag via $InitFunction" -Level Debug
+        Write-BucketLog -Data "Invoke-BucketPage: Navigating to $PageTag via $InitFunction" -Level Debug
 
         #region Main Logic
         # Check if the initialization function exists, otherwise fallback to navigation service
@@ -44,7 +44,7 @@ function Invoke-BucketPage {
             & $InitFunction
         }
         else {
-            Write-BucketLog -Data "[Navigation] $InitFunction not found, using navigation service fallback" -Level Warning
+            Write-BucketLog -Data "$InitFunction not found, using navigation service fallback" -Level Warning
             $params = @{
                 PageTag   = $PageTag
                 RootFrame = $RootFrame

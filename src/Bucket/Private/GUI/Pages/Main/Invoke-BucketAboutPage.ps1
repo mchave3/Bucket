@@ -9,7 +9,7 @@
     Name:        Invoke-BucketAboutPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/15/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -21,7 +21,7 @@ function Invoke-BucketAboutPage {
     param()
 
     process {
-        Write-BucketLog -Data "[About] Navigating to About page" -Level Info
+        Write-BucketLog -Data "Navigating to About page" -Level Info
         Invoke-BucketPage -PageTag "aboutPage" -RootFrame $WPF_MainWindow_RootFrame -InitFunction "Initialize-BucketAboutPage" -NavigationServiceParams @{ DataContext = $script:globalDataContext }
     }
 }

@@ -12,7 +12,7 @@
 RootModule = 'Bucket.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '25.6.3.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -33,7 +33,7 @@ Copyright = '(c) Mickaël CHAVE. All rights reserved.'
 Description = 'Bucket is a PowerShell module for customizing Windows images. Automate, tweak, and optimize your Windows deployment.'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.1'
+PowerShellVersion = '7.4'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -98,16 +98,16 @@ PrivateData = @{
         # Tags = @()
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/mchave3/Bucket/blob/main/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/mchave3/Bucket'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/mchave3/Bucket/blob/main/docs/CHANGELOG.md'
 
         # Prerelease string of this module
         # Prerelease = ''

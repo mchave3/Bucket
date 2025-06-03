@@ -7,7 +7,7 @@
     Name:        Update-BucketISOSelectIndexSummary.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 .LINK
@@ -33,6 +33,6 @@ function Update-BucketISOSelectIndexSummary {
             "$count edition(s) selected."
         }
         $script:ImportISO_DataContext.SelectedIndices = $selected
-        Write-BucketLog -Data "[ISO Import] Selected indices: $($selected | ForEach-Object { $_.Index })" -Level Debug
+        Write-BucketLog -Data "Selected indices: $($selected | ForEach-Object { $_.Index })" -Level Debug
     }
 }

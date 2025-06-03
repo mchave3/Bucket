@@ -12,7 +12,7 @@
     Name:        Import-BucketISO.ps1
     Author:      Mickaël CHAVE
     Created:     04/16/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -34,17 +34,17 @@ function Import-BucketISO {
 
         # Prevent multiple instances from being opened simultaneously
         if ($script:ImportISO_WindowOpen) {
-            Write-BucketLog -Data "[ISO Import] Window already open, bringing to front" -Level Info
+            Write-BucketLog -Data "Window already open, bringing to front" -Level Info
             return
         }
         $script:ImportISO_WindowOpen = $true
 
         # Load the XAML file for the GUI
         $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\ImageManagement\ImportISO_MainWindow.xaml"
-        Write-BucketLog -Data "[ISO Import] XAML file path: $xamlPath" -Level Debug
+        Write-BucketLog -Data "XAML file path: $xamlPath" -Level Debug
 
         if (-not (Test-Path -Path $xamlPath)) {
-            Write-BucketLog -Data "[ISO Import] Could not find ImportISO_MainWindow.xaml at $xamlPath" -Level Error
+            Write-BucketLog -Data "Could not find ImportISO_MainWindow.xaml at $xamlPath" -Level Error
             $script:ImportISO_WindowOpen = $false
             return
         }
@@ -60,43 +60,43 @@ function Import-BucketISO {
         $xamlDoc.LoadXml($inputXaml)
         $nsManager = New-Object System.Xml.XmlNamespaceManager($xamlDoc.NameTable)
         $nsManager.AddNamespace('x', 'http://schemas.microsoft.com/winfx/2006/xaml')
-        Write-BucketLog -Data "[ISO Import] XAML parsed successfully" -Level Verbose
+        Write-BucketLog -Data "XAML parsed successfully" -Level Verbose
 
         try {
             $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
             $form = [Windows.Markup.XamlReader]::Load($reader)
-            Write-BucketLog -Data "[ISO Import] XAML loaded successfully" -Level Info
+            Write-BucketLog -Data "XAML loaded successfully" -Level Info
         }
         catch {
-            Write-BucketLog -Data "[ISO Import] Failed to load XAML: $_" -Level Error
+            Write-BucketLog -Data "Failed to load XAML: $_" -Level Error
             exit 1
         }
 
         # Load the XAML objects into variables
         $namedNodes = $xamlDoc.SelectNodes("//*[@x:Name]", $nsManager)
         if ($namedNodes -and $namedNodes.Count -gt 0) {
-            Write-BucketLog -Data "[ISO Import] Found $($namedNodes.Count) named elements in XAML" -Level Debug
+            Write-BucketLog -Data "Found $($namedNodes.Count) named elements in XAML" -Level Debug
             foreach ($node in $namedNodes) {
                 $elementName = $node.GetAttribute('Name', 'http://schemas.microsoft.com/winfx/2006/xaml')
-                Write-BucketLog -Data "[ISO Import] Processing XAML element: $elementName" -Level Verbose
+                Write-BucketLog -Data "Processing XAML element: $elementName" -Level Verbose
                 try {
                     $element = $form.FindName($elementName)
                     if ($element) {
                         $varName = "WPF_$elementName"
                         Set-Variable -Name $varName -Value $element -Scope Script
-                        Write-BucketLog -Data "[ISO Import] Found UI element: $elementName -> $varName" -Level Debug
+                        Write-BucketLog -Data "Found UI element: $elementName -> $varName" -Level Debug
                     }
                     else {
-                        Write-BucketLog -Data "[ISO Import] UI element not found in form: $elementName" -Level Warning
+                        Write-BucketLog -Data "UI element not found in form: $elementName" -Level Warning
                     }
                 }
                 catch {
-                    Write-BucketLog -Data "[ISO Import] Error processing UI element $elementName : $_" -Level Error
+                    Write-BucketLog -Data "Error processing UI element $elementName : $_" -Level Error
                 }
             }
         }
         else {
-            Write-BucketLog -Data "[ISO Import] No named elements found in XAML" -Level Warning
+            Write-BucketLog -Data "No named elements found in XAML" -Level Warning
         }
         #endregion
 
@@ -158,25 +158,25 @@ function Import-BucketISO {
                             $outputPathTextBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
                             if ($isoPathTextBox -and -not [string]::IsNullOrWhiteSpace($isoPathTextBox.Text)) {
                                 $script:ImportISO_DataContext.ISOSourcePath = $isoPathTextBox.Text
-                                Write-BucketLog -Data "[ISO Import] Synchronized ISO path from UI: $($isoPathTextBox.Text)" -Level Debug
+                                Write-BucketLog -Data "Synchronized ISO path from UI: $($isoPathTextBox.Text)" -Level Debug
                             }
                             if ($script:ImportISO_DataContext.UseCustomLocation) {
                                 if ($outputPathTextBox -and -not [string]::IsNullOrWhiteSpace($outputPathTextBox.Text)) {
                                     $script:ImportISO_DataContext.OutputPath = $outputPathTextBox.Text
-                                    Write-BucketLog -Data "[ISO Import] Synchronized custom output path from UI: $($outputPathTextBox.Text)" -Level Debug
+                                    Write-BucketLog -Data "Synchronized custom output path from UI: $($outputPathTextBox.Text)" -Level Debug
                                 }
                             }
                             else {
                                 $defaultPath = Join-Path -Path $script:workingDirectory -ChildPath "ImportedWIMs"
                                 $script:ImportISO_DataContext.OutputPath = $defaultPath
-                                Write-BucketLog -Data "[ISO Import] Using default output path: $defaultPath" -Level Debug
+                                Write-BucketLog -Data "Using default output path: $defaultPath" -Level Debug
                             }
                         }
                         if ([string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.ISOSourcePath) -or
                             [string]::IsNullOrWhiteSpace($script:ImportISO_DataContext.OutputPath)) {
                             [System.Windows.MessageBox]::Show("Please select both an ISO file and output directory.", "Missing Information", "OK", "Warning")
                             $canContinue = $false
-                            Write-BucketLog -Data "[ISO Import] Validation failed - ISO path: '$($script:ImportISO_DataContext.ISOSourcePath)', Output path: '$($script:ImportISO_DataContext.OutputPath)'" -Level Warning
+                            Write-BucketLog -Data "Validation failed - ISO path: '$($script:ImportISO_DataContext.ISOSourcePath)', Output path: '$($script:ImportISO_DataContext.OutputPath)'" -Level Warning
                         }
                     }
                     "selectIndexPage" {
@@ -219,7 +219,7 @@ function Import-BucketISO {
         # Set the initial page when the form is loaded
         $form.add_Loaded({
                 if ($WPF_ImportISO_MainWindow_MainFrame) {
-                    Write-BucketLog -Data "[ISO Import] Form loaded, initializing navigation system and navigating to data source page" -Level Info
+                    Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to data source page" -Level Info
                     Invoke-BucketISOPage -PageTag "dataSourcePage"
                 }
             })
@@ -228,7 +228,7 @@ function Import-BucketISO {
         #region Start GUI
         $form.Add_Closed({
                 $script:ImportISO_WindowOpen = $false
-                Write-BucketLog -Data "[ISO Import] Window closed" -Level Info
+                Write-BucketLog -Data "Window closed" -Level Info
                 Write-BucketLog -Data "========== IMPORT-ISO WIZARD CLOSED =========="
             })
         $form.ShowDialog() | Out-Null

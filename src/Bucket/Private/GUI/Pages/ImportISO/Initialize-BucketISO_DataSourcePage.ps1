@@ -13,7 +13,7 @@
     Name:        Initialize-BucketISO_DataSourcePage.ps1
     Author:      Mickaël CHAVE
     Created:     04/16/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -29,7 +29,7 @@ function Initialize-BucketISO_DataSourcePage {
 
     process {
         #region Initialization
-        Write-BucketLog -Data "[ISO Import] Initializing data source page" -Level Info
+        Write-BucketLog -Data "Initializing data source page" -Level Info
         #endregion
 
         #region Page Logic
@@ -38,7 +38,7 @@ function Initialize-BucketISO_DataSourcePage {
 
             # Store page reference for event access
             $script:ImportISOCurrentPage = $senderObj
-            Write-BucketLog -Data "[ISO Import] Data source page loaded" -Level Info
+            Write-BucketLog -Data "Data source page loaded" -Level Info
 
             # Retrieve UI controls
             $browseISOButton = $senderObj.FindName("ImportISO_DataSource_BrowseISOButton")
@@ -71,7 +71,7 @@ function Initialize-BucketISO_DataSourcePage {
                             $script:ImportISO_DataContext.ISOSourcePath = $openFileDialog.FileName
                             $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_ISOPathTextBox")
                             if ($textBox) { $textBox.Text = $openFileDialog.FileName }
-                            Write-BucketLog -Data "[ISO Import] ISO file selected: $($openFileDialog.FileName)" -Level Info
+                            Write-BucketLog -Data "ISO file selected: $($openFileDialog.FileName)" -Level Info
                         }
                     })
             }
@@ -85,7 +85,7 @@ function Initialize-BucketISO_DataSourcePage {
                             $script:ImportISO_DataContext.OutputPath = $folderBrowserDialog.SelectedPath
                             $textBox = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
                             if ($textBox) { $textBox.Text = $folderBrowserDialog.SelectedPath }
-                            Write-BucketLog -Data "[ISO Import] Custom output directory selected: $($folderBrowserDialog.SelectedPath)" -Level Info
+                            Write-BucketLog -Data "Custom output directory selected: $($folderBrowserDialog.SelectedPath)" -Level Info
                         }
                     })
             }            # Radio button event: use default location
@@ -104,7 +104,7 @@ function Initialize-BucketISO_DataSourcePage {
                             $outputTxt.IsEnabled = $false
                             $outputTxt.Text = $defaultPath
                         }
-                        Write-BucketLog -Data "[ISO Import] Using default output directory: $defaultPath" -Level Info
+                        Write-BucketLog -Data "Using default output directory: $defaultPath" -Level Info
                     })
             }
             # Radio button event: use custom location
@@ -115,11 +115,11 @@ function Initialize-BucketISO_DataSourcePage {
                         if ($browseBtn) { $browseBtn.IsEnabled = $true }
                         $outputTxt = $script:importISOCurrentPage.FindName("ImportISO_DataSource_OutputPathTextBox")
                         if ($outputTxt) { $outputTxt.IsEnabled = $true }
-                        Write-BucketLog -Data "[ISO Import] Using custom output directory" -Level Info
+                        Write-BucketLog -Data "Using custom output directory" -Level Info
                     })
             }
 
-            Write-BucketLog -Data "[ISO Import] Data source page event handlers configured" -Level Debug
+            Write-BucketLog -Data "Data source page event handlers configured" -Level Debug
         }
         #endregion
 
@@ -131,7 +131,7 @@ function Initialize-BucketISO_DataSourcePage {
             DefaultLocationText = "Use default Bucket directory: $($script:ImportISO_DataContext.OutputPath)"
             PageLoaded          = $pageLoadedHandler
         }
-        Write-BucketLog -Data "[ISO Import] Data context for data source page created" -Level Debug
+        Write-BucketLog -Data "Data context for data source page created" -Level Debug
 
         Invoke-BucketNavigationService -PageTag "dataSourcePage" `
             -RootFrame $WPF_ImportISO_MainWindow_MainFrame `
@@ -139,7 +139,7 @@ function Initialize-BucketISO_DataSourcePage {
             -PageDictionary $script:ImportISOPages `
             -DataContext $dataContext `
             -GlobalDataContext $script:ImportISO_DataContext
-        Write-BucketLog -Data "[ISO Import] Data source page navigation started" -Level Debug
+        Write-BucketLog -Data "Data source page navigation started" -Level Debug
         #endregion
     }
 }

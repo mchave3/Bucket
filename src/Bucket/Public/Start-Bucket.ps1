@@ -9,7 +9,7 @@
     Name:        Start-Bucket.ps1
     Author:      Mickaël CHAVE
     Created:     04/03/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -44,7 +44,7 @@ function Start-Bucket {
         # Load the XAML file for the GUI
         $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "GUI\MainWindow.xaml"
         if (-not (Test-Path -Path $xamlPath)) {
-            Write-BucketLog -Data "[Bucket] Could not find MainWindow.xaml at $xamlPath" -Level Error
+            Write-BucketLog -Data "Could not find MainWindow.xaml at $xamlPath" -Level Error
             exit 1
         }
         $inputXaml = Get-Content -Path $xamlPath -Raw
@@ -57,41 +57,41 @@ function Start-Bucket {
         $xamlDoc.LoadXml($inputXaml)
         $nsManager = New-Object System.Xml.XmlNamespaceManager($xamlDoc.NameTable)
         $nsManager.AddNamespace('x', 'http://schemas.microsoft.com/winfx/2006/xaml')
-        Write-BucketLog -Data "[Bucket] XAML parsed successfully" -Level Verbose
+        Write-BucketLog -Data "XAML parsed successfully" -Level Verbose
         try {
             $reader = New-Object System.Xml.XmlNodeReader $xamlDoc
             $form = [Windows.Markup.XamlReader]::Load($reader)
-            Write-BucketLog -Data "[Bucket] XAML loaded successfully" -Level Info
+            Write-BucketLog -Data "XAML loaded successfully" -Level Info
         }
         catch {
-            Write-BucketLog -Data "[Bucket] Failed to load XAML: $_" -Level Error
+            Write-BucketLog -Data "Failed to load XAML: $_" -Level Error
             exit 1
         }
         # Load the XAML objects into variables
         $namedNodes = $xamlDoc.SelectNodes("//*[@x:Name]", $nsManager)
         if ($namedNodes -and $namedNodes.Count -gt 0) {
-            Write-BucketLog -Data "[Bucket] Found $($namedNodes.Count) named elements in XAML" -Level Debug
+            Write-BucketLog -Data "Found $($namedNodes.Count) named elements in XAML" -Level Debug
             foreach ($node in $namedNodes) {
                 $elementName = $node.GetAttribute('Name', 'http://schemas.microsoft.com/winfx/2006/xaml')
-                Write-BucketLog -Data "[Bucket] Processing XAML element: $elementName" -Level Verbose
+                Write-BucketLog -Data "Processing XAML element: $elementName" -Level Verbose
                 try {
                     $element = $form.FindName($elementName)
                     if ($element) {
                         $varName = "WPF_$elementName"
                         Set-Variable -Name $varName -Value $element -Scope Script
-                        Write-BucketLog -Data "[Bucket] Found UI element: $elementName -> $varName" -Level Debug
+                        Write-BucketLog -Data "Found UI element: $elementName -> $varName" -Level Debug
                     }
                     else {
-                        Write-BucketLog -Data "[Bucket] UI element not found in form: $elementName" -Level Warning
+                        Write-BucketLog -Data "UI element not found in form: $elementName" -Level Warning
                     }
                 }
                 catch {
-                    Write-BucketLog -Data "[Bucket] Error processing UI element $elementName : $_" -Level Error
+                    Write-BucketLog -Data "Error processing UI element $elementName : $_" -Level Error
                 }
             }
         }
         else {
-            Write-BucketLog -Data "[Bucket] No named elements found in XAML" -Level Warning
+            Write-BucketLog -Data "No named elements found in XAML" -Level Warning
         }
         #endregion
 
@@ -118,7 +118,7 @@ function Start-Bucket {
         # Set the initial page to home page when the form is loaded
         $form.add_Loaded({
                 if ($WPF_MainWindow_RootFrame) {
-                    Write-BucketLog -Data "[Bucket] Form loaded, initializing navigation system and navigating to home page" -Level Info
+                    Write-BucketLog -Data "Form loaded, initializing navigation system and navigating to home page" -Level Info
                     Invoke-BucketHomePage
                 }
             })

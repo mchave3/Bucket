@@ -7,7 +7,7 @@
     Name:        Get-BucketWimIndex.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 .LINK
@@ -23,7 +23,7 @@ function Get-BucketWimIndex {
     )
     process {
         try {
-            Write-BucketLog -Data "[ISO Import] Mounting ISO: $IsoPath" -Level Info
+            Write-BucketLog -Data "Mounting ISO: $IsoPath" -Level Info
             Mount-DiskImage -ImagePath $IsoPath -PassThru
 
             $vol = Get-DiskImage -ImagePath $IsoPath | Get-Volume
@@ -43,7 +43,7 @@ function Get-BucketWimIndex {
             else {
                 throw "No install.wim or install.esd found in $sourcesPath."
             }
-            Write-BucketLog -Data "[ISO Import] Found image file: $imagePath" -Level Debug
+            Write-BucketLog -Data "Found image file: $imagePath" -Level Debug
             $images = Get-WindowsImage -ImagePath $imagePath 2>&1
             if ($images -is [System.Management.Automation.ErrorRecord]) {
                 throw $images
@@ -59,20 +59,20 @@ function Get-BucketWimIndex {
                     Size         = [math]::Round($img.ImageSize/1MB, 1)
                 }
             }
-            Write-BucketLog -Data "[ISO Import] Extracted $($result.Count) indices from $imagePath" -Level Info
+            Write-BucketLog -Data "Extracted $($result.Count) indices from $imagePath" -Level Info
             return $result
         }
         catch {
-            Write-BucketLog -Data "[ISO Import] Error extracting indices: $_" -Level Error
+            Write-BucketLog -Data "Error extracting indices: $_" -Level Error
             throw $_
         }
         finally {
             try {
                 Dismount-DiskImage -ImagePath $IsoPath
-                Write-BucketLog -Data "[ISO Import] ISO dismounted: $IsoPath" -Level Info
+                Write-BucketLog -Data "ISO dismounted: $IsoPath" -Level Info
             }
             catch {
-                Write-BucketLog -Data "[ISO Import] Failed to dismount ISO: $_" -Level Warning
+                Write-BucketLog -Data "Failed to dismount ISO: $_" -Level Warning
             }
         }
     }

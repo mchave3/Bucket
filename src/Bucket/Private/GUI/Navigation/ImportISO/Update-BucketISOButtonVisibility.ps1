@@ -10,7 +10,7 @@
     Name:        Update-BucketISOButtonVisibility.ps1
     Author:      Mickaël CHAVE
     Created:     04/16/2025
-    Version:     1.0.0
+    Version:     25.6.3.4
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
