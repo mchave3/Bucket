@@ -59,7 +59,16 @@ jobs:
         Write-Host "=== PowerShell Version ===" -ForegroundColor Green
         $PSVersionTable | Format-Table -AutoSize
         Write-Host "=== System Information ===" -ForegroundColor Green
-        Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize
+        if ($IsWindows -or $PSVersionTable.PSEdition -eq 'Desktop') {
+            Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize
+        } else {
+            Write-Host "Operating System: $($PSVersionTable.OS)" -ForegroundColor Cyan
+            Write-Host "Platform: $($PSVersionTable.Platform)" -ForegroundColor Cyan
+            if (Get-Command 'free' -ErrorAction SilentlyContinue) {
+                Write-Host "Memory Information:" -ForegroundColor Cyan
+                free -h
+            }
+        }
         Write-Host "=== Available Modules ===" -ForegroundColor Green
         Get-Module -ListAvailable | Where-Object { $_.Name -like "*Pester*" -or $_.Name -like "*PSScript*" } | Format-Table Name, Version -AutoSize
 
