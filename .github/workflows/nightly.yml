@@ -116,7 +116,9 @@ jobs:
           Tests = $testResults
           Coverage = $coverageResults
           Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
+        }
+
+        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
         Write-Host "Test Summary: $summaryJson" -ForegroundColor Green
         echo "summary=$summaryJson" >> $env:GITHUB_OUTPUT
 
@@ -142,7 +144,8 @@ jobs:
         Write-Host "Total Lines of Code: $totalLines" -ForegroundColor Cyan
         Write-Host "Average Lines per File: $([math]::Round($totalLines / $totalFiles, 2))" -ForegroundColor Cyan
 
-        # Create metrics file for artifact        $metrics = @{
+        # Create metrics file for artifact
+        $metrics = @{
           TotalFiles = $totalFiles
           TotalLines = $totalLines
           AverageLines = [math]::Round($totalLines / $totalFiles, 2)
@@ -367,7 +370,9 @@ jobs:
         if (Test-Path $secPath) {
           $secData = Get-Content $secPath | ConvertFrom-Json
           $reportData.Security = $secData
-        }        # Generate simple HTML report
+        }
+
+        # Generate simple HTML report
         $htmlHeader = "<!DOCTYPE html><html><head><title>Bucket - Nightly Build Report</title></head><body>"
         $htmlContent = "<h1>Bucket - Nightly Build Report</h1>"
         $htmlContent += "<p>Generated: $($reportData.BuildInfo.Timestamp)</p>"
