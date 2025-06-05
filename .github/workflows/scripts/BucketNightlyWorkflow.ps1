@@ -62,18 +62,27 @@ function Initialize-NightlyBuildSummary {
     $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
     $summaryFilePath = Get-GitHubStepSummary
     $initialSummary = @"
-## 🔧 Bucket Nightly Build #$RunNumber
+# 🔧 Bucket Nightly Build #$RunNumber
 
-**Branch:** $BranchName | **Trigger:** $TriggerEvent | **Started:** $startTime
-**Commit:** [$($CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$CommitSHA)
+**📋 Build Information**
+- **Branch:** $BranchName
+- **Trigger:** $TriggerEvent
+- **Started:** $startTime
+- **Commit:** [$($CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$CommitSHA)
 
-| Phase | Status |
-|-------|--------|
-| Build & Test | 🔄 Running |
-| Code Coverage | ⏳ Pending |
-| Performance | ⏳ Pending |
-| Security Scan | ⏳ Pending |
-| Artifacts | ⏳ Pending |
+---
+
+## 🚀 Pipeline Status
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| 🏗️ Build & Test | 🔄 Running | In Progress |
+| 📊 Code Coverage | ⏸️ Pending | Waiting |
+| ⚡ Performance | ⏸️ Pending | Waiting |
+| 🛡️ Security Scan | ⏸️ Pending | Waiting |
+| 📦 Artifacts | ⏸️ Pending | Waiting |
+
+---
 "@
 
     try {
@@ -324,14 +333,17 @@ function Write-NightlyBuildJobSummary {
     )
     Write-Host "Generating GitHub Action Job Summary..." -ForegroundColor Yellow
 
-    $buildStatus = "✅ Success" # Assuming success if this function is called after main steps
+    $buildStatus = "✅ Success"
     $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 
+    # Initialize status variables
     $testStatus = "❌ No Data"
     $testCount = "No tests found"
+    $testDetails = ""
     $coverageStatus = "❌ No Data"
     $coveragePercent = "N/A"
 
+    # Parse test results
     $pesterFile = ".\\src\\Artifacts\\testOutput\\PesterTests.xml"
     Write-Host "🔍 Checking for test results at: $pesterFile" -ForegroundColor Cyan
     if (Test-Path $pesterFile) {
@@ -339,37 +351,47 @@ function Write-NightlyBuildJobSummary {
         try {
             [xml]$pesterXml = Get-Content $pesterFile
             Write-Host "📄 XML loaded successfully" -ForegroundColor Cyan
+
+            # Try NUnit format first
             $total = $pesterXml.'test-results'.total
             $passed = $pesterXml.'test-results'.passed
             $failed = $pesterXml.'test-results'.failed
+
             if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
-                 $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
-                 $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
-                 $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
-                 $testCount = "$passedInt/$totalInt"
-                 $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
-            } else {
-                # Try JUnit format if NUnit-style access failed or returned nulls
+                $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
+                $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
+                $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
+                $testCount = "$passedInt/$totalInt"
+                $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
+                $testDetails = "$passedInt passed, $failedInt failed"
+            }
+            else {
+                # Try JUnit format
                 if ($pesterXml.testsuites) {
                     $total = $pesterXml.testsuites.tests
                     $failures = $pesterXml.testsuites.failures
                     $passed = [int]$total - [int]$failures
                     $failed = $failures
                 }
-                elseif ($pesterXml.testsuite) { # Single testsuite format
+                elseif ($pesterXml.testsuite) {
                     $total = $pesterXml.testsuite.tests
                     $failures = $pesterXml.testsuite.failures
                     $passed = [int]$total - [int]$failures
                     $failed = $failures
-                }                if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
+                }
+
+                if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
                     $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
                     $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
                     $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
                     $testCount = "$passedInt/$totalInt"
                     $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
-                } else {
-                    $testStatus = "⚠️ Parse Issue - Unknown XML Format"
-                    $testCount = "Unknown"
+                    $testDetails = "$passedInt passed, $failedInt failed"
+                }
+                else {
+                    $testStatus = "⚠️ Parse Issue"
+                    $testCount = "Unknown format"
+                    $testDetails = "XML format not recognized"
                 }
             }
             Write-Host "✅ Test status: $testStatus ($testCount)" -ForegroundColor Green
@@ -378,12 +400,15 @@ function Write-NightlyBuildJobSummary {
             Write-Host "❌ Error parsing test file: $(${_.Exception.Message})" -ForegroundColor Red
             $testStatus = "⚠️ Parse Error"
             $testCount = "Parse failed"
+            $testDetails = "Error: $($_.Exception.Message)"
         }
     }
     else {
         Write-Host "❌ Test file not found at $pesterFile" -ForegroundColor Red
+        $testDetails = "Test file not found"
     }
 
+    # Parse coverage results
     if (Test-Path ".\\cov.xml") {
         try {
             [xml]$coverageXml = Get-Content ".\\cov.xml"
@@ -397,10 +422,13 @@ function Write-NightlyBuildJobSummary {
                 }
             }
         }
-        catch { $coverageStatus = "⚠️ Parse Error" }
+        catch {
+            $coverageStatus = "⚠️ Parse Error"
+            $coveragePercent = "Parse failed"
+        }
     }
 
-
+    # Get code metrics
     $codeMetrics = "❌ No Data"
     if (Test-Path ".\\code-metrics.json") {
         try {
@@ -410,22 +438,38 @@ function Write-NightlyBuildJobSummary {
         catch { $codeMetrics = "⚠️ Parse Error" }
     }
 
+    # Check artifacts
     $artifactsStatus = "✅ Available"
-    if (-not (Test-Path ".\\src\\Artifacts")) { # Basic check
+    if (-not (Test-Path ".\\src\\Artifacts")) {
         $artifactsStatus = "❌ Missing"
-    }    $summaryMarkdown = @"
+    }
 
-## 📊 Build Results v$ModuleVersion
+    # Update pipeline status table
+    $summaryMarkdown = @"
 
-| Component | Result | Details |
-|-----------|--------|---------|
-| Build | $buildStatus | Tests: $testStatus ($testCount) |
-| Coverage | $coverageStatus | $coveragePercent |
-| Metrics | ✅ | $codeMetrics |
-| Artifacts | $artifactsStatus | [📦 Download](./src/Artifacts/) |
+## 🚀 Pipeline Status - UPDATED
 
-**Completed:** $buildTime
+| Phase | Status | Details |
+|-------|--------|---------|
+| 🏗️ Build & Test | $buildStatus | $testDetails |
+| 📊 Code Coverage | $coverageStatus | $coveragePercent coverage |
+| 📈 Code Metrics | $codeMetrics | Files & lines analyzed |
+| 📦 Artifacts | $artifactsStatus | Build outputs ready |
+
+---
+
+## 📊 Build Summary v$ModuleVersion
+
+**🧪 Test Results:** $testStatus ($testCount)
+**📊 Coverage:** $coveragePercent
+**⏱️ Completed:** $buildTime
+
+**🔗 Quick Links:**
+- [📦 Download Artifacts](./src/Artifacts/)
+- [🔄 Workflow Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
+- [📝 Commit Details](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
 "@
+
     try {
         $summaryMarkdown | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
         Write-Host "Job summary appended to GITHUB_STEP_SUMMARY." -ForegroundColor Green
@@ -442,91 +486,32 @@ function Write-NightlyFinalConsolidatedSummary {
         [Parameter(Mandatory = $true)]
         [string]$ModuleVersion
     )
-    Write-Host "Generating final consolidated job summary..." -ForegroundColor Yellow
+    Write-Host "Updating final pipeline status..." -ForegroundColor Yellow
 
-    $buildStatus = "✅ Success" # Assumed
-    $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+    $completionTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 
-    $perfStatus = "⏳ Not Run/Available Yet" # Updated from Not Implemented
-    $secStatus = "⏳ Not Run/Available Yet"  # Updated from Not Implemented
-    $perfData = "⏳ No Data Yet"
-    $secData = "⏳ No Data Yet"
+    # Update the pipeline status to show completion
+    $finalStatus = @"
 
-    $testData = "❌ No Data"
-    $pesterFile = ".\\src\\Artifacts\\testOutput\\PesterTests.xml"
-    if (Test-Path $pesterFile) {
-        try {
-            [xml]$pesterXml = Get-Content $pesterFile
-            $total = $pesterXml.'test-results'.total
-            $passed = $pesterXml.'test-results'.passed
-            $failed = $pesterXml.'test-results'.failed
+## ✅ Build Completed Successfully!
 
-            if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
-                $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
-                $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
-                $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
-                $testData = if ($failedInt -eq 0) { "✅ $passedInt/$totalInt passed" } else { "❌ $failedInt/$totalInt failed" }
-            } else {
-                 # Try JUnit format if NUnit-style access failed or returned nulls
-                if ($pesterXml.testsuites) {
-                    $total = $pesterXml.testsuites.tests
-                    $failures = $pesterXml.testsuites.failures
-                    $passed = [int]$total - [int]$failures
-                    $failed = $failures
-                }
-                elseif ($pesterXml.testsuite) { # Single testsuite format
-                    $total = $pesterXml.testsuite.tests
-                    $failures = $pesterXml.testsuite.failures
-                    $passed = [int]$total - [int]$failures
-                    $failed = $failures
-                }
-                if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
-                    $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
-                    $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
-                    $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
-                    $testData = if ($failedInt -eq 0) { "✅ $passedInt/$totalInt passed" } else { "❌ $failedInt/$totalInt failed" }
-                } else {
-                    $testData = "⚠️ Parse Issue - Unknown XML Format"
-                }
-            }
-        }
-        catch { $testData = "⚠️ Parse Error: $(${_.Exception.Message})" }
-    }
+**Final Status:** All phases completed at $completionTime
 
-    $coverageData = "❌ No Data"
-    if (Test-Path ".\\cov.xml") {
-        try {
-            [xml]$coverageXml = Get-Content ".\\cov.xml"
-            $coverageNodes = $coverageXml.SelectNodes("//coverage")
-            if ($coverageNodes.Count -gt 0) {
-                $lineRate = $coverageNodes[0].'line-rate'
-                if ($lineRate) {
-                    $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
-                    $coverageData = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
-                }
-            }
-        }
-        catch { $coverageData = "⚠️ Parse Error" }
-    }    $consolidatedSummary = @"
+**🔗 Quick Actions:**
+- [📦 Download Build Artifacts](./src/Artifacts/)
+- [🔄 View Full Workflow Run](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
+- [📝 View Commit](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
 
-## 🚀 Pipeline Summary - Bucket v$ModuleVersion
-
-| Job | Status | Key Metrics |
-|-----|--------|-------------|
-| 🏗️ Build | $buildStatus | $testData • $coverageData |
-| ⚡ Perf | $perfStatus | $perfData |
-| 🛡️ Security | $secStatus | $secData |
-
-**Links:** [📦 Artifacts](./artifacts) • [🔄 Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID)) • [📝 $($env:GITHUB_SHA.Substring(0,7))](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
-
-**Completed:** $buildTime
+---
+*Build completed for Bucket v$ModuleVersion*
 "@
+
     try {
-        $consolidatedSummary | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 # Overwrites previous summary
-        Write-Host "Final consolidated job summary generated successfully!" -ForegroundColor Green
+        $finalStatus | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
+        Write-Host "Final status appended successfully!" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to write final consolidated summary: $($_.Exception.Message)"
+        Write-Error "Failed to write final status: $($_.Exception.Message)"
     }
 }
 
@@ -729,6 +714,43 @@ function Write-NightlyComprehensiveReport {
     }
 }
 #endregion Workflow Functions
+
+#region Pipeline Status Update
+function Update-NightlyPipelineStatus {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Phase,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Running', 'Completed', 'Failed', 'Skipped')]
+        [string]$Status,
+        [Parameter(Mandatory = $false)]
+        [string]$Details = ""
+    )
+
+    Write-Host "Updating pipeline status: $Phase -> $Status" -ForegroundColor Cyan
+
+    # Map status to appropriate emoji
+    $statusIcon = switch ($Status) {
+        'Running' { '🔄' }
+        'Completed' { '✅' }
+        'Failed' { '❌' }
+        'Skipped' { '⏭️' }
+    }
+
+    # This would append a status update to the summary
+    # In a real implementation, you might want to update a specific table row
+    $statusUpdate = "**$Phase:** $statusIcon $Status $(if($Details) { "- $Details" })"
+
+    try {
+        "`n$statusUpdate" | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
+        Write-Host "Pipeline status updated for $Phase" -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "Failed to update pipeline status: $($_.Exception.Message)"
+    }
+}
+#endregion Pipeline Status Update
 
 #region Main Script Logic
 # Dispatches the requested action to the appropriate function
