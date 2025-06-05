@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 25.5.6.34
+    Version: 25.5.6.35
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
@@ -496,7 +496,7 @@ $summary += @"
 | **Platform** | $($PSVersionTable.Platform) |
 | **.NET Version** | $([System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription) |
 | **Architecture** | $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) |
-| **Culture** | $((Get-Culture).Name ?? 'N/A') |
+| **Culture** | $(try { $culture = (Get-Culture).Name; if ([string]::IsNullOrWhiteSpace($culture)) { 'N/A' } else { $culture } } catch { 'N/A' }) |
 | **Current User** | $($env:USERNAME ?? $env:USER ?? 'Unknown') |
 | **Working Directory** | $(Get-Location) |
 | **Runner OS** | $($env:RUNNER_OS ?? 'N/A') |
