@@ -27,10 +27,9 @@ jobs:
 
         | ℹ️ Build Information | Value |
         |---------------------|-------|
-        | 🕐 **Start Time** | $startTime |
-        | 🔢 **Run Number** | #${{ github.run_number }} |
-        | 📝 **Commit** | [\`${{ github.sha }}\`](https://github.com/mchave3/Bucket/commit/${{ github.sha }}) |
-        | 🌿 **Branch** | \`${{ github.ref_name }}\` |
+        | 🕐 **Start Time** | $startTime |        | 🔢 **Run Number** | #${{ github.run_number }} |
+        | 📝 **Commit** | [${{ github.sha }}](https://github.com/mchave3/Bucket/commit/${{ github.sha }}) |
+        | 🌿 **Branch** | ${{ github.ref_name }} |
         | 🎯 **Trigger** | ${{ github.event_name }} |
 
         ## 📋 Planned Steps
@@ -239,22 +238,86 @@ jobs:
 
         # Check test results
         $testStatus = "❌ No Data"
-        $testCount = "N/A"
+        $testCount = "No tests found"
         $coverageStatus = "❌ No Data"
         $coveragePercent = "N/A"
 
         $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
+        Write-Host "🔍 Checking for test results at: $pesterFile" -ForegroundColor Cyan
         if (Test-Path $pesterFile) {
+          Write-Host "✅ Pester file found!" -ForegroundColor Green
           try {
             [xml]$pesterXml = Get-Content $pesterFile
-            $total = $pesterXml.'test-results'.total
-            $passed = $pesterXml.'test-results'.passed
-            $failed = $pesterXml.'test-results'.failed
-            $testCount = "$passed/$total"
-            $testStatus = if ($failed -eq "0") { "✅ All Passed" } else { "❌ $failed Failed" }
+            Write-Host "📄 XML loaded successfully" -ForegroundColor Cyan
+
+            # Debug: Show XML structure
+            Write-Host "🔍 XML Root element: $($pesterXml.DocumentElement.LocalName)" -ForegroundColor Cyan
+
+            # Initialize variables
+            $total = $null
+            $passed = $null
+            $failed = $null
+
+            # Try different XML formats
+            if ($pesterXml.'test-results') {
+              $total = $pesterXml.'test-results'.total
+              $passed = $pesterXml.'test-results'.passed
+              $failed = $pesterXml.'test-results'.failed
+              Write-Host "📊 NUnit format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
+            }
+            elseif ($pesterXml.testsuites) {
+              # JUnit format
+              $total = $pesterXml.testsuites.tests
+              $failures = $pesterXml.testsuites.failures
+              $passed = [int]$total - [int]$failures
+              $failed = $failures
+              Write-Host "📊 JUnit format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
+            }
+            elseif ($pesterXml.testsuite) {
+              # Single testsuite format
+              $total = $pesterXml.testsuite.tests
+              $failures = $pesterXml.testsuite.failures
+              $passed = [int]$total - [int]$failures
+              $failed = $failures
+              Write-Host "📊 Single testsuite format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
+            }
+            else {
+              Write-Host "⚠️ Unknown XML format. Root elements:" -ForegroundColor Yellow
+              $pesterXml.DocumentElement.ChildNodes | ForEach-Object {
+                Write-Host "  - $($_.LocalName)" -ForegroundColor Yellow
+              }
+              $testStatus = "⚠️ Unknown Format"
+              $testCount = "Unknown"
+            }
+              # Set status if we have valid data
+            if ($total -ne $null -and $passed -ne $null -and $failed -ne $null) {
+              # Convert to integers to handle empty strings
+              $totalInt = if ($total -eq "") { 0 } else { [int]$total }
+              $passedInt = if ($passed -eq "") { 0 } else { [int]$passed }
+              $failedInt = if ($failed -eq "") { 0 } else { [int]$failed }
+
+              $testCount = "$passedInt/$totalInt"
+              $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
+              Write-Host "✅ Test status: $testStatus ($testCount)" -ForegroundColor Green
+            } else {
+              Write-Host "⚠️ Could not extract test counts from XML - values: total=$total, passed=$passed, failed=$failed" -ForegroundColor Yellow
+              $testStatus = "⚠️ Parse Issue"
+              $testCount = "No data"
+            }
           }
           catch {
+            Write-Host "❌ Error parsing test file: $($_.Exception.Message)" -ForegroundColor Red
             $testStatus = "⚠️ Parse Error"
+            $testCount = "Parse failed"
+          }
+        } else {
+          Write-Host "❌ Test file not found" -ForegroundColor Red
+          # List available files for debugging
+          if (Test-Path ".\src\Artifacts\testOutput\") {
+            Write-Host "📁 Files in testOutput directory:" -ForegroundColor Cyan
+            Get-ChildItem ".\src\Artifacts\testOutput\" | ForEach-Object {
+              Write-Host "  - $($_.Name)" -ForegroundColor Cyan
+            }
           }
         }
 
@@ -304,7 +367,7 @@ jobs:
         | Component | Status | Details |
         |-----------|--------|---------|
         | 🏗️ **Build** | $buildStatus | Version $version |
-        | 🧪 **Tests** | $testStatus | $testCount tests |
+        | 🧪 **Tests** | $testStatus | $testCount |
         | 📊 **Coverage** | $coverageStatus | Code coverage |
         | 📝 **Code Metrics** | ✅ Generated | $codeMetrics |
         | 📦 **Artifacts** | $artifactsStatus | Build artifacts |
@@ -335,71 +398,55 @@ jobs:
       run: |
         Write-Host "Generating final consolidated job summary..." -ForegroundColor Yellow
 
-        # Build status from needs context
-        $buildStatus = if ("${{ needs.nightly-build.result }}" -eq "success") { "✅ Success" } else { "❌ Failed" }
-        $perfStatus = if ("${{ needs.performance-benchmarks.result }}" -eq "success") { "✅ Success" } else { "❌ Failed" }
-        $secStatus = if ("${{ needs.security-scan.result }}" -eq "success") { "✅ Success" } else { "❌ Failed" }
-
-        $version = "${{ needs.nightly-build.outputs.version }}"
+        # Build status (check if we got to this point)
+        $buildStatus = "✅ Success"
+        $version = "${{ steps.version.outputs.version }}"
         $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 
-        # Load performance data if available
+        # Since performance and security jobs aren't implemented yet, mark as not available
+        $perfStatus = "❌ Not Implemented"
+        $secStatus = "❌ Not Implemented"
         $perfData = "❌ No Data"
-        $perfPath = "./artifacts/performance-benchmarks/performance-benchmarks.json"
-        if (Test-Path $perfPath) {
-          try {
-            $perf = Get-Content $perfPath | ConvertFrom-Json
-            $loadTime = [math]::Round($perf.ModuleLoadTime, 2)
-            $perfData = "⚡ Module load: ${loadTime}ms"
-          }
-          catch {
-            $perfData = "⚠️ Parse Error"
-          }
-        }
-
-        # Load security data if available
-        $secData = "❌ No Data"
-        $secPath = "./artifacts/security-report/security-report.json"
-        if (Test-Path $secPath) {
-          try {
-            $sec = Get-Content $secPath | ConvertFrom-Json
-            $issueCount = $sec.TotalIssues
-            $secData = if ($issueCount -eq 0) { "✅ No issues found" } else { "⚠️ $issueCount issues found" }
-          }
-          catch {
-            $secData = "⚠️ Parse Error"
-          }
-        }
-
-        # Load test data from artifacts if available
+        $secData = "❌ No Data"        # Load test data from current run
         $testData = "❌ No Data"
-        $testPath = "./artifacts/nightly-test-results"
-        if (Test-Path $testPath) {
-          $pesterFile = "$testPath/PesterTests.xml"
-          if (Test-Path $pesterFile) {
-            try {
-              [xml]$pesterXml = Get-Content $pesterFile
-              $total = $pesterXml.'test-results'.total
-              $passed = $pesterXml.'test-results'.passed
-              $failed = $pesterXml.'test-results'.failed
-              $testData = if ($failed -eq "0") { "✅ $passed/$total passed" } else { "❌ $failed/$total failed" }
-            }
-            catch {
-              $testData = "⚠️ Parse Error"
-            }
+        $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
+        if (Test-Path $pesterFile) {
+          try {
+            [xml]$pesterXml = Get-Content $pesterFile
+            $total = $pesterXml.'test-results'.total
+            $passed = $pesterXml.'test-results'.passed
+            $failed = $pesterXml.'test-results'.failed
+
+            # Handle empty or null values
+            $totalInt = if ($total -eq "" -or $total -eq $null) { 0 } else { [int]$total }
+            $passedInt = if ($passed -eq "" -or $passed -eq $null) { 0 } else { [int]$passed }
+            $failedInt = if ($failed -eq "" -or $failed -eq $null) { 0 } else { [int]$failed }
+
+            $testData = if ($failedInt -eq 0) { "✅ $passedInt/$totalInt passed" } else { "❌ $failedInt/$totalInt failed" }
+          }
+          catch {
+            $testData = "⚠️ Parse Error"
           }
         }
 
         # Coverage data
         $coverageData = "❌ No Data"
-        $covPath = "./artifacts/nightly-test-results/cov.xml"
-        if (Test-Path $covPath) {
+        if (Test-Path ".\cov.xml") {
           try {
-            [xml]$coverageXml = Get-Content $covPath
+            [xml]$coverageXml = Get-Content ".\cov.xml"
             $coverageNodes = $coverageXml.SelectNodes("//coverage")
             if ($coverageNodes.Count -gt 0) {
               $lineRate = $coverageNodes[0].'line-rate'
               if ($lineRate) {
+                $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
+                $coverageData = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
+              }
+            }
+          }
+          catch {
+            $coverageData = "⚠️ Parse Error"
+          }
+        }
                 $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
                 $coverageData = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
               }
@@ -449,9 +496,8 @@ jobs:
         ---
 
         > 🕐 **Generated**: $buildTime
-        > 🆔 **Build**: #${{ github.run_number }}
-        > 📝 **Commit**: [\`${{ github.sha }}\`](https://github.com/mchave3/Bucket/commit/${{ github.sha }})
-        > 🌿 **Branch**: \`${{ github.ref_name }}\`
+        > 🆔 **Build**: #${{ github.run_number }}        > 📝 **Commit**: [${{ github.sha }}](https://github.com/mchave3/Bucket/commit/${{ github.sha }})
+        > 🌿 **Branch**: ${{ github.ref_name }}
         "@
 
         # Write to GitHub Step Summary
