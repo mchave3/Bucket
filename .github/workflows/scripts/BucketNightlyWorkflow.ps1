@@ -34,24 +34,17 @@ Write-Host "Platform: $($PSVersionTable.Platform)" -ForegroundColor Cyan
 # Initialize variables for job summary
 $script:BuildStartTime = Get-Date
 
-# Define all build tasks in execution order (based on Bucket.build.ps1)
+# Define all build tasks in execution order (matching the exact "." task order in Bucket.build.ps1)
 $script:BuildTasks = @(
     @{ Name = 'Clean'; Description = 'Clean and reset Artifacts/Archive Directory'; Required = $true },
     @{ Name = 'ValidateRequirements'; Description = 'Validate system requirements are met'; Required = $true },
-    @{ Name = 'TestModuleManifest'; Description = 'Test the module manifest file'; Required = $true },
     @{ Name = 'ImportModuleManifest'; Description = 'Import the current module manifest file'; Required = $true },
     @{ Name = 'FormattingCheck'; Description = 'Analyze scripts for coding format compliance'; Required = $true },
     @{ Name = 'Analyze'; Description = 'PSScriptAnalyzer against Module source path'; Required = $true },
-    @{ Name = 'AnalyzeTests'; Description = 'PSScriptAnalyzer against Tests path'; Required = $false },
     @{ Name = 'Test'; Description = 'Pester Unit Tests in Tests\Unit folder'; Required = $true },
     @{ Name = 'CreateHelpStart'; Description = 'Initialize help creation process'; Required = $true },
-    @{ Name = 'CreateMarkdownHelp'; Description = 'Build markdown help files'; Required = $true },
-    @{ Name = 'CreateExternalHelp'; Description = 'Build external XML help file'; Required = $true },
-    @{ Name = 'CreateHelpComplete'; Description = 'Finalize help documentation'; Required = $true },
-    @{ Name = 'AssetCopy'; Description = 'Copy module assets to Artifacts folder'; Required = $true },
-    @{ Name = 'UpdateCBH'; Description = 'Replace CBH with external help'; Required = $true },
     @{ Name = 'Build'; Description = 'Build the Module to Artifacts folder'; Required = $true },
-    @{ Name = 'IntegrationTest'; Description = 'Pester Integration Tests'; Required = $false },
+    @{ Name = 'IntegrationTest'; Description = 'Pester Integration Tests'; Required = $true },
     @{ Name = 'Archive'; Description = 'Create archive of the built Module'; Required = $true }
 )
 
@@ -81,9 +74,9 @@ foreach ($task in $script:BuildTasks) {
 function Write-StepHeader {
     param([string]$Title)
     Write-Host ""
-    Write-Host "=" * 60 -ForegroundColor DarkCyan
+    Write-Host "---------------------------------------------" -ForegroundColor DarkCyan
     Write-Host "  $Title" -ForegroundColor Yellow
-    Write-Host "=" * 60 -ForegroundColor DarkCyan
+    Write-Host "---------------------------------------------" -ForegroundColor DarkCyan
 }
 
 function Write-StepResult {
@@ -112,6 +105,7 @@ function Add-ToJobSummary {
     }
 }
 
+
 function Invoke-BuildTask {
     param(
         [string]$TaskName,
@@ -123,13 +117,12 @@ function Invoke-BuildTask {
     $taskResult.StartTime = Get-Date
 
     Write-Host ""
-    Write-Host "🔨 Executing Task: $TaskName" -ForegroundColor Yellow
-    Write-Host "   Description: $Description" -ForegroundColor Gray
+    Write-Host "🔨 Executing Task: $TaskName" -ForegroundColor Yellow    Write-Host "   Description: $Description" -ForegroundColor Gray
 
     try {
         # Execute the specific build task
         Push-Location -Path ".\src"
-          # Run individual task with Invoke-Build
+        # Run individual task with Invoke-Build
         $null = Invoke-Build -Task $TaskName -File ".\Bucket.build.ps1" 2>&1
 
         Pop-Location
@@ -184,7 +177,7 @@ catch {
     $script:BuildResults.Bootstrap.Error = $_.Exception.Message
 
     Write-StepResult -Step "Bootstrap" -Success $false -Duration $bootstrapDuration -Error $_.Exception.Message
-    throw "Bootstrap failed: $_"
+    Write-Host "❌ Bootstrap failed, but continuing to attempt build tasks..." -ForegroundColor Yellow
 }
 #endregion Bootstrap Process
 
@@ -225,20 +218,19 @@ try {
     }
 
     $buildDuration = (Get-Date) - $buildStart
-
     if ($overallSuccess) {
         Write-StepResult -Step "Build Process" -Success $true -Duration $buildDuration
         Write-Host "📊 Task Summary: $successfulTasks successful, $skippedTasks skipped, $failedTasks failed out of $executedTasks total" -ForegroundColor Green
     } else {
         Write-StepResult -Step "Build Process" -Success $false -Duration $buildDuration -Error "One or more required tasks failed"
         Write-Host "📊 Task Summary: $successfulTasks successful, $skippedTasks skipped, $failedTasks failed out of $executedTasks total" -ForegroundColor Red
-        throw "Build process failed due to required task failures"
+        Write-Host "❌ Build process failed, but continuing to generate summary..." -ForegroundColor Yellow
     }
 }
 catch {
     $buildDuration = (Get-Date) - $buildStart
     Write-StepResult -Step "Build Process" -Success $false -Duration $buildDuration -Error $_.Exception.Message
-    throw "Build failed: $_"
+    Write-Host "❌ Build process encountered an exception, but continuing to generate summary..." -ForegroundColor Yellow
 }
 #endregion Build Process
 
