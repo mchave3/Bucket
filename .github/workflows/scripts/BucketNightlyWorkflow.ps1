@@ -60,29 +60,19 @@ function Initialize-NightlyBuildSummary {
     )
     Write-Host "Initializing Build Summary..." -ForegroundColor Yellow
     $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-    $summaryFilePath = Get-GitHubStepSummary
-    $initialSummary = @"
-# 🌙 Bucket Nightly Build Started
+    $summaryFilePath = Get-GitHubStepSummary    $initialSummary = @"
+## 🔧 Bucket Nightly Build #$RunNumber
 
-| ℹ️ Build Information | Value |
-|---------------------|-------|
-| 🕐 **Start Time** | $startTime |
-| 🔢 **Run Number** | #$RunNumber |
-| 📝 **Commit** | [$CommitSHA](https://github.com/mchave3/Bucket/commit/$CommitSHA) |
-| 🌿 **Branch** | $BranchName |
-| 🎯 **Trigger** | $TriggerEvent |
+**Branch:** $BranchName | **Trigger:** $TriggerEvent | **Started:** $startTime
+**Commit:** [$($CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$CommitSHA)
 
-## 📋 Planned Steps
-
-- 🏗️ Build and test the PowerShell module
-- 📊 Generate code coverage reports
-- ⚡ Run performance benchmarks
-- 🛡️ Execute security scans
-- 📦 Create build artifacts
-- 📈 Upload coverage to Codecov
-
----
-*This summary will be updated as the build progresses...*
+| Phase | Status |
+|-------|--------|
+| Build & Test | 🔄 Running |
+| Code Coverage | ⏳ Pending |
+| Performance | ⏳ Pending |
+| Security Scan | ⏳ Pending |
+| Artifacts | ⏳ Pending |
 "@
 
     try {
@@ -422,34 +412,18 @@ function Write-NightlyBuildJobSummary {
     $artifactsStatus = "✅ Available"
     if (-not (Test-Path ".\\src\\Artifacts")) { # Basic check
         $artifactsStatus = "❌ Missing"
-    }
+    }    $summaryMarkdown = @"
 
-    $summaryMarkdown = @"
-# 🌙 Bucket Nightly Build Report
+## 📊 Build Results v$ModuleVersion
 
-## 📋 Build Overview
-
-| Component | Status | Details |
+| Component | Result | Details |
 |-----------|--------|---------|
-| 🏗️ **Build** | $buildStatus | Version $ModuleVersion |
-| 🧪 **Tests** | $testStatus | $testCount |
-| 📊 **Coverage** | $coverageStatus | Code coverage ($coveragePercent) |
-| 📝 **Code Metrics** | ✅ Generated | $codeMetrics |
-| 📦 **Artifacts** | $artifactsStatus | Build artifacts |
-| ⏰ **Build Time** | ✅ Completed | $buildTime |
+| Build | $buildStatus | Tests: $testStatus ($testCount) |
+| Coverage | $coverageStatus | $coveragePercent |
+| Metrics | ✅ | $codeMetrics |
+| Artifacts | $artifactsStatus | [📦 Download](./src/Artifacts/) |
 
-## 🔗 Quick Links
-
-- 📈 [Coverage Report](./cov.xml) (if available)
-- 📊 [Test Results](./src/Artifacts/testOutput/)
-- 📦 [Build Artifacts](./src/Artifacts/)
-- 📝 [Code Metrics](./code-metrics.json)
-
-## 💡 Summary
-
-This nightly build provides comprehensive testing, code coverage analysis, and performance metrics for the Bucket PowerShell module.
-
-> Generated on $buildTime | Build #$($env:GITHUB_RUN_NUMBER) | Commit: $($env:GITHUB_SHA)
+**Completed:** $buildTime
 "@
     try {
         $summaryMarkdown | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
@@ -532,49 +506,19 @@ function Write-NightlyFinalConsolidatedSummary {
             }
         }
         catch { $coverageData = "⚠️ Parse Error" }
-    }
+    }    $consolidatedSummary = @"
 
-    $consolidatedSummary = @"
-# 🌙 Bucket - Complete Nightly Build Report
+## 🚀 Pipeline Summary - Bucket v$ModuleVersion
 
-## 🎯 Overall Status
+| Job | Status | Key Metrics |
+|-----|--------|-------------|
+| 🏗️ Build | $buildStatus | $testData • $coverageData |
+| ⚡ Perf | $perfStatus | $perfData |
+| 🛡️ Security | $secStatus | $secData |
 
-| Job | Status | Details |
-|-----|--------|---------|
-| 🏗️ **Main Build** | $buildStatus | Version $ModuleVersion |
-| ⚡ **Performance** | $perfStatus | $perfData |
-| 🛡️ **Security** | $secStatus | $secData |
-| 📊 **Final Report** | ✅ Generated | All artifacts collected |
+**Links:** [📦 Artifacts](./artifacts) • [🔄 Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID)) • [📝 $($env:GITHUB_SHA.Substring(0,7))](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
 
-## 📈 Detailed Metrics
-
-| Metric | Value | Status |
-|--------|-------|--------|
-| 🧪 **Unit Tests** | $testData | Test execution results |
-| 📊 **Code Coverage** | $coverageData | Coverage analysis |
-| ⚡ **Performance** | $perfData | Module performance |
-| 🛡️ **Security Scan** | $secData | Security analysis |
-
-## 📦 Available Artifacts
-
-- 📋 **Test Results**: Unit test reports and coverage data
-- ⚡ **Performance**: Module load time and function benchmarks (from other jobs)
-- 🛡️ **Security**: Security scan results and recommendations (from other jobs)
-- 📊 **Reports**: Comprehensive HTML and JSON reports (from other jobs)
-- 🏗️ **Build**: Compiled module and build artifacts
-
-## 🔗 Useful Links
-
-- 🌐 **Repository**: [Bucket on GitHub](https://github.com/mchave3/Bucket)
-- 📈 **Codecov**: Coverage trends and history (link if configured)
-- 🔄 **Workflow**: [Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
-
----
-
-> 🕐 **Generated**: $buildTime
-> 🆔 **Build**: #$($env:GITHUB_RUN_NUMBER)
-> 📝 **Commit**: [$($env:GITHUB_SHA.Substring(0,7))](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
-> 🌿 **Branch**: $($env:GITHUB_REF_NAME)
+**Completed:** $buildTime
 "@
     try {
         $consolidatedSummary | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 # Overwrites previous summary
