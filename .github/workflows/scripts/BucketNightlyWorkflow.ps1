@@ -60,7 +60,8 @@ function Initialize-NightlyBuildSummary {
     )
     Write-Host "Initializing Build Summary..." -ForegroundColor Yellow
     $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-    $summaryFilePath = Get-GitHubStepSummary    $initialSummary = @"
+    $summaryFilePath = Get-GitHubStepSummary
+    $initialSummary = @"
 ## 🔧 Bucket Nightly Build #$RunNumber
 
 **Branch:** $BranchName | **Trigger:** $TriggerEvent | **Started:** $startTime
