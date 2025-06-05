@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 25.5.6.33
+    Version: 25.5.6.34
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
@@ -380,9 +380,9 @@ $pendingTasks = ($script:BuildResults.Tasks | Where-Object { $_.Status -eq 'Pend
 $summary = @"
 # 🌙 Bucket Nightly Build Report
 
-**Build Date:** $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
-**Total Duration:** $($totalDuration.TotalSeconds.ToString('F2')) seconds
-**Overall Status:** $(if ($overallSuccess) { '✅ Success' } else { '❌ Failed' })
+| Build Date | Total Duration | Overall Status |
+|------------|----------------|----------------|
+| $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC') | $($totalDuration.TotalSeconds.ToString('F2')) seconds | $(if ($overallSuccess) { '✅ Success' } else { '❌ Failed' }) |
 
 ## 📊 High-Level Summary
 
@@ -496,7 +496,7 @@ $summary += @"
 | **Platform** | $($PSVersionTable.Platform) |
 | **.NET Version** | $([System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription) |
 | **Architecture** | $([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) |
-| **Culture** | $((Get-Culture).Name) |
+| **Culture** | $((Get-Culture).Name ?? 'N/A') |
 | **Current User** | $($env:USERNAME ?? $env:USER ?? 'Unknown') |
 | **Working Directory** | $(Get-Location) |
 | **Runner OS** | $($env:RUNNER_OS ?? 'N/A') |
