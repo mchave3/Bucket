@@ -480,16 +480,29 @@ function Write-NightlyCompleteSummary {
 
     Write-Host "Generating complete job summary..." -ForegroundColor Yellow
 
+    # Ensure buildInfo is initialized with safe defaults
+    if (-not $script:buildInfo) {
+        $script:buildInfo = @{}
+    }
+
+    # Set safe default values for missing properties
+    $runNumber = if ($script:buildInfo.RunNumber) { $script:buildInfo.RunNumber } else { $RunNumber -or "Unknown" }
+    $branchName = if ($script:buildInfo.BranchName) { $script:buildInfo.BranchName } else { $BranchName -or "Unknown" }
+    $triggerEvent = if ($script:buildInfo.TriggerEvent) { $script:buildInfo.TriggerEvent } else { $TriggerEvent -or "Unknown" }
+    $startTime = if ($script:buildInfo.StartTime) { $script:buildInfo.StartTime } else { Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC" }
+    $commitSHA = if ($script:buildInfo.CommitSHA) { $script:buildInfo.CommitSHA } else { $CommitSHA -or "Unknown" }
+    $commitShort = if ($commitSHA -and $commitSHA -ne "Unknown" -and $commitSHA.Length -ge 8) { $commitSHA.Substring(0,8) } else { $commitSHA }
+
     # Generate complete summary with all accumulated data
     $completeSummary = @"
-# 🔧 Bucket Nightly Build #$($script:buildInfo.RunNumber)
+# 🔧 Bucket Nightly Build #$runNumber
 
 ## 📋 Build Information
 
-- **Branch:** $($script:buildInfo.BranchName)
-- **Trigger:** $($script:buildInfo.TriggerEvent)
-- **Started:** $($script:buildInfo.StartTime)
-- **Commit:** [$($script:buildInfo.CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$($script:buildInfo.CommitSHA))
+- **Branch:** $branchName
+- **Trigger:** $triggerEvent
+- **Started:** $startTime
+- **Commit:** [$commitShort](https://github.com/mchave3/Bucket/commit/$commitSHA)
 
 ---
 
@@ -497,26 +510,26 @@ function Write-NightlyCompleteSummary {
 
 | Phase | Status | Details |
 |-------|--------|---------|
-| 🏗️ Build & Test | $($script:pipelineStatus['Build & Test'].Icon) $($script:pipelineStatus['Build & Test'].Status) | $($script:pipelineStatus['Build & Test'].Details) |
-| 📊 Code Coverage | $($script:pipelineStatus['Code Coverage'].Icon) $($script:pipelineStatus['Code Coverage'].Status) | $($script:pipelineStatus['Code Coverage'].Details) |
-| 📈 Code Metrics | ✅ Completed | $($script:testResults.Metrics) |
-| ⚡ Performance | $($script:pipelineStatus['Performance'].Icon) $($script:pipelineStatus['Performance'].Status) | $($script:pipelineStatus['Performance'].Details) |
-| 🛡️ Security Scan | $($script:pipelineStatus['Security Scan'].Icon) $($script:pipelineStatus['Security Scan'].Status) | $($script:pipelineStatus['Security Scan'].Details) |
-| 📦 Artifacts | $($script:pipelineStatus['Artifacts'].Icon) $($script:pipelineStatus['Artifacts'].Status) | $($script:pipelineStatus['Artifacts'].Details) |
+| 🏗️ Build & Test | $(if ($script:pipelineStatus -and $script:pipelineStatus['Build & Test']) { "$($script:pipelineStatus['Build & Test'].Icon) $($script:pipelineStatus['Build & Test'].Status)" } else { "⏸️ Pending" }) | $(if ($script:pipelineStatus -and $script:pipelineStatus['Build & Test']) { $script:pipelineStatus['Build & Test'].Details } else { "Not started" }) |
+| 📊 Code Coverage | $(if ($script:pipelineStatus -and $script:pipelineStatus['Code Coverage']) { "$($script:pipelineStatus['Code Coverage'].Icon) $($script:pipelineStatus['Code Coverage'].Status)" } else { "⏸️ Pending" }) | $(if ($script:pipelineStatus -and $script:pipelineStatus['Code Coverage']) { $script:pipelineStatus['Code Coverage'].Details } else { "Not started" }) |
+| 📈 Code Metrics | ✅ Completed | $(if ($script:testResults -and $script:testResults.Metrics) { $script:testResults.Metrics } else { "Not available" }) |
+| ⚡ Performance | $(if ($script:pipelineStatus -and $script:pipelineStatus['Performance']) { "$($script:pipelineStatus['Performance'].Icon) $($script:pipelineStatus['Performance'].Status)" } else { "⏸️ Pending" }) | $(if ($script:pipelineStatus -and $script:pipelineStatus['Performance']) { $script:pipelineStatus['Performance'].Details } else { "Not started" }) |
+| 🛡️ Security Scan | $(if ($script:pipelineStatus -and $script:pipelineStatus['Security Scan']) { "$($script:pipelineStatus['Security Scan'].Icon) $($script:pipelineStatus['Security Scan'].Status)" } else { "⏸️ Pending" }) | $(if ($script:pipelineStatus -and $script:pipelineStatus['Security Scan']) { $script:pipelineStatus['Security Scan'].Details } else { "Not started" }) |
+| 📦 Artifacts | $(if ($script:pipelineStatus -and $script:pipelineStatus['Artifacts']) { "$($script:pipelineStatus['Artifacts'].Icon) $($script:pipelineStatus['Artifacts'].Status)" } else { "⏸️ Pending" }) | $(if ($script:pipelineStatus -and $script:pipelineStatus['Artifacts']) { $script:pipelineStatus['Artifacts'].Details } else { "Not started" }) |
 
 ---
 
-## 📊 Build Summary v$($script:buildInfo.ModuleVersion)
+## 📊 Build Summary v$(if ($script:buildInfo -and $script:buildInfo.ModuleVersion) { $script:buildInfo.ModuleVersion } else { $ModuleVersion -or "Unknown" })
 
-**🧪 Test Results:** $($script:testResults.Status) ($($script:testResults.Count))
-**📊 Coverage:** $($script:testResults.Coverage.Percent)
-**⏱️ Completed:** $($script:buildInfo.CompletionTime)
+**🧪 Test Results:** $(if ($script:testResults -and $script:testResults.Status) { $script:testResults.Status } else { "Not available" }) $(if ($script:testResults -and $script:testResults.Count) { "($($script:testResults.Count))" } else { "" })
+**📊 Coverage:** $(if ($script:testResults -and $script:testResults.Coverage -and $script:testResults.Coverage.Percent) { $script:testResults.Coverage.Percent } else { "Not available" })
+**⏱️ Completed:** $(if ($script:buildInfo -and $script:buildInfo.CompletionTime) { $script:buildInfo.CompletionTime } else { Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC" })
 
 ---
 
 ## ✅ Build Completed Successfully!
 
-**Final Status:** All phases completed at $($script:buildInfo.CompletionTime)
+**Final Status:** All phases completed at $(if ($script:buildInfo -and $script:buildInfo.CompletionTime) { $script:buildInfo.CompletionTime } else { Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC" })
 
 **🔗 Quick Links:**
 - [📦 Download Artifacts](./src/Artifacts/)
@@ -524,7 +537,7 @@ function Write-NightlyCompleteSummary {
 - [📝 Commit Details](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
 
 ---
-*Build completed for Bucket v$($script:buildInfo.ModuleVersion)*
+*Build completed for Bucket v$(if ($script:buildInfo -and $script:buildInfo.ModuleVersion) { $script:buildInfo.ModuleVersion } else { $ModuleVersion -or "Unknown" })*
 
 **Job summary generated at run-time**
 "@
