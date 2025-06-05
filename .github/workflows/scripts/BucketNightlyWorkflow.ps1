@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 25.5.6.28
+    Version: 25.5.6.32
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
@@ -381,7 +381,7 @@ $summary = @"
 # 🌙 Bucket Nightly Build Report
 
 **Build Date:** $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
-**Total Duration:** $($totalDuration.TotalMinutes.ToString('F2')) minutes
+**Total Duration:** $($totalDuration.TotalSeconds.ToString('F2')) seconds
 **Overall Status:** $(if ($overallSuccess) { '✅ Success' } else { '❌ Failed' })
 
 ## 📊 High-Level Summary

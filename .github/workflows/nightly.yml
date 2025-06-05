@@ -1,11 +1,11 @@
 # ============================================================================
-# Bucket Nightly Build & Statistics Workflow
+# 🌙 Bucket Nightly Build Report Workflow
 # This workflow runs nightly and on-demand to test, build, analyze, and report
 # on the Bucket PowerShell module. All logic is centralized in the script:
 #   ./.github/workflows/scripts/BucketNightlyWorkflow.ps1
 # ============================================================================
 
-name: Bucket Nightly Build & Statistics
+name: 🌙 Bucket Nightly Build Report
 
 on:
   schedule:
