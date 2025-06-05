@@ -740,7 +740,7 @@ function Update-NightlyPipelineStatus {
 
     # This would append a status update to the summary
     # In a real implementation, you might want to update a specific table row
-    $statusUpdate = "**$Phase:** $statusIcon $Status $(if($Details) { "- $Details" })"
+    $statusUpdate = "**$Phase :** $statusIcon $Status $(if($Details) { "- $Details" })"
 
     try {
         "`n$statusUpdate" | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
