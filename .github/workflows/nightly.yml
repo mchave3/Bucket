@@ -26,162 +26,44 @@ jobs:
   nightly-build:
     name: Nightly Build & Tests
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      test-results: ${{ steps.test-summary.outputs.summary }}
     steps:
-      #region Initialization
       - name: 🚀 Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Full history for better analytics
-      - name: 🚀 Initialize Build Summary
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action InitializeBuildSummary -RunNumber ${{ github.run_number }} -CommitSHA ${{ github.sha }} -BranchName ${{ github.ref_name }} -TriggerEvent ${{ github.event_name }}
-      #endregion
+          fetch-depth: 0
 
-      #region Environment & Bootstrap
-      - name: 📊 Display Environment Info
+      - name: 📊 Display Environment Information
         shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action DisplayEnvironmentInfo
-      - name: 🛠️ Bootstrap Dependencies
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action BootstrapDependencies
-      #endregion
+        run: |
+          Write-Host "PowerShell Version:" -ForegroundColor Cyan
+          $PSVersionTable
+          Write-Host "Environment Path:" -ForegroundColor Cyan
+          echo ${env:PATH}
 
-      #region Build & Test
-      - name: 📦 Get Module Version
-        id: version
+      - name: 🔄 Run Nightly Build Workflow
         shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GetModuleVersion
-      - name: 🏗️ Test and Build (Complete)
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action TestAndBuild
-      - name: 📊 Generate Code Coverage Report
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GenerateCodeCoverage
-      - name: 🔍 Run Additional Analysis
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunCodeAnalysis
-      - name: 📈 Generate Test Report Summary
-        id: test-summary
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GenerateTestReportSummary
-      - name: 📊 Generate Code Metrics
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteCodeMetric
-      #endregion
+        run: .\.github\workflows\scripts\BucketNightlyWorkflow.ps1
 
-      #region Artifacts & Reporting
-      - name: 📋 Upload Test Results
+      - name: 📤 Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: nightly-test-results
-          path: |
-            .\src\Artifacts\testOutput\
-            .\cov.xml
-            .\code-metrics.json
+          path: .\src\Artifacts\testOutput
           if-no-files-found: warn
-      - name: 📦 Upload Build Artifacts
+
+      - name: � Upload Build Artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: nightly-build-artifacts
-          path: |
-            .\src\Archive\
-            .\src\Artifacts\
+          path: .\src\Archive
           if-no-files-found: warn
-      - name: 📈 Upload Coverage to Codecov (Optional)
-        uses: codecov/codecov-action@v4
-        if: always() && env.CODECOV_TOKEN != ''
-        with:
-          file: ./cov.xml
-          flags: unittests
-          name: nightly-coverage
-          fail_ci_if_error: false
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: ⚡ Run Performance Benchmarks
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunPerformanceBenchmark
-      - name: �️ Run Security Scan
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunSecurityScan
-      - name: 📊 Collect Job Summary Data
-        shell: pwsh
-        if: always()
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteBuildJobSummary -ModuleVersion ${{ steps.version.outputs.version }}
-      - name: 📋 Store Final Data
-        shell: pwsh
-        if: always()
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteFinalConsolidatedSummary -ModuleVersion ${{ steps.version.outputs.version }}
-      - name: 📊 Generate Complete Summary
-        shell: pwsh
-        if: always()
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteCompleteSummary
-      - name: 📊 Upload Additional Artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: additional-reports
-          path: |
-            ./performance-benchmarks.json
-            ./security-report.json
-          if-no-files-found: warn
-          #endregion
 
-  # ---------------------------------------------------------------------------
-  # Final Report Generation Job
-  # ---------------------------------------------------------------------------
-  generate-report:
-    name: Generate Nightly Report
-    runs-on: windows-latest
-    needs: [nightly-build]
-    if: always()
-    steps:
-      #region Report
-      - name: 🚀 Checkout Repository
-        uses: actions/checkout@v4
-      - name: 📥 Download All Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-      - name: 📊 Generate Comprehensive Report
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteComprehensiveReport -ModuleVersion ${{ needs.nightly-build.outputs.version }} -GitHubRefName ${{ github.ref_name }} -GitHubShaForReport ${{ github.sha }} -GitHubRunId ${{ github.run_id }}
-      - name: 📊 Upload Nightly Report
+      - name: 📤 Upload Module Artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: nightly-report
-          path: |
-            ./nightly-report.html
-            ./nightly-report.json
+          name: nightly-module-artifacts
+          path: .\src\Artifacts\*.ps*
           if-no-files-found: warn
-      - name: 📧 Notify on Failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🚨 **Nightly Build Failed**\n\nThe nightly build for Bucket has failed. Please check the [workflow run](https://github.com/mchave3/Bucket/actions/runs/${{ github.run_id }}) for details.'
-            })
-      #endregion
