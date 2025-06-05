@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 1.0.0
+    Version: 25.5.6.26
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
