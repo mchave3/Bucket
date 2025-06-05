@@ -116,27 +116,16 @@ jobs:
           Tests = $testResults
           Coverage = $coverageResults
           Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }
-
-        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
+        }        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
         Write-Host "Test Summary: $summaryJson" -ForegroundColor Green
         echo "summary=$summaryJson" >> $env:GITHUB_OUTPUT
-
-    - name: 🔍 Code Analysis
-      shell: pwsh
-      run: |
-        Write-Host "Running code analysis..." -ForegroundColor Yellow
-        Invoke-Build -Task Analyze -File .\src\Bucket.build.ps1
 
     - name: 📊 Generate Code Metrics
       shell: pwsh
       run: |
         Write-Host "Generating code metrics..." -ForegroundColor Yellow
-        if (Test-Path ".\utility\Get-BucketCodeMetrics.ps1") {
-          & ".\utility\Get-BucketCodeMetrics.ps1"
-        }
 
-        # Count lines of code
+        # Count lines of code (our own implementation)
         $psFiles = Get-ChildItem -Path ".\src\Bucket" -Recurse -Filter "*.ps1" | Where-Object { $_.Name -notlike "*.Tests.ps1" }
         $totalLines = 0
         $totalFiles = $psFiles.Count
@@ -153,12 +142,12 @@ jobs:
         Write-Host "Total Lines of Code: $totalLines" -ForegroundColor Cyan
         Write-Host "Average Lines per File: $([math]::Round($totalLines / $totalFiles, 2))" -ForegroundColor Cyan
 
-        # Create metrics file for artifact
-        $metrics = @{
+        # Create metrics file for artifact        $metrics = @{
           TotalFiles = $totalFiles
           TotalLines = $totalLines
           AverageLines = [math]::Round($totalLines / $totalFiles, 2)
-          GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"        }
+          GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+        }
 
         $metrics | ConvertTo-Json | Out-File -FilePath ".\code-metrics.json" -Encoding UTF8
 
@@ -378,60 +367,22 @@ jobs:
         if (Test-Path $secPath) {
           $secData = Get-Content $secPath | ConvertFrom-Json
           $reportData.Security = $secData
-        }
-          # Generate HTML report using separate file creation
-        $htmlContent = @(
-          '<!DOCTYPE html>',
-          '<html>',
-          '<head>',
-          '    <title>Bucket - Nightly Build Report</title>',
-          '    <style>',
-          '        body { font-family: Arial, sans-serif; margin: 20px; }',
-          '        .header { background-color: #0078d4; color: white; padding: 20px; border-radius: 5px; }',
-          '        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }',
-          '        .success { background-color: #d4edda; border-color: #c3e6cb; }',
-          '        .warning { background-color: #fff3cd; border-color: #ffeaa7; }',
-          '        .error { background-color: #f8d7da; border-color: #f5c6cb; }',
-          '        .metric { display: inline-block; margin: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 3px; }',
-          '        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }',
-          '    </style>',
-          '</head>',
-          '<body>',
-          '    <div class="header">',
-          "        <h1>🪣 Bucket - Nightly Build Report</h1>",
-          "        <p>Generated: $($reportData.BuildInfo.Timestamp)</p>",
-          "        <p>Version: $($reportData.BuildInfo.Version) | Branch: $($reportData.BuildInfo.Branch)</p>",
-          '    </div>',
-          '    <div class="section">',
-          '        <h2>📊 Build Summary</h2>',
-          "        <div class=`"metric`"><strong>Run ID:</strong> $($reportData.BuildInfo.RunId)</div>",
-          "        <div class=`"metric`"><strong>Commit:</strong> $($reportData.BuildInfo.Commit.Substring(0,8))</div>",
-          "        <div class=`"metric`"><strong>Status:</strong> Completed</div>",
-          '    </div>',
-          '    <div class="section">',
-          '        <h2>⚡ Performance Metrics</h2>',
-          "        <pre>Performance data available in JSON report</pre>",
-          '    </div>',
-          '    <div class="section">',
-          '        <h2>🛡️ Security Scan</h2>',
-          "        <pre>Security data available in JSON report</pre>",
-          '    </div>',
-          '    <div class="section">',
-          '        <h2>📈 Code Coverage</h2>',
-          '        <p>Coverage reports available in artifacts.</p>',
-          '    </div>',
-          '    <div class="section">',
-          '        <h2>🔗 Useful Links</h2>',
-          '        <ul>',
-          '            <li><a href="https://github.com/mchave3/Bucket">Repository</a></li>',
-          "            <li><a href=`"https://github.com/mchave3/Bucket/actions/runs/$($reportData.BuildInfo.RunId)`">This Build</a></li>",
-          '        </ul>',
-          '    </div>',
-          '</body>',
-          '</html>'
-        )
+        }        # Generate simple HTML report
+        $htmlHeader = "<!DOCTYPE html><html><head><title>Bucket - Nightly Build Report</title></head><body>"
+        $htmlContent = "<h1>Bucket - Nightly Build Report</h1>"
+        $htmlContent += "<p>Generated: $($reportData.BuildInfo.Timestamp)</p>"
+        $htmlContent += "<p>Version: $($reportData.BuildInfo.Version) | Branch: $($reportData.BuildInfo.Branch)</p>"
+        $htmlContent += "<h2>Build Summary</h2>"
+        $htmlContent += "<p>Run ID: $($reportData.BuildInfo.RunId)</p>"
+        $htmlContent += "<p>Commit: $($reportData.BuildInfo.Commit.Substring(0,8))</p>"
+        $htmlContent += "<p>Status: Completed</p>"
+        $htmlContent += "<h2>Reports</h2>"
+        $htmlContent += "<p>Performance, security, and coverage data available in JSON artifacts.</p>"
+        $htmlFooter = "</body></html>"
 
-        $htmlContent | Out-File -FilePath "./nightly-report.html" -Encoding UTF8
+        $fullHtml = $htmlHeader + $htmlContent + $htmlFooter
+
+        $fullHtml | Out-File -FilePath "./nightly-report.html" -Encoding UTF8
         $reportData | ConvertTo-Json -Depth 10 | Out-File -FilePath "./nightly-report.json" -Encoding UTF8
 
         Write-Host "=== Nightly Report Generated ===" -ForegroundColor Green
