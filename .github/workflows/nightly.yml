@@ -456,15 +456,6 @@ jobs:
             $coverageData = "⚠️ Parse Error"
           }
         }
-                $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
-                $coverageData = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
-              }
-            }
-          }
-          catch {
-            $coverageData = "⚠️ Parse Error"
-          }
-        }
 
         # Generate comprehensive summary
         $consolidatedSummary = @"
