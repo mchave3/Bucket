@@ -9,7 +9,7 @@
     Name:        Start-Bucket.ps1
     Author:      Mickaël CHAVE
     Created:     04/03/2025
-    Version:     25.6.5.1
+    Version:     25.6.5.31
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -128,5 +128,4 @@ function Start-Bucket {
         $form.ShowDialog() | Out-Null
         #endregion
     }
-}
 }
