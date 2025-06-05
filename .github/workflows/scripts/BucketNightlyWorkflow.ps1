@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 25.5.6.26
+    Version: 25.5.6.27
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
@@ -117,23 +117,28 @@ function Invoke-BuildTask {
     $taskResult.StartTime = Get-Date
 
     Write-Host ""
-    Write-Host "🔨 Executing Task: $TaskName" -ForegroundColor Yellow    Write-Host "   Description: $Description" -ForegroundColor Gray
-
+    Write-Host "🔨 Executing Task: $TaskName" -ForegroundColor Yellow
+    Write-Host "   Description: $Description" -ForegroundColor Gray
     try {
         # Execute the specific build task
-        Push-Location -Path ".\src"
-        # Run individual task with Invoke-Build
-        $null = Invoke-Build -Task $TaskName -File ".\Bucket.build.ps1" 2>&1
+        Push-Location -Path ".\src"        # Run individual task with Invoke-Build and capture both success and error streams
+        Invoke-Build -Task $TaskName -File ".\Bucket.build.ps1" 2>&1 | Out-Null
+
+        # Check if the build was successful by examining the output
+        $buildSuccess = $LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq $null
 
         Pop-Location
 
         $taskResult.EndTime = Get-Date
         $taskResult.Duration = $taskResult.EndTime - $taskResult.StartTime
-        $taskResult.Status = 'Success'
 
-        Write-Host "   ✅ Task '$TaskName' completed successfully in $($taskResult.Duration.TotalSeconds.ToString('F2'))s" -ForegroundColor Green
-
-        return $true
+        if ($buildSuccess) {
+            $taskResult.Status = 'Success'
+            Write-Host "   ✅ Task '$TaskName' completed successfully in $($taskResult.Duration.TotalSeconds.ToString('F2'))s" -ForegroundColor Green
+            return $true
+        } else {
+            throw "Build task failed with exit code: $LASTEXITCODE"
+        }
     }
     catch {
         Pop-Location -ErrorAction SilentlyContinue
@@ -188,6 +193,12 @@ $buildStart = Get-Date
 try {
     Write-Host "Starting individual build task execution..." -ForegroundColor Cyan
 
+    # Debug: Show initial task states
+    Write-Host "🔍 Initial task states:" -ForegroundColor DarkGray
+    foreach ($taskResult in $script:BuildResults.Tasks) {
+        Write-Host "   - $($taskResult.Name): $($taskResult.Status)" -ForegroundColor DarkGray
+    }
+
     # Execute each build task individually
     $overallSuccess = $true
     $executedTasks = 0
@@ -198,10 +209,15 @@ try {
     foreach ($task in $script:BuildTasks) {
         $executedTasks++
 
+        Write-Host "🔄 Processing task $executedTasks/$($script:BuildTasks.Count): $($task.Name)" -ForegroundColor Cyan
+
         $taskSuccess = Invoke-BuildTask -TaskName $task.Name -Description $task.Description -Required $task.Required
 
+        # Get the updated task result to check the actual status
+        $taskResult = $script:BuildResults.Tasks | Where-Object { $_.Name -eq $task.Name }
+        Write-Host "   📊 Task result status: $($taskResult.Status)" -ForegroundColor Gray
+
         if ($taskSuccess) {
-            $taskResult = $script:BuildResults.Tasks | Where-Object { $_.Name -eq $task.Name }
             if ($taskResult.Status -eq 'Success') {
                 $successfulTasks++
             } elseif ($taskResult.Status -eq 'Skipped') {
@@ -215,6 +231,9 @@ try {
                 break
             }
         }
+
+        # Debug: Show current statistics
+        Write-Host "   📈 Current stats: $successfulTasks✅ $failedTasks❌ $skippedTasks⚠️ $(($script:BuildResults.Tasks | Where-Object { $_.Status -eq 'Pending' }).Count)⏳" -ForegroundColor DarkGray
     }
 
     $buildDuration = (Get-Date) - $buildStart
@@ -377,6 +396,7 @@ $summary = @"
 
 | # | Task Name | Status | Duration | Required | Description | Error |
 |---|-----------|--------|----------|----------|-------------|-------|
+
 "@
 
 # Add each task to the table
@@ -475,7 +495,7 @@ Add-ToJobSummary -Content $summary
 # Also output to console
 Write-Host ""
 Write-Host "📋 JOB SUMMARY" -ForegroundColor Magenta
-Write-Host "=" * 60 -ForegroundColor DarkMagenta
+Write-Host "---------------------------------------------" -ForegroundColor DarkMagenta
 Write-Host $summary
 
 Write-Host ""
