@@ -1,14 +1,27 @@
+# ============================================================================
+# Bucket Nightly Build & Statistics Workflow
+# This workflow runs nightly and on-demand to test, build, analyze, and report
+# on the Bucket PowerShell module. All logic is centralized in the script:
+#   ./.github/workflows/scripts/BucketNightlyWorkflow.ps1
+# ============================================================================
+
 name: Bucket Nightly Build & Statistics
 
 on:
   schedule:
-    # Run every night at 2:00 AM UTC (adjust for your timezone)
+    # Run every night at 2:00 AM UTC
     - cron: '0 2 * * *'
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
+# -----------------------------------------------------------------------------
+# Global Environment Variables
+# -----------------------------------------------------------------------------
 env:
   POWERSHELL_TELEMETRY_OPTOUT: 1
 
+# -----------------------------------------------------------------------------
+# Main Nightly Build & Test Job
+# -----------------------------------------------------------------------------
 jobs:
   nightly-build:
     name: Nightly Build & Tests
@@ -16,721 +29,187 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       test-results: ${{ steps.test-summary.outputs.summary }}
-
     steps:
-    - name: 🚀 Initialize Build Summary
-      shell: pwsh
-      run: |
-        $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        $initialSummary = @"
-        # 🌙 Bucket Nightly Build Started
-
-        | ℹ️ Build Information | Value |
-        |---------------------|-------|
-        | 🕐 **Start Time** | $startTime |        | 🔢 **Run Number** | #${{ github.run_number }} |
-        | 📝 **Commit** | [${{ github.sha }}](https://github.com/mchave3/Bucket/commit/${{ github.sha }}) |
-        | 🌿 **Branch** | ${{ github.ref_name }} |
-        | 🎯 **Trigger** | ${{ github.event_name }} |
-
-        ## 📋 Planned Steps
-
-        - 🏗️ Build and test the PowerShell module
-        - 📊 Generate code coverage reports
-        - ⚡ Run performance benchmarks
-        - 🛡️ Execute security scans
-        - 📦 Create build artifacts
-        - 📈 Upload coverage to Codecov
-
-        ---
-        *This summary will be updated as the build progresses...*
-        "@
-
-        $initialSummary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-        Write-Host "Initial build summary created!" -ForegroundColor Green
-
-    - name: 🚀 Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Full history for better analytics
-
-    - name: 📊 Display Environment Info
-      shell: pwsh
-      run: |
-        Write-Host "=== PowerShell Version ===" -ForegroundColor Green
-        $PSVersionTable | Format-Table -AutoSize
-        Write-Host "=== System Information ===" -ForegroundColor Green
-        if ($IsWindows -or $PSVersionTable.PSEdition -eq 'Desktop') {
-            Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize
-        } else {
-            Write-Host "Operating System: $($PSVersionTable.OS)" -ForegroundColor Cyan
-            Write-Host "Platform: $($PSVersionTable.Platform)" -ForegroundColor Cyan
-            if (Get-Command 'free' -ErrorAction SilentlyContinue) {
-                Write-Host "Memory Information:" -ForegroundColor Cyan
-                free -h
-            }
-        }
-        Write-Host "=== Available Modules ===" -ForegroundColor Green
-        Get-Module -ListAvailable | Where-Object { $_.Name -like "*Pester*" -or $_.Name -like "*PSScript*" } | Format-Table Name, Version -AutoSize
-
-    - name: 🛠️ Bootstrap Dependencies
-      shell: pwsh
-      run: |
-        Write-Host "Bootstrapping dependencies..." -ForegroundColor Yellow
-        ./actions_bootstrap.ps1
-
-    - name: 📦 Get Module Version
-      id: version
-      shell: pwsh
-      run: |
-        $version = (Import-PowerShellDataFile .\src\Bucket\Bucket.psd1).ModuleVersion
-        Write-Host "Module Version: $version" -ForegroundColor Green
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-
-    - name: 🏗️ Test and Build (Complete)
-      shell: pwsh
-      run: |
-        Write-Host "Running complete test and build process..." -ForegroundColor Yellow
-        Invoke-Build -File .\src\Bucket.build.ps1
-
-    - name: 📊 Generate Code Coverage Report
-      shell: pwsh
-      run: |
-        Write-Host "Generating additional code coverage report..." -ForegroundColor Yellow
-        try {
-          Invoke-Build -Task DevCC -File .\src\Bucket.build.ps1
-
-          # Verify coverage file was created
-          if (Test-Path ".\cov.xml") {
-            Write-Host "Code coverage report generated successfully at: .\cov.xml" -ForegroundColor Green
-            $fileSize = (Get-Item ".\cov.xml").Length
-            Write-Host "Coverage file size: $fileSize bytes" -ForegroundColor Cyan
-          } else {
-            Write-Host "Warning: Coverage file was not created at expected location .\cov.xml" -ForegroundColor Yellow
-          }
-        }
-        catch {
-          Write-Host "Error during code coverage generation: $($_.Exception.Message)" -ForegroundColor Red
-          Write-Host "Code coverage generation failed - continuing build process." -ForegroundColor Yellow
-        }
-
-    - name: 🔍 Run Additional Analysis
-      shell: pwsh
-      run: |
-        Write-Host "Running additional code analysis..." -ForegroundColor Yellow
-        try {
-          Invoke-Build -Task Analyze -File .\src\Bucket.build.ps1
-          Write-Host "Code analysis completed successfully." -ForegroundColor Green
-        }
-        catch {
-          Write-Host "Code analysis skipped - may already be included in main build." -ForegroundColor Yellow
-        }
-
-    - name: 📈 Generate Test Report Summary
-      id: test-summary
-      shell: pwsh
-      run: |
-        $testResults = @()
-        $coverageResults = @()
-
-        # Parse Pester results if available
-        $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
-        if (Test-Path $pesterFile) {
-          [xml]$pesterXml = Get-Content $pesterFile
-          $testResults += @{
-            Type = "Unit Tests"
-            Total = $pesterXml.'test-results'.total
-            Passed = $pesterXml.'test-results'.passed
-            Failed = $pesterXml.'test-results'.failed
-            Skipped = $pesterXml.'test-results'.inconclusive
-          }
-        }
-
-        # Parse coverage results if available
-        $coverageFile = ".\cov.xml"
-        if (Test-Path $coverageFile) {
-          [xml]$coverageXml = Get-Content $coverageFile
-          $coverage = $coverageXml.coverage
-          if ($coverage) {
-            $lineRate = [math]::Round([double]$coverage.'line-rate' * 100, 2)
-            $coverageResults += @{
-              LineRate = $lineRate
-              LinesValid = $coverage.'lines-valid'
-              LinesCovered = $coverage.'lines-covered'
-            }
-          }
-        }
-
-        $summary = @{
-          Tests = $testResults
-          Coverage = $coverageResults
-          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }
-
-        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
-        Write-Host "Test Summary: $summaryJson" -ForegroundColor Green
-        echo "summary=$summaryJson" >> $env:GITHUB_OUTPUT
-
-    - name: 📊 Generate Code Metrics
-      shell: pwsh
-      run: |
-        Write-Host "Generating code metrics..." -ForegroundColor Yellow
-
-        # Count lines of code (our own implementation)
-        $psFiles = Get-ChildItem -Path ".\src\Bucket" -Recurse -Filter "*.ps1" | Where-Object { $_.Name -notlike "*.Tests.ps1" }
-        $totalLines = 0
-        $totalFiles = $psFiles.Count
-
-        foreach ($file in $psFiles) {
-          $content = Get-Content $file.FullName -ErrorAction SilentlyContinue
-          if ($content) {
-            $totalLines += $content.Count
-          }
-        }
-
-        Write-Host "=== Code Metrics ===" -ForegroundColor Green
-        Write-Host "Total PowerShell Files: $totalFiles" -ForegroundColor Cyan
-        Write-Host "Total Lines of Code: $totalLines" -ForegroundColor Cyan
-        Write-Host "Average Lines per File: $([math]::Round($totalLines / $totalFiles, 2))" -ForegroundColor Cyan
-
-        # Create metrics file for artifact
-        $metrics = @{
-          TotalFiles = $totalFiles
-          TotalLines = $totalLines
-          AverageLines = [math]::Round($totalLines / $totalFiles, 2)
-          GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }
-
-        $metrics | ConvertTo-Json | Out-File -FilePath ".\code-metrics.json" -Encoding UTF8
-
-    - name: 📋 Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: nightly-test-results
-        path: |
-          .\src\Artifacts\testOutput\
-          .\cov.xml
-          .\code-metrics.json
-        if-no-files-found: warn
-
-    - name: 📦 Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: nightly-build-artifacts
-        path: |
-          .\src\Archive\
-          .\src\Artifacts\
-        if-no-files-found: warn
-
-    - name: 📈 Upload Coverage to Codecov (Optional)
-      uses: codecov/codecov-action@v4
-      if: always() && env.CODECOV_TOKEN != ''
-      with:
-        file: ./cov.xml
-        flags: unittests
-        name: nightly-coverage
-        fail_ci_if_error: false
-        verbose: true
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-    - name: 📊 Generate Job Summary
-      shell: pwsh
-      if: always()
-      run: |
-        Write-Host "Generating GitHub Action Job Summary..." -ForegroundColor Yellow
-
-        # Initialize summary data
-        $buildStatus = "✅ Success"
-        $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        $version = "${{ steps.version.outputs.version }}"
-
-        # Check test results
-        $testStatus = "❌ No Data"
-        $testCount = "No tests found"
-        $coverageStatus = "❌ No Data"
-        $coveragePercent = "N/A"
-
-        $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
-        Write-Host "🔍 Checking for test results at: $pesterFile" -ForegroundColor Cyan
-        if (Test-Path $pesterFile) {
-          Write-Host "✅ Pester file found!" -ForegroundColor Green
-          try {
-            [xml]$pesterXml = Get-Content $pesterFile
-            Write-Host "📄 XML loaded successfully" -ForegroundColor Cyan
-
-            # Debug: Show XML structure
-            Write-Host "🔍 XML Root element: $($pesterXml.DocumentElement.LocalName)" -ForegroundColor Cyan
-
-            # Initialize variables
-            $total = $null
-            $passed = $null
-            $failed = $null
-
-            # Try different XML formats
-            if ($pesterXml.'test-results') {
-              $total = $pesterXml.'test-results'.total
-              $passed = $pesterXml.'test-results'.passed
-              $failed = $pesterXml.'test-results'.failed
-              Write-Host "📊 NUnit format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
-            }
-            elseif ($pesterXml.testsuites) {
-              # JUnit format
-              $total = $pesterXml.testsuites.tests
-              $failures = $pesterXml.testsuites.failures
-              $passed = [int]$total - [int]$failures
-              $failed = $failures
-              Write-Host "📊 JUnit format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
-            }
-            elseif ($pesterXml.testsuite) {
-              # Single testsuite format
-              $total = $pesterXml.testsuite.tests
-              $failures = $pesterXml.testsuite.failures
-              $passed = [int]$total - [int]$failures
-              $failed = $failures
-              Write-Host "📊 Single testsuite format detected - Total:$total, Passed:$passed, Failed:$failed" -ForegroundColor Green
-            }
-            else {
-              Write-Host "⚠️ Unknown XML format. Root elements:" -ForegroundColor Yellow
-              $pesterXml.DocumentElement.ChildNodes | ForEach-Object {
-                Write-Host "  - $($_.LocalName)" -ForegroundColor Yellow
-              }
-              $testStatus = "⚠️ Unknown Format"
-              $testCount = "Unknown"
-            }
-              # Set status if we have valid data
-            if ($total -ne $null -and $passed -ne $null -and $failed -ne $null) {
-              # Convert to integers to handle empty strings
-              $totalInt = if ($total -eq "") { 0 } else { [int]$total }
-              $passedInt = if ($passed -eq "") { 0 } else { [int]$passed }
-              $failedInt = if ($failed -eq "") { 0 } else { [int]$failed }
-
-              $testCount = "$passedInt/$totalInt"
-              $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
-              Write-Host "✅ Test status: $testStatus ($testCount)" -ForegroundColor Green
-            } else {
-              Write-Host "⚠️ Could not extract test counts from XML - values: total=$total, passed=$passed, failed=$failed" -ForegroundColor Yellow
-              $testStatus = "⚠️ Parse Issue"
-              $testCount = "No data"
-            }
-          }
-          catch {
-            Write-Host "❌ Error parsing test file: $($_.Exception.Message)" -ForegroundColor Red
-            $testStatus = "⚠️ Parse Error"
-            $testCount = "Parse failed"
-          }
-        } else {
-          Write-Host "❌ Test file not found" -ForegroundColor Red
-          # List available files for debugging
-          if (Test-Path ".\src\Artifacts\testOutput\") {
-            Write-Host "📁 Files in testOutput directory:" -ForegroundColor Cyan
-            Get-ChildItem ".\src\Artifacts\testOutput\" | ForEach-Object {
-              Write-Host "  - $($_.Name)" -ForegroundColor Cyan
-            }
-          }
-        }
-
-        # Check coverage results
-        if (Test-Path ".\cov.xml") {
-          try {
-            [xml]$coverageXml = Get-Content ".\cov.xml"
-            # For CoverageGutters format, look for coverage data
-            $coverageNodes = $coverageXml.SelectNodes("//coverage")
-            if ($coverageNodes.Count -gt 0) {
-              $lineRate = $coverageNodes[0].'line-rate'
-              if ($lineRate) {
-                $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
-                $coverageStatus = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
-              }
-            }
-          }
-          catch {
-            $coverageStatus = "⚠️ Parse Error"
-          }
-        }
-
-        # Check code metrics
-        $codeMetrics = "❌ No Data"
-        if (Test-Path ".\code-metrics.json") {
-          try {
-            $metrics = Get-Content ".\code-metrics.json" | ConvertFrom-Json
-            $codeMetrics = "📁 $($metrics.TotalFiles) files, 📝 $($metrics.TotalLines) lines"
-          }
-          catch {
-            $codeMetrics = "⚠️ Parse Error"
-          }
-        }
-
-        # Check artifacts
-        $artifactsStatus = "✅ Available"
-        if (-not (Test-Path ".\src\Artifacts")) {
-          $artifactsStatus = "❌ Missing"
-        }
-
-        # Generate Markdown summary
-        $summary = @"
-        # 🌙 Bucket Nightly Build Report
-
-        ## 📋 Build Overview
-
-        | Component | Status | Details |
-        |-----------|--------|---------|
-        | 🏗️ **Build** | $buildStatus | Version $version |
-        | 🧪 **Tests** | $testStatus | $testCount |
-        | 📊 **Coverage** | $coverageStatus | Code coverage |
-        | 📝 **Code Metrics** | ✅ Generated | $codeMetrics |
-        | 📦 **Artifacts** | $artifactsStatus | Build artifacts |
-        | ⏰ **Build Time** | ✅ Completed | $buildTime |
-
-        ## 🔗 Quick Links
-
-        - 📈 [Coverage Report](./cov.xml) (if available)
-        - 📊 [Test Results](./src/Artifacts/testOutput/)
-        - 📦 [Build Artifacts](./src/Artifacts/)
-        - 📝 [Code Metrics](./code-metrics.json)
-
-        ## 💡 Summary
-
-        This nightly build provides comprehensive testing, code coverage analysis, and performance metrics for the Bucket PowerShell module.
-
-        > Generated on $buildTime | Build #${{ github.run_number }} | Commit: ${{ github.sha }}
-        "@
-
-        # Write to GitHub Step Summary
-        $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8 -Append
-
-        Write-Host "Job summary generated successfully!" -ForegroundColor Green
-
-    - name: 📋 Generate Final Consolidated Summary
-      shell: pwsh
-      if: always()
-      run: |
-        Write-Host "Generating final consolidated job summary..." -ForegroundColor Yellow
-
-        # Build status (check if we got to this point)
-        $buildStatus = "✅ Success"
-        $version = "${{ steps.version.outputs.version }}"
-        $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-
-        # Since performance and security jobs aren't implemented yet, mark as not available
-        $perfStatus = "❌ Not Implemented"
-        $secStatus = "❌ Not Implemented"
-        $perfData = "❌ No Data"
-        $secData = "❌ No Data"        # Load test data from current run
-        $testData = "❌ No Data"
-        $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
-        if (Test-Path $pesterFile) {
-          try {
-            [xml]$pesterXml = Get-Content $pesterFile
-            $total = $pesterXml.'test-results'.total
-            $passed = $pesterXml.'test-results'.passed
-            $failed = $pesterXml.'test-results'.failed
-
-            # Handle empty or null values
-            $totalInt = if ($total -eq "" -or $total -eq $null) { 0 } else { [int]$total }
-            $passedInt = if ($passed -eq "" -or $passed -eq $null) { 0 } else { [int]$passed }
-            $failedInt = if ($failed -eq "" -or $failed -eq $null) { 0 } else { [int]$failed }
-
-            $testData = if ($failedInt -eq 0) { "✅ $passedInt/$totalInt passed" } else { "❌ $failedInt/$totalInt failed" }
-          }
-          catch {
-            $testData = "⚠️ Parse Error"
-          }
-        }
-
-        # Coverage data
-        $coverageData = "❌ No Data"
-        if (Test-Path ".\cov.xml") {
-          try {
-            [xml]$coverageXml = Get-Content ".\cov.xml"
-            $coverageNodes = $coverageXml.SelectNodes("//coverage")
-            if ($coverageNodes.Count -gt 0) {
-              $lineRate = $coverageNodes[0].'line-rate'
-              if ($lineRate) {
-                $coveragePercent = [math]::Round([double]$lineRate * 100, 1)
-                $coverageData = if ($coveragePercent -ge 80) { "✅ $coveragePercent%" } else { "⚠️ $coveragePercent%" }
-              }
-            }
-          }
-          catch {
-            $coverageData = "⚠️ Parse Error"
-          }
-        }
-
-        # Generate comprehensive summary
-        $consolidatedSummary = @"
-        # 🌙 Bucket - Complete Nightly Build Report
-
-        ## 🎯 Overall Status
-
-        | Job | Status | Details |
-        |-----|--------|---------|
-        | 🏗️ **Main Build** | $buildStatus | Version $version |
-        | ⚡ **Performance** | $perfStatus | $perfData |
-        | 🛡️ **Security** | $secStatus | $secData |
-        | 📊 **Final Report** | ✅ Generated | All artifacts collected |
-
-        ## 📈 Detailed Metrics
-
-        | Metric | Value | Status |
-        |--------|-------|--------|
-        | 🧪 **Unit Tests** | $testData | Test execution results |
-        | 📊 **Code Coverage** | $coverageData | Coverage analysis |
-        | ⚡ **Performance** | $perfData | Module performance |
-        | 🛡️ **Security Scan** | $secData | Security analysis |
-
-        ## 📦 Available Artifacts
-
-        - 📋 **Test Results**: Unit test reports and coverage data
-        - ⚡ **Performance**: Module load time and function benchmarks
-        - 🛡️ **Security**: Security scan results and recommendations
-        - 📊 **Reports**: Comprehensive HTML and JSON reports
-        - 🏗️ **Build**: Compiled module and build artifacts
-
-        ## 🔗 Useful Links
-
-        - 🌐 **Repository**: [Bucket on GitHub](https://github.com/mchave3/Bucket)
-        - 📈 **Codecov**: Coverage trends and history
-        - 🔄 **Workflow**: [Run #${{ github.run_number }}](https://github.com/mchave3/Bucket/actions/runs/${{ github.run_id }})
-
-        ---
-
-        > 🕐 **Generated**: $buildTime
-        > 🆔 **Build**: #${{ github.run_number }}        > 📝 **Commit**: [${{ github.sha }}](https://github.com/mchave3/Bucket/commit/${{ github.sha }})
-        > 🌿 **Branch**: ${{ github.ref_name }}
-        "@
-
-        # Write to GitHub Step Summary
-        $consolidatedSummary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-
-        Write-Host "Final consolidated job summary generated successfully!" -ForegroundColor Green
-        Write-Host "Summary includes data from all jobs: build, performance, and security." -ForegroundColor Cyan
-
+      #region Initialization
+      - name: 🚀 Initialize Build Summary
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action InitializeBuildSummary -RunNumber ${{ github.run_number }} -CommitSHA ${{ github.sha }} -BranchName ${{ github.ref_name }} -TriggerEvent ${{ github.event_name }}
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for better analytics
+      #endregion
+
+      #region Environment & Bootstrap
+      - name: 📊 Display Environment Info
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action DisplayEnvironmentInfo
+      - name: 🛠️ Bootstrap Dependencies
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action BootstrapDependencies
+      #endregion
+
+      #region Build & Test
+      - name: 📦 Get Module Version
+        id: version
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GetModuleVersion
+      - name: 🏗️ Test and Build (Complete)
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action TestAndBuild
+      - name: 📊 Generate Code Coverage Report
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GenerateCodeCoverage
+      - name: 🔍 Run Additional Analysis
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunCodeAnalysis
+      - name: 📈 Generate Test Report Summary
+        id: test-summary
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action GenerateTestReportSummary
+      - name: 📊 Generate Code Metrics
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteCodeMetric
+      #endregion
+
+      #region Artifacts & Reporting
+      - name: 📋 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-test-results
+          path: |
+            .\src\Artifacts\testOutput\
+            .\cov.xml
+            .\code-metrics.json
+          if-no-files-found: warn
+      - name: 📦 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-build-artifacts
+          path: |
+            .\src\Archive\
+            .\src\Artifacts\
+          if-no-files-found: warn
+      - name: 📈 Upload Coverage to Codecov (Optional)
+        uses: codecov/codecov-action@v4
+        if: always() && env.CODECOV_TOKEN != ''
+        with:
+          file: ./cov.xml
+          flags: unittests
+          name: nightly-coverage
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: 📊 Generate Job Summary
+        shell: pwsh
+        if: always()
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteBuildJobSummary -ModuleVersion ${{ steps.version.outputs.version }}
+      - name: 📋 Generate Final Consolidated Summary
+        shell: pwsh
+        if: always()
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteFinalConsolidatedSummary -ModuleVersion ${{ steps.version.outputs.version }}
+      #endregion
+
+  # ---------------------------------------------------------------------------
+  # Performance Benchmarks Job
+  # ---------------------------------------------------------------------------
   performance-benchmarks:
     name: Performance Benchmarks
     runs-on: windows-latest
     needs: nightly-build
-
     steps:
-    - name: 🚀 Checkout Repository
-      uses: actions/checkout@v4
+      #region Performance
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+      - name: 🛠️ Bootstrap Dependencies
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action BootstrapDependencies
+      - name: ⚡ Run Performance Tests
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunPerformanceBenchmark
+      - name: 📊 Upload Performance Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmarks
+          path: ./performance-benchmarks.json
+          if-no-files-found: warn
+      #endregion
 
-    - name: 🛠️ Bootstrap Dependencies
-      shell: pwsh
-      run: ./actions_bootstrap.ps1
-
-    - name: ⚡ Run Performance Tests
-      shell: pwsh
-      run: |
-        Write-Host "Running performance benchmarks..." -ForegroundColor Yellow
-
-        # Import the module
-        Import-Module .\src\Bucket\Bucket.psm1 -Force
-
-        # Simple performance test
-        $startTime = Get-Date
-
-        # Test module loading time
-        $moduleLoadTime = Measure-Command {
-          Remove-Module Bucket -Force -ErrorAction SilentlyContinue
-          Import-Module .\src\Bucket\Bucket.psm1 -Force
-        }
-
-        # Test key functions if available
-        $functionTests = @()
-        $exportedFunctions = Get-Command -Module Bucket -CommandType Function
-
-        foreach ($func in $exportedFunctions) {
-          if ($func.Name -eq "Get-BucketVersion") {
-            $execTime = Measure-Command { & $func.Name }
-            $functionTests += @{
-              Function = $func.Name
-              ExecutionTime = $execTime.TotalMilliseconds
-            }
-          }
-        }
-
-        $endTime = Get-Date
-        $totalTime = ($endTime - $startTime).TotalSeconds
-
-        $benchmarks = @{
-          ModuleLoadTime = $moduleLoadTime.TotalMilliseconds
-          FunctionTests = $functionTests
-          TotalBenchmarkTime = $totalTime
-          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }
-
-        Write-Host "=== Performance Benchmarks ===" -ForegroundColor Green
-        Write-Host "Module Load Time: $($moduleLoadTime.TotalMilliseconds) ms" -ForegroundColor Cyan
-        Write-Host "Total Benchmark Time: $totalTime seconds" -ForegroundColor Cyan
-
-        $benchmarks | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\performance-benchmarks.json" -Encoding UTF8
-
-    - name: 📊 Upload Performance Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-benchmarks
-        path: ./performance-benchmarks.json
-        if-no-files-found: warn
-
+  # ---------------------------------------------------------------------------
+  # Security Scan Job
+  # ---------------------------------------------------------------------------
   security-scan:
     name: Security Scan
     runs-on: windows-latest
     needs: nightly-build
-
     steps:
-    - name: 🚀 Checkout Repository
-      uses: actions/checkout@v4
+      #region Security
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+      - name: 🛡️ PowerShell Script Analyzer Security Scan
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunSecurityScan
+      - name: 🛡️ Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: ./security-report.json
+          if-no-files-found: warn
+      #endregion
 
-    - name: 🛡️ PowerShell Script Analyzer Security Scan
-      shell: pwsh
-      run: |
-        Write-Host "Running security scan..." -ForegroundColor Yellow
-
-        # Install PSScriptAnalyzer if not available
-        if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
-          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
-        }
-
-        # Run security-focused analysis
-        $securityRules = @(
-          'PSAvoidUsingCmdletAliases',
-          'PSAvoidUsingPlainTextForPassword',
-          'PSAvoidUsingUsernameAndPasswordParams',
-          'PSAvoidUsingInvokeExpression',
-          'PSUseShouldProcessForStateChangingFunctions'
-        )
-
-        $results = Get-ChildItem -Path ".\src\Bucket" -Recurse -Filter "*.ps1" |
-          ForEach-Object {
-            Invoke-ScriptAnalyzer -Path $_.FullName -IncludeRule $securityRules
-          }
-
-        $securityReport = @{
-          TotalIssues = $results.Count
-          Issues = $results | ForEach-Object {
-            @{
-              Severity = $_.Severity
-              RuleName = $_.RuleName
-              Message = $_.Message
-              ScriptName = $_.ScriptName
-              Line = $_.Line
-            }
-          }
-          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-        }
-
-        Write-Host "=== Security Scan Results ===" -ForegroundColor Green
-        Write-Host "Total Security Issues Found: $($results.Count)" -ForegroundColor Cyan
-
-        if ($results.Count -gt 0) {
-          $results | Format-Table Severity, RuleName, ScriptName, Line -AutoSize
-        }
-
-        $securityReport | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\security-report.json" -Encoding UTF8
-
-    - name: 🛡️ Upload Security Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-report
-        path: ./security-report.json
-        if-no-files-found: warn
-
+  # ---------------------------------------------------------------------------
+  # Final Report Generation Job
+  # ---------------------------------------------------------------------------
   generate-report:
     name: Generate Nightly Report
     runs-on: windows-latest
     needs: [nightly-build, performance-benchmarks, security-scan]
     if: always()
-
     steps:
-    - name: 🚀 Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: 📥 Download All Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./artifacts
-
-    - name: 📊 Generate Comprehensive Report
-      shell: pwsh
-      run: |
-        Write-Host "Generating comprehensive nightly report..." -ForegroundColor Yellow
-
-        $reportData = @{
-          BuildInfo = @{
-            Version = "${{ needs.nightly-build.outputs.version }}"
-            Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-            Branch = $env:GITHUB_REF_NAME
-            Commit = $env:GITHUB_SHA
-            RunId = $env:GITHUB_RUN_ID
-          }
-          TestResults = @{}
-          Performance = @{}
-          Security = @{}
-          Artifacts = @{}
-        }
-
-        # Load test results if available
-        $testResultsPath = "./artifacts/nightly-test-results"
-        if (Test-Path $testResultsPath) {
-          $reportData.TestResults = @{
-            Available = $true
-            Path = $testResultsPath
-          }
-        }
-
-        # Load performance data if available
-        $perfPath = "./artifacts/performance-benchmarks/performance-benchmarks.json"
-        if (Test-Path $perfPath) {
-          $perfData = Get-Content $perfPath | ConvertFrom-Json
-          $reportData.Performance = $perfData
-        }
-
-        # Load security data if available
-        $secPath = "./artifacts/security-report/security-report.json"
-        if (Test-Path $secPath) {
-          $secData = Get-Content $secPath | ConvertFrom-Json
-          $reportData.Security = $secData
-        }
-
-        # Generate simple HTML report
-        $htmlHeader = "<!DOCTYPE html><html><head><title>Bucket - Nightly Build Report</title></head><body>"
-        $htmlContent = "<h1>Bucket - Nightly Build Report</h1>"
-        $htmlContent += "<p>Generated: $($reportData.BuildInfo.Timestamp)</p>"
-        $htmlContent += "<p>Version: $($reportData.BuildInfo.Version) | Branch: $($reportData.BuildInfo.Branch)</p>"
-        $htmlContent += "<h2>Build Summary</h2>"
-        $htmlContent += "<p>Run ID: $($reportData.BuildInfo.RunId)</p>"
-        $htmlContent += "<p>Commit: $($reportData.BuildInfo.Commit.Substring(0,8))</p>"
-        $htmlContent += "<p>Status: Completed</p>"
-        $htmlContent += "<h2>Reports</h2>"
-        $htmlContent += "<p>Performance, security, and coverage data available in JSON artifacts.</p>"
-        $htmlFooter = "</body></html>"
-
-        $fullHtml = $htmlHeader + $htmlContent + $htmlFooter
-
-        $fullHtml | Out-File -FilePath "./nightly-report.html" -Encoding UTF8
-        $reportData | ConvertTo-Json -Depth 10 | Out-File -FilePath "./nightly-report.json" -Encoding UTF8
-
-        Write-Host "=== Nightly Report Generated ===" -ForegroundColor Green
-        Write-Host "Report files created: nightly-report.html, nightly-report.json" -ForegroundColor Cyan
-
-    - name: 📊 Upload Nightly Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: nightly-report
-        path: |
-          ./nightly-report.html
-          ./nightly-report.json
-        if-no-files-found: warn
-
-    - name: 📧 Notify on Failure
-      if: failure()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: '🚨 **Nightly Build Failed**\n\nThe nightly build for Bucket has failed. Please check the [workflow run](https://github.com/mchave3/Bucket/actions/runs/${{ github.run_id }}) for details.'
-          })
+      #region Report
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+      - name: 📥 Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      - name: 📊 Generate Comprehensive Report
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteComprehensiveReport -ModuleVersion ${{ needs.nightly-build.outputs.version }} -GitHubRefName ${{ github.ref_name }} -GitHubShaForReport ${{ github.sha }} -GitHubRunId ${{ github.run_id }}
+      - name: 📊 Upload Nightly Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-report
+          path: |
+            ./nightly-report.html
+            ./nightly-report.json
+          if-no-files-found: warn
+      - name: 📧 Notify on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚨 **Nightly Build Failed**\n\nThe nightly build for Bucket has failed. Please check the [workflow run](https://github.com/mchave3/Bucket/actions/runs/${{ github.run_id }}) for details.'
+            })
+      #endregion
