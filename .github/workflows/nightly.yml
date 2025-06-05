@@ -31,14 +31,14 @@ jobs:
       test-results: ${{ steps.test-summary.outputs.summary }}
     steps:
       #region Initialization
-      - name: 🚀 Initialize Build Summary
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action InitializeBuildSummary -RunNumber ${{ github.run_number }} -CommitSHA ${{ github.sha }} -BranchName ${{ github.ref_name }} -TriggerEvent ${{ github.event_name }}
       - name: 🚀 Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full history for better analytics
+      - name: 🚀 Initialize Build Summary
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action InitializeBuildSummary -RunNumber ${{ github.run_number }} -CommitSHA ${{ github.sha }} -BranchName ${{ github.ref_name }} -TriggerEvent ${{ github.event_name }}
       #endregion
 
       #region Environment & Bootstrap

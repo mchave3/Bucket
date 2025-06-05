@@ -1,6 +1,6 @@
-[CmdletBinding()]
 #Requires -Version 7.4
 [CmdletBinding()]
+param(
     [Parameter(Mandatory = $true)]
     [ValidateSet(
         'InitializeBuildSummary',
@@ -29,7 +29,6 @@
     [string]$GitHubRunId
 )
 
-#region Helper Functions
 #region Helper Functions
 function Get-GitHubOutput {
     [CmdletBinding()]
@@ -371,16 +370,15 @@ function Write-NightlyBuildJobSummary {
                     $failures = $pesterXml.testsuite.failures
                     $passed = [int]$total - [int]$failures
                     $failed = $failures
-                }
-
-                if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
+                }                if ($null -ne $total -and $null -ne $passed -and $null -ne $failed) {
                     $totalInt = if ([string]::IsNullOrEmpty($total)) { 0 } else { [int]$total }
                     $passedInt = if ([string]::IsNullOrEmpty($passed)) { 0 } else { [int]$passed }
                     $failedInt = if ([string]::IsNullOrEmpty($failed)) { 0 } else { [int]$failed }
                     $testCount = "$passedInt/$totalInt"
                     $testStatus = if ($failedInt -eq 0) { "✅ All Passed" } else { "❌ $failedInt Failed" }
                 } else {
-                    $testData = "⚠️ Parse Issue - Unknown XML Format"
+                    $testStatus = "⚠️ Parse Issue - Unknown XML Format"
+                    $testCount = "Unknown"
                 }
             }
             Write-Host "✅ Test status: $testStatus ($testCount)" -ForegroundColor Green
