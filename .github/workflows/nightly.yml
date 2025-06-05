@@ -59,10 +59,19 @@ jobs:
         Write-Host "Generating additional code coverage report..." -ForegroundColor Yellow
         try {
           Invoke-Build -Task DevCC -File .\src\Bucket.build.ps1
-          Write-Host "Code coverage report generated successfully." -ForegroundColor Green
+
+          # Verify coverage file was created
+          if (Test-Path ".\cov.xml") {
+            Write-Host "Code coverage report generated successfully at: .\cov.xml" -ForegroundColor Green
+            $fileSize = (Get-Item ".\cov.xml").Length
+            Write-Host "Coverage file size: $fileSize bytes" -ForegroundColor Cyan
+          } else {
+            Write-Host "Warning: Coverage file was not created at expected location .\cov.xml" -ForegroundColor Yellow
+          }
         }
         catch {
-          Write-Host "Code coverage generation skipped - may already be included in main build." -ForegroundColor Yellow
+          Write-Host "Error during code coverage generation: $($_.Exception.Message)" -ForegroundColor Red
+          Write-Host "Code coverage generation failed - continuing build process." -ForegroundColor Yellow
         }
 
     - name: 🔍 Run Additional Analysis
@@ -182,6 +191,7 @@ jobs:
         flags: unittests
         name: nightly-coverage
         fail_ci_if_error: false
+        verbose: true
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

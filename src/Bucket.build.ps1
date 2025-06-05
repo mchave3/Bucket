@@ -317,7 +317,7 @@ Add-BuildTask DevCC {
     $pesterConfiguration.CodeCoverage.Enabled = $true
     $pesterConfiguration.CodeCoverage.Path = "$script:ModuleSourcePath\*\*.ps1"
     $pesterConfiguration.CodeCoverage.CoveragePercentTarget = $script:coverageThreshold
-    $pesterConfiguration.CodeCoverage.OutputPath = '..\..\..\cov.xml'
+    $pesterConfiguration.CodeCoverage.OutputPath = '.\cov.xml'
     $pesterConfiguration.CodeCoverage.OutputFormat = 'CoverageGutters'
 
     Invoke-Pester -Configuration $pesterConfiguration
@@ -365,13 +365,13 @@ Add-BuildTask CreateMarkdownHelp -After CreateHelpStart {
     Write-Build DarkGray '             Replace each missing element we need for a proper generic module page .md file'
     $ModulePageFileContent = Get-Content -Raw $ModulePage
     $ModulePageFileContent = $ModulePageFileContent -replace '{{Manually Enter Description Here}}', $script:ModuleDescription
-    
+
     # If FunctionsToExport contains *, retrieve all functions from the Public folder
     if ($script:FunctionsToExport -contains '*') {
         Write-Build DarkGray "             FunctionsToExport contains wildcard (*). Getting actual functions from Public folder..."
-        $PublicFunctions = Get-ChildItem -Path "$script:ModuleSourcePath\Public\*.ps1" -ErrorAction SilentlyContinue | 
+        $PublicFunctions = Get-ChildItem -Path "$script:ModuleSourcePath\Public\*.ps1" -ErrorAction SilentlyContinue |
                            Select-Object -ExpandProperty BaseName
-        
+
         foreach ($Function in $PublicFunctions) {
             Write-Build DarkGray "             Updating definition for the following function: $Function"
             $TextToReplace = "{{Manually Enter $Function Description Here}}"
@@ -563,17 +563,17 @@ Add-BuildTask Build {
 
     Write-Build Gray '        Updating module manifest to export only public functions...'
     # Get the list of public functions to export
-    $publicFunctions = Get-ChildItem -Path "$script:ArtifactsPath\Public" -Filter "*.ps1" -ErrorAction SilentlyContinue | 
+    $publicFunctions = Get-ChildItem -Path "$script:ArtifactsPath\Public" -Filter "*.ps1" -ErrorAction SilentlyContinue |
                       Select-Object -ExpandProperty BaseName
-    
+
     if ($publicFunctions) {
         # Update the module manifest to export only the public functions
         Write-Build Gray "        Found $($publicFunctions.Count) public functions to export"
-        
+
         # Read manifest content
         $manifestPath = Join-Path -Path $script:ArtifactsPath -ChildPath "$($script:ModuleName).psd1"
         $manifestContent = Get-Content -Path $manifestPath -Raw
-        
+
         # Use regex to replace the FunctionsToExport value
         if ($manifestContent -match "FunctionsToExport\s*=\s*['`"]?\*['`"]?") {
             $functionsToExportString = "FunctionsToExport = @('" + ($publicFunctions -join "','") + "')"
@@ -668,7 +668,3 @@ Add-BuildTask Archive {
 
     Write-Build Green '        ...Archive Complete!'
 } #Archive
-
-
-
-
