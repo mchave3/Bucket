@@ -29,7 +29,8 @@ jobs:
         Write-Host "=== PowerShell Version ===" -ForegroundColor Green
         $PSVersionTable | Format-Table -AutoSize
         Write-Host "=== System Information ===" -ForegroundColor Green
-        Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize        Write-Host "=== Available Modules ===" -ForegroundColor Green
+        Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize
+        Write-Host "=== Available Modules ===" -ForegroundColor Green
         Get-Module -ListAvailable | Where-Object { $_.Name -like "*Pester*" -or $_.Name -like "*PSScript*" } | Format-Table Name, Version -AutoSize
 
     - name: 🛠️ Bootstrap Dependencies
