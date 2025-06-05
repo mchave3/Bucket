@@ -111,67 +111,39 @@ jobs:
           verbose: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: 📊 Generate Job Summary
+      - name: ⚡ Run Performance Benchmarks
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunPerformanceBenchmark
+      - name: �️ Run Security Scan
+        shell: pwsh
+        run: >
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunSecurityScan
+      - name: 📊 Collect Job Summary Data
         shell: pwsh
         if: always()
         run: >
           pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteBuildJobSummary -ModuleVersion ${{ steps.version.outputs.version }}
-      - name: 📋 Generate Final Consolidated Summary
+      - name: 📋 Store Final Data
         shell: pwsh
         if: always()
         run: >
           pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteFinalConsolidatedSummary -ModuleVersion ${{ steps.version.outputs.version }}
-      #endregion
-
-  # ---------------------------------------------------------------------------
-  # Performance Benchmarks Job
-  # ---------------------------------------------------------------------------
-  performance-benchmarks:
-    name: Performance Benchmarks
-    runs-on: windows-latest
-    needs: nightly-build
-    steps:
-      #region Performance
-      - name: 🚀 Checkout Repository
-        uses: actions/checkout@v4
-      - name: 🛠️ Bootstrap Dependencies
+      - name: 📊 Generate Complete Summary
         shell: pwsh
+        if: always()
         run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action BootstrapDependencies
-      - name: ⚡ Run Performance Tests
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunPerformanceBenchmark
-      - name: 📊 Upload Performance Results
+          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action WriteCompleteSummary
+      - name: 📊 Upload Additional Artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: performance-benchmarks
-          path: ./performance-benchmarks.json
+          name: additional-reports
+          path: |
+            ./performance-benchmarks.json
+            ./security-report.json
           if-no-files-found: warn
-      #endregion
-
-  # ---------------------------------------------------------------------------
-  # Security Scan Job
-  # ---------------------------------------------------------------------------
-  security-scan:
-    name: Security Scan
-    runs-on: windows-latest
-    needs: nightly-build
-    steps:
-      #region Security
-      - name: 🚀 Checkout Repository
-        uses: actions/checkout@v4
-      - name: 🛡️ PowerShell Script Analyzer Security Scan
-        shell: pwsh
-        run: >
-          pwsh ./.github/workflows/scripts/BucketNightlyWorkflow.ps1 -Action RunSecurityScan
-      - name: 🛡️ Upload Security Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: ./security-report.json
-          if-no-files-found: warn
-      #endregion
+          #endregion
 
   # ---------------------------------------------------------------------------
   # Final Report Generation Job
@@ -179,7 +151,7 @@ jobs:
   generate-report:
     name: Generate Nightly Report
     runs-on: windows-latest
-    needs: [nightly-build, performance-benchmarks, security-scan]
+    needs: [nightly-build]
     if: always()
     steps:
       #region Report

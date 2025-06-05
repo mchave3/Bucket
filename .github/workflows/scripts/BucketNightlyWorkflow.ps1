@@ -1,8 +1,7 @@
 #Requires -Version 7.4
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
-    [ValidateSet(
+    [Parameter(Mandatory = $true)]    [ValidateSet(
         'InitializeBuildSummary',
         'DisplayEnvironmentInfo',
         'BootstrapDependencies',
@@ -14,6 +13,7 @@ param(
         'WriteCodeMetric',
         'WriteBuildJobSummary',
         'WriteFinalConsolidatedSummary',
+        'WriteCompleteSummary',
         'RunPerformanceBenchmark',
         'RunSecurityScan',
         'WriteComprehensiveReport'
@@ -43,6 +43,21 @@ function Get-GitHubStepSummary {
 }
 #endregion Helper Functions
 
+#region Script Variables
+# Variables to accumulate summary content instead of writing incrementally
+$script:buildInfo = @{}
+$script:pipelineStatus = @{
+    'Build & Test' = @{ Status = 'Pending'; Details = 'Waiting'; Icon = '⏸️' }
+    'Code Coverage' = @{ Status = 'Pending'; Details = 'Waiting'; Icon = '⏸️' }
+    'Performance' = @{ Status = 'Pending'; Details = 'Waiting'; Icon = '⏸️' }
+    'Security Scan' = @{ Status = 'Pending'; Details = 'Waiting'; Icon = '⏸️' }
+    'Artifacts' = @{ Status = 'Pending'; Details = 'Waiting'; Icon = '⏸️' }
+}
+$script:testResults = @{}
+$script:codeMetrics = @{}
+$script:summaryContent = @()
+#endregion Script Variables
+
 #region Workflow Functions
 
 #region Build Summary Initialization
@@ -59,40 +74,16 @@ function Initialize-NightlyBuildSummary {
         [string]$TriggerEvent
     )
     Write-Host "Initializing Build Summary..." -ForegroundColor Yellow
-    $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
-    $summaryFilePath = Get-GitHubStepSummary
-    $initialSummary = @"
-# 🔧 Bucket Nightly Build #$RunNumber
 
-**📋 Build Information**
-- **Branch:** $BranchName
-- **Trigger:** $TriggerEvent
-- **Started:** $startTime
-- **Commit:** [$($CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$CommitSHA)
-
----
-
-## 🚀 Pipeline Status
-
-| Phase | Status | Progress |
-|-------|--------|----------|
-| 🏗️ Build & Test | 🔄 Running | In Progress |
-| 📊 Code Coverage | ⏸️ Pending | Waiting |
-| ⚡ Performance | ⏸️ Pending | Waiting |
-| 🛡️ Security Scan | ⏸️ Pending | Waiting |
-| 📦 Artifacts | ⏸️ Pending | Waiting |
-
----
-"@
-
-    try {
-        $initialSummary | Out-File -FilePath $summaryFilePath -Encoding UTF8
-        Write-Host "Initial build summary created at $summaryFilePath!" -ForegroundColor Green
+    # Store build information for later use in final summary
+    $script:buildInfo = @{
+        RunNumber = $RunNumber
+        CommitSHA = $CommitSHA
+        BranchName = $BranchName
+        TriggerEvent = $TriggerEvent
+        StartTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
     }
-    catch {
-        Write-Error "Failed to write initial build summary: $($_.Exception.Message)"
-        exit 1
-    }
+      Write-Host "Build information initialized!" -ForegroundColor Green
 }
 
 #region Environment Info
@@ -330,10 +321,8 @@ function Write-NightlyBuildJobSummary {
     param (
         [Parameter(Mandatory = $true)]
         [string]$ModuleVersion
-    )
-    Write-Host "Generating GitHub Action Job Summary..." -ForegroundColor Yellow
+    )    Write-Host "Collecting build job summary data..." -ForegroundColor Yellow
 
-    $buildStatus = "✅ Success"
     $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 
     # Initialize status variables
@@ -444,39 +433,26 @@ function Write-NightlyBuildJobSummary {
         $artifactsStatus = "❌ Missing"
     }
 
-    # Update pipeline status table
-    $summaryMarkdown = @"
-
-## 🚀 Pipeline Status - UPDATED
-
-| Phase | Status | Details |
-|-------|--------|---------|
-| 🏗️ Build & Test | $buildStatus | $testDetails |
-| 📊 Code Coverage | $coverageStatus | $coveragePercent coverage |
-| 📈 Code Metrics | $codeMetrics | Files & lines analyzed |
-| 📦 Artifacts | $artifactsStatus | Build outputs ready |
-
----
-
-## 📊 Build Summary v$ModuleVersion
-
-**🧪 Test Results:** $testStatus ($testCount)
-**📊 Coverage:** $coveragePercent
-**⏱️ Completed:** $buildTime
-
-**🔗 Quick Links:**
-- [📦 Download Artifacts](./src/Artifacts/)
-- [🔄 Workflow Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
-- [📝 Commit Details](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
-"@
-
-    try {
-        $summaryMarkdown | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
-        Write-Host "Job summary appended to GITHUB_STEP_SUMMARY." -ForegroundColor Green
+    # Store test results and metrics for final summary
+    $script:testResults = @{
+        Status = $testStatus
+        Count = $testCount
+        Details = $testDetails
+        Coverage = @{
+            Status = $coverageStatus
+            Percent = $coveragePercent
+        }
+        Metrics = $codeMetrics
+        Artifacts = $artifactsStatus
+        BuildTime = $buildTime
     }
-    catch {
-        Write-Error "Failed to append job summary: $($_.Exception.Message)"
-    }
+
+    # Update pipeline status phases
+    Save-NightlyPipelineStatus -Phase "Build & Test" -Status "Completed" -Details $testDetails
+    Save-NightlyPipelineStatus -Phase "Code Coverage" -Status "Completed" -Details "$coveragePercent coverage"
+    Save-NightlyPipelineStatus -Phase "Artifacts" -Status "Completed" -Details "Build outputs ready"
+
+    Write-Host "Build job summary data collected!" -ForegroundColor Green
 }
 
 #region Final Consolidated Summary
@@ -486,34 +462,82 @@ function Write-NightlyFinalConsolidatedSummary {
         [Parameter(Mandatory = $true)]
         [string]$ModuleVersion
     )
-    Write-Host "Updating final pipeline status..." -ForegroundColor Yellow
+    Write-Host "Storing final completion data..." -ForegroundColor Yellow
 
     $completionTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 
-    # Update the pipeline status to show completion
-    $finalStatus = @"
+    # Store completion information for final summary
+    $script:buildInfo.CompletionTime = $completionTime
+    $script:buildInfo.ModuleVersion = $ModuleVersion
+
+    Write-Host "Final completion data stored!" -ForegroundColor Green
+}
+
+#region Complete Summary Generation
+function Write-NightlyCompleteSummary {
+    [CmdletBinding()]
+    param()
+
+    Write-Host "Generating complete job summary..." -ForegroundColor Yellow
+
+    # Generate complete summary with all accumulated data
+    $completeSummary = @"
+# 🔧 Bucket Nightly Build #$($script:buildInfo.RunNumber)
+
+## 📋 Build Information
+
+- **Branch:** $($script:buildInfo.BranchName)
+- **Trigger:** $($script:buildInfo.TriggerEvent)
+- **Started:** $($script:buildInfo.StartTime)
+- **Commit:** [$($script:buildInfo.CommitSHA.Substring(0,8))](https://github.com/mchave3/Bucket/commit/$($script:buildInfo.CommitSHA))
+
+---
+
+## 🚀 Pipeline Status
+
+| Phase | Status | Details |
+|-------|--------|---------|
+| 🏗️ Build & Test | $($script:pipelineStatus['Build & Test'].Icon) $($script:pipelineStatus['Build & Test'].Status) | $($script:pipelineStatus['Build & Test'].Details) |
+| 📊 Code Coverage | $($script:pipelineStatus['Code Coverage'].Icon) $($script:pipelineStatus['Code Coverage'].Status) | $($script:pipelineStatus['Code Coverage'].Details) |
+| 📈 Code Metrics | ✅ Completed | $($script:testResults.Metrics) |
+| ⚡ Performance | $($script:pipelineStatus['Performance'].Icon) $($script:pipelineStatus['Performance'].Status) | $($script:pipelineStatus['Performance'].Details) |
+| 🛡️ Security Scan | $($script:pipelineStatus['Security Scan'].Icon) $($script:pipelineStatus['Security Scan'].Status) | $($script:pipelineStatus['Security Scan'].Details) |
+| 📦 Artifacts | $($script:pipelineStatus['Artifacts'].Icon) $($script:pipelineStatus['Artifacts'].Status) | $($script:pipelineStatus['Artifacts'].Details) |
+
+---
+
+## 📊 Build Summary v$($script:buildInfo.ModuleVersion)
+
+**🧪 Test Results:** $($script:testResults.Status) ($($script:testResults.Count))
+**📊 Coverage:** $($script:testResults.Coverage.Percent)
+**⏱️ Completed:** $($script:buildInfo.CompletionTime)
+
+---
 
 ## ✅ Build Completed Successfully!
 
-**Final Status:** All phases completed at $completionTime
+**Final Status:** All phases completed at $($script:buildInfo.CompletionTime)
 
-**🔗 Quick Actions:**
-- [📦 Download Build Artifacts](./src/Artifacts/)
-- [🔄 View Full Workflow Run](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
-- [📝 View Commit](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
+**🔗 Quick Links:**
+- [📦 Download Artifacts](./src/Artifacts/)
+- [🔄 Workflow Run #$($env:GITHUB_RUN_NUMBER)](https://github.com/mchave3/Bucket/actions/runs/$($env:GITHUB_RUN_ID))
+- [📝 Commit Details](https://github.com/mchave3/Bucket/commit/$($env:GITHUB_SHA))
 
 ---
-*Build completed for Bucket v$ModuleVersion*
+*Build completed for Bucket v$($script:buildInfo.ModuleVersion)*
+
+**Job summary generated at run-time**
 "@
 
     try {
-        $finalStatus | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
-        Write-Host "Final status appended successfully!" -ForegroundColor Green
+        $completeSummary | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8
+        Write-Host "Complete job summary written to GITHUB_STEP_SUMMARY!" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to write final status: $($_.Exception.Message)"
+        Write-Error "Failed to write complete summary: $($_.Exception.Message)"
     }
 }
+#endregion Complete Summary Generation
 
 #region Performance Benchmark
 function Invoke-NightlyPerformanceBenchmark {
@@ -557,6 +581,9 @@ function Invoke-NightlyPerformanceBenchmark {
 
         $benchmarks | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\\performance-benchmarks.json" -Encoding UTF8
         Write-Host "Performance benchmarks saved to .\\performance-benchmarks.json" -ForegroundColor Green
+
+        # Update pipeline status
+        Save-NightlyPipelineStatus -Phase "Performance" -Status "Completed" -Details "Benchmarks completed"
     }
     catch {
         Write-Error "Error during performance benchmarks: $($_.Exception.Message)"
@@ -616,6 +643,10 @@ function Invoke-NightlySecurityScan {
 
         $securityReport | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\\security-report.json" -Encoding UTF8
         Write-Host "Security report saved to .\\security-report.json" -ForegroundColor Green
+
+        # Update pipeline status
+        $statusDetails = if ($issues.Count -eq 0) { "No security issues found" } else { "$($issues.Count) issues found" }
+        Save-NightlyPipelineStatus -Phase "Security Scan" -Status "Completed" -Details $statusDetails
     }
     catch {
         Write-Error "Error during security scan: $($_.Exception.Message)"
@@ -716,7 +747,7 @@ function Write-NightlyComprehensiveReport {
 #endregion Workflow Functions
 
 #region Pipeline Status Update
-function Update-NightlyPipelineStatus {
+function Save-NightlyPipelineStatus {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -736,18 +767,20 @@ function Update-NightlyPipelineStatus {
         'Completed' { '✅' }
         'Failed' { '❌' }
         'Skipped' { '⏭️' }
+        'Pending' { '⏸️' }
     }
 
-    # This would append a status update to the summary
-    # In a real implementation, you might want to update a specific table row
-    $statusUpdate = "**$Phase :** $statusIcon $Status $(if($Details) { "- $Details" })"
-
-    try {
-        "`n$statusUpdate" | Out-File -FilePath (Get-GitHubStepSummary) -Encoding UTF8 -Append
+    # Update the internal pipeline status instead of writing to summary
+    if ($script:pipelineStatus.ContainsKey($Phase)) {
+        $script:pipelineStatus[$Phase] = @{
+            Status = $Status
+            Details = $Details
+            Icon = $statusIcon
+        }
         Write-Host "Pipeline status updated for $Phase" -ForegroundColor Green
     }
-    catch {
-        Write-Warning "Failed to update pipeline status: $($_.Exception.Message)"
+    else {
+        Write-Warning "Unknown phase: $Phase"
     }
 }
 #endregion Pipeline Status Update
@@ -767,6 +800,7 @@ try {
         'WriteCodeMetric' { Write-NightlyCodeMetric }
         'WriteBuildJobSummary' { Write-NightlyBuildJobSummary -ModuleVersion $ModuleVersion }
         'WriteFinalConsolidatedSummary' { Write-NightlyFinalConsolidatedSummary -ModuleVersion $ModuleVersion }
+        'WriteCompleteSummary' { Write-NightlyCompleteSummary }
         'RunPerformanceBenchmark' { Invoke-NightlyPerformanceBenchmark }
         'RunSecurityScan' { Invoke-NightlySecurityScan }
         'WriteComprehensiveReport' { Write-NightlyComprehensiveReport -ModuleVersion $ModuleVersion -GitHubRefName $GitHubRefName -GitHubShaForReport $GitHubShaForReport -GitHubRunId $GitHubRunId }
