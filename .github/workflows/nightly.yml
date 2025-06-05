@@ -25,7 +25,7 @@ env:
 jobs:
   nightly-build:
     name: Nightly Build & Tests
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: 🚀 Checkout Repository
         uses: actions/checkout@v4
@@ -42,22 +42,22 @@ jobs:
 
       - name: 🔄 Run Nightly Build Workflow
         shell: pwsh
-        run: .\.github\workflows\scripts\BucketNightlyWorkflow.ps1
+        run: ./.github/workflows/scripts/BucketNightlyWorkflow.ps1
 
       - name: 📤 Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: nightly-test-results
-          path: .\src\Artifacts\testOutput
+          path: ./src/Artifacts/testOutput
           if-no-files-found: warn
 
-      - name: � Upload Build Artifacts
+      - name: 📤 Upload Build Artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: nightly-build-artifacts
-          path: .\src\Archive
+          path: ./src/Archive
           if-no-files-found: warn
 
       - name: 📤 Upload Module Artifacts
@@ -65,5 +65,5 @@ jobs:
         if: always()
         with:
           name: nightly-module-artifacts
-          path: .\src\Artifacts\*.ps*
+          path: ./src/Artifacts/*.ps*
           if-no-files-found: warn

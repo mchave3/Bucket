@@ -10,7 +10,7 @@
     Name: BucketNightlyWorkflow.ps1
     Author: Mickaël CHAVE
     Created: 06/05/2025
-    Version: 25.5.6.27
+    Version: 25.5.6.28
     Repository: https://github.com/mchave3/Bucket
     License: MIT License
 
@@ -51,6 +51,7 @@ $script:BuildTasks = @(
 $script:BuildResults = @{
     Bootstrap = @{ Status = 'Pending'; Duration = $null; Error = $null }
     Tasks = @()
+    BuildDuration = $null
     TestResults = @{ Status = 'Pending'; Duration = $null; Error = $null; Details = @{} }
     Artifacts = @{ Status = 'Pending'; Duration = $null; Error = $null; Files = @() }
 }
@@ -234,9 +235,8 @@ try {
 
         # Debug: Show current statistics
         Write-Host "   📈 Current stats: $successfulTasks✅ $failedTasks❌ $skippedTasks⚠️ $(($script:BuildResults.Tasks | Where-Object { $_.Status -eq 'Pending' }).Count)⏳" -ForegroundColor DarkGray
-    }
-
-    $buildDuration = (Get-Date) - $buildStart
+    }    $buildDuration = (Get-Date) - $buildStart
+    $script:BuildResults.BuildDuration = $buildDuration
     if ($overallSuccess) {
         Write-StepResult -Step "Build Process" -Success $true -Duration $buildDuration
         Write-Host "📊 Task Summary: $successfulTasks successful, $skippedTasks skipped, $failedTasks failed out of $executedTasks total" -ForegroundColor Green
@@ -248,6 +248,7 @@ try {
 }
 catch {
     $buildDuration = (Get-Date) - $buildStart
+    $script:BuildResults.BuildDuration = $buildDuration
     Write-StepResult -Step "Build Process" -Success $false -Duration $buildDuration -Error $_.Exception.Message
     Write-Host "❌ Build process encountered an exception, but continuing to generate summary..." -ForegroundColor Yellow
 }
@@ -381,14 +382,14 @@ $summary = @"
 
 **Build Date:** $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
 **Total Duration:** $($totalDuration.TotalMinutes.ToString('F2')) minutes
-**Overall Status:** $(if ($overallSuccess) { '✅ SUCCESS' } else { '❌ FAILED' })
+**Overall Status:** $(if ($overallSuccess) { '✅ Success' } else { '❌ Failed' })
 
 ## 📊 High-Level Summary
 
 | Component | Status | Duration | Details |
 |-----------|--------|----------|---------|
 | Bootstrap | $(if ($script:BuildResults.Bootstrap.Status -eq 'Success') { '✅' } elseif ($script:BuildResults.Bootstrap.Status -eq 'Failed') { '❌' } else { '⏳' }) $($script:BuildResults.Bootstrap.Status) | $($script:BuildResults.Bootstrap.Duration.TotalSeconds.ToString('F1'))s | Dependencies installation |
-| Build Tasks | $(if ($tasksSuccess) { '✅ SUCCESS' } else { '❌ FAILED' }) | $($totalDuration.TotalSeconds.ToString('F1'))s | $successfulTasks✅ $failedTasks❌ $skippedTasks⚠️ $pendingTasks⏳ |
+| Build Tasks | $(if ($tasksSuccess) { '✅ Success' } else { '❌ Failed' }) | $($script:BuildResults.BuildDuration.TotalSeconds.ToString('F1'))s | $successfulTasks✅ $failedTasks❌ $skippedTasks⚠️ $pendingTasks⏳ |
 | Test Analysis | $(if ($script:BuildResults.TestResults.Status -eq 'Success') { '✅' } elseif ($script:BuildResults.TestResults.Status -eq 'Failed') { '❌' } else { '⏳' }) $($script:BuildResults.TestResults.Status) | $($script:BuildResults.TestResults.Duration.TotalSeconds.ToString('F1'))s | Test results parsing |
 | Artifacts | $(if ($script:BuildResults.Artifacts.Status -eq 'Success') { '✅' } elseif ($script:BuildResults.Artifacts.Status -eq 'Failed') { '❌' } else { '⏳' }) $($script:BuildResults.Artifacts.Status) | $($script:BuildResults.Artifacts.Duration.TotalSeconds.ToString('F1'))s | Build outputs collection |
 
