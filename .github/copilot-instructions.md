@@ -8,10 +8,19 @@ This document is a style and structure guide for you, GitHub Copilot, to follow 
 - Use English for all code, comments, and log messages.
 - Favor readability and explicitness over cleverness.
 - Do not use global-scope variables (avoid $global:). Prefer script-scope ($script:) or local variables.
-- Follow Windows PowerShell 5.1+ compatibility practices, while also ensuring code works in PowerShell Core (7+).
+- Target PowerShell Core 7.4+ exclusively. Do not maintain compatibility with Windows PowerShell 5.1.
+
+### PowerShell Core 7.4+ Specific Guidelines
+- Leverage modern PowerShell Core features (parallel processing, improved cmdlets, cross-platform capabilities).
+- Use `foreach -Parallel` for CPU-intensive operations when appropriate.
+- Take advantage of improved error handling and debugging features in PowerShell Core.
+- Use modern .NET APIs available in PowerShell Core.
+- Avoid legacy Windows PowerShell ISE-specific constructs.
+- Use UTF-8 with BOM encoding by default for file operations.
+- Target Windows platform exclusively - do not maintain compatibility with Linux or macOS.
 
 ### Logging
-- All log messages must be harmonized: start with a context tag in square brackets (e.g. [Navigation], [ISO Import], [Pre-Flight], [Bucket]).
+- All log messages must be harmonized.
 - Use Write-BucketLog for all logging, and choose the appropriate log level (Verbose, Debug, Info, Warning, Error, Fatal).
 - Log key actions, errors, and important state changes.
 - Follow these guidelines for log levels:

@@ -8,7 +8,7 @@ Locale: en-US
 
 # Bucket Module
 ## Description
-Bucket is a PowerShell module for customizing Windows images. Automate, tweak, and optimize your Windows deployment.
+Bucket is a PowerShell module for customizing Windows images on Windows systems. Automate, tweak, and optimize your Windows deployment with PowerShell Core 7.4+.
 
 ## Bucket Cmdlets
 ### [Start-Bucket](Start-Bucket.md)

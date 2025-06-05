@@ -15,7 +15,7 @@ RootModule = 'Bucket.psm1'
 ModuleVersion = '25.6.3.4'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core')
 
 # ID used to uniquely identify this module
 GUID = 'a9ecc47c-1bec-400f-9d21-2ed73cdfd515'
@@ -30,7 +30,7 @@ CompanyName = 'Unknown'
 Copyright = '(c) Mickaël CHAVE. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Bucket is a PowerShell module for customizing Windows images. Automate, tweak, and optimize your Windows deployment.'
+Description = 'Bucket is a PowerShell module for customizing Windows images on Windows systems. Automate, tweak, and optimize your Windows deployment with PowerShell Core 7.4+.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.4'

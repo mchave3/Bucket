@@ -9,7 +9,7 @@
     Name:        Start-Bucket.ps1
     Author:      Mickaël CHAVE
     Created:     04/03/2025
-    Version:     25.6.3.4
+    Version:     25.6.5.1
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -20,7 +20,7 @@
     Start-Bucket
 #>
 function Start-Bucket {
-    #Requires -Version 5.1
+    #Requires -Version 7.4
     #Requires -Modules PoShLog
 
     [CmdletBinding(SupportsShouldProcess)]

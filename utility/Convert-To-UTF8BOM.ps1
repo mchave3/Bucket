@@ -38,11 +38,11 @@ foreach ($file in $files) {
 
     # Read file content as bytes
     $content = Get-Content $file.FullName -Raw
-    
+
     # Convert to bytes with UTF-8 BOM encoding without adding extra newlines
     $encoding = New-Object System.Text.UTF8Encoding $true
     $bytes = $encoding.GetBytes($content)
-    
+
     # Write bytes directly to file to preserve exact content
     [System.IO.File]::WriteAllBytes($file.FullName, $bytes)
 
