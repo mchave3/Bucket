@@ -1,0 +1,447 @@
+name: Bucket Nightly Build & Statistics
+
+on:
+  schedule:
+    # Run every night at 2:00 AM UTC (adjust for your timezone)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  nightly-build:
+    name: Nightly Build & Tests
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      test-results: ${{ steps.test-summary.outputs.summary }}
+
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full history for better analytics
+
+    - name: 📊 Display Environment Info
+      shell: pwsh
+      run: |
+        Write-Host "=== PowerShell Version ===" -ForegroundColor Green
+        $PSVersionTable | Format-Table -AutoSize
+        Write-Host "=== System Information ===" -ForegroundColor Green
+        Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory | Format-Table -AutoSize
+        Write-Host "=== Available Modules ===" -ForegroundColor Green
+        Get-Module -ListAvailable | Where-Object { $_.Name -like "*Pester*" -or $_.Name -like "*PSScript*" } | Format-Table Name, Version -AutoSize
+
+    - name: 🛠️ Bootstrap Dependencies
+      shell: pwsh
+      run: |
+        Write-Host "Bootstrapping dependencies..." -ForegroundColor Yellow
+        ./actions_bootstrap.ps1
+
+    - name: 📦 Get Module Version
+      id: version
+      shell: pwsh
+      run: |
+        $version = (Import-PowerShellDataFile .\src\Bucket\Bucket.psd1).ModuleVersion
+        Write-Host "Module Version: $version" -ForegroundColor Green
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+
+    - name: 🏗️ Build Module
+      shell: pwsh
+      run: |
+        Write-Host "Building module..." -ForegroundColor Yellow
+        Invoke-Build -Task Build -File .\src\Bucket.build.ps1
+
+    - name: 🧪 Run Unit Tests with Coverage
+      shell: pwsh
+      run: |
+        Write-Host "Running unit tests with coverage..." -ForegroundColor Yellow
+        Invoke-Build -Task DevCC -File .\src\Bucket.build.ps1
+
+    - name: 🔍 Run Integration Tests
+      shell: pwsh
+      run: |
+        Write-Host "Running integration tests..." -ForegroundColor Yellow
+        Invoke-Build -Task IntegrationTest -File .\src\Bucket.build.ps1
+
+    - name: 📈 Generate Test Report Summary
+      id: test-summary
+      shell: pwsh
+      run: |
+        $testResults = @()
+        $coverageResults = @()
+
+        # Parse Pester results if available
+        $pesterFile = ".\src\Artifacts\testOutput\PesterTests.xml"
+        if (Test-Path $pesterFile) {
+          [xml]$pesterXml = Get-Content $pesterFile
+          $testResults += @{
+            Type = "Unit Tests"
+            Total = $pesterXml.'test-results'.total
+            Passed = $pesterXml.'test-results'.passed
+            Failed = $pesterXml.'test-results'.failed
+            Skipped = $pesterXml.'test-results'.inconclusive
+          }
+        }
+
+        # Parse coverage results if available
+        $coverageFile = ".\cov.xml"
+        if (Test-Path $coverageFile) {
+          [xml]$coverageXml = Get-Content $coverageFile
+          $coverage = $coverageXml.coverage
+          if ($coverage) {
+            $lineRate = [math]::Round([double]$coverage.'line-rate' * 100, 2)
+            $coverageResults += @{
+              LineRate = $lineRate
+              LinesValid = $coverage.'lines-valid'
+              LinesCovered = $coverage.'lines-covered'
+            }
+          }
+        }
+
+        $summary = @{
+          Tests = $testResults
+          Coverage = $coverageResults
+          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+        }
+
+        $summaryJson = $summary | ConvertTo-Json -Depth 10 -Compress
+        Write-Host "Test Summary: $summaryJson" -ForegroundColor Green
+        echo "summary=$summaryJson" >> $env:GITHUB_OUTPUT
+
+    - name: 🔍 Code Analysis
+      shell: pwsh
+      run: |
+        Write-Host "Running code analysis..." -ForegroundColor Yellow
+        Invoke-Build -Task Analyze -File .\src\Bucket.build.ps1
+
+    - name: 📊 Generate Code Metrics
+      shell: pwsh
+      run: |
+        Write-Host "Generating code metrics..." -ForegroundColor Yellow
+        if (Test-Path ".\utility\Get-BucketCodeMetrics.ps1") {
+          & ".\utility\Get-BucketCodeMetrics.ps1"
+        }
+
+        # Count lines of code
+        $psFiles = Get-ChildItem -Path ".\src\Bucket" -Recurse -Filter "*.ps1" | Where-Object { $_.Name -notlike "*.Tests.ps1" }
+        $totalLines = 0
+        $totalFiles = $psFiles.Count
+
+        foreach ($file in $psFiles) {
+          $content = Get-Content $file.FullName -ErrorAction SilentlyContinue
+          if ($content) {
+            $totalLines += $content.Count
+          }
+        }
+
+        Write-Host "=== Code Metrics ===" -ForegroundColor Green
+        Write-Host "Total PowerShell Files: $totalFiles" -ForegroundColor Cyan
+        Write-Host "Total Lines of Code: $totalLines" -ForegroundColor Cyan
+        Write-Host "Average Lines per File: $([math]::Round($totalLines / $totalFiles, 2))" -ForegroundColor Cyan
+
+        # Create metrics file for artifact
+        $metrics = @{
+          TotalFiles = $totalFiles
+          TotalLines = $totalLines
+          AverageLines = [math]::Round($totalLines / $totalFiles, 2)
+          GeneratedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"        }
+
+        $metrics | ConvertTo-Json | Out-File -FilePath ".\code-metrics.json" -Encoding UTF8
+
+    - name: 📋 Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: nightly-test-results
+        path: |
+          .\src\Artifacts\testOutput\
+          .\cov.xml
+          .\code-metrics.json
+        if-no-files-found: warn
+
+    - name: 📦 Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nightly-build-artifacts
+        path: |
+          .\src\Archive\
+          .\src\Artifacts\
+        if-no-files-found: warn
+
+    - name: 📈 Upload Coverage to Codecov (Optional)
+      uses: codecov/codecov-action@v4
+      if: always() && env.CODECOV_TOKEN != ''
+      with:
+        file: ./cov.xml
+        flags: unittests
+        name: nightly-coverage
+        fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: windows-latest
+    needs: nightly-build
+
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🛠️ Bootstrap Dependencies
+      shell: pwsh
+      run: ./actions_bootstrap.ps1
+
+    - name: ⚡ Run Performance Tests
+      shell: pwsh
+      run: |
+        Write-Host "Running performance benchmarks..." -ForegroundColor Yellow
+
+        # Import the module
+        Import-Module .\src\Bucket\Bucket.psm1 -Force
+
+        # Simple performance test
+        $startTime = Get-Date
+
+        # Test module loading time
+        $moduleLoadTime = Measure-Command {
+          Remove-Module Bucket -Force -ErrorAction SilentlyContinue
+          Import-Module .\src\Bucket\Bucket.psm1 -Force
+        }
+
+        # Test key functions if available
+        $functionTests = @()
+        $exportedFunctions = Get-Command -Module Bucket -CommandType Function
+
+        foreach ($func in $exportedFunctions) {
+          if ($func.Name -eq "Get-BucketVersion") {
+            $execTime = Measure-Command { & $func.Name }
+            $functionTests += @{
+              Function = $func.Name
+              ExecutionTime = $execTime.TotalMilliseconds
+            }
+          }
+        }
+
+        $endTime = Get-Date
+        $totalTime = ($endTime - $startTime).TotalSeconds
+
+        $benchmarks = @{
+          ModuleLoadTime = $moduleLoadTime.TotalMilliseconds
+          FunctionTests = $functionTests
+          TotalBenchmarkTime = $totalTime
+          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+        }
+
+        Write-Host "=== Performance Benchmarks ===" -ForegroundColor Green
+        Write-Host "Module Load Time: $($moduleLoadTime.TotalMilliseconds) ms" -ForegroundColor Cyan
+        Write-Host "Total Benchmark Time: $totalTime seconds" -ForegroundColor Cyan
+
+        $benchmarks | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\performance-benchmarks.json" -Encoding UTF8
+
+    - name: 📊 Upload Performance Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-benchmarks
+        path: ./performance-benchmarks.json
+        if-no-files-found: warn
+
+  security-scan:
+    name: Security Scan
+    runs-on: windows-latest
+    needs: nightly-build
+
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🛡️ PowerShell Script Analyzer Security Scan
+      shell: pwsh
+      run: |
+        Write-Host "Running security scan..." -ForegroundColor Yellow
+
+        # Install PSScriptAnalyzer if not available
+        if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+        }
+
+        # Run security-focused analysis
+        $securityRules = @(
+          'PSAvoidUsingCmdletAliases',
+          'PSAvoidUsingPlainTextForPassword',
+          'PSAvoidUsingUsernameAndPasswordParams',
+          'PSAvoidUsingInvokeExpression',
+          'PSUseShouldProcessForStateChangingFunctions'
+        )
+
+        $results = Get-ChildItem -Path ".\src\Bucket" -Recurse -Filter "*.ps1" |
+          ForEach-Object {
+            Invoke-ScriptAnalyzer -Path $_.FullName -IncludeRule $securityRules
+          }
+
+        $securityReport = @{
+          TotalIssues = $results.Count
+          Issues = $results | ForEach-Object {
+            @{
+              Severity = $_.Severity
+              RuleName = $_.RuleName
+              Message = $_.Message
+              ScriptName = $_.ScriptName
+              Line = $_.Line
+            }
+          }
+          Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+        }
+
+        Write-Host "=== Security Scan Results ===" -ForegroundColor Green
+        Write-Host "Total Security Issues Found: $($results.Count)" -ForegroundColor Cyan
+
+        if ($results.Count -gt 0) {
+          $results | Format-Table Severity, RuleName, ScriptName, Line -AutoSize
+        }
+
+        $securityReport | ConvertTo-Json -Depth 10 | Out-File -FilePath ".\security-report.json" -Encoding UTF8
+
+    - name: 🛡️ Upload Security Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: ./security-report.json
+        if-no-files-found: warn
+
+  generate-report:
+    name: Generate Nightly Report
+    runs-on: windows-latest
+    needs: [nightly-build, performance-benchmarks, security-scan]
+    if: always()
+
+    steps:
+    - name: 🚀 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 📥 Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+
+    - name: 📊 Generate Comprehensive Report
+      shell: pwsh
+      run: |
+        Write-Host "Generating comprehensive nightly report..." -ForegroundColor Yellow
+
+        $reportData = @{
+          BuildInfo = @{
+            Version = "${{ needs.nightly-build.outputs.version }}"
+            Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+            Branch = $env:GITHUB_REF_NAME
+            Commit = $env:GITHUB_SHA
+            RunId = $env:GITHUB_RUN_ID
+          }
+          TestResults = @{}
+          Performance = @{}
+          Security = @{}
+          Artifacts = @{}
+        }
+
+        # Load test results if available
+        $testResultsPath = "./artifacts/nightly-test-results"
+        if (Test-Path $testResultsPath) {
+          $reportData.TestResults = @{
+            Available = $true
+            Path = $testResultsPath
+          }
+        }
+
+        # Load performance data if available
+        $perfPath = "./artifacts/performance-benchmarks/performance-benchmarks.json"
+        if (Test-Path $perfPath) {
+          $perfData = Get-Content $perfPath | ConvertFrom-Json
+          $reportData.Performance = $perfData
+        }
+
+        # Load security data if available
+        $secPath = "./artifacts/security-report/security-report.json"
+        if (Test-Path $secPath) {
+          $secData = Get-Content $secPath | ConvertFrom-Json
+          $reportData.Security = $secData
+        }
+          # Generate HTML report using separate file creation
+        $htmlContent = @(
+          '<!DOCTYPE html>',
+          '<html>',
+          '<head>',
+          '    <title>Bucket - Nightly Build Report</title>',
+          '    <style>',
+          '        body { font-family: Arial, sans-serif; margin: 20px; }',
+          '        .header { background-color: #0078d4; color: white; padding: 20px; border-radius: 5px; }',
+          '        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }',
+          '        .success { background-color: #d4edda; border-color: #c3e6cb; }',
+          '        .warning { background-color: #fff3cd; border-color: #ffeaa7; }',
+          '        .error { background-color: #f8d7da; border-color: #f5c6cb; }',
+          '        .metric { display: inline-block; margin: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 3px; }',
+          '        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }',
+          '    </style>',
+          '</head>',
+          '<body>',
+          '    <div class="header">',
+          "        <h1>🪣 Bucket - Nightly Build Report</h1>",
+          "        <p>Generated: $($reportData.BuildInfo.Timestamp)</p>",
+          "        <p>Version: $($reportData.BuildInfo.Version) | Branch: $($reportData.BuildInfo.Branch)</p>",
+          '    </div>',
+          '    <div class="section">',
+          '        <h2>📊 Build Summary</h2>',
+          "        <div class=`"metric`"><strong>Run ID:</strong> $($reportData.BuildInfo.RunId)</div>",
+          "        <div class=`"metric`"><strong>Commit:</strong> $($reportData.BuildInfo.Commit.Substring(0,8))</div>",
+          "        <div class=`"metric`"><strong>Status:</strong> Completed</div>",
+          '    </div>',
+          '    <div class="section">',
+          '        <h2>⚡ Performance Metrics</h2>',
+          "        <pre>Performance data available in JSON report</pre>",
+          '    </div>',
+          '    <div class="section">',
+          '        <h2>🛡️ Security Scan</h2>',
+          "        <pre>Security data available in JSON report</pre>",
+          '    </div>',
+          '    <div class="section">',
+          '        <h2>📈 Code Coverage</h2>',
+          '        <p>Coverage reports available in artifacts.</p>',
+          '    </div>',
+          '    <div class="section">',
+          '        <h2>🔗 Useful Links</h2>',
+          '        <ul>',
+          '            <li><a href="https://github.com/mchave3/Bucket">Repository</a></li>',
+          "            <li><a href=`"https://github.com/mchave3/Bucket/actions/runs/$($reportData.BuildInfo.RunId)`">This Build</a></li>",
+          '        </ul>',
+          '    </div>',
+          '</body>',
+          '</html>'
+        )
+
+        $htmlContent | Out-File -FilePath "./nightly-report.html" -Encoding UTF8
+        $reportData | ConvertTo-Json -Depth 10 | Out-File -FilePath "./nightly-report.json" -Encoding UTF8
+
+        Write-Host "=== Nightly Report Generated ===" -ForegroundColor Green
+        Write-Host "Report files created: nightly-report.html, nightly-report.json" -ForegroundColor Cyan
+
+    - name: 📊 Upload Nightly Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: nightly-report
+        path: |
+          ./nightly-report.html
+          ./nightly-report.json
+        if-no-files-found: warn
+
+    - name: 📧 Notify on Failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚨 **Nightly Build Failed**\n\nThe nightly build for Bucket has failed. Please check the [workflow run](https://github.com/mchave3/Bucket/actions/runs/${{ github.run_id }}) for details.'
+          })

@@ -6,6 +6,7 @@
 [![PowerShell Gallery][psgallery-img]][psgallery-site]
 [![Platform](https://img.shields.io/badge/Platform-Windows-blue)](https://github.com/mchave3/Bucket)
 [![Build Status](https://github.com/mchave3/Bucket/actions/workflows/wf_Windows_Core.yml/badge.svg?branch=main)](https://github.com/mchave3/Bucket/actions/workflows/wf_Windows_Core.yml)
+[![Nightly Build](https://github.com/mchave3/Bucket/actions/workflows/nightly.yml/badge.svg)](https://github.com/mchave3/Bucket/actions/workflows/nightly.yml)
 [![License][license-badge]](LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/Bucket/badge/?version=latest)](https://Bucket.readthedocs.io/en/latest/?badge=latest)
 
