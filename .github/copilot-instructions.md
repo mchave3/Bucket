@@ -13,6 +13,7 @@ This document is a style and structure guide for you, GitHub Copilot, to follow 
 ### PowerShell Core 7.4+ Specific Guidelines
 - Leverage modern PowerShell Core features (parallel processing, improved cmdlets, cross-platform capabilities).
 - Use `foreach -Parallel` for CPU-intensive operations when appropriate.
+- Use PowerShell Core Jobs (`Start-Job`, `Get-Job`, etc.) for background or asynchronous tasks when needed. Refer to the official documentation: https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_jobs?view=powershell-7.4
 - Take advantage of improved error handling and debugging features in PowerShell Core.
 - Use modern .NET APIs available in PowerShell Core.
 - Avoid legacy Windows PowerShell ISE-specific constructs.
