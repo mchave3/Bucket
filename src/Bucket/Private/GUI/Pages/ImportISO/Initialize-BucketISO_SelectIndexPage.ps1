@@ -9,7 +9,7 @@
     Name:        Initialize-BucketISO_SelectIndexPage.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     25.6.6.1
+    Version:     25.6.11.2
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -53,35 +53,7 @@ function Initialize-BucketISO_SelectIndexPage {
             $summaryLabel = $senderObj.FindName("ImportISO_SelectIndex_SummaryLabel")
             $selectAllButton = $senderObj.FindName("ImportISO_SelectIndex_SelectAllButton")
             $deselectAllButton = $senderObj.FindName("ImportISO_SelectIndex_DeselectAllButton")
-
-            # Log control discovery results
-            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_DataGrid' found: $($null -ne $dataGrid)" -Level Debug
-            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_SummaryLabel' found: $($null -ne $summaryLabel)" -Level Debug
-            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_SelectAllButton' found: $($null -ne $selectAllButton)" -Level Debug
-            Write-BucketLog -Data "Control 'ImportISO_SelectIndex_DeselectAllButton' found: $($null -ne $deselectAllButton)" -Level Debug            # Show overlay and disable UI elements while loading
-            $waitOverlay = $senderObj.FindName("ImportISO_SelectIndex_WaitOverlay")
-            if ($waitOverlay) {
-                $waitOverlay.Visibility = "Visible"
-                Write-BucketLog -Data "Wait overlay displayed" -Level Debug
-            }
-
-            # Hide and disable other UI elements during loading
-            if ($dataGrid) {
-                $dataGrid.IsEnabled = $false
-                $dataGrid.Visibility = "Hidden"
-                Write-BucketLog -Data "DataGrid hidden and disabled" -Level Debug
-            }
-            if ($selectAllButton) {
-                $selectAllButton.IsEnabled = $false
-                $selectAllButton.Visibility = "Hidden"
-            }
-            if ($deselectAllButton) {
-                $deselectAllButton.IsEnabled = $false
-                $deselectAllButton.Visibility = "Hidden"
-            }
-            if ($summaryLabel) {
-                $summaryLabel.Visibility = "Hidden"
-            }
+            $helpTextElement = $senderObj.FindName("ImportISO_SelectIndex_HelpText")
 
             #region Extract WIM Indices using Background Task
             $isoPath = $script:ImportISO_DataContext.ISOSourcePath
@@ -106,7 +78,6 @@ function Initialize-BucketISO_SelectIndexPage {
                             $dataGridElement = $currentPage.FindName("ImportISO_SelectIndex_DataGrid")
                             $waitOverlayElement = $currentPage.FindName("ImportISO_SelectIndex_WaitOverlay")
                             $selectAllButtonElement = $currentPage.FindName("ImportISO_SelectIndex_SelectAllButton")
-                            $deselectAllButtonElement = $currentPage.FindName("ImportISO_SelectIndex_DeselectAllButton")
                             $helpTextElement = $currentPage.FindName("ImportISO_SelectIndex_HelpText")
                             $summaryLabelElement = $currentPage.FindName("ImportISO_SelectIndex_SummaryLabel")
 
@@ -115,7 +86,6 @@ function Initialize-BucketISO_SelectIndexPage {
                             # Update UI elements
                             if ($dataGridElement) {
                                 $dataGridElement.ItemsSource = $indices
-                                $dataGridElement.IsEnabled = $true
                                 $dataGridElement.Visibility = "Visible"
                                 Write-BucketLog -Data "DataGrid updated with $($indices.Count) items" -Level Debug
                             }
@@ -124,19 +94,16 @@ function Initialize-BucketISO_SelectIndexPage {
                                 Write-BucketLog -Data "Wait overlay hidden" -Level Debug
                             }
 
-                            # Restore visibility and enable UI elements
+                            # Show UI elements
                             if ($selectAllButtonElement) {
-                                $selectAllButtonElement.IsEnabled = $true
-                                $selectAllButtonElement.Visibility = "Visible"
-                            }
-                            if ($deselectAllButtonElement) {
-                                $deselectAllButtonElement.IsEnabled = $true
-                                $deselectAllButtonElement.Visibility = "Visible"
+                                $selectAllButtonElement.Parent.Visibility = "Visible"
                             }
                             if ($summaryLabelElement) {
                                 $summaryLabelElement.Visibility = "Visible"
                             }
-                            if ($helpTextElement) { $helpTextElement.Text = "If no edition is selected, all editions will be included in the final WIM." }
+                            if ($helpTextElement) {
+                                $helpTextElement.Visibility = "Visible"
+                            }
 
                             Write-BucketLog -Data "Populated DataGrid with $($indices.Count) WIM indices" -Level Info
 
@@ -160,16 +127,17 @@ function Initialize-BucketISO_SelectIndexPage {
                     $helpTextElement = $currentPage.FindName("ImportISO_SelectIndex_HelpText")
                     $dataGridElement = $currentPage.FindName("ImportISO_SelectIndex_DataGrid")
                     $selectAllButtonElement = $currentPage.FindName("ImportISO_SelectIndex_SelectAllButton")
-                    $deselectAllButtonElement = $currentPage.FindName("ImportISO_SelectIndex_DeselectAllButton")
                     $summaryLabelElement = $currentPage.FindName("ImportISO_SelectIndex_SummaryLabel")
 
-                    # Hide overlay and restore UI elements
+                    # Hide overlay and show UI elements with error message
                     if ($waitOverlayElement) { $waitOverlayElement.Visibility = "Collapsed" }
                     if ($dataGridElement) { $dataGridElement.Visibility = "Visible" }
-                    if ($selectAllButtonElement) { $selectAllButtonElement.Visibility = "Visible" }
-                    if ($deselectAllButtonElement) { $deselectAllButtonElement.Visibility = "Visible" }
+                    if ($selectAllButtonElement) { $selectAllButtonElement.Parent.Visibility = "Visible" }
                     if ($summaryLabelElement) { $summaryLabelElement.Visibility = "Visible" }
-                    if ($helpTextElement) { $helpTextElement.Text = "Error extracting WIM indices. Please check the ISO file and try again." }
+                    if ($helpTextElement) {
+                        $helpTextElement.Visibility = "Visible"
+                        $helpTextElement.Text = "Error extracting WIM indices. Please check the ISO file and try again."
+                    }
                 }
                 catch {
                     Write-BucketLog -Data "Error handling background task failure: $_" -Level Error
