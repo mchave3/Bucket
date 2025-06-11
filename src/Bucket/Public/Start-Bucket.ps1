@@ -9,7 +9,7 @@
     Name:        Start-Bucket.ps1
     Author:      Mickaël CHAVE
     Created:     04/03/2025
-    Version:     25.6.5.31
+    Version:     25.6.11.1
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 
@@ -127,5 +127,11 @@ function Start-Bucket {
         #region Start GUI
         $form.ShowDialog() | Out-Null
         #endregion
+    }
+
+    clean {
+        # Cleanup any resources if necessary
+        Write-BucketLog -Data "Bucket GUI application closed" -Level Info
+        Close-Logger
     }
 }
