@@ -150,11 +150,14 @@ function Initialize-BucketISO_SelectIndexPage {
             $script:importISO_DataGrid = $dataGrid
             $script:importISO_SummaryLabel = $summaryLabel
 
-            # Setup DataGrid selection changed event
+            # Setup DataGrid current cell changed event to update summary after checkbox changes
             if ($dataGrid) {
-                $dataGrid.Add_SelectionChanged({
+                $dataGrid.Add_CurrentCellChanged({
                         param($senderObj, $e)
-                        Update-BucketISOSelectIndexSummary -DataGrid $script:importISO_DataGrid -SummaryLabel $script:importISO_SummaryLabel
+                        # Use Dispatcher.BeginInvoke to execute after WPF has processed the checkbox change
+                        $senderObj.Dispatcher.BeginInvoke([Action]{
+                                Update-BucketISOSelectIndexSummary -DataGrid $script:importISO_DataGrid -SummaryLabel $script:importISO_SummaryLabel
+                            })
                     })
             }
 

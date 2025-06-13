@@ -41,7 +41,15 @@
                   IsReadOnly="False"
                   Visibility="Collapsed">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Include" Binding="{Binding Include, Mode=TwoWay}" Width="60"/>
+                <DataGridTemplateColumn Header="Include" Width="60">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Include, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Index" Binding="{Binding Index}" Width="50" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*" IsReadOnly="True"/>

@@ -7,7 +7,7 @@
     Name:        Get-BucketWimIndex.ps1
     Author:      Mickaël CHAVE
     Created:     04/22/2025
-    Version:     25.6.3.4
+    Version:     25.6.11.3
     Repository:  https://github.com/mchave3/Bucket
     License:     MIT License
 .LINK
@@ -49,14 +49,21 @@ function Get-BucketWimIndex {
                 throw $images
             }
             $result = @()
+            
             foreach ($img in $images) {
-                $result += [PSCustomObject]@{
-                    Include      = $false
-                    Index        = $img.ImageIndex
-                    Name         = $img.ImageName
-                    Description  = $img.ImageDescription
-                    Architecture = $img.Architecture
-                    Size         = [math]::Round($img.ImageSize/1MB, 1)
+                # Only process images with valid ImageIndex (skip entries without proper index)
+                if ($img.ImageIndex -and $img.ImageIndex -gt 0) {
+                    $result += [PSCustomObject]@{
+                        Include      = $true
+                        Index        = $img.ImageIndex
+                        Name         = $img.ImageName
+                        Description  = $img.ImageDescription
+                        Architecture = $img.Architecture
+                        Size         = [math]::Round($img.ImageSize/1MB, 1)
+                    }
+                }
+                else {
+                    Write-BucketLog -Data "Skipping invalid image entry: Name='$($img.ImageName)', Index='$($img.ImageIndex)'" -Level Debug
                 }
             }
             Write-BucketLog -Data "Extracted $($result.Count) indices from $imagePath" -Level Info
