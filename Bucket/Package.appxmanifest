@@ -12,14 +12,14 @@
 
   <Identity
     Name="496a3642-6753-4149-9dbb-46160969331e"
-    Publisher="CN=Mickaël"
-    Version="1.0.0.0" />
-    
+    Publisher="CN=Mickaël CHAVE"
+    Version="25.6.16.2" />
+
   <mp:PhoneIdentity PhoneProductId="496a3642-6753-4149-9dbb-46160969331e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
-    
+
   <Properties>
     <DisplayName>Bucket</DisplayName>
-    <PublisherDisplayName>Mickaël</PublisherDisplayName>
+    <PublisherDisplayName>Mickaël CHAVE</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
