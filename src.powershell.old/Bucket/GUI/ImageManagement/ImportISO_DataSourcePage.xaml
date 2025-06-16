@@ -1,0 +1,117 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="Bucket.GUI.ImageManagement.ImportISO_DataSourcePage"
+    Title="Data Source"
+    Background="#F9F9F9">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Page Title -->
+        <TextBlock Grid.Row="0" 
+                   Text="Import Windows ISO" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   Margin="0,0,0,20"/>
+        
+        <!-- Description -->
+        <TextBlock Grid.Row="1" 
+                   Text="This wizard will help you import a Windows ISO file into Bucket. You will be able to extract the Windows image and make it available for customization." 
+                   TextWrapping="Wrap" 
+                   Margin="0,0,0,30"/>
+        
+        <!-- ISO Selection -->
+        <TextBlock Grid.Row="2" 
+                   Text="Select Windows ISO File" 
+                   FontWeight="SemiBold" 
+                   FontSize="16" 
+                   Margin="0,0,0,10"/>
+        
+        <Grid Grid.Row="3" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox x:Name="ImportISO_DataSource_ISOPathTextBox" 
+                     Grid.Column="0" 
+                     Text="{Binding ISOSourcePath}" 
+                     Padding="8"
+                     IsReadOnly="True"
+                     Background="#F5F5F5"/>
+            
+            <Button x:Name="ImportISO_DataSource_BrowseISOButton"
+                    Grid.Column="1" 
+                    Content="Browse..." 
+                    Padding="8,5" 
+                    Margin="10,0,0,0"/>
+        </Grid>
+        
+        <!-- Output Directory -->
+        <TextBlock Grid.Row="4" 
+                   Text="Select Output Directory" 
+                   FontWeight="SemiBold" 
+                   FontSize="16" 
+                   Margin="0,0,0,10"/>
+        
+        <!-- Option to choose output location -->
+        <StackPanel Grid.Row="5" Margin="0,0,0,15">
+            <RadioButton x:Name="ImportISO_DataSource_UseDefaultLocation" 
+                         Margin="0,0,0,10"
+                         IsChecked="True"
+                         GroupName="OutputLocation" >
+                <TextBlock Text="{Binding DefaultLocationText}" TextWrapping="Wrap" />
+            </RadioButton>
+            
+            <RadioButton x:Name="ImportISO_DataSource_UseCustomLocation" 
+                         Content="Specify custom directory"
+                         Margin="0,0,0,10"
+                         IsChecked="False"
+                         GroupName="OutputLocation" />
+        </StackPanel>
+        
+        <!-- Custom directory selection (enabled only when UseCustomLocation is checked) -->
+        <Grid Grid.Row="6" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox x:Name="ImportISO_DataSource_OutputPathTextBox"
+                     Grid.Column="0" 
+                     Text="{Binding OutputPath}" 
+                     Padding="8"
+                     IsReadOnly="True"
+                     Background="#F5F5F5"
+                     IsEnabled="{Binding UseCustomLocation}"/>
+            
+            <Button x:Name="ImportISO_DataSource_BrowseOutputButton"
+                    Grid.Column="1" 
+                    Content="Browse..." 
+                    Padding="8,5" 
+                    Margin="10,0,0,0"
+                    IsEnabled="{Binding UseCustomLocation}"/>
+        </Grid>
+        
+        <!-- Information text -->
+        <TextBlock Grid.Row="7" 
+                  Text="Use the buttons below to navigate through the import process." 
+                  Foreground="#555555"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Bottom"
+                  Margin="0,0,0,5"
+                  FontStyle="Italic"/>
+    </Grid>
+</Page>
