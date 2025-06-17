@@ -60,9 +60,14 @@
 
         private async void InitializeApp()
         {
+            // Configure logger first thing
+            ConfigureLogger();
+            Logger.Information("Application starting - {ProductName} {Version}", ProcessInfoHelper.ProductName, ProcessInfoHelper.Version);
+
             var menuService = GetService<ContextMenuService>();
             if (menuService != null && RuntimeHelper.IsPackaged())
             {
+                Logger.Debug("Configuring context menu service");
                 ContextMenuItem menu = new ContextMenuItem
                 {
                     Title = "Open Bucket Here",
@@ -77,14 +82,19 @@
                 };
 
                 await menuService.SaveAsync(menu);
+                Logger.Information("Context menu configured successfully");
             }
-
-            if (Settings.UseDeveloperMode)
+            if (AppHelper.Settings.UseDeveloperMode)
             {
-                ConfigureLogger();
+                Logger.Information("Developer mode enabled");
             }
+            UnhandledException += (s, e) =>
+            {
+                Logger.Fatal(e.Exception, "Unhandled exception occurred");
+                Logger.Information("Application terminating due to unhandled exception");
+            };
 
-            UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
+            Logger.Information("Application initialization completed");
         }
     }
 

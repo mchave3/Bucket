@@ -26,19 +26,24 @@ namespace Bucket.ViewModels
 
         public AppUpdateSettingViewModel()
         {
+            Logger.Debug("AppUpdateSettingViewModel initialized");
             CurrentVersion = $"Current Version {ProcessInfoHelper.VersionWithPrefix}";
             LastUpdateCheck = Settings.LastUpdateCheck;
+            Logger.Information("Current version: {Version}, Last update check: {LastCheck}",
+                ProcessInfoHelper.Version, Settings.LastUpdateCheck);
         }
 
         [RelayCommand]
         private async Task CheckForUpdateAsync()
         {
+            Logger.Information("Starting update check");
             IsLoading = true;
             IsUpdateAvailable = false;
             IsCheckButtonEnabled = false;
             LoadingStatus = "Checking for new version";
             if (NetworkHelper.IsNetworkAvailable())
             {
+                Logger.Debug("Network is available, proceeding with update check");
                 try
                 {
                     //Todo: Fix UserName and Repo
@@ -46,6 +51,7 @@ namespace Bucket.ViewModels
                     string repo = "";
                     LastUpdateCheck = DateTime.Now.ToShortDateString();
                     Settings.LastUpdateCheck = DateTime.Now.ToShortDateString();
+                    Logger.Debug("Checking for updates from repository: {Username}/{Repo}", username, repo);
                     var update = await UpdateHelper.CheckUpdateAsync(username, repo, new Version(ProcessInfoHelper.Version));
                     if (update.StableRelease.IsExistNewVersion)
                     {
@@ -67,6 +73,7 @@ namespace Bucket.ViewModels
                 catch (Exception ex)
                 {
                     LoadingStatus = ex.Message;
+                    Logger.Error(ex, "Error occurred while checking for updates");
                     IsLoading = false;
                     IsCheckButtonEnabled = true;
                 }
@@ -74,6 +81,7 @@ namespace Bucket.ViewModels
             else
             {
                 LoadingStatus = "Error Connection";
+                Logger.Warning("Network is not available, cannot check for updates");
             }
             IsLoading = false;
             IsCheckButtonEnabled = true;

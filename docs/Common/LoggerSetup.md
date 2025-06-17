@@ -2,7 +2,14 @@
 
 ## Overview
 
-The `LoggerSetup` class provides centralized logging configuration for the Bucket application using the Serilog logging framework. It manages the creation and configuration of the application's primary logger instance with file and debug output capabilities.
+The `LoggerSetup` class provides centralized logging configuration and access using Serilog for the Bucket application. It implements structured logging with multiple sinks and automatic configuration based on application settings.
+
+**Key Features:**
+- Global logger access via static property
+- Automatic configuration based on developer mode
+- File logging with daily rotation
+- Structured logging with application metadata
+- Exception handling with fallback configuration
 
 ## Location
 
@@ -12,8 +19,40 @@ The `LoggerSetup` class provides centralized logging configuration for the Bucke
 ## Class Definition
 
 ```csharp
+/// <summary>
+/// Provides global logging configuration and access using Serilog
+/// </summary>
 public static partial class LoggerSetup
 ```
+
+## Properties
+
+### Logger
+```csharp
+public static ILogger Logger { get; private set; }
+```
+Global logger instance accessible throughout the application via global using statement.
+
+## Methods
+
+### ConfigureLogger()
+```csharp
+public static void ConfigureLogger()
+```
+Configures the global logger with appropriate sinks and settings based on application configuration.
+
+**Features:**
+- Automatic log level determination (Debug in developer mode, Information otherwise)
+- File logging with daily rotation (retains 7 days)
+- Debug output for development
+- Structured logging with application metadata
+- Exception handling with fallback configuration
+
+### CloseLogger()
+```csharp
+public static void CloseLogger()
+```
+Properly closes and flushes the logger to ensure all log entries are written.
 
 ## Dependencies
 
