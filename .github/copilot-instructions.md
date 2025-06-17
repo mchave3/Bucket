@@ -1,0 +1,261 @@
+# GitHub Copilot Instructions - Bucket Project
+
+## Project Overview
+
+**Bucket** is a modern Windows application developed with WinUI 3 and .NET 9, following the MVVM (Model-View-ViewModel) pattern.
+
+**Purpose**: Bucket is a Windows image management tool designed to provision updates in Windows images, automatically download updates according to WIM files, and manage Windows deployment scenarios.
+
+### Core Technologies
+- **Framework**: .NET 9 (net9.0-windows10.0.26100.0)
+- **UI Framework**: WinUI 3 (UseWinUI)
+- **Architecture**: MVVM with CommunityToolkit.Mvvm
+- **Target Platform**: Windows 10/11 (10.0.17763.0+)
+- **Supported Architectures**: x86, x64, ARM64
+
+## Project Structure
+
+```
+src/
+├── Views/           # XAML pages and controls
+├── ViewModels/      # MVVM ViewModels
+├── Models/          # Data models
+├── Common/          # Common utility classes
+├── Themes/          # Theme resources and styles
+├── T4Templates/     # T4 templates for code generation
+└── Assets/          # Resources (icons, images)
+```
+
+## Development Conventions
+
+### Naming
+- **Classes**: PascalCase (e.g., `MainViewModel`, `SettingsPage`)
+- **Methods/Properties**: PascalCase (e.g., `LoadData()`, `IsVisible`)
+- **Local variables**: camelCase (e.g., `userData`, `configPath`)
+- **Constants**: PascalCase (e.g., `DefaultTimeout`)
+
+### MVVM Architecture
+- Use `ObservableObject` from CommunityToolkit.Mvvm for ViewModels
+- Views should only contain UI logic
+- All business logic should be in ViewModels or Services
+- Use `[ObservableProperty]` for bindable properties
+- Use `[RelayCommand]` for commands
+
+### File Structure
+- **Views**: `PageName.xaml` + `PageName.xaml.cs`
+- **ViewModels**: `PageNameViewModel.cs`
+- **Services**: `ServiceName.cs` in appropriate folder
+
+### Global Usings and Imports
+- Avoid redundant using statements (use GlobalUsings.cs)
+- Prefer global access patterns where available
+- Access common utilities directly without namespace prefix
+
+## Patterns and Best Practices
+
+### ViewModels
+- Inherit from `ObservableObject` from CommunityToolkit.Mvvm
+- Use `[ObservableProperty]` for bindable properties
+- Use `[RelayCommand]` for commands
+- Follow async/await pattern for long-running operations
+
+### Resource Management
+- Use resource files in `Themes/`
+- Prefer `StaticResource` over `DynamicResource` when possible
+- Organize styles by functionality
+
+### Configuration and Logging
+- Use `AppConfig.cs` for configuration
+- Use `LoggerSetup.cs` for logging configuration
+- Refer to documentation in `docs/` for details
+
+## Project Specifics
+
+### Navigation
+- Navigation system is documented in `docs/Navigation-Bar-Management.md`
+- Use T4 templates to generate navigation mappings
+
+### Themes and Styling
+- Support for dark/light themes
+- Use Fluent Design System
+- Assets organized by category in `Assets/`
+
+### Configuration
+- `AppConfig.cs`: Global application configuration
+- `Constants.cs`: Shared constants
+- `AppHelper.cs`: Utility methods
+
+## Business Domain
+
+### Core Functionality
+Bucket specializes in Windows image management with the following key features:
+
+- **Image Provisioning**: Manage and provision updates in Windows images
+- **Automatic Updates**: Download updates automatically based on WIM file specifications
+- **WIM Management**: Handle Windows Imaging Format files for deployment scenarios
+- **Update Integration**: Seamlessly integrate Windows updates into existing images
+
+### Technical Context
+- Work with Windows Imaging APIs and tools
+- Handle large file operations (WIM files, update packages)
+- Manage Windows Update services and catalogs
+- Support offline and online image servicing
+- Integration with Windows deployment tools (DISM, etc.)
+
+### Data Models Expected
+- Image metadata and specifications
+- Update packages and dependencies
+- Download progress and status tracking
+- Configuration profiles for different deployment scenarios
+
+## Instructions for Copilot
+
+When generating code for this project:
+
+1. **Follow MVVM architecture**: Clearly separate UI logic from business logic
+2. **Use CommunityToolkit.Mvvm**: Prefer `[ObservableProperty]` and `[RelayCommand]` attributes
+3. **Follow naming conventions**: Use the established naming patterns in the project
+4. **Integrate with existing structure**: Use appropriate folders
+5. **Document complex code**: Add XML comments for public APIs
+6. **Handle errors**: Include appropriate error handling with logging
+7. **Respect existing patterns**: Observe how other classes are structured
+8. **Consider async operations**: Most Windows imaging operations are long-running
+9. **Handle large files**: WIM files and updates can be several GB in size
+10. **Progress reporting**: Always include progress tracking for long operations
+
+### Domain-Specific Guidelines
+
+When working with Windows imaging functionality:
+- Use async/await patterns for all file and network operations
+- Implement proper cancellation tokens for long-running tasks
+- Include progress reporting with `IProgress<T>` interface
+- Handle Windows-specific exceptions and error codes
+- Consider memory usage when working with large WIM files
+- Implement proper logging for troubleshooting deployment issues
+
+### Security & Permissions Guidelines
+- Handle administrator permissions requirements
+- Validate file paths to prevent directory traversal
+- Check disk space before large operations
+
+### Error Handling Standards
+- Handle Windows-specific errors (access denied, disk space, etc.)
+- Implement proper retry logic for network operations
+- Graceful degradation when operations fail
+
+## Logging Standards
+
+### Logger Usage
+- Use `LoggerSetup.Logger` for all logging operations
+- Access globally via `Logger` (thanks to global using statement)
+- Configure logging once at application startup using `LoggerSetup.ConfigureLogger()`
+
+### Log Levels and Usage
+- **Logger.Verbose()**: Extremely detailed trace information for debugging
+- **Logger.Debug()**: Detailed information for diagnosing problems during development
+- **Logger.Information()**: General application flow and important events
+- **Logger.Warning()**: Potentially harmful situations that don't stop execution
+- **Logger.Error()**: Error events that allow application to continue running
+- **Logger.Fatal()**: Critical errors that may cause application termination
+
+### Structured Logging Best Practices
+- Use named parameters for structured logging: `Logger.Information("User {UserId} started operation {Operation}", userId, operationName)`
+- Include relevant context in log messages
+- Log method entry/exit for critical operations
+- Always log exceptions with full context: `Logger.Error(ex, "Operation failed for {Context}", context)`
+
+### Required Logging Points
+- Application startup and shutdown
+- Configuration loading and changes
+- File operations (especially large files)
+- Network operations and downloads
+- Error conditions and recovery actions
+- Performance-critical operations with timing information
+- User-initiated actions in ViewModels
+
+## Documentation Standards
+
+### Automatic Documentation Generation
+
+For every class created or significantly modified, generate corresponding documentation in the `docs/` folder following this structure:
+
+#### File Naming Convention
+- **File Name**: `{ClassName}.md` (exact match with class name)
+- **Location**: Mirror the source code structure in `docs/`
+- **Examples**:
+  - `src/Common/AppConfig.cs` → `docs/Common/AppConfig.md`
+  - `src/ViewModels/MainViewModel.cs` → `docs/ViewModels/MainViewModel.md`
+  - `src/Views/Settings/SettingsPage.xaml.cs` → `docs/Views/Settings/SettingsPage.md`
+
+#### Mandatory Documentation Structure
+
+```markdown
+# [ClassName] Class Documentation
+
+## Overview
+Brief description of the class purpose and functionality.
+
+## Location
+- **File**: `src/[folder]/[ClassName].cs`
+- **Namespace**: `Bucket.[Namespace]`
+
+## Class Definition
+```csharp
+[access modifier] [partial] class [ClassName] [: base class, interfaces]
+```
+
+## [Context-Specific Sections]
+Choose relevant sections based on class type:
+- **Properties** (for data classes, ViewModels)
+- **Methods** (for service classes, utilities)
+- **Constants** (for constant classes)
+- **Commands** (for ViewModels)
+- **Events** (if applicable)
+
+## Usage Examples
+Practical code examples showing how to use the class.
+
+## Features
+Key features and capabilities of the class.
+
+## Dependencies
+External dependencies and related classes.
+
+## Related Files
+Links to related documentation using relative paths:
+- [`RelatedClass.md`](./RelatedClass.md)
+
+## Best Practices
+Guidelines for using the class effectively.
+
+## Error Handling
+Common error scenarios and handling approaches.
+```
+
+#### Section Guidelines
+
+1. **Always Include**: Overview, Location, Class Definition, Usage Examples, Dependencies, Related Files
+2. **Include When Relevant**: Features, Best Practices, Error Handling, Security Considerations, Performance Notes
+3. **Use Consistent Formatting**:
+   - Code blocks with proper syntax highlighting
+   - Property/method signatures in code format
+   - Clear section headers
+   - Descriptive examples
+
+#### Documentation Quality Standards
+
+- **Comprehensive**: Cover all public members and key functionality
+- **Practical Examples**: Include real-world usage scenarios
+- **Cross-References**: Link to related documentation files
+- **Code Samples**: Provide working code examples
+- **Consistent Style**: Follow the established template structure
+
+## Documentation
+
+Refer to files in `docs/` for more details:
+- `AppConfig.md`: Application configuration
+- `AppHelper.md`: Available utilities
+- `Constants.md`: Project constants
+- `LoggerSetup.md`: Logging configuration
+- `Logging-System.md`: Logging system
+- `Navigation-Bar-Management.md`: Navigation management
