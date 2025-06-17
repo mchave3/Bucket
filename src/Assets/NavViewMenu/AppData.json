@@ -1,0 +1,22 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/Ghost1372/DevWinUI/refs/heads/main/AppData.Schema.json",
+  "Groups": [
+    {
+      "UniqueId": "Bucket",
+      "Title": "Bucket",
+      "ImagePath": "ms-appx:///Assets/AppIcon.png",
+      "IsSpecialSection": false,
+      "ShowItemsWithoutGroup": true,
+      "IsExpanded": false,
+      "Items": [
+        {
+          "UniqueId": "Bucket.Views.HomeLandingPage",
+          "Title": "Bucket",
+          "Subtitle": "Bucket",
+          "ImagePath": "ms-appx:///Assets/AppIcon.png",
+          "HideItem": true
+        }
+      ]
+    }
+  ]
+}

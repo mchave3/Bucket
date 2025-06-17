@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket", "Bucket.csproj", "{3B92C780-177F-442A-9780-ACF7FAA0010D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Users\Mickaël\source\repos\Bucket\.editorconfig = ..\..\..\Users\Mickaël\source\repos\Bucket\.editorconfig
+		..\..\..\Users\Mickaël\source\repos\Bucket\.github\workflows\dotnet-release.yml = ..\..\..\Users\Mickaël\source\repos\Bucket\.github\workflows\dotnet-release.yml
+		..\..\..\Users\Mickaël\source\repos\Bucket\settings.xamlstyler = ..\..\..\Users\Mickaël\source\repos\Bucket\settings.xamlstyler
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x64.ActiveCfg = Debug|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x64.Build.0 = Debug|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x64.Deploy.0 = Debug|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x86.ActiveCfg = Debug|x86
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x86.Build.0 = Debug|x86
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Debug|x86.Deploy.0 = Debug|x86
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|ARM64.Build.0 = Release|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|ARM64.Deploy.0 = Release|ARM64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x64.ActiveCfg = Release|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x64.Build.0 = Release|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x64.Deploy.0 = Release|x64
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x86.ActiveCfg = Release|x86
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x86.Build.0 = Release|x86
+		{3B92C780-177F-442A-9780-ACF7FAA0010D}.Release|x86.Deploy.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4E733D1F-06ED-4C2E-A296-9E9419AE5250}
+	EndGlobalSection
+EndGlobal
