@@ -67,6 +67,156 @@ public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "A
 - **Structure**: `%APPDATA%\[ProductName][Version]\AppConfig.json`
 - **Usage**: Stores user preferences and application settings
 
+## ProgramData Directory Structure (Windows Image Management)
+
+### WorkingDirectoryPath
+
+```csharp
+public static readonly string WorkingDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Main working directory for Windows image operations
+- **Structure**: `C:\ProgramData\Bucket\`
+- **Usage**: Root directory for all image management operations
+
+### UpdatesDirectoryPath
+
+```csharp
+public static readonly string UpdatesDirectoryPath = Path.Combine(WorkingDirectoryPath, "Updates");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Storage for Windows update packages
+- **Structure**: `C:\ProgramData\Bucket\Updates\`
+- **Usage**: Downloaded Windows updates and patches
+
+### StagingDirectoryPath
+
+```csharp
+public static readonly string StagingDirectoryPath = Path.Combine(WorkingDirectoryPath, "Staging");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Temporary staging area for image operations
+- **Structure**: `C:\ProgramData\Bucket\Staging\`
+- **Usage**: Intermediate files during image processing
+
+### MountDirectoryPath
+
+```csharp
+public static readonly string MountDirectoryPath = Path.Combine(WorkingDirectoryPath, "Mount");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Mount points for WIM files
+- **Structure**: `C:\ProgramData\Bucket\Mount\`
+- **Usage**: DISM mount operations for image modification
+
+### CompletedWIMsDirectoryPath
+
+```csharp
+public static readonly string CompletedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "CompletedWIMs");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Storage for completed Windows images
+- **Structure**: `C:\ProgramData\Bucket\CompletedWIMs\`
+- **Usage**: Final processed WIM files ready for deployment
+
+### ImportedWIMsDirectoryPath
+
+```csharp
+public static readonly string ImportedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "ImportedWIMs");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Storage for imported source images
+- **Structure**: `C:\ProgramData\Bucket\ImportedWIMs\`
+- **Usage**: Original WIM files from ISOs or other sources
+
+### ConfigsDirectoryPath
+
+```csharp
+public static readonly string ConfigsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Configs");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Working directory configuration files
+- **Structure**: `C:\ProgramData\Bucket\Configs\`
+- **Usage**: WIMs.xml and other operational configurations
+
+### WorkingLogsDirectoryPath
+
+```csharp
+public static readonly string WorkingLogsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Logs");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Working directory operation logs
+- **Structure**: `C:\ProgramData\Bucket\Logs\`
+- **Usage**: Logs specific to image management operations
+
+## Configuration Files
+
+### WIMsConfigPath
+
+```csharp
+public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath, "WIMs.xml");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Windows image registry configuration file
+- **Structure**: `C:\ProgramData\Bucket\Configs\WIMs.xml`
+- **Usage**: Tracks imported and processed Windows images
+
+### WorkingLogFilePath
+
+```csharp
+public static readonly string WorkingLogFilePath = Path.Combine(WorkingLogsDirectoryPath, "Bucket.log");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Working directory operations log file
+- **Structure**: `C:\ProgramData\Bucket\Logs\Bucket.log`
+- **Usage**: Detailed logging of image management operations
+
+## System Requirements
+
+### MinimumDiskSpaceGB
+
+```csharp
+public const long MinimumDiskSpaceGB = 15;
+```
+
+- **Type**: `long`
+- **Access**: Public, Static, Const
+- **Purpose**: Minimum required free disk space in GB
+- **Value**: 15 GB
+- **Rationale**: Windows images and updates can be several GB in size
+
+### MinimumWindowsBuild
+
+```csharp
+public const int MinimumWindowsBuild = 17763;
+```
+
+- **Type**: `int`
+- **Access**: Public, Static, Const
+- **Purpose**: Minimum supported Windows build number
+- **Value**: 17763 (Windows 10 version 1809)
+- **Rationale**: Required for modern Windows imaging APIs
+
 ## Directory Structure
 
 The constants define the following directory hierarchy:

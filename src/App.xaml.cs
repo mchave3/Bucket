@@ -27,9 +27,7 @@
             // Enables Multicore JIT with the specified profile
             System.Runtime.ProfileOptimization.SetProfileRoot(Constants.RootDirectoryPath);
             System.Runtime.ProfileOptimization.StartProfile("Startup.Profile");
-        }
-
-        private static IServiceProvider ConfigureServices()
+        }        private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
             services.AddSingleton<IThemeService, ThemeService>();
@@ -40,6 +38,9 @@
             services.AddTransient<GeneralSettingViewModel>();
             services.AddTransient<AppUpdateSettingViewModel>();
             services.AddTransient<AboutUsSettingViewModel>();
+
+            // Pre-flight service
+            services.AddSingleton<PreFlightService>();
 
             return services.BuildServiceProvider();
         }
@@ -63,6 +64,48 @@
             // Configure logger first thing
             ConfigureLogger();
             Logger.Information("Application starting - {ProductName} {Version}", ProcessInfoHelper.ProductName, ProcessInfoHelper.Version);
+
+            // Run pre-flight checks
+            Logger.Information("Running pre-flight system checks...");
+            var preFlightService = GetService<PreFlightService>();
+            var preFlightResult = await preFlightService.RunPreFlightChecksAsync();
+
+            // Handle pre-flight results
+            if (!preFlightResult.AllCriticalChecksPassed)
+            {
+                var errorMessage = $"Pre-flight checks failed:\n\n{string.Join("\n", preFlightResult.ErrorMessages)}";
+                Logger.Fatal("Pre-flight checks failed, cannot start application");
+
+                // Show error dialog and exit
+                var dialog = new ContentDialog
+                {
+                    Title = "Bucket - Startup Failed",
+                    Content = errorMessage,
+                    CloseButtonText = "Exit",
+                    XamlRoot = MainWindow?.Content?.XamlRoot
+                };
+
+                await dialog.ShowAsync();
+                Application.Current.Exit();
+                return;
+            }
+
+            // Log warnings if any
+            if (preFlightResult.WarningMessages.Any())
+            {
+                Logger.Warning("Pre-flight warnings: {Warnings}", string.Join(", ", preFlightResult.WarningMessages));
+
+                // Optionally show warning dialog (non-blocking)
+                var warningDialog = new ContentDialog
+                {
+                    Title = "Bucket - System Warnings",
+                    Content = $"Some system checks generated warnings:\n\n{string.Join("\n", preFlightResult.WarningMessages)}\n\nThe application will continue to run, but some features may be limited.",
+                    PrimaryButtonText = "Continue",
+                    XamlRoot = MainWindow?.Content?.XamlRoot
+                };
+
+                _ = warningDialog.ShowAsync(); // Fire and forget
+            }
 
             var menuService = GetService<ContextMenuService>();
             if (menuService != null && RuntimeHelper.IsPackaged())
