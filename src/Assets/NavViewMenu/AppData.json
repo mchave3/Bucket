@@ -11,9 +11,9 @@
       "Items": [
         {
           "UniqueId": "Bucket.Views.HomeLandingPage",
-          "Title": "Bucket",
-          "Subtitle": "Bucket",
-          "ImagePath": "ms-appx:///Assets/AppIcon.png",
+          "Title": "Home",
+          "Subtitle": "Home Landing Page",
+          "IconGlyph": "\uE80F",
           "HideItem": true
         }
       ]
