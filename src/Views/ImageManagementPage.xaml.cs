@@ -12,8 +12,8 @@ public sealed partial class ImageManagementPage : Page
     /// <summary>
     /// Gets the ViewModel for this page.
     /// </summary>
-    public ImageManagementViewModel ViewModel => (ImageManagementViewModel)DataContext;    
-    
+    public ImageManagementViewModel ViewModel => (ImageManagementViewModel)DataContext;
+
     /// <summary>
     /// Initializes a new instance of the ImageManagementPage class.
     /// </summary>
@@ -21,7 +21,9 @@ public sealed partial class ImageManagementPage : Page
     {
         this.InitializeComponent();
         Logger.Information("ImageManagementPage initialized");
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Called when the page is navigated to.
     /// </summary>
     /// <param name="e">The navigation event arguments.</param>

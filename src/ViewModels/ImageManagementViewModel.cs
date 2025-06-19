@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Bucket.Models;
 using Bucket.Services;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 namespace Bucket.ViewModels;
 
@@ -398,7 +399,7 @@ public partial class ImageManagementViewModel : ObservableObject
     /// </summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="message">The error message.</param>
-    private static async Task ShowErrorDialogAsync(string title, string message)
+    private async Task ShowErrorDialogAsync(string title, string message)
     {
         var dialog = new ContentDialog
         {
@@ -407,8 +408,11 @@ public partial class ImageManagementViewModel : ObservableObject
             CloseButtonText = "OK"
         };
 
-        // TODO: Set XamlRoot when available
-        // dialog.XamlRoot = xamlRoot;
+        // Get XamlRoot from the main window
+        if (App.MainWindow?.Content is FrameworkElement element)
+        {
+            dialog.XamlRoot = element.XamlRoot;
+        }
 
         await dialog.ShowAsync();
     }
@@ -418,7 +422,7 @@ public partial class ImageManagementViewModel : ObservableObject
     /// </summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="message">The information message.</param>
-    private static async Task ShowInfoDialogAsync(string title, string message)
+    private async Task ShowInfoDialogAsync(string title, string message)
     {
         var dialog = new ContentDialog
         {
@@ -426,6 +430,12 @@ public partial class ImageManagementViewModel : ObservableObject
             Content = message,
             CloseButtonText = "OK"
         };
+
+        // Get XamlRoot from the main window
+        if (App.MainWindow?.Content is FrameworkElement element)
+        {
+            dialog.XamlRoot = element.XamlRoot;
+        }
 
         await dialog.ShowAsync();
     }
@@ -436,7 +446,7 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <param name="title">The dialog title.</param>
     /// <param name="message">The confirmation message.</param>
     /// <returns>True if the user confirmed, false otherwise.</returns>
-    private static async Task<bool> ShowConfirmationDialogAsync(string title, string message)
+    private async Task<bool> ShowConfirmationDialogAsync(string title, string message)
     {
         var dialog = new ContentDialog
         {
@@ -446,6 +456,12 @@ public partial class ImageManagementViewModel : ObservableObject
             SecondaryButtonText = "No",
             DefaultButton = ContentDialogButton.Secondary
         };
+
+        // Get XamlRoot from the main window
+        if (App.MainWindow?.Content is FrameworkElement element)
+        {
+            dialog.XamlRoot = element.XamlRoot;
+        }
 
         var result = await dialog.ShowAsync();
         return result == ContentDialogResult.Primary;
