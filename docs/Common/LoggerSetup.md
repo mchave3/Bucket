@@ -163,6 +163,7 @@ Serilog.Log.Logger = Logger;
 - **Rolling**: Daily log file rotation (`RollingInterval.Day`)
 - **Retention**: Keeps last 7 days of log files (`retainedFileCountLimit: 7`)
 - **Custom Template**: Detailed timestamp format with timezone information
+- **Framework Overrides**: Microsoft and System components limited to Warning level
 
 **Debug Output**:
 - Structured output format for development
@@ -246,10 +247,10 @@ Logger.Fatal("Critical system failure");
 ### File Location
 
 ```
-%APPDATA%\[ProductName][Version]\Log\
-├── Log20250617.txt
-├── Log20250618.txt
-└── Log20250619.txt
+%PROGRAMDATA%\Bucket\Logs\
+├── Bucket20250617.log
+├── Bucket20250618.log
+└── Bucket20250619.log
 ```
 
 ## Configuration Best Practices

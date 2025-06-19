@@ -63,7 +63,7 @@ public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "A
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Full path to the application configuration JSON file
-- **Structure**: `%APPDATA%\[ProductName][Version]\AppConfig.json`
+- **Structure**: `%PROGRAMDATA%\Bucket\AppConfig.json`
 - **Usage**: Stores user preferences and application settings
 
 ## ProgramData Directory Structure (Windows Image Management)
@@ -95,7 +95,7 @@ public static readonly string StagingDirectoryPath = Path.Combine(RootDirectoryP
 ### MountDirectoryPath
 
 ```csharp
-public static readonly string MountDirectoryPath = Path.Combine(WorkingDirectoryPath, "Mount");
+public static readonly string MountDirectoryPath = Path.Combine(RootDirectoryPath, "Mount");
 ```
 
 - **Type**: `string`

@@ -79,7 +79,7 @@ bool devMode = Settings.UseDeveloperMode;
 ## Configuration File Location
 The configuration is stored as JSON in the path defined by `Constants.AppConfigPath`, typically:
 ```
-%APPDATA%/[AppName]/AppConfig.json
+%PROGRAMDATA%/Bucket/AppConfig.json
 ```
 
 ---
