@@ -123,6 +123,10 @@ When generating code for this project:
 9. **Handle large files**: WIM files and updates can be several GB in size
 10. **Progress reporting**: Always include progress tracking for long operations
 
+11. **Language**: All code and comments must be written in English.
+12. **Documentation Awareness**: When analyzing code for context, always check if related documentation already exists in the `docs/` folder and use it to complement your understanding of the code.
+13. **Documentation Language**: All generated documentation (Markdown files) must be written in English.
+
 ### Domain-Specific Guidelines
 
 When working with Windows imaging functionality:
