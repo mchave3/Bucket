@@ -16,7 +16,8 @@ public partial class AppConfig : NotifiyingJsonSettings, IVersionable
 
     // Pre-flight and system configuration
     private bool preFlightCompleted { get; set; } = false;
-    private DateTime lastPreFlightCheck { get; set; } = DateTime.MinValue;    private bool skipAdminCheck { get; set; } = false;
+    private DateTime lastPreFlightCheck { get; set; } = DateTime.MinValue;
+    private bool skipAdminCheck { get; set; } = false;
     private bool skipDiskSpaceCheck { get; set; } = false;
     private string customWorkingDirectory { get; set; } = "";
 
