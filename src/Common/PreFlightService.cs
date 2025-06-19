@@ -44,10 +44,6 @@ public class PreFlightService
             // Configuration checks - these auto-repair
             Logger.Information("---------- Configuration Setup ----------");
             result.ConfigFiles = await CreateConfigurationFilesAsync();
-            result.LoggingSystem = InitializeWorkingLoggingSystem();
-
-            // Migrate existing configuration if needed
-            await MigrateExistingConfigurationAsync();
 
         }
         catch (Exception ex)
@@ -142,7 +138,7 @@ public class PreFlightService
 
             var directoryNames = new[]
             {
-                "Working Directory",
+                "Bucket Data Directory",
                 "Updates",
                 "Staging",
                 "Mount",
@@ -571,60 +567,6 @@ public class PreFlightService
             Logger.Error(ex, "Failed to create configuration files");
             _errorMessages.Add($"Failed to create configuration files: {ex.Message}");
             return false;
-        }
-    }
-
-    /// <summary>
-    /// Initializes the working directory logging system.
-    /// </summary>
-    private bool InitializeWorkingLoggingSystem()
-    {
-        try
-        {            // Ensure the logs directory exists
-            if (!Directory.Exists(Constants.LogDirectoryPath))
-            {
-                Directory.CreateDirectory(Constants.LogDirectoryPath);
-            }
-
-            Logger.Information("Bucket application initialized - Pre-flight checks completed");
-            Logger.Information("Working directory logging system initialized");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.Warning(ex, "Could not initialize working directory logging");
-            _warningMessages.Add($"Could not initialize working directory logging: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Migrates existing configuration from AppData to ProgramData if needed.
-    /// </summary>
-    private Task MigrateExistingConfigurationAsync()
-    {
-        try
-        {
-            if (AppHelper.Settings.ConfigMigratedToProgramData)
-            {
-                Logger.Debug("Configuration migration already completed");
-                return Task.CompletedTask;
-            }
-
-            // Check if there are any existing configuration files to migrate
-            // This could include user preferences, custom paths, etc.
-
-            Logger.Information("Configuration migration to ProgramData structure completed");
-            AppHelper.Settings.ConfigMigratedToProgramData = true;
-            AppHelper.Settings.LastMigrationVersion = ProcessInfoHelper.Version;
-
-            return Task.CompletedTask;
-        }
-        catch (Exception ex)
-        {
-            Logger.Warning(ex, "Error during configuration migration");
-            _warningMessages.Add($"Configuration migration warning: {ex.Message}");
-            return Task.CompletedTask;
         }
     }
 

@@ -46,8 +46,7 @@ namespace Bucket.Models;
         public bool WindowsServices { get; set; }
 
         /// <summary>
-        /// Indicates whether network connectivity to Microsoft servers is available.
-        /// </summary>
+        /// Indicates whether network connectivity to Microsoft servers is available.        /// </summary>
         public bool NetworkConnectivity { get; set; }
 
         #endregion
@@ -58,11 +57,6 @@ namespace Bucket.Models;
         /// Indicates whether configuration files were created or repaired successfully.
         /// </summary>
         public bool ConfigFiles { get; set; }
-
-        /// <summary>
-        /// Indicates whether the logging system was initialized successfully.
-        /// </summary>
-        public bool LoggingSystem { get; set; }
 
         #endregion
 
@@ -109,11 +103,10 @@ namespace Bucket.Models;
         /// <summary>
         /// Collection of detailed error messages from the pre-flight checks.
         /// </summary>
-        public List<string> ErrorMessages { get; set; } = new List<string>();
-
-        /// <summary>
+        public List<string> ErrorMessages { get; set; } = new List<string>();        /// <summary>
         /// Collection of warning messages from the pre-flight checks.
         /// </summary>
         public List<string> WarningMessages { get; set; } = new List<string>();
-          #endregion
+
+        #endregion
     }

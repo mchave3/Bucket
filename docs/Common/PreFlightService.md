@@ -85,14 +85,8 @@ The pre-flight service ensures that:
 - **Purpose**: Creates or repairs configuration files
 - **Files Managed**:
   - `WIMs.xml` - Windows image registry
-  - Working directory log files
 - **Validation**: XML structure verification
 - **Recovery**: Corrupted files are backed up and recreated
-
-#### 10. Configuration Migration
-- **Purpose**: Migrates settings from previous versions
-- **Tracking**: Records migration status and version
-- **Safety**: Preserves existing user preferences
 
 ## Usage
 
@@ -135,8 +129,6 @@ if (!result.AllCriticalChecksPassed)
 The service updates configuration tracking properties:
 - `PreFlightCompleted` - Whether checks passed
 - `LastPreFlightCheck` - Timestamp of last check
-- `ConfigMigratedToProgramData` - Migration status
-- `LastMigrationVersion` - Version that performed migration
 
 ### Skip Options
 Debug/testing skip options available:

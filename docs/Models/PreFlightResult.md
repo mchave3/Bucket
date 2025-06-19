@@ -95,9 +95,7 @@ public bool ConfigFiles { get; set; }
 - **Purpose**: Indicates whether configuration files were created or repaired successfully
 - **Critical**: Auto-repair - Issues are resolved automatically
 
-#### LoggingSystem
-```csharp
-public bool LoggingSystem { get; set; }
+### Summary Properties
 ```
 - **Type**: `bool`
 - **Purpose**: Indicates whether the logging system was initialized successfully
