@@ -320,3 +320,7 @@ AppHelper.Settings.LastPreFlightCheck = DateTime.Now;
 - **Privilege Escalation**: Handle UAC prompts gracefully
 - **File Access**: Validate all file system operations
 - **Network Requests**: Use secure protocols for connectivity tests
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.

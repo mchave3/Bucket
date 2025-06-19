@@ -273,3 +273,7 @@ This legacy system demonstrates the evolution from PowerShell-based WPF navigati
 - T4 templates allow for automated page discovery and mapping
 - The service-based architecture supports easy testing and maintenance
 - Schema validation ensures navigation configuration integrity
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.

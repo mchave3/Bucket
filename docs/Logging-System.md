@@ -52,18 +52,18 @@ This allows any part of the application to use `Logger?.Error()`, `Logger?.Info(
 ```csharp
 public static partial class Constants
 {
-    public static readonly string RootDirectoryPath = Path.Combine(PathHelper.GetAppDataFolderPath(), ProcessInfoHelper.ProductNameAndVersion);
-    public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Log");
-    public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Log.txt");
+    public static readonly string RootDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
+    public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
+    public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Bucket.log");
     public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "AppConfig.json");
 }
 ```
 
 #### Default Log Locations
 
-- **Root Directory**: `%AppData%/Bucket/{Version}/`
-- **Log Directory**: `%AppData%/Bucket/{Version}/Log/`
-- **Log File**: `%AppData%/Bucket/{Version}/Log/Log.txt`
+- **Root Directory**: `%ProgramData%/Bucket/`
+- **Log Directory**: `%ProgramData%/Bucket/Logs/`
+- **Log File**: `%ProgramData%/Bucket/Logs/Bucket.log`
 
 ### 3. Conditional Logging (Developer Mode)
 
@@ -141,7 +141,7 @@ private async void NavigateToLogPath_Click(object sender, RoutedEventArgs e)
 
 #### File Logging
 - **Rolling Interval**: Daily rotation (`RollingInterval.Day`)
-- **File Path**: `%AppData%/Bucket/{Version}/Log/Log.txt`
+- **File Path**: `%ProgramData%/Bucket/Logs/Bucket.log`
 - **Format**: Plain text with timestamps
 
 #### Debug Output
@@ -307,7 +307,7 @@ Using null-conditional operators ensures the application continues to function e
 #### Manual Access
 - Settings page provides direct link to log directory
 - Users can easily access logs for troubleshooting
-- Logs are stored in standard AppData location
+- Logs are stored in standard ProgramData location
 
 ### 2. Performance Considerations
 
@@ -327,7 +327,7 @@ Using null-conditional operators ensures the application continues to function e
 
 #### Logging Not Working
 1. Check if Developer Mode is enabled in settings
-2. Verify application has write permissions to AppData
+2. Verify application has write permissions to ProgramData
 3. Restart application after enabling Developer Mode
 
 #### Log Files Not Created
@@ -338,7 +338,7 @@ Using null-conditional operators ensures the application continues to function e
 ### 2. Log Analysis
 
 #### Log Location
-Navigate to: `%AppData%/Bucket/{Version}/Log/`
+Navigate to: `%ProgramData%/Bucket/Logs/`
 
 #### File Format
 - **Text Format**: Human-readable log entries
@@ -360,3 +360,7 @@ Navigate to: `%AppData%/Bucket/{Version}/Log/`
 2. **Crash Reporting**: Automatic crash report generation
 3. **Telemetry**: Optional telemetry data collection
 4. **Support Tools**: Integration with support ticket systems
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.

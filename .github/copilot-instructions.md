@@ -234,6 +234,10 @@ Guidelines for using the class effectively.
 
 ## Error Handling
 Common error scenarios and handling approaches.
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.
 ```
 
 #### Section Guidelines

@@ -75,6 +75,68 @@ private string lastUpdateCheck { get; set; }
 - **Purpose**: Stores the timestamp of the last update check
 - **Format**: Typically ISO date string
 
+### preFlightCompleted
+
+```csharp
+private bool preFlightCompleted { get; set; } = false;
+```
+
+- **Type**: `bool`
+- **Access**: Private
+- **Purpose**: Indicates if pre-flight system checks have been completed successfully
+- **Default**: `false`
+- **Usage**: Prevents repeated system validation on startup
+
+### lastPreFlightCheck
+
+```csharp
+private DateTime lastPreFlightCheck { get; set; } = DateTime.MinValue;
+```
+
+- **Type**: `DateTime`
+- **Access**: Private
+- **Purpose**: Timestamp of last successful pre-flight check
+- **Default**: `DateTime.MinValue`
+- **Usage**: Determines when to re-run system validation
+
+### skipAdminCheck
+
+```csharp
+private bool skipAdminCheck { get; set; } = false;
+```
+
+- **Type**: `bool`
+- **Access**: Private
+- **Purpose**: Bypasses administrator privilege verification during pre-flight
+- **Default**: `false`
+- **Usage**: Development and testing scenarios
+- **Warning**: Should only be used in controlled environments
+
+### skipDiskSpaceCheck
+
+```csharp
+private bool skipDiskSpaceCheck { get; set; } = false;
+```
+
+- **Type**: `bool`
+- **Access**: Private
+- **Purpose**: Bypasses disk space validation during pre-flight
+- **Default**: `false`
+- **Usage**: Development environments with limited disk space
+- **Warning**: May cause operations to fail if insufficient disk space
+
+### customWorkingDirectory
+
+```csharp
+private string customWorkingDirectory { get; set; } = "";
+```
+
+- **Type**: `string`
+- **Access**: Private
+- **Purpose**: Override default ProgramData working directory
+- **Default**: Empty string (uses default from Constants)
+- **Usage**: Custom deployment scenarios or alternative storage locations
+
 ## Features
 
 ### Automatic Persistence
@@ -131,7 +193,12 @@ The configuration is serialized to JSON with the following structure:
   "Version": "1.0.0.0",
   "fileName": "C:\\ProgramData\\Bucket\\AppConfig.json",
   "useDeveloperMode": false,
-  "lastUpdateCheck": "2025-06-17T10:30:00.000Z"
+  "lastUpdateCheck": "2025-06-17T10:30:00.000Z",
+  "preFlightCompleted": false,
+  "lastPreFlightCheck": "0001-01-01T00:00:00",
+  "skipAdminCheck": false,
+  "skipDiskSpaceCheck": false,
+  "customWorkingDirectory": ""
 }
 ```
 
@@ -184,3 +251,7 @@ public partial class AppConfig
 - Sensitive settings should be encrypted before storage
 - File permissions should restrict access to the configuration file
 - Consider separate configuration files for sensitive vs. non-sensitive data
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.

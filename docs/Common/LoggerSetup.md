@@ -49,10 +49,30 @@ Configures the global logger with appropriate sinks and settings based on applic
 - Exception handling with fallback configuration
 
 ### CloseLogger()
+
 ```csharp
 public static void CloseLogger()
 ```
-Properly closes and flushes the logger to ensure all log entries are written.
+
+- **Access**: Public, Static
+- **Purpose**: Properly closes and flushes the logger to ensure all log entries are written
+- **Returns**: `void`
+- **Usage**: Call during application shutdown to ensure log data integrity
+
+#### Implementation Details
+
+```csharp
+public static void CloseLogger()
+{
+    Logger?.Information("Shutting down logger");
+    Serilog.Log.CloseAndFlush();
+}
+```
+
+**Process**:
+1. Logs a final shutdown message
+2. Calls `Serilog.Log.CloseAndFlush()` to ensure all buffered log entries are written
+3. Properly releases log file handles
 
 ## Dependencies
 
@@ -100,25 +120,54 @@ The method performs the following setup:
 #### Logger Configuration
 
 ```csharp
+// Determine log level based on developer mode
+var logLevel = AppHelper.Settings.UseDeveloperMode
+    ? LogEventLevel.Debug
+    : LogEventLevel.Information;
+
+// Configure logger
 Logger = new LoggerConfiguration()
+    .MinimumLevel.Is(logLevel)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.WithProperty("Application", ProcessInfoHelper.ProductName)
     .Enrich.WithProperty("Version", ProcessInfoHelper.Version)
-    .WriteTo.File(Constants.LogFilePath, rollingInterval: RollingInterval.Day)
-    .WriteTo.Debug()
+    .Enrich.WithProperty("MachineName", Environment.MachineName)
+    .Enrich.WithProperty("UserName", Environment.UserName)
+    .WriteTo.File(
+        Constants.LogFilePath,
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+    )
+    .WriteTo.Debug(outputTemplate: "[{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
+
+// Set as global logger
+Serilog.Log.Logger = Logger;
 ```
 
-**Enrichment**:
-- Adds `Version` property to all log entries
-- Uses `ProcessInfoHelper.Version` for current application version
+**Dynamic Log Levels**:
+- **Developer Mode**: `LogEventLevel.Debug` (detailed logging)
+- **Production Mode**: `LogEventLevel.Information` (normal logging)
+- **Framework Overrides**: Microsoft and System components limited to Warning level
 
-**File Output**:
+**Enhanced Enrichment**:
+- `Application`: Application name from ProcessInfoHelper
+- `Version`: Current application version
+- `MachineName`: Name of the machine running the application
+- `UserName`: Current user name for troubleshooting
+
+**Advanced File Output**:
 - **Path**: Defined by `Constants.LogFilePath`
 - **Rolling**: Daily log file rotation (`RollingInterval.Day`)
-- **Format**: Default Serilog text format
+- **Retention**: Keeps last 7 days of log files (`retainedFileCountLimit: 7`)
+- **Custom Template**: Detailed timestamp format with timezone information
 
 **Debug Output**:
-- Writes to debug console (visible in Visual Studio Output window)
-- Useful for development and debugging
+- Structured output format for development
+- Visible in Visual Studio Output window
+- Consistent formatting with file output
 
 ## Usage Examples
 
@@ -371,3 +420,7 @@ public void Logger_WriteToFile_CreatesLogFile()
     Assert.That(File.Exists(Constants.LogFilePath), Is.True);
 }
 ```
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.

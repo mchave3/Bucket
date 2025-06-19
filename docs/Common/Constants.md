@@ -347,3 +347,7 @@ public static bool ValidatePaths()
 - **Static ReadOnly**: Computed once at application startup
 - **No Runtime Computation**: Paths calculated during static initialization
 - **Memory Efficient**: Single string instances shared across application
+
+---
+
+**Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.
