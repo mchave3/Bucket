@@ -120,10 +120,17 @@
                 VerticalAlignment="Center" />
         </Grid>
 
-        <!-- Main Content -->
+        <!-- Main Content - Master-Detail Layout -->
         <Grid Grid.Row="2" Margin="24,0,24,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MinWidth="300" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
             <!-- Loading Indicator -->
             <StackPanel
+                Grid.ColumnSpan="3"
                 Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -137,6 +144,7 @@
 
             <!-- Empty State -->
             <StackPanel
+                Grid.ColumnSpan="3"
                 Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Reverse}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
@@ -164,130 +172,326 @@
                     Margin="0,16,0,0" />
             </StackPanel>
 
-            <!-- Images List -->
-            <ListView
-                x:Name="ImagesListView"
-                ItemsSource="{Binding FilteredImages}"
-                SelectedItem="{Binding SelectedImage, Mode=TwoWay}"
-                Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}"
-                SelectionMode="Single">
+            <!-- Master Panel - Images List -->
+            <Grid Grid.Column="0" Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="models:WindowsImageInfo">
-                        <Grid Margin="0,8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                <!-- Master Header -->
+                <Border
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4,4,0,0"
+                    Padding="16,12">
+                    <TextBlock
+                        Text="Windows Images"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                </Border>
 
-                            <!-- Image Icon -->
-                            <Border
-                                Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"
-                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="4"
-                                Width="48" Height="48"
-                                Margin="0,0,16,0"
-                                VerticalAlignment="Top">
-                                <FontIcon
-                                    Glyph="&#xE7C3;"
-                                    FontSize="24"
-                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                            </Border>
+                <!-- Images List -->
+                <ListView
+                    x:Name="ImagesListView"
+                    Grid.Row="1"
+                    ItemsSource="{Binding FilteredImages}"
+                    SelectedItem="{Binding SelectedImage, Mode=TwoWay}"
+                    SelectionMode="Single"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,0,1,1"
+                    CornerRadius="0,0,4,4">
 
-                            <!-- Image Information -->
-                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
-                                <TextBlock
-                                    Text="{x:Bind Name}"
-                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:WindowsImageInfo">
+                            <Grid Margin="8" Padding="12" Background="{ThemeResource SubtleFillColorTransparentBrush}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
 
-                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                <!-- Image Icon -->
+                                <Border
+                                    Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                    Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                    CornerRadius="4"
+                                    Width="40" Height="40"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Top">
+                                    <FontIcon
+                                        Glyph="&#xE7C3;"
+                                        FontSize="20"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                </Border>
+
+                                <!-- Image Information -->
+                                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="2">
                                     <TextBlock
-                                        Text="{x:Bind ImageTypeDisplay}"
-                                        Style="{StaticResource CaptionTextBlockStyle}"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBlock
-                                        Text="{x:Bind FormattedFileSize}"
-                                        Style="{StaticResource CaptionTextBlockStyle}"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        Text="{x:Bind Name}"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock
+                                            Text="{x:Bind ImageTypeDisplay}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock
+                                            Text="{x:Bind FormattedFileSize}"
+                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Indices Count -->
+                                <Border
+                                    Grid.Row="1" Grid.Column="1"
+                                    Background="{ThemeResource AccentFillColorSecondaryBrush}"
+                                    CornerRadius="2"
+                                    Padding="6,2"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,4,0,0">
                                     <TextBlock
                                         Text="{x:Bind IncludedIndicesSummary}"
                                         Style="{StaticResource CaptionTextBlockStyle}"
                                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                </Border>
+
+                                <!-- File Path -->
+                                <TextBlock
+                                    Grid.Row="2" Grid.Column="1"
+                                    Text="{x:Bind FilePath}"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Margin="0,4,0,0"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Splitter -->
+            <Border
+                Grid.Column="1"
+                Width="1"
+                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                Margin="12,0"
+                Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+            <!-- Detail Panel - Selected Image Details -->
+            <Grid Grid.Column="2" Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Detail Header -->
+                <Border
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4,4,0,0"
+                    Padding="16,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="{Binding SelectedImageDisplayName}"
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            TextTrimming="CharacterEllipsis" />
+
+                        <Button
+                            Grid.Column="1"
+                            Content="Actions"
+                            Command="{Binding ViewImageDetailsCommand}"
+                            CommandParameter="{Binding SelectedImage}"
+                            Style="{StaticResource DefaultButtonStyle}"
+                            IsEnabled="{Binding SelectedImage, Converter={StaticResource ObjectToBooleanConverter}}"
+                            Margin="8,0,0,0">
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Detail Content -->
+                <ScrollViewer
+                    Grid.Row="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,0,1,1"
+                    CornerRadius="0,0,4,4"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+
+                    <StackPanel Margin="16" Spacing="16">
+                        <!-- No Selection State -->
+                        <StackPanel
+                            Visibility="{Binding SelectedImage, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Reverse}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12">
+                            <FontIcon
+                                Glyph="&#xE7C3;"
+                                FontSize="32"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock
+                                Text="Select an image to view details"
+                                Style="{StaticResource BodyTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                HorizontalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Selected Image Details -->
+                        <StackPanel
+                            Visibility="{Binding SelectedImage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Spacing="16">
+
+                            <!-- Image Properties -->
+                            <StackPanel Spacing="8">
+                                <TextBlock
+                                    Text="Image Properties"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Type:" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedImage.ImageTypeDisplay}" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Size:" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedImage.FormattedFileSize}" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Created:" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedImage.CreatedDate}" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Modified:" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,8,4" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedImage.ModifiedDate}" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Path:" Style="{StaticResource CaptionTextBlockStyle}" Margin="0,0,8,0" VerticalAlignment="Top" />
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedImage.FilePath}" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- Windows Editions -->
+                            <StackPanel Spacing="8">
+                                <TextBlock
+                                    Text="Windows Editions"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+                                <ItemsControl ItemsSource="{Binding SelectedImage.Indices}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="models:WindowsImageIndex">
+                                            <Border
+                                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="12"
+                                                Margin="0,0,0,8">
+
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+
+                                                    <!-- Edition Name -->
+                                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                                                        <Border
+                                                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                            CornerRadius="2"
+                                                            Padding="4,2">
+                                                            <TextBlock
+                                                                Text="{x:Bind DisplayText}"
+                                                                Style="{StaticResource CaptionTextBlockStyle}"
+                                                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                                FontWeight="SemiBold" />
+                                                        </Border>
+                                                        <TextBlock
+                                                            Text="{x:Bind Name}"
+                                                            Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                                    </StackPanel>
+
+                                                    <!-- Edition Details -->
+                                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+                                                        <TextBlock
+                                                            Text="{x:Bind Architecture}"
+                                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <TextBlock
+                                                            Text="{x:Bind FormattedSize}"
+                                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    </StackPanel>
+
+                                                    <!-- Edition Description -->
+                                                    <TextBlock
+                                                        Grid.Row="2"
+                                                        Text="{x:Bind Description}"
+                                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                        TextWrapping="Wrap"
+                                                        Margin="0,4,0,0" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- Actions -->
+                            <StackPanel Spacing="8">
+                                <TextBlock
+                                    Text="Actions"
+                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+                                <StackPanel Spacing="8">
+                                    <Button
+                                        Content="Extract Selected Editions"
+                                        Command="{Binding ExtractSelectedIndicesCommand}"
+                                        IsEnabled="False"
+                                        HorizontalAlignment="Stretch">
+                                    </Button>
+                                    <Button
+                                        Content="Mount Image"
+                                        Command="{Binding MountImageCommand}"
+                                        IsEnabled="False"
+                                        HorizontalAlignment="Stretch">
+                                    </Button>
+                                    <Button
+                                        Content="Validate Integrity"
+                                        Command="{Binding ValidateImageCommand}"
+                                        IsEnabled="False"
+                                        HorizontalAlignment="Stretch">
+                                    </Button>
                                 </StackPanel>
                             </StackPanel>
-
-                            <!-- Action Buttons -->
-                            <StackPanel
-                                Grid.Row="0" Grid.Column="2"
-                                Orientation="Horizontal"
-                                Spacing="8"
-                                VerticalAlignment="Top">
-                                <Button
-                                    Content="Details"
-                                    Command="{Binding DataContext.ViewImageDetailsCommand, ElementName=ImagesListView}"
-                                    CommandParameter="{x:Bind}"
-                                    Style="{StaticResource DefaultButtonStyle}">
-                                </Button>
-                            </StackPanel>
-
-                            <!-- File Path -->
-                            <TextBlock
-                                Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                                Text="{x:Bind FilePath}"
-                                Style="{StaticResource CaptionTextBlockStyle}"
-                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                Margin="0,4,0,0"
-                                TextTrimming="CharacterEllipsis" />
-
-                            <!-- Indices Preview -->
-                            <ItemsControl
-                                Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                                ItemsSource="{x:Bind Indices}"
-                                Margin="0,8,0,0">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Vertical" Spacing="2" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:WindowsImageIndex">
-                                        <Border
-                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                            CornerRadius="2"
-                                            Padding="8,4"
-                                            HorizontalAlignment="Left">
-
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock
-                                                    Text="{x:Bind DisplayText}"
-                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                                <TextBlock
-                                                    Text="{x:Bind Name}"
-                                                    Style="{StaticResource CaptionTextBlockStyle}" />
-                                                <TextBlock
-                                                    Text="{x:Bind Architecture}"
-                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                <TextBlock
-                                                    Text="{x:Bind FormattedSize}"
-                                                    Style="{StaticResource CaptionTextBlockStyle}"
-                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </Grid>
 
         <!-- Status Bar and Actions -->

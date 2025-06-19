@@ -16,6 +16,8 @@ namespace Bucket.ViewModels;
 public partial class ImageManagementViewModel : ObservableObject
 {
     private readonly WindowsImageService _windowsImageService;
+    private readonly FilePickerService _filePickerService;
+    private readonly IsoImportService _isoImportService;
 
     private ObservableCollection<WindowsImageInfo> _images = new();
     private WindowsImageInfo _selectedImage;
@@ -99,19 +101,31 @@ public partial class ImageManagementViewModel : ObservableObject
         FilteredImages.Count == 1 ? "1 image" : $"{FilteredImages.Count} images";
 
     /// <summary>
+    /// Gets the display name for the selected image or a default message.
+    /// </summary>
+    public string SelectedImageDisplayName =>
+        SelectedImage?.Name ?? "No image selected";
+
+    /// <summary>
     /// Initializes a new instance of the ImageManagementViewModel class.
     /// </summary>
     public ImageManagementViewModel()
     {
         _windowsImageService = new WindowsImageService();
+        _filePickerService = new FilePickerService();
+        _isoImportService = new IsoImportService();
 
         // Initialize commands
         RefreshCommand = new AsyncRelayCommand(RefreshImagesAsync);
         ImportFromIsoCommand = new AsyncRelayCommand(ImportFromIsoAsync);
-        ImportFromWimCommand = new AsyncRelayCommand(ImportFromWimAsync);
-        DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedImageAsync, CanDeleteSelected);
+        ImportFromWimCommand = new AsyncRelayCommand(ImportFromWimAsync); DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedImageAsync, CanDeleteSelected);
         DeleteSelectedFromDiskCommand = new AsyncRelayCommand(DeleteSelectedImageFromDiskAsync, CanDeleteSelected);
         ViewImageDetailsCommand = new RelayCommand<WindowsImageInfo>(ViewImageDetails);
+
+        // Placeholder commands for detail panel
+        ExtractSelectedIndicesCommand = new RelayCommand(() => { /* TODO: Implement */ });
+        MountImageCommand = new RelayCommand(() => { /* TODO: Implement */ });
+        ValidateImageCommand = new RelayCommand(() => { /* TODO: Implement */ });
 
         // Watch for property changes
         PropertyChanged += OnPropertyChanged;
@@ -144,12 +158,25 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <summary>
     /// Gets the command to delete the selected image from both list and disk.
     /// </summary>
-    public ICommand DeleteSelectedFromDiskCommand { get; }
-
-    /// <summary>
+    public ICommand DeleteSelectedFromDiskCommand { get; }    /// <summary>
     /// Gets the command to view detailed information about an image.
     /// </summary>
     public ICommand ViewImageDetailsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to extract selected indices from an image.
+    /// </summary>
+    public ICommand ExtractSelectedIndicesCommand { get; }
+
+    /// <summary>
+    /// Gets the command to mount an image.
+    /// </summary>
+    public ICommand MountImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to validate an image's integrity.
+    /// </summary>
+    public ICommand ValidateImageCommand { get; }
 
     #endregion
 
@@ -227,18 +254,42 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            // TODO: Open file picker for ISO files
-            // For now, show a placeholder dialog
-            StatusMessage = "ISO import feature coming soon...";
+            // Open file picker for ISO files
+            var isoFile = await _filePickerService.PickIsoFileAsync();
+            if (isoFile == null)
+            {
+                Logger.Information("ISO import cancelled by user");
+                return;
+            }
 
-            await ShowInfoDialogAsync("Feature Coming Soon",
-                "The ISO import wizard will be available in a future update. " +
-                "This will provide the same functionality as your PowerShell module with a modern interface.");
+            // Show import progress dialog
+            await ShowImportProgressDialogAsync("Importing from ISO", async (progress, cancellationToken) =>
+            {
+                var imageInfo = await _isoImportService.ImportFromIsoAsync(
+                    isoFile,
+                    "", // Let service generate name from ISO
+                    progress,
+                    cancellationToken);
+
+                // Refresh the images list
+                await RefreshImagesAsync();
+
+                // Select the newly imported image
+                SelectedImage = FilteredImages.FirstOrDefault(img => img.Id == imageInfo.Id);
+            });
+
+            StatusMessage = "ISO import completed successfully";
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("ISO import cancelled by user");
+            StatusMessage = "ISO import cancelled";
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to start ISO import");
-            await ShowErrorDialogAsync("Import Error", $"Failed to start ISO import: {ex.Message}");
+            Logger.Error(ex, "Failed to import from ISO");
+            StatusMessage = $"ISO import failed: {ex.Message}";
+            await ShowErrorDialogAsync("Import Error", $"Failed to import from ISO: {ex.Message}");
         }
     }
 
@@ -251,17 +302,42 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            // TODO: Open file picker for WIM/ESD files
-            // For now, show a placeholder dialog
-            StatusMessage = "WIM import feature coming soon...";
+            // Open file picker for WIM/ESD files
+            var wimFile = await _filePickerService.PickWimFileAsync();
+            if (wimFile == null)
+            {
+                Logger.Information("WIM import cancelled by user");
+                return;
+            }
 
-            await ShowInfoDialogAsync("Feature Coming Soon",
-                "Direct WIM/ESD import will be available in a future update.");
+            // Show import progress dialog
+            await ShowImportProgressDialogAsync("Importing WIM/ESD", async (progress, cancellationToken) =>
+            {
+                var imageInfo = await _isoImportService.ImportFromWimAsync(
+                    wimFile,
+                    "", // Let service generate name from WIM
+                    progress,
+                    cancellationToken);
+
+                // Refresh the images list
+                await RefreshImagesAsync();
+
+                // Select the newly imported image
+                SelectedImage = FilteredImages.FirstOrDefault(img => img.Id == imageInfo.Id);
+            });
+
+            StatusMessage = "WIM import completed successfully";
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("WIM import cancelled by user");
+            StatusMessage = "WIM import cancelled";
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to start WIM import");
-            await ShowErrorDialogAsync("Import Error", $"Failed to start WIM import: {ex.Message}");
+            Logger.Error(ex, "Failed to import from WIM");
+            StatusMessage = $"WIM import failed: {ex.Message}";
+            await ShowErrorDialogAsync("Import Error", $"Failed to import from WIM: {ex.Message}");
         }
     }
 
@@ -381,11 +457,12 @@ public partial class ImageManagementViewModel : ObservableObject
     private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
-        {
-            case nameof(SelectedImage):
+        {            case nameof(SelectedImage):
                 // Update command can execute states
                 ((AsyncRelayCommand)DeleteSelectedCommand).NotifyCanExecuteChanged();
                 ((AsyncRelayCommand)DeleteSelectedFromDiskCommand).NotifyCanExecuteChanged();
+                // Update selected image display name
+                OnPropertyChanged(nameof(SelectedImageDisplayName));
                 break;
 
             case nameof(SearchText):
@@ -438,9 +515,7 @@ public partial class ImageManagementViewModel : ObservableObject
         }
 
         await dialog.ShowAsync();
-    }
-
-    /// <summary>
+    }    /// <summary>
     /// Shows a confirmation dialog with the specified title and message.
     /// </summary>
     /// <param name="title">The dialog title.</param>
@@ -465,6 +540,82 @@ public partial class ImageManagementViewModel : ObservableObject
 
         var result = await dialog.ShowAsync();
         return result == ContentDialogResult.Primary;
+    }
+
+    /// <summary>
+    /// Shows an import progress dialog with cancellation support.
+    /// </summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="importOperation">The import operation to execute.</param>
+    private async Task ShowImportProgressDialogAsync(string title, Func<IProgress<string>, CancellationToken, Task> importOperation)
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        var progress = new Progress<string>();
+        var progressText = "Starting import...";
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        // Create progress content
+        var progressPanel = new StackPanel { Spacing = 16, Margin = new Thickness(0, 16, 0, 16) };
+
+        var progressRing = new Microsoft.UI.Xaml.Controls.ProgressRing { IsActive = true, Width = 48, Height = 48 };
+        var progressLabel = new TextBlock
+        {
+            Text = progressText,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        progressPanel.Children.Add(progressRing);
+        progressPanel.Children.Add(progressLabel);
+
+        dialog.Content = progressPanel;
+
+        // Update progress text
+        progress.ProgressChanged += (s, text) =>
+        {
+            progressLabel.Text = text;
+        };
+
+        // Get XamlRoot from the main window
+        if (App.MainWindow?.Content is FrameworkElement element)
+        {
+            dialog.XamlRoot = element.XamlRoot;
+        }
+
+        // Start the import operation
+        var importTask = importOperation(progress, cancellationTokenSource.Token);
+
+        // Show dialog and wait for completion or cancellation
+        var dialogTask = dialog.ShowAsync().AsTask();
+
+        var completedTask = await Task.WhenAny(importTask, dialogTask);
+
+        if (completedTask == dialogTask)
+        {
+            // Dialog was closed (cancelled)
+            cancellationTokenSource.Cancel();
+            try
+            {
+                await importTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when cancelled
+            }
+            throw new OperationCanceledException("Import operation was cancelled by user");
+        }
+        else
+        {
+            // Import completed, close dialog
+            dialog.Hide();
+            await importTask; // Propagate any exceptions
+        }
     }
 
     #endregion
