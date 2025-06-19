@@ -4,7 +4,7 @@ public static partial class Constants
 {
     // ProgramData directory structure (main application configuration)
     public static readonly string RootDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
-    public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Log");
+    public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
     public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Log.txt");
     public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "AppConfig.json");
 
@@ -15,7 +15,7 @@ public static partial class Constants
     public static readonly string CompletedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "CompletedWIMs");
     public static readonly string ImportedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "ImportedWIMs");
     public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryPath, "Configs");
-    public static readonly string WorkingLogsDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");    // Configuration files in ProgramData
+    public static readonly string WorkingLogsDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
     public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath, "WIMs.xml");
     public static readonly string WorkingLogFilePath = Path.Combine(WorkingLogsDirectoryPath, "Bucket.log");
 
