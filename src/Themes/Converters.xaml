@@ -1,4 +1,11 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:common="using:Bucket.Common">
+
+    <!-- Boolean to Visibility Converter -->
+    <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+    <!-- Object to Boolean Converter -->
+    <common:ObjectToBooleanConverter x:Key="ObjectToBooleanConverter" />
 
 </ResourceDictionary>

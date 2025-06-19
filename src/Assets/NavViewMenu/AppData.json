@@ -15,6 +15,13 @@
           "Subtitle": "Home Landing Page",
           "IconGlyph": "\uE80F",
           "HideItem": true
+        },
+        {
+          "UniqueId": "Bucket.Views.ImageManagementPage",
+          "Title": "Image Management",
+          "Subtitle": "Manage Windows Images",
+          "IconGlyph": "\uE958",
+          "HideItem": false
         }
       ]
     }
