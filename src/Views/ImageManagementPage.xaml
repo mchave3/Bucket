@@ -8,10 +8,6 @@
     xmlns:models="using:Bucket.Models"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.DataContext>
-        <viewmodels:ImageManagementViewModel />
-    </Page.DataContext>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

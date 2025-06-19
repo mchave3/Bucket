@@ -12,13 +12,18 @@ public sealed partial class ImageManagementPage : Page
     /// <summary>
     /// Gets the ViewModel for this page.
     /// </summary>
-    public ImageManagementViewModel ViewModel => (ImageManagementViewModel)DataContext;
+    public ImageManagementViewModel ViewModel
+    {
+        get;
+    }
 
     /// <summary>
     /// Initializes a new instance of the ImageManagementPage class.
     /// </summary>
     public ImageManagementPage()
     {
+        ViewModel = App.GetService<ImageManagementViewModel>();
+        this.DataContext = ViewModel;
         this.InitializeComponent();
         Logger.Information("ImageManagementPage initialized");
     }

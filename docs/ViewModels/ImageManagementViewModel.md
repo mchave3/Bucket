@@ -38,6 +38,16 @@ public partial class ImageManagementViewModel : ObservableObject
 - **`ImportFromIsoCommand`**: Initiates ISO import process
 - **`ImportFromWimCommand`**: Initiates direct WIM file import
 
+### Import Operations
+
+```csharp
+// ISO Import with custom FilePicker
+await viewModel.ImportFromIsoCommand.ExecuteAsync(null);
+
+// WIM Direct Import with standard picker
+await viewModel.ImportFromWimCommand.ExecuteAsync(null);
+```
+
 ### Selection Actions
 
 - **`DeleteSelectedCommand`**: Removes selected image from collection only
@@ -85,22 +95,32 @@ viewModel.UpdateSearchFilter("Pro Edition");
 
 ## Features
 
+### File Import Capabilities
+
+- **ISO Import**: Custom FilePicker with window handle for WinUI 3 compatibility
+- **WIM Direct Import**: Standard FileOpenPicker for WIM/ESD/SWM files
+- **Robust File Selection**: Proper error handling and user feedback
+
 ### Automatic Filtering
+
 - **Real-time Search**: Filters images as user types
 - **Multi-field Search**: Searches across name, type, and edition information
 - **Case-insensitive**: Provides user-friendly search experience
 
 ### Command Management
+
 - **Async Commands**: All operations support async/await pattern
 - **Conditional Enabling**: Commands automatically enable/disable based on state
 - **Progress Reporting**: Long operations provide user feedback
 
-### Error Handling
+### Error Management
+
 - **User-friendly Messages**: Displays appropriate error dialogs
 - **Graceful Degradation**: Continues operation when possible
 - **Comprehensive Logging**: All operations are logged for troubleshooting
 
 ### State Management
+
 - **Property Change Notification**: Implements INotifyPropertyChanged
 - **Dependent Property Updates**: Related properties update automatically
 - **UI Synchronization**: Maintains consistent UI state
@@ -143,7 +163,7 @@ private async Task RefreshImagesAsync()
 }
 ```
 
-### Error Handling
+### Exception Management
 
 ```csharp
 private async Task SafeOperationAsync()
@@ -183,9 +203,9 @@ private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 }
 ```
 
-## Error Handling
+## Common Error Scenarios
 
-### Common Scenarios
+### Service Integration Issues
 
 - **Service Failures**: Handle WindowsImageService exceptions gracefully
 - **File System Errors**: Manage file access and permission issues

@@ -106,6 +106,22 @@ public class WindowsImageService
             throw new FileNotFoundException($"Image file not found: {imagePath}");
         }
 
+        // Validate file format
+        var extension = Path.GetExtension(imagePath).ToLowerInvariant();
+        if (!IsValidImageFormat(extension))
+        {
+            throw new NotSupportedException($"Unsupported image format: {extension}");
+        }
+
+        // Check available disk space
+        var fileInfo = new FileInfo(imagePath);
+        var driveInfo = new DriveInfo(Path.GetPathRoot(imagePath));
+        if (driveInfo.AvailableFreeSpace < fileInfo.Length * 2) // Need at least 2x file size for operations
+        {
+            Logger.Warning("Low disk space detected: {AvailableSpace} bytes available, {FileSize} bytes needed",
+                driveInfo.AvailableFreeSpace, fileInfo.Length * 2);
+        }
+
         try
         {
             var indices = new List<WindowsImageIndex>();
@@ -138,6 +154,17 @@ public class WindowsImageService
             if (process.ExitCode != 0)
             {
                 var errorMessage = string.Join("\n", errors);
+
+                // Check for specific error conditions
+                if (errorMessage.Contains("Access is denied"))
+                {
+                    throw new UnauthorizedAccessException("Administrator privileges are required to analyze Windows images using DISM.");
+                }
+                else if (errorMessage.Contains("The file cannot be accessed"))
+                {
+                    throw new IOException($"The image file is in use or corrupted: {imagePath}");
+                }
+
                 throw new InvalidOperationException($"DISM failed with exit code {process.ExitCode}: {errorMessage}");
             }
 
@@ -157,15 +184,32 @@ public class WindowsImageService
     }
 
     /// <summary>
+    /// Validates if the file format is supported for Windows imaging.
+    /// </summary>
+    /// <param name="extension">The file extension to validate.</param>
+    /// <returns>True if the format is supported, false otherwise.</returns>
+    private static bool IsValidImageFormat(string extension)
+    {
+        return extension switch
+        {
+            ".wim" => true,
+            ".esd" => true,
+            ".swm" => true,
+            _ => false
+        };
+    }
+
+    /// <summary>
     /// Imports a new Windows image and adds it to the collection.
     /// </summary>
     /// <param name="imagePath">The path to the image file to import.</param>
     /// <param name="name">The display name for the image.</param>
     /// <param name="sourceIsoPath">The source ISO path if applicable.</param>
+    /// <param name="copyToManagedDirectory">Whether to copy the image to the managed directory.</param>
     /// <param name="progress">The progress reporter.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The imported Windows image information.</returns>
-    public async Task<WindowsImageInfo> ImportImageAsync(string imagePath, string name, string sourceIsoPath = "", IProgress<string> progress = null, CancellationToken cancellationToken = default)
+    public async Task<WindowsImageInfo> ImportImageAsync(string imagePath, string name, string sourceIsoPath = "", bool copyToManagedDirectory = true, IProgress<string> progress = null, CancellationToken cancellationToken = default)
     {
         Logger.Information("Importing Windows image: {ImagePath}", imagePath);
         progress?.Report("Starting image import...");
@@ -175,20 +219,34 @@ public class WindowsImageService
             throw new FileNotFoundException($"Image file not found: {imagePath}");
         }
 
+        if (!IsValidFilePath(imagePath))
+        {
+            throw new ArgumentException($"Invalid file path: {imagePath}");
+        }
+
         try
         {
+            var finalImagePath = imagePath;
+
+            // Copy to managed directory if requested
+            if (copyToManagedDirectory)
+            {
+                progress?.Report("Copying image to managed directory...");
+                finalImagePath = await CopyImageToManagedDirectoryAsync(imagePath, name, progress, cancellationToken);
+            }
+
             // Analyze the image to get its indices
-            var indices = await AnalyzeImageAsync(imagePath, progress, cancellationToken);
+            var indices = await AnalyzeImageAsync(finalImagePath, progress, cancellationToken);
 
             // Get file information
-            var fileInfo = new FileInfo(imagePath);
+            var fileInfo = new FileInfo(finalImagePath);
 
             // Create the image info object
             var imageInfo = new WindowsImageInfo
             {
                 Name = name,
-                FilePath = imagePath,
-                ImageType = Path.GetExtension(imagePath).ToUpperInvariant().TrimStart('.'),
+                FilePath = finalImagePath,
+                ImageType = Path.GetExtension(finalImagePath).ToUpperInvariant().TrimStart('.'),
                 CreatedDate = fileInfo.CreationTime,
                 ModifiedDate = fileInfo.LastWriteTime,
                 FileSizeBytes = fileInfo.Length,
@@ -321,5 +379,113 @@ public class WindowsImageService
         }
 
         return indices;
+    }
+
+    /// <summary>
+    /// Copies an image file to the managed images directory.
+    /// </summary>
+    /// <param name="sourcePath">The source image file path.</param>
+    /// <param name="targetName">The target file name (without extension).</param>
+    /// <param name="progress">The progress reporter.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The path to the copied image file.</returns>
+    public async Task<string> CopyImageToManagedDirectoryAsync(string sourcePath, string targetName, IProgress<string> progress = null, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Copying image to managed directory: {SourcePath} -> {TargetName}", sourcePath, targetName);
+        progress?.Report("Preparing to copy image file...");
+
+        if (!File.Exists(sourcePath))
+        {
+            throw new FileNotFoundException($"Source image file not found: {sourcePath}");
+        }
+
+        var sourceInfo = new FileInfo(sourcePath);
+        var extension = sourceInfo.Extension;
+        var targetPath = Path.Combine(_imagesDirectory, $"{targetName}{extension}");
+
+        // Ensure target directory exists
+        Directory.CreateDirectory(_imagesDirectory);        // Check if target already exists
+        if (File.Exists(targetPath))
+        {
+            var counter = 1;
+            var baseName = targetName;
+            do
+            {
+                targetName = $"{baseName}_{counter}";
+                targetPath = Path.Combine(_imagesDirectory, $"{targetName}{extension}");
+                counter++;
+            }
+            while (File.Exists(targetPath));
+        }
+
+        // Check available disk space
+        var driveInfo = new DriveInfo(Path.GetPathRoot(_imagesDirectory));
+        if (driveInfo.AvailableFreeSpace < sourceInfo.Length)
+        {
+            throw new IOException($"Insufficient disk space. Need {sourceInfo.Length} bytes, but only {driveInfo.AvailableFreeSpace} bytes available.");
+        }
+
+        try
+        {
+            progress?.Report($"Copying {sourceInfo.Name}...");
+
+            // Copy the file
+            await Task.Run(() => File.Copy(sourcePath, targetPath), cancellationToken);
+
+            progress?.Report("Copy completed");
+            Logger.Information("Successfully copied image to: {TargetPath}", targetPath);
+
+            return targetPath;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to copy image file: {SourcePath} -> {TargetPath}", sourcePath, targetPath);
+
+            // Clean up partial copy if it exists
+            if (File.Exists(targetPath))
+            {
+                try
+                {
+                    File.Delete(targetPath);
+                }
+                catch (Exception deleteEx)
+                {
+                    Logger.Warning(deleteEx, "Failed to clean up partial copy: {TargetPath}", targetPath);
+                }
+            }
+
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Validates file path to prevent directory traversal attacks.
+    /// </summary>
+    /// <param name="filePath">The file path to validate.</param>
+    /// <returns>True if the path is safe, false otherwise.</returns>
+    public static bool IsValidFilePath(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return false;
+
+        // Check for directory traversal attempts
+        if (filePath.Contains("..") || filePath.Contains("~"))
+            return false;
+
+        // Check for invalid characters
+        var invalidChars = Path.GetInvalidPathChars();
+        if (filePath.Any(c => invalidChars.Contains(c)))
+            return false;
+
+        try
+        {
+            // Try to get full path - this will throw if invalid
+            Path.GetFullPath(filePath);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -28,9 +28,7 @@ public class WindowsImageIndex
     /// <summary>
     /// Gets or sets the size of the image in megabytes.
     /// </summary>
-    public double SizeMB { get; set; }
-
-    /// <summary>
+    public double SizeMB { get; set; }    /// <summary>
     /// Gets or sets whether this index is included/selected for operations.
     /// </summary>
     public bool IsIncluded { get; set; } = true;
