@@ -33,26 +33,26 @@ public static readonly string RootDirectoryPath = Path.Combine(Environment.GetFo
 ### LogDirectoryPath
 
 ```csharp
-public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Log");
+public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Directory for storing application log files
-- **Structure**: `%PROGRAMDATA%\Bucket\Log\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Logs\`
 - **Parent**: Subdirectory of `RootDirectoryPath`
 
 ### LogFilePath
 
 ```csharp
-public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Log.txt");
+public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Bucket.log");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Full path to the main application log file
-- **Structure**: `%APPDATA%\[ProductName][Version]\Log\Log.txt`
-- **Usage**: Primary log file for application events and errors
+- **Structure**: `%PROGRAMDATA%\Bucket\Logs\Bucket.log`
+- **Usage**: Primary log file for application events and errors (with daily rotation by Serilog)
 
 ### AppConfigPath
 
@@ -140,18 +140,6 @@ public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryP
 - **Structure**: `%PROGRAMDATA%\Bucket\Configs\`
 - **Usage**: WIMs.xml and other operational configurations
 
-### WorkingLogsDirectoryPath
-
-```csharp
-public static readonly string WorkingLogsDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
-```
-
-- **Type**: `string`
-- **Access**: Public, Static, ReadOnly
-- **Purpose**: Working directory operation logs
-- **Structure**: `%PROGRAMDATA%\Bucket\Logs\`
-- **Usage**: Logs specific to image management operations
-
 ## Configuration Files
 
 ### WIMsConfigPath
@@ -165,18 +153,6 @@ public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath
 - **Purpose**: Windows image registry configuration file
 - **Structure**: `%PROGRAMDATA%\Bucket\Configs\WIMs.xml`
 - **Usage**: Tracks imported and processed Windows images
-
-### WorkingLogFilePath
-
-```csharp
-public static readonly string WorkingLogFilePath = Path.Combine(WorkingLogsDirectoryPath, "Bucket.log");
-```
-
-- **Type**: `string`
-- **Access**: Public, Static, ReadOnly
-- **Purpose**: Working directory operations log file
-- **Structure**: `%PROGRAMDATA%\Bucket\Logs\Bucket.log`
-- **Usage**: Detailed logging of image management operations
 
 ## System Requirements
 
@@ -209,10 +185,17 @@ public const int MinimumWindowsBuild = 17763;
 The constants define the following directory hierarchy:
 
 ```
-%APPDATA%\[ProductName][Version]\
+%PROGRAMDATA%\Bucket\
 ├── AppConfig.json          (AppConfigPath)
-└── Log\                    (LogDirectoryPath)
-    └── Log.txt            (LogFilePath)
+├── Logs\                   (LogDirectoryPath)
+│   └── Bucket.log         (LogFilePath - with daily rotation)
+├── Updates\                (UpdatesDirectoryPath)
+├── Staging\                (StagingDirectoryPath)
+├── Mount\                  (MountDirectoryPath)
+├── CompletedWIMs\          (CompletedWIMsDirectoryPath)
+├── ImportedWIMs\           (ImportedWIMsDirectoryPath)
+└── Configs\                (ConfigsDirectoryPath)
+    └── WIMs.xml           (WIMsConfigPath)
 ```
 
 ## Usage Examples

@@ -137,7 +137,7 @@ public class PreFlightService
                 Constants.CompletedWIMsDirectoryPath,
                 Constants.ImportedWIMsDirectoryPath,
                 Constants.ConfigsDirectoryPath,
-                Constants.WorkingLogsDirectoryPath
+                Constants.LogDirectoryPath
             };
 
             var directoryNames = new[]
@@ -195,7 +195,7 @@ public class PreFlightService
                 Constants.CompletedWIMsDirectoryPath,
                 Constants.ImportedWIMsDirectoryPath,
                 Constants.ConfigsDirectoryPath,
-                Constants.WorkingLogsDirectoryPath
+                Constants.LogDirectoryPath
             };
 
             var allPermissionsOk = true;
@@ -392,7 +392,9 @@ public class PreFlightService
         }
 
         return Environment.OSVersion.Version.Build;
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Checks the status of required Windows services.
     /// </summary>
     private bool CheckWindowsServices()
@@ -578,17 +580,13 @@ public class PreFlightService
     private bool InitializeWorkingLoggingSystem()
     {
         try
-        {
-            // Ensure the working logs directory exists
-            if (!Directory.Exists(Constants.WorkingLogsDirectoryPath))
+        {            // Ensure the logs directory exists
+            if (!Directory.Exists(Constants.LogDirectoryPath))
             {
-                Directory.CreateDirectory(Constants.WorkingLogsDirectoryPath);
+                Directory.CreateDirectory(Constants.LogDirectoryPath);
             }
 
-            // Create a log entry indicating the system is ready
-            var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Bucket application initialized - Pre-flight checks completed{Environment.NewLine}";
-            File.AppendAllText(Constants.WorkingLogFilePath, logEntry);
-
+            Logger.Information("Bucket application initialized - Pre-flight checks completed");
             Logger.Information("Working directory logging system initialized");
             return true;
         }
@@ -598,7 +596,9 @@ public class PreFlightService
             _warningMessages.Add($"Could not initialize working directory logging: {ex.Message}");
             return false;
         }
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Migrates existing configuration from AppData to ProgramData if needed.
     /// </summary>
     private Task MigrateExistingConfigurationAsync()

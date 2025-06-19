@@ -41,7 +41,7 @@ The pre-flight service ensures that:
   - `C:\ProgramData\Bucket\CompletedWIMs\` (Finished images)
   - `C:\ProgramData\Bucket\ImportedWIMs\` (Imported images)
   - `C:\ProgramData\Bucket\Configs\` (Configuration files)
-  - `C:\ProgramData\Bucket\Logs\` (Working directory logs)
+  - `C:\ProgramData\Bucket\Logs\` (Application logs)
 
 #### 3. Write Permissions
 - **Purpose**: Verifies write access to all working directories
@@ -173,8 +173,8 @@ C:\ProgramData\Bucket\
 ├── ImportedWIMs\           # Imported source images
 ├── Configs\                # Configuration files
 │   └── WIMs.xml            # Image registry
-└── Logs\                   # Working directory logs
-    └── Bucket.log          # Operations log
+└── Logs\                   # Application logs
+    └── Bucket.log          # Primary log file (with daily rotation)
 ```
 
 ## Error Recovery
