@@ -76,6 +76,7 @@ public class IsoImportService
                     destinationPath,
                     imageName,
                     isoFile.Path,
+                    false, // copyToManagedDirectory = false (already copied)
                     progress,
                     cancellationToken);
 
@@ -131,6 +132,7 @@ public class IsoImportService
                 destinationPath,
                 imageName,
                 "", // No source ISO for direct WIM import
+                false, // copyToManagedDirectory = false (already copied)
                 progress,
                 cancellationToken);
 
