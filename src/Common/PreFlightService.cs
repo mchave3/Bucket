@@ -119,7 +119,9 @@ public class PreFlightService
             _errorMessages.Add($"Failed to verify administrator privileges: {ex.Message}");
             return false;
         }
-    }    /// <summary>
+    }
+
+    /// <summary>
     /// Creates the required directory structure in ProgramData.
     /// </summary>
     private Task<bool> CreateDirectoryStructureAsync()
@@ -128,7 +130,7 @@ public class PreFlightService
         {
             var requiredDirectories = new[]
             {
-                Constants.WorkingDirectoryPath,
+                Constants.RootDirectoryPath,
                 Constants.UpdatesDirectoryPath,
                 Constants.StagingDirectoryPath,
                 Constants.MountDirectoryPath,
@@ -186,7 +188,7 @@ public class PreFlightService
         {
             var testDirectories = new[]
             {
-                Constants.WorkingDirectoryPath,
+                Constants.RootDirectoryPath,
                 Constants.UpdatesDirectoryPath,
                 Constants.StagingDirectoryPath,
                 Constants.MountDirectoryPath,
@@ -468,7 +470,7 @@ public class PreFlightService
 
             try
             {
-                var response = await client.GetAsync("https://update.microsoft.com");
+                var response = await client.GetAsync("https://catalog.update.microsoft.com");
                 if (response.IsSuccessStatusCode)
                 {
                     Logger.Information("Network connectivity verified: Microsoft Update servers reachable");

@@ -20,16 +20,15 @@ public static partial class Constants
 ### RootDirectoryPath
 
 ```csharp
-public static readonly string RootDirectoryPath = Path.Combine(PathHelper.GetAppDataFolderPath(), ProcessInfoHelper.ProductNameAndVersion);
+public static readonly string RootDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
-- **Purpose**: Main application data directory in user's AppData folder
-- **Structure**: `%APPDATA%\[ProductName][Version]\`
+- **Purpose**: Main application data directory in ProgramData folder
+- **Structure**: `%PROGRAMDATA%\Bucket\`
 - **Dependencies**:
-  - `PathHelper.GetAppDataFolderPath()` - Gets AppData path
-  - `ProcessInfoHelper.ProductNameAndVersion` - Gets app name and version
+  - `Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)` - Gets ProgramData path
 
 ### LogDirectoryPath
 
@@ -40,7 +39,7 @@ public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath,
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Directory for storing application log files
-- **Structure**: `%APPDATA%\[ProductName][Version]\Log\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Log\`
 - **Parent**: Subdirectory of `RootDirectoryPath`
 
 ### LogFilePath
@@ -69,34 +68,22 @@ public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "A
 
 ## ProgramData Directory Structure (Windows Image Management)
 
-### WorkingDirectoryPath
-
-```csharp
-public static readonly string WorkingDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
-```
-
-- **Type**: `string`
-- **Access**: Public, Static, ReadOnly
-- **Purpose**: Main working directory for Windows image operations
-- **Structure**: `C:\ProgramData\Bucket\`
-- **Usage**: Root directory for all image management operations
-
 ### UpdatesDirectoryPath
 
 ```csharp
-public static readonly string UpdatesDirectoryPath = Path.Combine(WorkingDirectoryPath, "Updates");
+public static readonly string UpdatesDirectoryPath = Path.Combine(RootDirectoryPath, "Updates");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Storage for Windows update packages
-- **Structure**: `C:\ProgramData\Bucket\Updates\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Updates\`
 - **Usage**: Downloaded Windows updates and patches
 
 ### StagingDirectoryPath
 
 ```csharp
-public static readonly string StagingDirectoryPath = Path.Combine(WorkingDirectoryPath, "Staging");
+public static readonly string StagingDirectoryPath = Path.Combine(RootDirectoryPath, "Staging");
 ```
 
 - **Type**: `string`
@@ -114,55 +101,55 @@ public static readonly string MountDirectoryPath = Path.Combine(WorkingDirectory
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Mount points for WIM files
-- **Structure**: `C:\ProgramData\Bucket\Mount\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Mount\`
 - **Usage**: DISM mount operations for image modification
 
 ### CompletedWIMsDirectoryPath
 
 ```csharp
-public static readonly string CompletedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "CompletedWIMs");
+public static readonly string CompletedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "CompletedWIMs");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Storage for completed Windows images
-- **Structure**: `C:\ProgramData\Bucket\CompletedWIMs\`
+- **Structure**: `%PROGRAMDATA%\Bucket\CompletedWIMs\`
 - **Usage**: Final processed WIM files ready for deployment
 
 ### ImportedWIMsDirectoryPath
 
 ```csharp
-public static readonly string ImportedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "ImportedWIMs");
+public static readonly string ImportedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "ImportedWIMs");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Storage for imported source images
-- **Structure**: `C:\ProgramData\Bucket\ImportedWIMs\`
+- **Structure**: `%PROGRAMDATA%\Bucket\ImportedWIMs\`
 - **Usage**: Original WIM files from ISOs or other sources
 
 ### ConfigsDirectoryPath
 
 ```csharp
-public static readonly string ConfigsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Configs");
+public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryPath, "Configs");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Working directory configuration files
-- **Structure**: `C:\ProgramData\Bucket\Configs\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Configs\`
 - **Usage**: WIMs.xml and other operational configurations
 
 ### WorkingLogsDirectoryPath
 
 ```csharp
-public static readonly string WorkingLogsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Logs");
+public static readonly string WorkingLogsDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");
 ```
 
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Working directory operation logs
-- **Structure**: `C:\ProgramData\Bucket\Logs\`
+- **Structure**: `%PROGRAMDATA%\Bucket\Logs\`
 - **Usage**: Logs specific to image management operations
 
 ## Configuration Files
@@ -176,7 +163,7 @@ public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Windows image registry configuration file
-- **Structure**: `C:\ProgramData\Bucket\Configs\WIMs.xml`
+- **Structure**: `%PROGRAMDATA%\Bucket\Configs\WIMs.xml`
 - **Usage**: Tracks imported and processed Windows images
 
 ### WorkingLogFilePath
@@ -188,7 +175,7 @@ public static readonly string WorkingLogFilePath = Path.Combine(WorkingLogsDirec
 - **Type**: `string`
 - **Access**: Public, Static, ReadOnly
 - **Purpose**: Working directory operations log file
-- **Structure**: `C:\ProgramData\Bucket\Logs\Bucket.log`
+- **Structure**: `%PROGRAMDATA%\Bucket\Logs\Bucket.log`
 - **Usage**: Detailed logging of image management operations
 
 ## System Requirements
@@ -357,8 +344,7 @@ public static bool ValidatePaths()
 ## Dependencies
 
 - **System.IO.Path**: For path manipulation methods
-- **PathHelper**: Custom helper for AppData path resolution
-- **ProcessInfoHelper**: For application name and version information
+- **System.Environment**: For ProgramData path resolution (SpecialFolder.CommonApplicationData)
 
 ## Related Files
 
@@ -368,9 +354,10 @@ public static bool ValidatePaths()
 
 ## Security Considerations
 
-- **User Directory**: Stored in user-specific AppData (not system-wide)
-- **Access Control**: Inherits user directory permissions
+- **System Directory**: Stored in ProgramData (system-wide, requires elevated permissions)
+- **Access Control**: Requires administrator privileges for write operations
 - **Path Traversal**: Using `Path.Combine()` prevents directory traversal attacks
+- **Elevated Operations**: Windows image management requires elevated permissions
 
 ## Performance Notes
 

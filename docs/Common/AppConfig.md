@@ -129,7 +129,7 @@ The configuration is serialized to JSON with the following structure:
 ```json
 {
   "Version": "1.0.0.0",
-  "fileName": "C:\\Users\\...\\AppConfig.json",
+  "fileName": "C:\\ProgramData\\Bucket\\AppConfig.json",
   "useDeveloperMode": false,
   "lastUpdateCheck": "2025-06-17T10:30:00.000Z"
 }

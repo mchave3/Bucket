@@ -2,23 +2,20 @@
 
 public static partial class Constants
 {
-    // AppData directory structure (existing configuration)
-    public static readonly string RootDirectoryPath = Path.Combine(PathHelper.GetAppDataFolderPath(), ProcessInfoHelper.ProductNameAndVersion);
+    // ProgramData directory structure (main application configuration)
+    public static readonly string RootDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
     public static readonly string LogDirectoryPath = Path.Combine(RootDirectoryPath, "Log");
     public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Log.txt");
     public static readonly string AppConfigPath = Path.Combine(RootDirectoryPath, "AppConfig.json");
 
     // ProgramData directory structure (for Windows image management)
-    public static readonly string WorkingDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket");
-    public static readonly string UpdatesDirectoryPath = Path.Combine(WorkingDirectoryPath, "Updates");
-    public static readonly string StagingDirectoryPath = Path.Combine(WorkingDirectoryPath, "Staging");
-    public static readonly string MountDirectoryPath = Path.Combine(WorkingDirectoryPath, "Mount");
-    public static readonly string CompletedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "CompletedWIMs");
-    public static readonly string ImportedWIMsDirectoryPath = Path.Combine(WorkingDirectoryPath, "ImportedWIMs");
-    public static readonly string ConfigsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Configs");
-    public static readonly string WorkingLogsDirectoryPath = Path.Combine(WorkingDirectoryPath, "Logs");
-
-    // Configuration files in ProgramData
+    public static readonly string UpdatesDirectoryPath = Path.Combine(RootDirectoryPath, "Updates");
+    public static readonly string StagingDirectoryPath = Path.Combine(RootDirectoryPath, "Staging");
+    public static readonly string MountDirectoryPath = Path.Combine(RootDirectoryPath, "Mount");
+    public static readonly string CompletedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "CompletedWIMs");
+    public static readonly string ImportedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "ImportedWIMs");
+    public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryPath, "Configs");
+    public static readonly string WorkingLogsDirectoryPath = Path.Combine(RootDirectoryPath, "Logs");    // Configuration files in ProgramData
     public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath, "WIMs.xml");
     public static readonly string WorkingLogFilePath = Path.Combine(WorkingLogsDirectoryPath, "Bucket.log");
 
