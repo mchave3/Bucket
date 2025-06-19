@@ -7,6 +7,8 @@ using Bucket.Models;
 using Bucket.Services;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using WinRT.Interop;
+using Windows.Storage.Pickers;
 
 namespace Bucket.ViewModels;
 
@@ -227,13 +229,32 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            // TODO: Open file picker for ISO files
-            // For now, show a placeholder dialog
-            StatusMessage = "ISO import feature coming soon...";
+            var picker = new FilePicker(WindowNative.GetWindowHandle(App.MainWindow))
+            {
+                FileTypeChoices = new Dictionary<string, IList<string>>
+                {
+                    { "ISO Files", new List<string> { "*.iso" } }
+                },
+                DefaultFileExtension = "ISO Files",
+                Title = "Select an ISO file to import",
+                ShowAllFilesOption = false
+            };
 
-            await ShowInfoDialogAsync("Feature Coming Soon",
-                "The ISO import wizard will be available in a future update. " +
-                "This will provide the same functionality as your PowerShell module with a modern interface.");
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                StatusMessage = $"Selected ISO: {file.Name}";
+                Logger.Information("User selected ISO file: {FilePath}", file.Path);
+
+                // TODO: Implement ISO mounting and WIM extraction
+                await ShowInfoDialogAsync("ISO Import",
+                    $"ISO file selected: {file.Name}\n\nISO mounting and extraction will be implemented in the next update.");
+            }
+            else
+            {
+                StatusMessage = "ISO import cancelled";
+                Logger.Information("User cancelled ISO file selection");
+            }
         }
         catch (Exception ex)
         {
@@ -251,12 +272,66 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            // TODO: Open file picker for WIM/ESD files
-            // For now, show a placeholder dialog
-            StatusMessage = "WIM import feature coming soon...";
+            // Open file picker for WIM/ESD files
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
 
-            await ShowInfoDialogAsync("Feature Coming Soon",
-                "Direct WIM/ESD import will be available in a future update.");
+            // Get the window handle for the picker
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+            picker.FileTypeFilter.Add(".wim");
+            picker.FileTypeFilter.Add(".esd");
+            picker.FileTypeFilter.Add(".swm");
+
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                StatusMessage = $"Analyzing {file.Name}...";
+                Logger.Information("User selected WIM file: {FilePath}", file.Path);
+
+                IsLoading = true;
+
+                try
+                {
+                    // Get a friendly name for the image
+                    var imageName = Path.GetFileNameWithoutExtension(file.Name);
+
+                    // Import the image using the service
+                    var importedImage = await _windowsImageService.ImportImageAsync(
+                        file.Path,
+                        imageName,
+                        sourceIsoPath: "",
+                        progress: new Progress<string>(message => StatusMessage = message));
+
+                    // Refresh the images list
+                    await RefreshImagesAsync();
+
+                    StatusMessage = $"Successfully imported {importedImage.Name}";
+                    Logger.Information("Successfully imported WIM file: {Name} with {IndexCount} indices",
+                        importedImage.Name, importedImage.IndexCount);
+
+                    await ShowInfoDialogAsync("Import Successful",
+                        $"Successfully imported '{importedImage.Name}' with {importedImage.IndexCount} Windows editions.");
+                }
+                catch (Exception importEx)
+                {
+                    Logger.Error(importEx, "Failed to import WIM file: {FilePath}", file.Path);
+                    StatusMessage = $"Failed to import {file.Name}";
+                    await ShowErrorDialogAsync("Import Failed",
+                        $"Failed to import '{file.Name}':\n\n{importEx.Message}");
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            }
+            else
+            {
+                StatusMessage = "WIM import cancelled";
+                Logger.Information("User cancelled WIM file selection");
+            }
         }
         catch (Exception ex)
         {
@@ -344,8 +419,19 @@ public partial class ImageManagementViewModel : ObservableObject
 
         Logger.Information("Viewing details for image: {Name}", image.Name);
 
-        // TODO: Open image details dialog or page
-        StatusMessage = $"Viewing details for {image.Name}";
+        try
+        {
+            // Navigate to the image details page
+            var navService = App.GetService<IJsonNavigationService>();
+            navService.NavigateTo(typeof(Views.ImageDetailsPage), image);
+
+            StatusMessage = $"Viewing details for {image.Name}";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to navigate to image details for: {Name}", image.Name);
+            StatusMessage = $"Failed to open details for {image.Name}";
+        }
     }
 
     /// <summary>

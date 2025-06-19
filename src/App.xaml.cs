@@ -27,13 +27,16 @@
             // Enables Multicore JIT with the specified profile
             System.Runtime.ProfileOptimization.SetProfileRoot(Constants.RootDirectoryPath);
             System.Runtime.ProfileOptimization.StartProfile("Startup.Profile");
-        }        private static IServiceProvider ConfigureServices()
+        }
+
+        private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
-
             services.AddTransient<MainViewModel>();
+            services.AddTransient<ImageManagementViewModel>();
+            services.AddTransient<ImageDetailsViewModel>();
             services.AddSingleton<ContextMenuService>();
             services.AddTransient<GeneralSettingViewModel>();
             services.AddTransient<AppUpdateSettingViewModel>();
