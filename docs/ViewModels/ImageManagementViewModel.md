@@ -30,6 +30,11 @@ public partial class ImageManagementViewModel : ObservableObject
 - **`StatusMessage`** (string): Current status message for display
 - **`SearchText`** (string): Current search filter text
 
+### Computed Properties
+
+- **`FilteredImagesCountText`** (string): Formatted count text for filtered images ("1 image" or "X images")
+- **`SelectedImageDisplayName`** (string): Display name for selected image or "No image selected"
+
 ## Commands
 
 ### Primary Actions
@@ -53,6 +58,37 @@ await viewModel.ImportFromWimCommand.ExecuteAsync(null);
 - **`DeleteSelectedCommand`**: Removes selected image from collection only
 - **`DeleteSelectedFromDiskCommand`**: Removes selected image from collection and disk
 - **`ViewImageDetailsCommand`**: Displays detailed information about an image
+
+### Detail Panel Actions
+
+- **`ExtractSelectedIndicesCommand`**: Extracts selected indices from an image (placeholder)
+- **`MountImageCommand`**: Mounts an image for modification (placeholder)
+- **`ValidateImageCommand`**: Validates an image's integrity (placeholder)
+
+## Methods
+
+### Public Methods
+
+- **`InitializeAsync()`**: Initializes the ViewModel by loading existing images
+- **`UpdateSearchFilter(string searchText)`**: Updates the search filter and refreshes filtered images
+
+### Private Helper Methods
+
+- **`RefreshImagesAsync()`**: Refreshes the images collection from the service
+- **`ImportFromIsoAsync()`**: Imports images from an ISO file using file picker
+- **`ImportFromWimAsync()`**: Imports a WIM or ESD file using file picker
+- **`DeleteSelectedImageAsync()`**: Deletes selected image from collection only
+- **`DeleteSelectedImageFromDiskAsync()`**: Deletes selected image from both collection and disk
+- **`ViewImageDetails(WindowsImageInfo image)`**: Views detailed information about specified image
+- **`FilterImages()`**: Filters the images based on search text
+- **`CanDeleteSelected()`**: Checks if selected image can be deleted
+
+### Dialog Helper Methods
+
+- **`ShowErrorDialogAsync(string title, string message)`**: Shows error dialog
+- **`ShowInfoDialogAsync(string title, string message)`**: Shows information dialog
+- **`ShowConfirmationDialogAsync(string title, string message)`**: Shows confirmation dialog
+- **`ShowImportProgressDialogAsync(string title, Func<IProgress<string>, CancellationToken, Task> importOperation)`**: Shows cancellable progress dialog for import operations
 
 ## Usage Examples
 
@@ -118,6 +154,13 @@ viewModel.UpdateSearchFilter("Pro Edition");
 - **User-friendly Messages**: Displays appropriate error dialogs
 - **Graceful Degradation**: Continues operation when possible
 - **Comprehensive Logging**: All operations are logged for troubleshooting
+- **Progress Dialog Support**: Shows cancellable progress dialogs for long operations
+
+### Import Progress Management
+
+- **Cancellable Operations**: Import operations can be cancelled by users
+- **Real-time Progress**: Shows live progress updates during import
+- **Error Propagation**: Properly handles and displays import errors
 
 ### State Management
 
@@ -227,6 +270,14 @@ if (confirmed)
 {
     // Proceed with deletion
 }
+
+// Progress dialogs with cancellation
+await ShowImportProgressDialogAsync("Importing...", async (progress, cancellationToken) =>
+{
+    // Long-running import operation
+    progress.Report("Starting import...");
+    await SomeImportOperationAsync(progress, cancellationToken);
+});
 ```
 
 ## Performance Considerations

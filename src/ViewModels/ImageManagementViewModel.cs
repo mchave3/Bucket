@@ -252,6 +252,7 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
+            // Use FilePicker to select a single ISO file
             var picker = new FilePicker(WindowNative.GetWindowHandle(App.MainWindow))
             {
                 FileTypeChoices = new Dictionary<string, IList<string>>
@@ -262,8 +263,9 @@ public partial class ImageManagementViewModel : ObservableObject
                 Title = "Select an ISO file to import",
                 ShowAllFilesOption = false
             };
-
             var file = await picker.PickSingleFileAsync();
+
+            // Check if a file was selected
             if (file != null)
             {
                 StatusMessage = $"Selected ISO: {file.Name}";
@@ -287,7 +289,7 @@ public partial class ImageManagementViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Imports a WIM file directly.
+    /// Imports a WIM or ESD file.
     /// </summary>
     private async Task ImportFromWimAsync()
     {
@@ -295,24 +297,25 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            // Open file picker for WIM/ESD files
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-
-            // Get the window handle for the picker
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-
-            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.List;
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
-            picker.FileTypeFilter.Add(".wim");
-            picker.FileTypeFilter.Add(".esd");
-            picker.FileTypeFilter.Add(".swm");
-
+            // Use FilePicker to select a WIM or ESD file
+            var picker = new FilePicker(WindowNative.GetWindowHandle(App.MainWindow))
+            {
+                FileTypeChoices = new Dictionary<string, IList<string>>
+                {
+                    { "WIM Files", new List<string> { "*.wim" } },
+                    { "ESD Files", new List<string> { "*.esd" } }
+                },
+                DefaultFileExtension = "WIM Files",
+                Title = "Select a WIM/ESD file to import",
+                ShowAllFilesOption = false
+            };
             var file = await picker.PickSingleFileAsync();
+
+            // Check if a file was selected
             if (file != null)
             {
                 StatusMessage = $"Analyzing {file.Name}...";
-                Logger.Information("User selected WIM file: {FilePath}", file.Path);
+                Logger.Information("User selected file: {FilePath}", file.Path);
 
                 IsLoading = true;
 
@@ -332,7 +335,7 @@ public partial class ImageManagementViewModel : ObservableObject
                     await RefreshImagesAsync();
 
                     StatusMessage = $"Successfully imported {importedImage.Name}";
-                    Logger.Information("Successfully imported WIM file: {Name} with {IndexCount} indices",
+                    Logger.Information("Successfully imported file: {Name} with {IndexCount} indices",
                         importedImage.Name, importedImage.IndexCount);
 
                     await ShowInfoDialogAsync("Import Successful",
@@ -340,7 +343,7 @@ public partial class ImageManagementViewModel : ObservableObject
                 }
                 catch (Exception importEx)
                 {
-                    Logger.Error(importEx, "Failed to import WIM file: {FilePath}", file.Path);
+                    Logger.Error(importEx, "Failed to import file: {FilePath}", file.Path);
                     StatusMessage = $"Failed to import {file.Name}";
                     await ShowErrorDialogAsync("Import Failed",
                         $"Failed to import '{file.Name}':\n\n{importEx.Message}");
@@ -352,14 +355,14 @@ public partial class ImageManagementViewModel : ObservableObject
             }
             else
             {
-                StatusMessage = "WIM import cancelled";
-                Logger.Information("User cancelled WIM file selection");
+                StatusMessage = "WIM/ESD import cancelled";
+                Logger.Information("User cancelled WIM/ESD file selection");
             }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to start WIM import");
-            await ShowErrorDialogAsync("Import Error", $"Failed to start WIM import: {ex.Message}");
+            Logger.Error(ex, "Failed to start WIM/ESD import");
+            await ShowErrorDialogAsync("Import Error", $"Failed to start WIM/ESD import: {ex.Message}");
         }
     }
 
