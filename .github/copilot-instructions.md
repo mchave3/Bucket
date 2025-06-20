@@ -258,6 +258,28 @@ Common error scenarios and handling approaches.
 - **Code Samples**: Provide working code examples
 - **Consistent Style**: Follow the established template structure
 
+## Code Editing Standards
+
+### File Editing Best Practices
+
+When using code editing tools (insert_edit_into_file, replace_string_in_file):
+
+- **Proper Line Breaks**: Always ensure proper line breaks between existing code and new code
+- **No Inline Additions**: Never add new code with tabs or spaces directly after existing code on the same line
+- **Clean Indentation**: Each new line of code should start on its own line with proper indentation
+- **Preserve Formatting**: Maintain consistent indentation and formatting with the existing codebase
+
+**Example of INCORRECT formatting**:
+```csharp
+existing code line		new code line  // WRONG: tabs/spaces on same line
+```
+
+**Example of CORRECT formatting**:
+```csharp
+existing code line
+new code line  // CORRECT: proper line break and indentation
+```
+
 ## Documentation
 
 Refer to files in `docs/` for more details:
