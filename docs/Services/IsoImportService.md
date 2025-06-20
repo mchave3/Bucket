@@ -169,7 +169,6 @@ var imageInfo = await isoImportService.ImportFromIsoAsync(
 
 ## Related Files
 
-- [`FilePickerService.md`](./FilePickerService.md) - Provides file selection
 - [`WindowsImageService.md`](./WindowsImageService.md) - Handles image analysis
 - [`ImageManagementViewModel.md`](../ViewModels/ImageManagementViewModel.md) - Coordinates the import process
 - [`Constants.md`](../Common/Constants.md) - Defines directory paths

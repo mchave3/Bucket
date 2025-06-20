@@ -18,7 +18,6 @@ namespace Bucket.ViewModels;
 public partial class ImageManagementViewModel : ObservableObject
 {
     private readonly WindowsImageService _windowsImageService;
-    private readonly FilePickerService _filePickerService;
     private readonly IsoImportService _isoImportService;
 
     private ObservableCollection<WindowsImageInfo> _images = new();
@@ -106,15 +105,12 @@ public partial class ImageManagementViewModel : ObservableObject
     /// Gets the display name for the selected image or a default message.
     /// </summary>
     public string SelectedImageDisplayName =>
-        SelectedImage?.Name ?? "No image selected";
-
-    /// <summary>
+        SelectedImage?.Name ?? "No image selected";    /// <summary>
     /// Initializes a new instance of the ImageManagementViewModel class.
     /// </summary>
     public ImageManagementViewModel()
     {
         _windowsImageService = new WindowsImageService();
-        _filePickerService = new FilePickerService();
         _isoImportService = new IsoImportService();
 
         // Initialize commands
