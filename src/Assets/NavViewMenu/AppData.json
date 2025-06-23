@@ -20,7 +20,7 @@
           "UniqueId": "Bucket.Views.ImageManagementPage",
           "Title": "Image Management",
           "Subtitle": "Manage Windows Images",
-          "IconGlyph": "\uE958",
+          "ImagePath": "ms-appx:///Assets/Fluent/ic_fluent_cube_24_regular.png",
           "HideItem": false
         }
       ]
