@@ -100,7 +100,7 @@ Bucket specializes in Windows image management with the following key features:
 - Handle large file operations (WIM files, update packages)
 - Manage Windows Update services and catalogs
 - Support offline and online image servicing
-- Integration with Windows deployment tools (DISM, etc.)
+- Integration with Windows deployment tools (PowerShell, etc.)
 
 ### Data Models Expected
 - Image metadata and specifications

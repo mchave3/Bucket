@@ -16,7 +16,7 @@ public class PreFlightService
 The pre-flight service ensures that:
 - The application has necessary administrator privileges
 - Required directory structure exists in ProgramData
-- System tools (DISM, PowerShell) are available
+- System tools (PowerShell and cmdlets) are available
 - Sufficient disk space is available
 - Windows version is compatible
 - Required services are running
@@ -56,7 +56,8 @@ The pre-flight service ensures that:
 #### 5. System Tools
 - **Purpose**: Verifies required external tools are available
 - **Tools Checked**:
-  - `DISM.exe` (Critical - required for WIM operations)
+  - `PowerShell.exe` (Critical - required for all imaging operations)
+  - `Get-WindowsImage` cmdlet (Critical - required for WIM operations)
   - `PowerShell.exe` (Recommended - for advanced operations)
 
 ### 🟡 Recommended Checks (Warnings only)

@@ -27,7 +27,7 @@ namespace Bucket.Models;
         public bool DiskSpace { get; set; }
 
         /// <summary>
-        /// Indicates whether all required system tools (DISM, PowerShell) are available.
+        /// Indicates whether all required system tools (PowerShell and cmdlets) are available.
         /// </summary>
         public bool SystemTools { get; set; }
 

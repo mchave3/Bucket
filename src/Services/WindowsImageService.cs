@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Bucket.Models;
@@ -170,7 +171,7 @@ public class WindowsImageService
                 }
                 else if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
                 {
-                    throw new InvalidOperationException("The DISM PowerShell module is not available. Please ensure Windows ADK or DISM module is installed.");
+                    throw new InvalidOperationException("The Get-WindowsImage PowerShell cmdlet is not available. Please ensure the Windows PowerShell module for imaging is installed.");
                 }
 
                 throw new InvalidOperationException($"PowerShell Get-WindowsImage failed with exit code {process.ExitCode}: {errorMessage}");
@@ -440,6 +441,111 @@ public class WindowsImageService
                 index.SizeMB = Math.Round(sizeBytes / (1024.0 * 1024.0), 1);
             }
 
+            // Extract detailed properties (available when querying specific index)
+            if (imageElement.TryGetProperty("WIMBoot", out var wimBootProperty))
+            {
+                index.WIMBoot = wimBootProperty.GetBoolean();
+                index.HasDetailedInfo = true;
+            }
+
+            if (imageElement.TryGetProperty("Version", out var versionProperty))
+            {
+                index.Version = versionProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("SPBuild", out var spBuildProperty))
+            {
+                index.SPBuild = spBuildProperty.GetInt32();
+            }
+
+            if (imageElement.TryGetProperty("SPLevel", out var spLevelProperty))
+            {
+                index.SPLevel = spLevelProperty.GetInt32();
+            }
+
+            if (imageElement.TryGetProperty("EditionId", out var editionIdProperty))
+            {
+                index.EditionId = editionIdProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("InstallationType", out var installationTypeProperty))
+            {
+                index.InstallationType = installationTypeProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("ProductType", out var productTypeProperty))
+            {
+                index.ProductType = productTypeProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("ProductSuite", out var productSuiteProperty))
+            {
+                index.ProductSuite = GetStringOrArray(productSuiteProperty);
+            }
+
+            if (imageElement.TryGetProperty("SystemRoot", out var systemRootProperty))
+            {
+                index.SystemRoot = systemRootProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("Hal", out var halProperty))
+            {
+                index.Hal = halProperty.GetString() ?? string.Empty;
+            }
+
+            if (imageElement.TryGetProperty("DirectoryCount", out var dirCountProperty))
+            {
+                index.DirectoryCount = dirCountProperty.GetInt32();
+            }
+
+            if (imageElement.TryGetProperty("FileCount", out var fileCountProperty))
+            {
+                index.FileCount = fileCountProperty.GetInt32();
+            }
+
+            if (imageElement.TryGetProperty("CreatedTime", out var createdTimeProperty))
+            {
+                var createdTimeString = createdTimeProperty.GetString();
+                if (!string.IsNullOrEmpty(createdTimeString))
+                {
+                    // Handle both ISO 8601 format and Microsoft JSON.NET legacy format
+                    DateTime createdTime;
+                    if (TryParseMicrosoftJsonDate(createdTimeString, out createdTime) ||
+                        DateTime.TryParse(createdTimeString, null, DateTimeStyles.RoundtripKind, out createdTime))
+                    {
+                        index.CreatedTime = createdTime;
+                    }
+                    else
+                    {
+                        Logger.Debug("Failed to parse CreatedTime: {CreatedTimeString}", createdTimeString);
+                    }
+                }
+            }
+
+            if (imageElement.TryGetProperty("ModifiedTime", out var modifiedTimeProperty))
+            {
+                var modifiedTimeString = modifiedTimeProperty.GetString();
+                if (!string.IsNullOrEmpty(modifiedTimeString))
+                {
+                    // Handle both ISO 8601 format and Microsoft JSON.NET legacy format
+                    DateTime modifiedTime;
+                    if (TryParseMicrosoftJsonDate(modifiedTimeString, out modifiedTime) ||
+                        DateTime.TryParse(modifiedTimeString, null, DateTimeStyles.RoundtripKind, out modifiedTime))
+                    {
+                        index.ModifiedTime = modifiedTime;
+                    }
+                    else
+                    {
+                        Logger.Debug("Failed to parse ModifiedTime: {ModifiedTimeString}", modifiedTimeString);
+                    }
+                }
+            }
+
+            if (imageElement.TryGetProperty("Languages", out var languagesProperty))
+            {
+                index.Languages = GetStringOrArray(languagesProperty);
+            }
+
             // Only return valid indices with required properties
             if (index.Index > 0 && !string.IsNullOrEmpty(index.Name))
             {
@@ -564,5 +670,194 @@ public class WindowsImageService
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Gets detailed information for a specific Windows image index.
+    /// </summary>
+    /// <param name="imagePath">The path to the image file.</param>
+    /// <param name="index">The index number to get detailed information for.</param>
+    /// <param name="progress">The progress reporter.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A WindowsImageIndex object with detailed information, or null if not found.</returns>
+    public async Task<WindowsImageIndex> GetImageIndexDetailsAsync(string imagePath, int index, IProgress<string> progress = null, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Getting detailed information for image index {Index} in {ImagePath}", index, imagePath);
+
+        if (!File.Exists(imagePath))
+        {
+            throw new FileNotFoundException($"Image file not found: {imagePath}");
+        }
+
+        try
+        {
+            progress?.Report($"Loading detailed information for index {index}...");
+
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
+
+            // Use PowerShell Get-WindowsImage with specific index to get detailed info
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-Command \"Get-WindowsImage -ImagePath '{imagePath}' -Index {index} | ConvertTo-Json -Depth 10\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    outputBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    errorBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            await Task.Run(() => process.WaitForExit(), cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                var errorMessage = errorBuilder.ToString().Trim();
+                Logger.Error("PowerShell Get-WindowsImage failed with exit code {ExitCode}: {Error}", process.ExitCode, errorMessage);
+
+                if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
+                {
+                    throw new InvalidOperationException("The Get-WindowsImage PowerShell cmdlet is not available. Please ensure the Windows PowerShell module for imaging is installed.");
+                }
+
+                throw new InvalidOperationException($"PowerShell Get-WindowsImage failed with exit code {process.ExitCode}: {errorMessage}");
+            }
+
+            progress?.Report("Parsing detailed image information...");
+
+            var jsonOutput = outputBuilder.ToString().Trim();
+            if (string.IsNullOrEmpty(jsonOutput))
+            {
+                Logger.Warning("No output received from Get-WindowsImage for index {Index} in {ImagePath}", index, imagePath);
+                return null;
+            }
+
+            // Parse the JSON output for detailed information
+            var detailedIndices = ParsePowerShellOutput(jsonOutput);
+            var detailedIndex = detailedIndices.FirstOrDefault();
+
+            if (detailedIndex != null)
+            {
+                Logger.Information("Successfully loaded detailed information for index {Index}: {Name}", index, detailedIndex.Name);
+            }
+            else
+            {
+                Logger.Warning("No detailed information found for index {Index} in {ImagePath}", index, imagePath);
+            }
+
+            return detailedIndex;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to get detailed information for index {Index} in {ImagePath}", index, imagePath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to get a string value from a JsonElement that could be either a string or an array
+    /// </summary>
+    /// <param name="element">The JsonElement to process</param>
+    /// <returns>A string representation of the value</returns>
+    private static string GetStringOrArray(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                return element.GetString() ?? string.Empty;
+
+            case JsonValueKind.Array:
+                var arrayValues = new List<string>();
+                foreach (var item in element.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.String)
+                    {
+                        var value = item.GetString();
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            arrayValues.Add(value);
+                        }
+                    }
+                }
+                return string.Join(", ", arrayValues);
+
+            case JsonValueKind.Null:
+            case JsonValueKind.Undefined:
+                return string.Empty;
+
+            default:
+                return element.ToString() ?? string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Tries to parse Microsoft JSON.NET legacy date format like "/Date(1725596151358)/"
+    /// </summary>
+    /// <param name="dateString">The date string to parse</param>
+    /// <param name="result">The parsed DateTime if successful</param>
+    /// <returns>True if parsing succeeded, false otherwise</returns>
+    private static bool TryParseMicrosoftJsonDate(string dateString, out DateTime result)
+    {
+        result = default;
+
+        if (string.IsNullOrEmpty(dateString))
+            return false;
+
+        // Check if it matches the Microsoft JSON.NET format: /Date(timestamp)/
+        if (dateString.StartsWith("/Date(") && dateString.EndsWith(")/"))
+        {
+            try
+            {
+                // Extract the timestamp part
+                var timestampString = dateString.Substring(6, dateString.Length - 8);
+
+                // Handle timezone offset if present (e.g., "/Date(1725596151358+0200)/")
+                var plusIndex = timestampString.IndexOf('+');
+                var minusIndex = timestampString.IndexOf('-');
+
+                if (plusIndex > 0 || minusIndex > 0)
+                {
+                    // Remove timezone part for now, just use the timestamp
+                    var timezoneIndex = Math.Max(plusIndex, minusIndex);
+                    timestampString = timestampString.Substring(0, timezoneIndex);
+                }
+
+                // Parse the timestamp (milliseconds since Unix epoch)
+                if (long.TryParse(timestampString, out var timestamp))
+                {
+                    // Convert from Unix timestamp (milliseconds) to DateTime
+                    result = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).DateTime;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Ignore parsing errors
+            }
+        }
+
+        return false;
     }
 }

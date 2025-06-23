@@ -274,18 +274,6 @@ public class PreFlightService
         {
             var allToolsFound = true;
 
-            // Check for DISM.exe
-            if (IsToolAvailable("dism.exe"))
-            {
-                Logger.Information("System tool verified: DISM.exe");
-            }
-            else
-            {
-                Logger.Error("Required system tool not found: DISM.exe");
-                _errorMessages.Add("DISM.exe is required for Windows image management but was not found.");
-                allToolsFound = false;
-            }
-
             // Check for PowerShell
             if (IsToolAvailable("powershell.exe"))
             {
@@ -293,8 +281,20 @@ public class PreFlightService
             }
             else
             {
-                Logger.Warning("PowerShell.exe not found in PATH");
-                _warningMessages.Add("PowerShell not found - some advanced features may be limited.");
+                Logger.Error("Required system tool not found: PowerShell.exe");
+                _errorMessages.Add("PowerShell.exe is required for Windows image management but was not found.");
+                allToolsFound = false;
+            }
+
+            // Verify Get-WindowsImage cmdlet availability
+            if (IsPowerShellCmdletAvailable("Get-WindowsImage"))
+            {
+                Logger.Information("PowerShell cmdlet verified: Get-WindowsImage");
+            }
+            else
+            {
+                Logger.Warning("Get-WindowsImage cmdlet not available");
+                _warningMessages.Add("Get-WindowsImage cmdlet not found - Windows imaging features may be limited.");
             }
 
             return allToolsFound;
@@ -325,6 +325,36 @@ public class PreFlightService
 
             process?.WaitForExit();
             return process?.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Checks if a PowerShell cmdlet is available.
+    /// </summary>
+    private bool IsPowerShellCmdletAvailable(string cmdletName)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-Command \"Get-Command {cmdletName} -ErrorAction SilentlyContinue | Select-Object -First 1\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            });
+
+            if (process == null) return false;
+
+            process.WaitForExit();
+            var output = process.StandardOutput.ReadToEnd();
+
+            return process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output) && output.Contains(cmdletName);
         }
         catch
         {

@@ -4,7 +4,7 @@
 
 The `WindowsImageService` class is a comprehensive service for managing Windows image files (WIM/ESD) and their metadata in the Bucket application. It provides functionality to analyze, import, store, and manage Windows images using PowerShell's `Get-WindowsImage` cmdlet for reliable image analysis.
 
-**Recent Update**: The service has been significantly improved to use PowerShell's `Get-WindowsImage` cmdlet instead of DISM text parsing, providing much more reliable image analysis and index detection.
+**Recent Update**: The service has been completely migrated to use PowerShell's `Get-WindowsImage` cmdlet exclusively, removing all dependencies on DISM.exe, providing much more reliable image analysis and index detection.
 
 ## Location
 

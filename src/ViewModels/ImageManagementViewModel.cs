@@ -123,9 +123,11 @@ public partial class ImageManagementViewModel : ObservableObject
         // Initialize commands
         RefreshCommand = new AsyncRelayCommand(RefreshImagesAsync);
         ImportFromIsoCommand = new AsyncRelayCommand(ImportFromIsoAsync);
-        ImportFromWimCommand = new AsyncRelayCommand(ImportFromWimAsync); DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedImageAsync, CanDeleteSelected);
+        ImportFromWimCommand = new AsyncRelayCommand(ImportFromWimAsync);
+        DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedImageAsync, CanDeleteSelected);
         DeleteSelectedFromDiskCommand = new AsyncRelayCommand(DeleteSelectedImageFromDiskAsync, CanDeleteSelected);
         ViewImageDetailsCommand = new RelayCommand<WindowsImageInfo>(ViewImageDetails);
+        LoadIndexDetailsCommand = new AsyncRelayCommand<WindowsImageIndex>(LoadIndexDetailsAsync);
 
         // Placeholder commands for detail panel
         ExtractSelectedIndicesCommand = new RelayCommand(() => { /* TODO: Implement */ });
@@ -182,6 +184,11 @@ public partial class ImageManagementViewModel : ObservableObject
     /// Gets the command to validate an image's integrity.
     /// </summary>
     public ICommand ValidateImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to load detailed information for a specific image index.
+    /// </summary>
+    public ICommand LoadIndexDetailsCommand { get; }
 
     #endregion
 
@@ -464,6 +471,55 @@ public partial class ImageManagementViewModel : ObservableObject
         {
             Logger.Error(ex, "Failed to navigate to image details for: {Name}", image.Name);
             StatusMessage = $"Failed to open details for {image.Name}";
+        }
+    }
+
+    /// <summary>
+    /// Loads detailed information for a specific Windows image index.
+    /// </summary>
+    /// <param name="index">The Windows image index to load details for.</param>
+    private async Task LoadIndexDetailsAsync(WindowsImageIndex index)
+    {
+        if (index == null || SelectedImage == null)
+        {
+            Logger.Warning("Cannot load index details: index or selected image is null");
+            return;
+        }
+
+        try
+        {
+            Logger.Information("Loading detailed information for index {Index} in {ImageName}", index.Index, SelectedImage.Name);
+            StatusMessage = $"Loading detailed information for {index.Name}...";
+
+            // Get detailed information for the specific index
+            var detailedIndex = await _windowsImageService.GetImageIndexDetailsAsync(
+                SelectedImage.FilePath,
+                index.Index,
+                new Progress<string>(message => StatusMessage = message)
+            );
+
+            if (detailedIndex != null)
+            {
+                // Find the matching index in the selected image and update it with detailed info
+                var existingIndex = SelectedImage.Indices.FirstOrDefault(i => i.Index == index.Index);
+                if (existingIndex != null)
+                {
+                    // Update the existing index with detailed information
+                    var indexToUpdate = SelectedImage.Indices.IndexOf(existingIndex);
+                    if (indexToUpdate >= 0)
+                    {
+                        SelectedImage.Indices[indexToUpdate] = detailedIndex;
+                        Logger.Information("Updated index {Index} with detailed information", index.Index);
+                    }
+                }
+            }
+
+            StatusMessage = "Ready";
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to load detailed information for index {Index}", index.Index);
+            StatusMessage = $"Error loading details: {ex.Message}";
         }
     }
 

@@ -56,7 +56,7 @@ public bool DiskSpace { get; set; }
 public bool SystemTools { get; set; }
 ```
 - **Type**: `bool`
-- **Purpose**: Indicates whether all required system tools (DISM, PowerShell) are available
+- **Purpose**: Indicates whether all required system tools (PowerShell and cmdlets) are available
 - **Critical**: Yes - Required for image manipulation
 
 ### Recommended Check Results
