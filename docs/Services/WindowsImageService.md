@@ -2,7 +2,9 @@
 
 ## Overview
 
-Service for managing Windows image files and their metadata. This service provides comprehensive functionality for importing, analyzing, and managing Windows WIM/ESD files, including integration with DISM for extracting image information.
+The `WindowsImageService` class is a comprehensive service for managing Windows image files (WIM/ESD) and their metadata in the Bucket application. It provides functionality to analyze, import, store, and manage Windows images using PowerShell's `Get-WindowsImage` cmdlet for reliable image analysis.
+
+**Recent Update**: The service has been significantly improved to use PowerShell's `Get-WindowsImage` cmdlet instead of DISM text parsing, providing much more reliable image analysis and index detection.
 
 ## Location
 
@@ -14,6 +16,14 @@ Service for managing Windows image files and their metadata. This service provid
 ```csharp
 public class WindowsImageService
 ```
+
+## Key Improvements
+
+### PowerShell Integration
+- **Reliable Analysis**: Uses `Get-WindowsImage` cmdlet for structured data extraction
+- **JSON Output**: Processes structured JSON instead of parsing text output
+- **Better Error Handling**: Improved detection of privilege and module requirements
+- **Architecture Mapping**: Automatic conversion of numeric architecture codes to readable names
 
 ## Methods
 
@@ -30,8 +40,13 @@ public class WindowsImageService
 
 #### `AnalyzeImageAsync(string imagePath, IProgress<string> progress = null, CancellationToken cancellationToken = default)`
 - **Returns**: `Task<List<WindowsImageIndex>>`
-- **Purpose**: Analyzes a WIM/ESD file using DISM to extract index information
-- **Features**: Progress reporting, DISM integration, output parsing
+- **Purpose**: **IMPROVED** - Analyzes WIM/ESD files using PowerShell `Get-WindowsImage` cmdlet
+- **Features**:
+  - PowerShell JSON output parsing
+  - Structured data extraction
+  - Better error diagnostics
+  - Progress reporting
+  - Architecture code mapping (0→x86, 9→x64, 12→ARM64, etc.)
 
 #### `ImportImageAsync(string imagePath, string name, string sourceIsoPath = "", IProgress<string> progress = null, CancellationToken cancellationToken = default)`
 - **Returns**: `Task<WindowsImageInfo>`
@@ -211,6 +226,55 @@ public async Task<WindowsImageInfo> SafeImportAsync(string path, string name)
 - **Process Security**: DISM execution is controlled and sandboxed
 - **Permission Handling**: Graceful handling of permission-related errors
 - **Input Sanitization**: All user inputs are validated before use
+
+## Issue Resolution: Index Detection Problems
+
+### Problem Description
+Previously, users experienced issues where imported images showed "no indices found" even when indices were present. This was caused by unreliable text parsing of DISM command output.
+
+### Root Cause
+The original implementation used `dism.exe /Get-WimInfo` and parsed the text output line by line. This approach was fragile and could fail due to:
+- Localization differences in DISM output
+- Formatting variations across Windows versions
+- Text encoding issues
+- Output parsing edge cases
+
+### Solution Implemented
+**PowerShell Integration**: Replaced DISM text parsing with PowerShell's `Get-WindowsImage` cmdlet:
+
+```csharp
+// OLD: DISM text parsing (unreliable)
+var processInfo = new ProcessStartInfo
+{
+    FileName = "dism.exe",
+    Arguments = $"/Get-WimInfo /WimFile:\"{imagePath}\"",
+    // ... parse text output line by line
+};
+
+// NEW: PowerShell JSON output (reliable)
+var powerShellCommand = $"Get-WindowsImage -ImagePath '{escapedPath}' | ConvertTo-Json -Depth 3";
+var processInfo = new ProcessStartInfo
+{
+    FileName = "powershell.exe",
+    Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"{powerShellCommand}\"",
+    // ... parse structured JSON output
+};
+```
+
+### Benefits of the Fix
+- **Structured Data**: JSON output provides consistent, parseable data structure
+- **Language Independent**: No localization issues with PowerShell objects
+- **Better Error Handling**: Clearer error messages and exception types
+- **Comprehensive Data**: Access to all image properties without parsing artifacts
+- **Reliability**: No more missing indices due to parsing failures
+
+### Testing the Fix
+After updating, users should see:
+1. All image indices properly detected during import
+2. Correct architecture information (x86, x64, ARM64, etc.)
+3. Accurate size calculations
+4. Proper image names and descriptions
+5. Better error messages when issues occur
 
 ---
 

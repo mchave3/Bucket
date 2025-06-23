@@ -2,7 +2,9 @@
 
 ## Overview
 
-Represents a Windows image file (WIM/ESD) with its associated indices and metadata. This class serves as a container for managing Windows installation media, tracking both the file information and the available Windows editions contained within.
+The `WindowsImageInfo` class represents a Windows image file (WIM/ESD) with its associated indices and metadata. This is an observable data model that supports proper UI binding and real-time updates in MVVM scenarios.
+
+**Recent Update**: The class has been converted to use `ObservableObject` from CommunityToolkit.Mvvm to support proper data binding and UI notifications when properties change.
 
 ## Location
 
@@ -12,12 +14,14 @@ Represents a Windows image file (WIM/ESD) with its associated indices and metada
 ## Class Definition
 
 ```csharp
-public class WindowsImageInfo
+public partial class WindowsImageInfo : ObservableObject
 ```
 
 ## Properties
 
-### Core Properties
+### Core Observable Properties
+
+All core properties now use `[ObservableProperty]` for automatic UI notification:
 
 - **`Id`** (string): Unique identifier for this image
 - **`Name`** (string): Display name of the image
@@ -152,6 +156,59 @@ if (imageInfo.Indices.Any(i => i.Index <= 0))
 - **Large Files**: WIM files can be several GB - consider progress reporting for operations
 - **Index Loading**: Defer index analysis until needed to improve startup performance
 - **File Validation**: Cache file existence checks to avoid repeated file system access
+
+## Issue Resolution: UI Binding Problems
+
+### Problem Description
+Previously, when users clicked on an image in the Image Management page, the details panel on the right side would not update properly, showing "No image selected" instead of the actual image details.
+
+### Root Cause
+The `WindowsImageInfo` class was a simple POCO (Plain Old CLR Object) without property change notifications. This meant that when the UI bound to properties like `SelectedImage.Name`, `SelectedImage.FormattedFileSize`, etc., the binding system couldn't detect when these properties changed, resulting in a static UI that didn't reflect the current selection.
+
+### Solution Implemented
+**Observable Object Pattern**: Converted `WindowsImageInfo` to inherit from `ObservableObject` and use `[ObservableProperty]` attributes:
+
+```csharp
+// OLD: Simple properties (no notifications)
+public class WindowsImageInfo
+{
+    public string Name { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    // ... other properties
+}
+
+// NEW: Observable properties with automatic notifications
+public partial class WindowsImageInfo : ObservableObject
+{
+    [ObservableProperty]
+    private string name = string.Empty;
+
+    [ObservableProperty]
+    private string filePath = string.Empty;
+    // ... other properties with [ObservableProperty]
+}
+```
+
+### Property Change Notification Chain
+The solution includes automatic notification for calculated properties:
+
+- When `ImageType` changes → `ImageTypeDisplay` updates
+- When `FileSizeBytes` changes → `FormattedFileSize` updates
+- When `FilePath` changes → `FileName` and `FileExists` update
+- When `Indices` collection changes → `IndexCount`, `IncludedIndexCount`, and `IncludedIndicesSummary` update
+
+### Benefits of the Fix
+- **Real-time UI Updates**: Image details now appear immediately when selecting an image
+- **Proper Data Binding**: All calculated properties update automatically when base properties change
+- **Collection Monitoring**: Changes to the indices collection trigger appropriate UI updates
+- **MVVM Compliance**: Follows proper MVVM patterns with observable data models
+
+### Testing the Fix
+After updating, users should see:
+1. Image details appear immediately when clicking on an image
+2. All image information displayed correctly (name, size, dates, file path)
+3. Windows editions/indices list populated properly
+4. Real-time updates when image data changes
 
 ---
 

@@ -8,4 +8,7 @@
     <!-- Object to Boolean Converter -->
     <common:ObjectToBooleanConverter x:Key="ObjectToBooleanConverter" />
 
+    <!-- Object to Visibility Converter -->
+    <common:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />
+
 </ResourceDictionary>

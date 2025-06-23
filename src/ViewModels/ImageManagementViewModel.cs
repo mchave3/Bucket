@@ -43,7 +43,14 @@ public partial class ImageManagementViewModel : ObservableObject
     public WindowsImageInfo SelectedImage
     {
         get => _selectedImage;
-        set => SetProperty(ref _selectedImage, value);
+        set
+        {
+            Logger.Information("SelectedImage changing from {OldValue} to {NewValue}",
+                _selectedImage?.Name ?? "null", value?.Name ?? "null");
+            SetProperty(ref _selectedImage, value);
+            Logger.Information("SelectedImage changed. Current value: {CurrentValue}",
+                _selectedImage?.Name ?? "null");
+        }
     }
 
     /// <summary>
@@ -492,13 +499,18 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <param name="e">The property change event arguments.</param>
     private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
+        Logger.Debug("Property changed: {PropertyName}", e.PropertyName);
+
         switch (e.PropertyName)
-        {            case nameof(SelectedImage):
+        {
+            case nameof(SelectedImage):
+                Logger.Information("SelectedImage property changed - updating related properties");
                 // Update command can execute states
                 ((AsyncRelayCommand)DeleteSelectedCommand).NotifyCanExecuteChanged();
                 ((AsyncRelayCommand)DeleteSelectedFromDiskCommand).NotifyCanExecuteChanged();
                 // Update selected image display name
                 OnPropertyChanged(nameof(SelectedImageDisplayName));
+                Logger.Information("SelectedImageDisplayName updated to: {DisplayName}", SelectedImageDisplayName);
                 break;
 
             case nameof(SearchText):

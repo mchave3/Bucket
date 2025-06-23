@@ -333,7 +333,7 @@
                     <StackPanel Margin="16" Spacing="16">
                         <!-- No Selection State -->
                         <StackPanel
-                            Visibility="{Binding SelectedImage, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Reverse}"
+                            Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Reverse}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="12">
@@ -350,7 +350,7 @@
 
                         <!-- Selected Image Details -->
                         <StackPanel
-                            Visibility="{Binding SelectedImage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}}"
                             Spacing="16">
 
                             <!-- Image Properties -->

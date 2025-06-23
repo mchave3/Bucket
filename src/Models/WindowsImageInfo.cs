@@ -1,61 +1,71 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Bucket.Models;
 
 /// <summary>
 /// Represents a Windows image file (WIM/ESD) with its associated indices and metadata.
 /// </summary>
-public class WindowsImageInfo
+public partial class WindowsImageInfo : ObservableObject
 {
     /// <summary>
     /// Gets or sets the unique identifier for this image.
     /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    [ObservableProperty]
+    private string id = Guid.NewGuid().ToString();
 
     /// <summary>
     /// Gets or sets the display name of the image.
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string name = string.Empty;
 
     /// <summary>
     /// Gets or sets the full path to the image file.
     /// </summary>
-    public string FilePath { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string filePath = string.Empty;
 
     /// <summary>
     /// Gets or sets the type of image file (WIM, ESD, etc.).
     /// </summary>
-    public string ImageType { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string imageType = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the creation date of the image.
+    /// </summary>
+    [ObservableProperty]
+    private DateTime createdDate;
+
+    /// <summary>
+    /// Gets or sets the last modified date of the image.
+    /// </summary>
+    [ObservableProperty]
+    private DateTime modifiedDate;
+
+    /// <summary>
+    /// Gets or sets the total size of the image file in bytes.
+    /// </summary>
+    [ObservableProperty]
+    private long fileSizeBytes;
+
+    /// <summary>
+    /// Gets or sets the source ISO path if this image was imported from an ISO.
+    /// </summary>
+    [ObservableProperty]
+    private string sourceIsoPath = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collection of Windows indices contained in this image.
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<WindowsImageIndex> indices = new();
 
     /// <summary>
     /// Gets the formatted image type for display purposes.
     /// </summary>
     public string ImageTypeDisplay => string.IsNullOrEmpty(ImageType) ? "Image" : $"{ImageType} Image";
-
-    /// <summary>
-    /// Gets or sets the creation date of the image.
-    /// </summary>
-    public DateTime CreatedDate { get; set; }
-
-    /// <summary>
-    /// Gets or sets the last modified date of the image.
-    /// </summary>
-    public DateTime ModifiedDate { get; set; }
-
-    /// <summary>
-    /// Gets or sets the total size of the image file in bytes.
-    /// </summary>
-    public long FileSizeBytes { get; set; }
-
-    /// <summary>
-    /// Gets or sets the source ISO path if this image was imported from an ISO.
-    /// </summary>
-    public string SourceIsoPath { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the collection of Windows indices contained in this image.
-    /// </summary>
-    public ObservableCollection<WindowsImageIndex> Indices { get; set; } = new();
 
     /// <summary>
     /// Gets the formatted file size string for display purposes.
@@ -107,6 +117,52 @@ public class WindowsImageInfo
         {
             var includedCount = IncludedIndexCount;
             return includedCount == IndexCount ? $"All {IndexCount} indices" : $"{includedCount} of {IndexCount} indices";
+        }
+    }
+
+    /// <summary>
+    /// Partial method called when ImageType property changes.
+    /// </summary>
+    partial void OnImageTypeChanged(string value)
+    {
+        OnPropertyChanged(nameof(ImageTypeDisplay));
+    }
+
+    /// <summary>
+    /// Partial method called when FileSizeBytes property changes.
+    /// </summary>
+    partial void OnFileSizeBytesChanged(long value)
+    {
+        OnPropertyChanged(nameof(FormattedFileSize));
+    }
+
+    /// <summary>
+    /// Partial method called when FilePath property changes.
+    /// </summary>
+    partial void OnFilePathChanged(string value)
+    {
+        OnPropertyChanged(nameof(FileName));
+        OnPropertyChanged(nameof(FileExists));
+    }
+
+    /// <summary>
+    /// Partial method called when Indices property changes.
+    /// </summary>
+    partial void OnIndicesChanged(ObservableCollection<WindowsImageIndex> value)
+    {
+        OnPropertyChanged(nameof(IndexCount));
+        OnPropertyChanged(nameof(IncludedIndexCount));
+        OnPropertyChanged(nameof(IncludedIndicesSummary));
+
+        // Subscribe to collection changes
+        if (value != null)
+        {
+            value.CollectionChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(IndexCount));
+                OnPropertyChanged(nameof(IncludedIndexCount));
+                OnPropertyChanged(nameof(IncludedIndicesSummary));
+            };
         }
     }
 }

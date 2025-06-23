@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Bucket.Models;
 
@@ -90,7 +91,7 @@ public class WindowsImageService
     }
 
     /// <summary>
-    /// Analyzes a WIM/ESD file and extracts its indices asynchronously.
+    /// Analyzes a WIM/ESD file and extracts its indices asynchronously using PowerShell Get-WindowsImage.
     /// </summary>
     /// <param name="imagePath">The path to the WIM/ESD file.</param>
     /// <param name="progress">The progress reporter.</param>
@@ -127,11 +128,14 @@ public class WindowsImageService
             var indices = new List<WindowsImageIndex>();
             progress?.Report("Extracting image information...");
 
-            // Use DISM to get image information
+            // Use PowerShell Get-WindowsImage cmdlet for better reliability and structured output
+            var escapedPath = imagePath.Replace("'", "''"); // Escape single quotes for PowerShell
+            var powerShellCommand = $"Get-WindowsImage -ImagePath '{escapedPath}' | ConvertTo-Json -Depth 3";
+
             var processInfo = new ProcessStartInfo
             {
-                FileName = "dism.exe",
-                Arguments = $"/Get-WimInfo /WimFile:\"{imagePath}\"",
+                FileName = "powershell.exe",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"{powerShellCommand}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -139,11 +143,11 @@ public class WindowsImageService
             };
 
             using var process = new Process { StartInfo = processInfo };
-            var output = new List<string>();
-            var errors = new List<string>();
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
 
-            process.OutputDataReceived += (sender, e) => { if (!string.IsNullOrEmpty(e.Data)) output.Add(e.Data); };
-            process.ErrorDataReceived += (sender, e) => { if (!string.IsNullOrEmpty(e.Data)) errors.Add(e.Data); };
+            process.OutputDataReceived += (sender, e) => { if (!string.IsNullOrEmpty(e.Data)) outputBuilder.AppendLine(e.Data); };
+            process.ErrorDataReceived += (sender, e) => { if (!string.IsNullOrEmpty(e.Data)) errorBuilder.AppendLine(e.Data); };
 
             process.Start();
             process.BeginOutputReadLine();
@@ -153,25 +157,36 @@ public class WindowsImageService
 
             if (process.ExitCode != 0)
             {
-                var errorMessage = string.Join("\n", errors);
+                var errorMessage = errorBuilder.ToString();
 
                 // Check for specific error conditions
-                if (errorMessage.Contains("Access is denied"))
+                if (errorMessage.Contains("Access is denied") || errorMessage.Contains("UnauthorizedAccess"))
                 {
-                    throw new UnauthorizedAccessException("Administrator privileges are required to analyze Windows images using DISM.");
+                    throw new UnauthorizedAccessException("Administrator privileges are required to analyze Windows images.");
                 }
-                else if (errorMessage.Contains("The file cannot be accessed"))
+                else if (errorMessage.Contains("cannot access") || errorMessage.Contains("FileNotFound"))
                 {
                     throw new IOException($"The image file is in use or corrupted: {imagePath}");
                 }
+                else if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
+                {
+                    throw new InvalidOperationException("The DISM PowerShell module is not available. Please ensure Windows ADK or DISM module is installed.");
+                }
 
-                throw new InvalidOperationException($"DISM failed with exit code {process.ExitCode}: {errorMessage}");
+                throw new InvalidOperationException($"PowerShell Get-WindowsImage failed with exit code {process.ExitCode}: {errorMessage}");
             }
 
             progress?.Report("Parsing image information...");
 
-            // Parse DISM output
-            indices = ParseDismOutput(output);
+            var jsonOutput = outputBuilder.ToString().Trim();
+            if (string.IsNullOrEmpty(jsonOutput))
+            {
+                Logger.Warning("No output received from Get-WindowsImage for {ImagePath}", imagePath);
+                return indices;
+            }
+
+            // Parse PowerShell JSON output
+            indices = ParsePowerShellOutput(jsonOutput);
 
             Logger.Information("Successfully analyzed image with {Count} indices", indices.Count);
             return indices;
@@ -315,70 +330,130 @@ public class WindowsImageService
     }
 
     /// <summary>
-    /// Parses DISM output to extract Windows image indices.
+    /// Parses PowerShell Get-WindowsImage JSON output to extract Windows image indices.
     /// </summary>
-    /// <param name="dismOutput">The DISM command output lines.</param>
+    /// <param name="jsonOutput">The JSON output from PowerShell Get-WindowsImage cmdlet.</param>
     /// <returns>A list of Windows image indices.</returns>
-    private static List<WindowsImageIndex> ParseDismOutput(List<string> dismOutput)
+    private static List<WindowsImageIndex> ParsePowerShellOutput(string jsonOutput)
     {
         var indices = new List<WindowsImageIndex>();
-        WindowsImageIndex currentIndex = null;
 
-        foreach (var line in dismOutput)
+        try
         {
-            var trimmedLine = line.Trim();
-
-            if (trimmedLine.StartsWith("Index : "))
+            // Handle both single object and array responses
+            JsonDocument document;
+            try
             {
-                // Save previous index if exists
-                if (currentIndex != null)
-                {
-                    indices.Add(currentIndex);
-                }
-
-                // Start new index
-                if (int.TryParse(trimmedLine.Substring(8), out var indexNumber))
-                {
-                    currentIndex = new WindowsImageIndex { Index = indexNumber };
-                }
+                document = JsonDocument.Parse(jsonOutput);
             }
-            else if (currentIndex != null)
+            catch (JsonException ex)
             {
-                if (trimmedLine.StartsWith("Name : "))
+                Logger.Error(ex, "Failed to parse PowerShell JSON output: {Output}", jsonOutput);
+                throw new InvalidOperationException("Invalid JSON output from PowerShell Get-WindowsImage command", ex);
+            }
+
+            using (document)
+            {
+                JsonElement root = document.RootElement;
+
+                // Handle array of images
+                if (root.ValueKind == JsonValueKind.Array)
                 {
-                    currentIndex.Name = trimmedLine.Substring(7);
-                }
-                else if (trimmedLine.StartsWith("Description : "))
-                {
-                    currentIndex.Description = trimmedLine.Substring(14);
-                }
-                else if (trimmedLine.StartsWith("Architecture : "))
-                {
-                    currentIndex.Architecture = trimmedLine.Substring(15);
-                }
-                else if (trimmedLine.StartsWith("Size : "))
-                {
-                    var sizeText = trimmedLine.Substring(7);
-                    // Parse size (format: "X,XXX,XXX bytes")
-                    if (sizeText.Contains("bytes"))
+                    foreach (var imageElement in root.EnumerateArray())
                     {
-                        var bytesText = sizeText.Replace("bytes", "").Replace(",", "").Trim();
-                        if (long.TryParse(bytesText, out var sizeBytes))
+                        var index = ParseImageElement(imageElement);
+                        if (index != null)
                         {
-                            currentIndex.SizeMB = Math.Round(sizeBytes / (1024.0 * 1024.0), 1);
+                            indices.Add(index);
                         }
                     }
                 }
+                // Handle single image object
+                else if (root.ValueKind == JsonValueKind.Object)
+                {
+                    var index = ParseImageElement(root);
+                    if (index != null)
+                    {
+                        indices.Add(index);
+                    }
+                }
             }
-        }
 
-        // Add the last index
-        if (currentIndex != null)
+            Logger.Debug("Parsed {Count} image indices from PowerShell output", indices.Count);
+            return indices;
+        }
+        catch (Exception ex)
         {
-            indices.Add(currentIndex);
+            Logger.Error(ex, "Failed to parse PowerShell output");
+            throw;
         }
+    }
 
-        return indices;
+    /// <summary>
+    /// Parses a single image element from PowerShell JSON output.
+    /// </summary>
+    /// <param name="imageElement">The JSON element representing a single image.</param>
+    /// <returns>A WindowsImageIndex object or null if parsing fails.</returns>
+    private static WindowsImageIndex ParseImageElement(JsonElement imageElement)
+    {
+        try
+        {
+            var index = new WindowsImageIndex();
+
+            // Extract index number
+            if (imageElement.TryGetProperty("ImageIndex", out var indexProperty))
+            {
+                index.Index = indexProperty.GetInt32();
+            }
+
+            // Extract image name
+            if (imageElement.TryGetProperty("ImageName", out var nameProperty))
+            {
+                index.Name = nameProperty.GetString() ?? string.Empty;
+            }
+
+            // Extract description
+            if (imageElement.TryGetProperty("ImageDescription", out var descProperty))
+            {
+                index.Description = descProperty.GetString() ?? string.Empty;
+            }
+
+            // Extract architecture
+            if (imageElement.TryGetProperty("Architecture", out var archProperty))
+            {
+                var archValue = archProperty.GetInt32();
+                index.Architecture = archValue switch
+                {
+                    0 => "x86",
+                    5 => "ARM",
+                    6 => "IA64",
+                    9 => "x64",
+                    12 => "ARM64",
+                    _ => archValue.ToString()
+                };
+            }
+
+            // Extract size
+            if (imageElement.TryGetProperty("ImageSize", out var sizeProperty))
+            {
+                var sizeBytes = sizeProperty.GetInt64();
+                index.SizeMB = Math.Round(sizeBytes / (1024.0 * 1024.0), 1);
+            }
+
+            // Only return valid indices with required properties
+            if (index.Index > 0 && !string.IsNullOrEmpty(index.Name))
+            {
+                return index;
+            }
+
+            Logger.Warning("Skipping invalid image index: Index={Index}, Name={Name}", index.Index, index.Name);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to parse image element from JSON");
+            return null;
+        }
     }
 
     /// <summary>
@@ -404,7 +479,9 @@ public class WindowsImageService
         var targetPath = Path.Combine(_imagesDirectory, $"{targetName}{extension}");
 
         // Ensure target directory exists
-        Directory.CreateDirectory(_imagesDirectory);        // Check if target already exists
+        Directory.CreateDirectory(_imagesDirectory);
+
+        // Check if target already exists
         if (File.Exists(targetPath))
         {
             var counter = 1;
