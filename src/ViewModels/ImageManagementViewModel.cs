@@ -22,7 +22,6 @@ public partial class ImageManagementViewModel : ObservableObject
 
     private ObservableCollection<WindowsImageInfo> _images = new();
     private WindowsImageInfo _selectedImage;
-    private bool _isLoading;
     private string _statusMessage = "Ready";
     private bool _hasImages;
     private string _searchText = string.Empty;
@@ -54,15 +53,6 @@ public partial class ImageManagementViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Gets or sets whether the ViewModel is currently loading data.
-    /// </summary>
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set => SetProperty(ref _isLoading, value);
-    }
-
-    /// <summary>
     /// Gets or sets the current status message.
     /// </summary>
     public string StatusMessage
@@ -77,7 +67,12 @@ public partial class ImageManagementViewModel : ObservableObject
     public bool HasImages
     {
         get => _hasImages;
-        set => SetProperty(ref _hasImages, value);
+        set
+        {
+            SetProperty(ref _hasImages, value);
+            OnPropertyChanged(nameof(ShowEmptyState));
+            OnPropertyChanged(nameof(ShowImagesList));
+        }
     }
 
     /// <summary>
@@ -112,7 +107,19 @@ public partial class ImageManagementViewModel : ObservableObject
     /// Gets the display name for the selected image or a default message.
     /// </summary>
     public string SelectedImageDisplayName =>
-        SelectedImage?.Name ?? "No image selected";    /// <summary>
+        SelectedImage?.Name ?? "No image selected";
+
+    /// <summary>
+    /// Gets whether the empty state should be shown (no images).
+    /// </summary>
+    public bool ShowEmptyState => !HasImages;
+
+    /// <summary>
+    /// Gets whether the images list should be shown (has images).
+    /// </summary>
+    public bool ShowImagesList => HasImages;
+
+    /// <summary>
     /// Initializes a new instance of the ImageManagementViewModel class.
     /// </summary>
     public ImageManagementViewModel()
@@ -226,7 +233,6 @@ public partial class ImageManagementViewModel : ObservableObject
 
         try
         {
-            IsLoading = true;
             StatusMessage = "Loading images...";
 
             var images = await _windowsImageService.GetImagesAsync();
@@ -250,10 +256,6 @@ public partial class ImageManagementViewModel : ObservableObject
 
             // Show error dialog
             await ShowErrorDialogAsync("Error Loading Images", $"Failed to load Windows images: {ex.Message}");
-        }
-        finally
-        {
-            IsLoading = false;
         }
     }
 
@@ -284,8 +286,6 @@ public partial class ImageManagementViewModel : ObservableObject
             {
                 StatusMessage = $"Analyzing {file.Name}...";
                 Logger.Information("User selected ISO file: {FilePath}", file.Path);
-
-                IsLoading = true;
 
                 try
                 {
@@ -319,10 +319,6 @@ public partial class ImageManagementViewModel : ObservableObject
                     StatusMessage = $"Failed to import {file.Name}";
                     await ShowErrorDialogAsync("Import Failed",
                         $"Failed to import '{file.Name}':\n\n{importEx.Message}");
-                }
-                finally
-                {
-                    IsLoading = false;
                 }
             }
             else
@@ -367,19 +363,23 @@ public partial class ImageManagementViewModel : ObservableObject
                 StatusMessage = $"Analyzing {file.Name}...";
                 Logger.Information("User selected file: {FilePath}", file.Path);
 
-                IsLoading = true;
-
                 try
                 {
-                    // Get a friendly name for the image
-                    var imageName = Path.GetFileNameWithoutExtension(file.Name);
+                    // Import the image using the WIM import service with progress dialog
+                    WindowsImageInfo importedImage = null;
+                    await ShowImportProgressDialogAsync("Importing WIM/ESD", async (progress, cancellationToken) =>
+                    {
+                        // Get a friendly name for the image
+                        var imageName = Path.GetFileNameWithoutExtension(file.Name);
 
-                    // Import the image using the service
-                    var importedImage = await _windowsImageService.ImportImageAsync(
-                        file.Path,
-                        imageName,
-                        sourceIsoPath: "",
-                        progress: new Progress<string>(message => StatusMessage = message));
+                        // Import the image using the service
+                        importedImage = await _windowsImageService.ImportImageAsync(
+                            file.Path,
+                            imageName,
+                            sourceIsoPath: "",
+                            progress: progress,
+                            cancellationToken: cancellationToken);
+                    });
 
                     // Refresh the images list
                     await RefreshImagesAsync();
@@ -391,16 +391,17 @@ public partial class ImageManagementViewModel : ObservableObject
                     await ShowInfoDialogAsync("Import Successful",
                         $"Successfully imported '{importedImage.Name}' with {importedImage.IndexCount} Windows editions.");
                 }
+                catch (OperationCanceledException)
+                {
+                    StatusMessage = "WIM/ESD import cancelled";
+                    Logger.Information("WIM/ESD import was cancelled by user");
+                }
                 catch (Exception importEx)
                 {
                     Logger.Error(importEx, "Failed to import file: {FilePath}", file.Path);
                     StatusMessage = $"Failed to import {file.Name}";
                     await ShowErrorDialogAsync("Import Failed",
                         $"Failed to import '{file.Name}':\n\n{importEx.Message}");
-                }
-                finally
-                {
-                    IsLoading = false;
                 }
             }
             else

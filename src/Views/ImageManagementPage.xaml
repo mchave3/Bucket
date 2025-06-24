@@ -125,24 +125,10 @@
                 <ColumnDefinition Width="1*" MinWidth="300" />
             </Grid.ColumnDefinitions>
 
-            <!-- Loading Indicator -->
-            <StackPanel
-                Grid.ColumnSpan="3"
-                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Spacing="16">
-                <ProgressRing IsActive="True" Width="48" Height="48" />
-                <TextBlock
-                    Text="Loading images..."
-                    Style="{StaticResource BodyTextBlockStyle}"
-                    HorizontalAlignment="Center" />
-            </StackPanel>
-
             <!-- Empty State -->
             <StackPanel
                 Grid.ColumnSpan="3"
-                Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Reverse}"
+                Visibility="{Binding ShowEmptyState, Converter={StaticResource BooleanToVisibilityConverter}}"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Spacing="16"
@@ -170,7 +156,7 @@
             </StackPanel>
 
             <!-- Master Panel - Images List -->
-            <Grid Grid.Column="0" Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Grid.Column="0" Visibility="{Binding ShowImagesList, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -281,10 +267,10 @@
                 Width="1"
                 Background="{ThemeResource DividerStrokeColorDefaultBrush}"
                 Margin="12,0"
-                Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                Visibility="{Binding ShowImagesList, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
             <!-- Detail Panel - Selected Image Details -->
-            <Grid Grid.Column="2" Visibility="{Binding HasImages, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Grid.Column="2" Visibility="{Binding ShowImagesList, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

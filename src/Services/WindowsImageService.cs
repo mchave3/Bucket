@@ -735,10 +735,8 @@ public class WindowsImageService
 
         try
         {
-            progress?.Report($"Copying {sourceInfo.Name}...");
-
-            // Copy the file
-            await Task.Run(() => File.Copy(sourcePath, targetPath), cancellationToken);
+            // Copy the file with progress reporting
+            await CopyFileWithProgressAsync(sourcePath, targetPath, progress, cancellationToken);
 
             progress?.Report("Copy completed");
             Logger.Information("Successfully copied image to: {TargetPath}", targetPath);
@@ -764,6 +762,78 @@ public class WindowsImageService
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Copies a file with progress reporting.
+    /// </summary>
+    /// <param name="sourcePath">The source file path.</param>
+    /// <param name="destinationPath">The destination file path.</param>
+    /// <param name="progress">Progress reporter for the operation.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    private async Task CopyFileWithProgressAsync(string sourcePath, string destinationPath, IProgress<string> progress, CancellationToken cancellationToken)
+    {
+        Logger.Information("Copying file from {Source} to {Destination}", sourcePath, destinationPath);
+
+        try
+        {
+            // Ensure destination directory exists
+            var destinationDir = Path.GetDirectoryName(destinationPath);
+            if (!Directory.Exists(destinationDir))
+            {
+                Directory.CreateDirectory(destinationDir);
+            }
+
+            var sourceInfo = new FileInfo(sourcePath);
+            var totalBytes = sourceInfo.Length;
+            var copiedBytes = 0L;
+
+            const int bufferSize = 1024 * 1024; // 1MB buffer
+            var buffer = new byte[bufferSize];
+
+            using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+            using (var destinationStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
+            {
+                int bytesRead;
+                while ((bytesRead = await sourceStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                {
+                    await destinationStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                    copiedBytes += bytesRead;
+
+                    var percentComplete = (int)((double)copiedBytes / totalBytes * 100);
+                    progress?.Report($"Copying file... {percentComplete}% ({FormatBytes(copiedBytes)} / {FormatBytes(totalBytes)})");
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+
+            Logger.Information("File copied successfully: {Destination}", destinationPath);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to copy file from {Source} to {Destination}", sourcePath, destinationPath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Formats bytes into a human-readable string.
+    /// </summary>
+    /// <param name="bytes">The number of bytes.</param>
+    /// <returns>A formatted string representation.</returns>
+    private static string FormatBytes(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        var suffixIndex = 0;
+        double size = bytes;
+
+        while (size >= 1024 && suffixIndex < suffixes.Length - 1)
+        {
+            size /= 1024;
+            suffixIndex++;
+        }
+
+        return $"{size:F1} {suffixes[suffixIndex]}";
     }
 
     /// <summary>
