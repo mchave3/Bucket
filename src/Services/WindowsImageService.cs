@@ -8,12 +8,17 @@ using Bucket.Models;
 namespace Bucket.Services;
 
 /// <summary>
-/// Service for managing Windows image files and their metadata.
+/// Service for managing Windows image files and their metadata using PowerShell Get-WindowsImage cmdlet.
+/// Provides functionality to analyze, import, manage, and extract detailed information from WIM/ESD files.
 /// </summary>
 public class WindowsImageService
 {
+    #region Private Fields
+
     private readonly string _imagesDataPath;
     private readonly string _imagesDirectory;
+
+    #region Constructor
 
     /// <summary>
     /// Initializes a new instance of the WindowsImageService class.
@@ -28,6 +33,10 @@ public class WindowsImageService
 
         Logger.Debug("WindowsImageService initialized with directory: {Directory}", _imagesDirectory);
     }
+
+    #endregion
+
+    #region Public Methods - Image Collection Management
 
     /// <summary>
     /// Gets all available Windows images asynchronously.
@@ -90,6 +99,10 @@ public class WindowsImageService
             throw;
         }
     }
+
+
+
+    #endregion
 
     /// <summary>
     /// Analyzes a WIM/ESD file and extracts its indices asynchronously using PowerShell Get-WindowsImage.
@@ -329,6 +342,118 @@ public class WindowsImageService
             throw;
         }
     }
+
+    #endregion
+
+    #region Public Methods - Image Analysis and Details
+
+    /// <summary>
+    /// Gets detailed information for a specific Windows image index.
+    /// </summary>
+    /// <param name="imagePath">The path to the image file.</param>
+    /// <param name="index">The index number to get detailed information for.</param>
+    /// <param name="progress">The progress reporter.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A WindowsImageIndex object with detailed information, or null if not found.</returns>
+    public async Task<WindowsImageIndex> GetImageIndexDetailsAsync(string imagePath, int index, IProgress<string> progress = null, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Getting detailed information for image index {Index} in {ImagePath}", index, imagePath);
+
+        if (!File.Exists(imagePath))
+        {
+            throw new FileNotFoundException($"Image file not found: {imagePath}");
+        }
+
+        try
+        {
+            progress?.Report($"Loading detailed information for index {index}...");
+
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
+
+            // Use PowerShell Get-WindowsImage with specific index to get detailed info
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-Command \"Get-WindowsImage -ImagePath '{imagePath}' -Index {index} | ConvertTo-Json -Depth 10\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    outputBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    errorBuilder.AppendLine(e.Data);
+                }
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            await Task.Run(() => process.WaitForExit(), cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                var errorMessage = errorBuilder.ToString().Trim();
+                Logger.Error("PowerShell Get-WindowsImage failed with exit code {ExitCode}: {Error}", process.ExitCode, errorMessage);
+
+                if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
+                {
+                    throw new InvalidOperationException("The Get-WindowsImage PowerShell cmdlet is not available. Please ensure the Windows PowerShell module for imaging is installed.");
+                }
+
+                throw new InvalidOperationException($"PowerShell Get-WindowsImage failed with exit code {process.ExitCode}: {errorMessage}");
+            }
+
+            progress?.Report("Parsing detailed image information...");
+
+            var jsonOutput = outputBuilder.ToString().Trim();
+            if (string.IsNullOrEmpty(jsonOutput))
+            {
+                Logger.Warning("No output received from Get-WindowsImage for index {Index} in {ImagePath}", index, imagePath);
+                return null;
+            }
+
+            // Parse the JSON output for detailed information
+            var detailedIndices = ParsePowerShellOutput(jsonOutput);
+            var detailedIndex = detailedIndices.FirstOrDefault();
+
+            if (detailedIndex != null)
+            {
+                Logger.Information("Successfully loaded detailed information for index {Index}: {Name}", index, detailedIndex.Name);
+            }
+            else
+            {
+                Logger.Warning("No detailed information found for index {Index} in {ImagePath}", index, imagePath);
+            }
+
+            return detailedIndex;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to get detailed information for index {Index} in {ImagePath}", index, imagePath);
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region Private Methods
 
     /// <summary>
     /// Parses PowerShell Get-WindowsImage JSON output to extract Windows image indices.
@@ -673,110 +798,6 @@ public class WindowsImageService
     }
 
     /// <summary>
-    /// Gets detailed information for a specific Windows image index.
-    /// </summary>
-    /// <param name="imagePath">The path to the image file.</param>
-    /// <param name="index">The index number to get detailed information for.</param>
-    /// <param name="progress">The progress reporter.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A WindowsImageIndex object with detailed information, or null if not found.</returns>
-    public async Task<WindowsImageIndex> GetImageIndexDetailsAsync(string imagePath, int index, IProgress<string> progress = null, CancellationToken cancellationToken = default)
-    {
-        Logger.Information("Getting detailed information for image index {Index} in {ImagePath}", index, imagePath);
-
-        if (!File.Exists(imagePath))
-        {
-            throw new FileNotFoundException($"Image file not found: {imagePath}");
-        }
-
-        try
-        {
-            progress?.Report($"Loading detailed information for index {index}...");
-
-            var outputBuilder = new StringBuilder();
-            var errorBuilder = new StringBuilder();
-
-            // Use PowerShell Get-WindowsImage with specific index to get detailed info
-            using var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    Arguments = $"-Command \"Get-WindowsImage -ImagePath '{imagePath}' -Index {index} | ConvertTo-Json -Depth 10\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-
-            process.OutputDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                {
-                    outputBuilder.AppendLine(e.Data);
-                }
-            };
-
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                if (e.Data != null)
-                {
-                    errorBuilder.AppendLine(e.Data);
-                }
-            };
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            await Task.Run(() => process.WaitForExit(), cancellationToken);
-
-            if (process.ExitCode != 0)
-            {
-                var errorMessage = errorBuilder.ToString().Trim();
-                Logger.Error("PowerShell Get-WindowsImage failed with exit code {ExitCode}: {Error}", process.ExitCode, errorMessage);
-
-                if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
-                {
-                    throw new InvalidOperationException("The Get-WindowsImage PowerShell cmdlet is not available. Please ensure the Windows PowerShell module for imaging is installed.");
-                }
-
-                throw new InvalidOperationException($"PowerShell Get-WindowsImage failed with exit code {process.ExitCode}: {errorMessage}");
-            }
-
-            progress?.Report("Parsing detailed image information...");
-
-            var jsonOutput = outputBuilder.ToString().Trim();
-            if (string.IsNullOrEmpty(jsonOutput))
-            {
-                Logger.Warning("No output received from Get-WindowsImage for index {Index} in {ImagePath}", index, imagePath);
-                return null;
-            }
-
-            // Parse the JSON output for detailed information
-            var detailedIndices = ParsePowerShellOutput(jsonOutput);
-            var detailedIndex = detailedIndices.FirstOrDefault();
-
-            if (detailedIndex != null)
-            {
-                Logger.Information("Successfully loaded detailed information for index {Index}: {Name}", index, detailedIndex.Name);
-            }
-            else
-            {
-                Logger.Warning("No detailed information found for index {Index} in {ImagePath}", index, imagePath);
-            }
-
-            return detailedIndex;
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Failed to get detailed information for index {Index} in {ImagePath}", index, imagePath);
-            throw;
-        }
-    }
-
-    /// <summary>
     /// Helper method to get a string value from a JsonElement that could be either a string or an array
     /// </summary>
     /// <param name="element">The JsonElement to process</param>
@@ -860,4 +881,6 @@ public class WindowsImageService
 
         return false;
     }
+
+    #endregion
 }
