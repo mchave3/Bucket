@@ -89,7 +89,7 @@ public class IsoImportService
             {
                 // Step 7: Dismount the ISO
                 progress?.Report("Cleaning up...");
-                await DismountIsoAsync(mountPath, cancellationToken);
+                await DismountIsoAsync(isoFile.Path, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -160,10 +160,42 @@ public class IsoImportService
 
         try
         {
+            // First check if ISO is already mounted
+            if (await IsIsoMountedAsync(isoPath, cancellationToken))
+            {
+                Logger.Information("ISO is already mounted, getting drive letter");
+
+                // Get the drive letter of already mounted ISO
+                var getDriveProcessInfo = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Get-DiskImage -ImagePath '{isoPath.Replace("'", "''")}' | Get-Volume | Select-Object -ExpandProperty DriveLetter\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using var getDriveProcess = new Process { StartInfo = getDriveProcessInfo };
+                getDriveProcess.Start();
+
+                var driveOutput = await getDriveProcess.StandardOutput.ReadToEndAsync();
+                await getDriveProcess.WaitForExitAsync(cancellationToken);
+
+                var existingDriveLetter = driveOutput.Trim();
+                if (!string.IsNullOrEmpty(existingDriveLetter))
+                {
+                    var existingMountPath = $"{existingDriveLetter}:\\";
+                    Logger.Information("Found existing mount at: {MountPath}", existingMountPath);
+                    return existingMountPath;
+                }
+            }
+
+            // Mount the ISO
             var processInfo = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-Command \"Mount-DiskImage -ImagePath '{isoPath}' -PassThru | Get-Volume | Select-Object -ExpandProperty DriveLetter\"",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Mount-DiskImage -ImagePath '{isoPath.Replace("'", "''")}' -PassThru | Get-Volume | Select-Object -ExpandProperty DriveLetter\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -204,18 +236,19 @@ public class IsoImportService
     /// <summary>
     /// Dismounts an ISO file.
     /// </summary>
-    /// <param name="mountPath">The mount path to dismount.</param>
+    /// <param name="isoPath">The original ISO file path.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task DismountIsoAsync(string mountPath, CancellationToken cancellationToken)
+    private async Task DismountIsoAsync(string isoPath, CancellationToken cancellationToken)
     {
-        Logger.Information("Dismounting ISO from: {MountPath}", mountPath);
+        Logger.Information("Dismounting ISO: {IsoPath}", isoPath);
 
         try
         {
+            // Use a more reliable dismount command with timeout
             var processInfo = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-Command \"Get-DiskImage | Where-Object {{$_.DevicePath -like '*{mountPath.Substring(0, 1)}*'}} | Dismount-DiskImage\"",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"try {{ Dismount-DiskImage -ImagePath '{isoPath.Replace("'", "''")}' -ErrorAction Stop; Write-Output 'SUCCESS' }} catch {{ Write-Error $_.Exception.Message }}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -225,15 +258,105 @@ public class IsoImportService
             using var process = new Process { StartInfo = processInfo };
             process.Start();
 
-            await process.WaitForExitAsync(cancellationToken);
+            // Use a timeout for dismount operation to prevent hanging
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            Logger.Information("ISO dismounted successfully");
+            try
+            {
+                await process.WaitForExitAsync(linkedCts.Token);
+
+                var output = await process.StandardOutput.ReadToEndAsync();
+                var error = await process.StandardError.ReadToEndAsync();
+
+                if (process.ExitCode == 0 && output.Contains("SUCCESS"))
+                {
+                    Logger.Information("ISO dismounted successfully");
+                }
+                else
+                {
+                    Logger.Warning("ISO dismount returned exit code {ExitCode}. Output: {Output}. Error: {Error}",
+                        process.ExitCode, output, error);
+
+                    // Try alternative dismount method
+                    await TryAlternativeDismountAsync(isoPath, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (timeoutCts.Token.IsCancellationRequested)
+            {
+                Logger.Warning("ISO dismount timed out after 30 seconds, attempting to kill process");
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(true);
+                    }
+                }
+                catch (Exception killEx)
+                {
+                    Logger.Warning(killEx, "Failed to kill dismount process");
+                }
+
+                // Try alternative dismount method
+                await TryAlternativeDismountAsync(isoPath, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
-            Logger.Warning(ex, "Failed to dismount ISO cleanly, but continuing");
+            Logger.Warning(ex, "Failed to dismount ISO cleanly: {IsoPath}", isoPath);
+
+            // Try alternative dismount method as last resort
+            await TryAlternativeDismountAsync(isoPath, cancellationToken);
         }
-    }    /// <summary>
+    }
+
+    /// <summary>
+    /// Attempts to dismount ISO using alternative method.
+    /// </summary>
+    /// <param name="isoPath">The original ISO file path.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    private async Task TryAlternativeDismountAsync(string isoPath, CancellationToken cancellationToken)
+    {
+        Logger.Information("Attempting alternative dismount method for: {IsoPath}", isoPath);
+
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Get-DiskImage -ImagePath '{isoPath.Replace("'", "''")}' | Dismount-DiskImage -Force\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = new Process { StartInfo = processInfo };
+            process.Start();
+
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+            await process.WaitForExitAsync(linkedCts.Token);
+
+            if (process.ExitCode == 0)
+            {
+                Logger.Information("Alternative dismount method succeeded");
+            }
+            else
+            {
+                var error = await process.StandardError.ReadToEndAsync();
+                Logger.Warning("Alternative dismount method failed with exit code {ExitCode}: {Error}",
+                    process.ExitCode, error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Alternative dismount method also failed, ISO may remain mounted");
+        }
+    }
+
+    /// <summary>
     /// Finds Windows image files in the mounted ISO.
     /// </summary>
     /// <param name="mountPath">The mount path to search.</param>
@@ -335,5 +458,47 @@ public class IsoImportService
             counter++;
         }
         return $"{number:n1} {suffixes[counter]}";
+    }
+
+    /// <summary>
+    /// Checks if an ISO file is currently mounted.
+    /// </summary>
+    /// <param name="isoPath">The path to the ISO file.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>True if the ISO is mounted, false otherwise.</returns>
+    private async Task<bool> IsIsoMountedAsync(string isoPath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Get-DiskImage -ImagePath '{isoPath.Replace("'", "''")}' | Select-Object -ExpandProperty Attached\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = new Process { StartInfo = processInfo };
+            process.Start();
+
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+            await process.WaitForExitAsync(linkedCts.Token);
+
+            if (process.ExitCode == 0)
+            {
+                var output = await process.StandardOutput.ReadToEndAsync();
+                return output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug(ex, "Failed to check if ISO is mounted: {IsoPath}", isoPath);
+        }
+
+        return false;
     }
 }

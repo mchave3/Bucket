@@ -282,12 +282,48 @@ public partial class ImageManagementViewModel : ObservableObject
             // Check if a file was selected
             if (file != null)
             {
-                StatusMessage = $"Selected ISO: {file.Name}";
+                StatusMessage = $"Analyzing {file.Name}...";
                 Logger.Information("User selected ISO file: {FilePath}", file.Path);
 
-                // TODO: Implement ISO mounting and WIM extraction
-                await ShowInfoDialogAsync("ISO Import",
-                    $"ISO file selected: {file.Name}\n\nISO mounting and extraction will be implemented in the next update.");
+                IsLoading = true;
+
+                try
+                {
+                    // Import the image using the ISO import service
+                    await ShowImportProgressDialogAsync("Importing from ISO", async (progress, cancellationToken) =>
+                    {
+                        var importedImage = await _isoImportService.ImportFromIsoAsync(
+                            file,
+                            customName: "",
+                            progress: progress,
+                            cancellationToken: cancellationToken);
+                    });
+
+                    // Refresh the images list
+                    await RefreshImagesAsync();
+
+                    StatusMessage = $"Successfully imported from {file.Name}";
+                    Logger.Information("Successfully imported ISO: {Name}", file.Name);
+
+                    await ShowInfoDialogAsync("Import Successful",
+                        $"Successfully imported Windows image(s) from '{file.Name}'.");
+                }
+                catch (OperationCanceledException)
+                {
+                    StatusMessage = "ISO import cancelled";
+                    Logger.Information("ISO import was cancelled by user");
+                }
+                catch (Exception importEx)
+                {
+                    Logger.Error(importEx, "Failed to import ISO: {FilePath}", file.Path);
+                    StatusMessage = $"Failed to import {file.Name}";
+                    await ShowErrorDialogAsync("Import Failed",
+                        $"Failed to import '{file.Name}':\n\n{importEx.Message}");
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
             }
             else
             {

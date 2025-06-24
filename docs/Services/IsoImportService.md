@@ -38,12 +38,13 @@ Imports a Windows image from an ISO file by mounting it, finding the install.wim
 **Returns**: The imported WindowsImageInfo object
 
 **Process**:
-1. Mounts the ISO file using PowerShell
-2. Scans for Windows image files (install.wim, install.esd, boot.wim)
-3. Copies the main installation image to the managed directory
-4. Analyzes the image with DISM
-5. Registers the image in the application database
-6. Dismounts the ISO file
+1. Checks if ISO is already mounted to avoid conflicts
+2. Mounts the ISO file using PowerShell with improved reliability
+3. Scans for Windows image files (install.wim, install.esd, boot.wim)
+4. Copies the main installation image to the managed directory with progress
+5. Analyzes the image with DISM through WindowsImageService
+6. Registers the image in the application database
+7. Safely dismounts the ISO file with multiple fallback methods
 
 ### ImportFromWimAsync()
 
@@ -65,31 +66,58 @@ Imports a Windows image directly from a WIM or ESD file.
 
 **Returns**: The imported WindowsImageInfo object
 
+### Private Helper Methods
+
+#### MountIsoAsync()
+Mounts an ISO file with automatic detection of existing mounts and improved PowerShell execution.
+
+#### DismountIsoAsync()
+Dismounts an ISO file with timeout protection and multiple fallback strategies.
+
+#### TryAlternativeDismountAsync()
+Alternative dismount method using `-Force` parameter for stubborn ISOs.
+
+#### IsIsoMountedAsync()
+Checks if an ISO file is currently mounted to prevent conflicts.
+
+#### FindWindowsImagesAsync()
+Searches for Windows image files in mounted ISO with support for multiple locations.
+
+#### CopyFileWithProgressAsync()
+Copies files with detailed progress reporting and cancellation support.
+
 ## Features
 
-### ISO File Support
-- Mounts ISO files using PowerShell Mount-DiskImage
-- Automatically detects drive letter after mounting
-- Safely dismounts ISO files after processing
-- Handles both standard and custom ISO structures
+### Enhanced ISO Mounting & Dismounting
 
-### Windows Image Detection
-- Searches multiple common locations for Windows images
-- Prioritizes install.wim and install.esd files
-- Supports boot.wim images as well
-- Handles both WIM and ESD formats
+- **Smart Mount Detection**: Automatically detects if ISO is already mounted
+- **Improved PowerShell Execution**: Uses `-ExecutionPolicy Bypass -NoProfile` for reliability
+- **Timeout Protection**: Prevents hanging on dismount operations (30s primary, 15s fallback)
+- **Multiple Dismount Strategies**: Primary dismount with fallback using `-Force` parameter
+- **Process Management**: Automatic process termination for unresponsive operations
+- **Proper Path Escaping**: Handles file paths with special characters (apostrophes)
 
-### Progress Reporting
-- Detailed progress messages throughout the import process
-- File copy progress with percentage and size information
-- Cancellation support for long-running operations
-- User-friendly status messages
+### Advanced Windows Image Detection
 
-### File Management
-- Copies images to the managed ImportedWIMs directory
-- Generates unique filenames with timestamps
-- Preserves original file extensions
-- Validates file integrity during copy
+- **Multi-Location Search**: Scans both `/sources` and root directories
+- **Format Support**: Handles install.wim, install.esd, and boot.wim files
+- **Intelligent Prioritization**: Prefers install.wim/install.esd over boot.wim
+- **Duplicate Filtering**: Removes duplicate files from search results
+
+### Comprehensive Progress Reporting
+
+- **Detailed Status Messages**: Step-by-step progress throughout the import process
+- **File Copy Progress**: Real-time percentage and size information during copy
+- **Cancellation Support**: Graceful handling of user cancellations
+- **User-Friendly Messages**: Clear, actionable status updates
+
+### Robust File Management
+
+- **Unique Filenames**: Timestamp-based naming to prevent conflicts
+- **Directory Creation**: Automatic creation of destination directories
+- **Streaming Copy**: 1MB buffer for efficient large file transfers
+- **Progress Integration**: File copy integrated with overall progress reporting
+- **Error Recovery**: Proper cleanup on operation failures
 
 ## Usage Examples
 
@@ -198,23 +226,41 @@ var imageInfo = await isoImportService.ImportFromIsoAsync(
 ### Common Error Scenarios
 
 1. **File Access Issues**
-   - ISO file is locked or in use
-   - Insufficient permissions to mount ISO
-   - Target directory is read-only
+   - ISO file is locked or in use by another process
+   - Insufficient permissions to mount ISO (requires admin rights)
+   - Target directory is read-only or access denied
+   - Network paths not accessible
 
 2. **ISO Mounting Failures**
-   - PowerShell execution disabled
-   - No available drive letters
-   - Corrupted ISO file
+   - PowerShell execution policy restrictions
+   - No available drive letters for mounting
+   - Corrupted or invalid ISO file format
+   - Virtual drive services not available
 
 3. **Disk Space Issues**
-   - Insufficient space for image copy
+   - Insufficient space for image copy operation
    - Temporary space exhausted during processing
+   - Drive full during large file operations
 
 4. **Image Analysis Failures**
-   - Invalid or corrupted WIM/ESD files
-   - DISM not available or failing
-   - Unsupported image formats
+   - Invalid or corrupted WIM/ESD files within ISO
+   - DISM not available or failing to execute
+   - Unsupported image formats or versions
+   - Missing Windows imaging components
+
+5. **Timeout and Cancellation Issues**
+   - ISO dismount operations timing out (now handled with 30s + 15s fallbacks)
+   - User cancellation during long operations
+   - Process hanging during PowerShell execution
+   - Network timeouts for remote files
+
+### Enhanced Error Handling Features
+
+- **Timeout Protection**: Automatic timeout handling for dismount operations
+- **Multiple Fallback Strategies**: Primary and alternative dismount methods
+- **Process Management**: Automatic termination of unresponsive processes
+- **Graceful Cancellation**: Proper cleanup on user cancellation
+- **Detailed Logging**: Comprehensive error logging for troubleshooting
 
 ### Recommended Error Handling
 
@@ -223,39 +269,58 @@ try
 {
     // Check available disk space first
     var driveInfo = new DriveInfo(Path.GetPathRoot(Constants.ImportedWIMsDirectoryPath));
-    if (driveInfo.AvailableSpace < requiredSpace)
+    var estimatedSize = new FileInfo(isoFile.Path).Length; // Rough estimate
+    if (driveInfo.AvailableSpace < estimatedSize * 2) // Need 2x for safety
     {
-        throw new InvalidOperationException("Insufficient disk space");
+        throw new InvalidOperationException("Insufficient disk space for import operation");
     }
 
     var imageInfo = await isoImportService.ImportFromIsoAsync(
         isoFile, customName, progress, cancellationToken);
+
+    Logger.Information("Successfully imported {ImageName} with {IndexCount} indices",
+        imageInfo.Name, imageInfo.IndexCount);
 }
 catch (OperationCanceledException)
 {
-    // User cancelled - normal flow
+    // User cancelled - normal flow, cleanup handled automatically
     Logger.Information("Import cancelled by user");
+    StatusMessage = "Import operation cancelled";
 }
-catch (UnauthorizedAccessException)
+catch (UnauthorizedAccessException ex)
 {
-    // Permission issues
-    await ShowErrorDialog("Administrator rights may be required for ISO mounting");
+    // Permission issues - common with ISO mounting
+    Logger.Error(ex, "Permission denied during ISO import");
+    await ShowErrorDialog("Administrator Rights Required",
+        "ISO mounting requires administrator privileges. Please run the application as administrator.");
 }
 catch (FileNotFoundException ex)
 {
-    // Missing dependencies
-    await ShowErrorDialog($"Required component not found: {ex.Message}");
+    // Missing dependencies or files
+    Logger.Error(ex, "Required component not found");
+    await ShowErrorDialog("Missing Component",
+        $"Required component not found: {ex.Message}\n\nPlease ensure PowerShell and DISM are available.");
 }
 catch (InvalidOperationException ex)
 {
-    // Business logic errors
-    await ShowErrorDialog($"Import failed: {ex.Message}");
+    // Business logic errors (disk space, invalid files, etc.)
+    Logger.Error(ex, "Import operation failed");
+    await ShowErrorDialog("Import Failed",
+        $"The import operation could not be completed:\n\n{ex.Message}");
+}
+catch (TimeoutException ex)
+{
+    // Timeout errors (handled automatically now, but may still occur)
+    Logger.Error(ex, "Operation timed out");
+    await ShowErrorDialog("Operation Timeout",
+        "The import operation timed out. This may indicate system issues or very large files.");
 }
 catch (Exception ex)
 {
     // Unexpected errors
-    Logger.Error(ex, "Unexpected error during import");
-    await ShowErrorDialog("An unexpected error occurred during import");
+    Logger.Error(ex, "Unexpected error during ISO import");
+    await ShowErrorDialog("Unexpected Error",
+        $"An unexpected error occurred during import. Please check the logs for details.\n\nError: {ex.Message}");
 }
 ```
 

@@ -40,18 +40,26 @@ public partial class ImageManagementViewModel : ObservableObject
 ### Primary Actions
 
 - **`RefreshCommand`**: Refreshes the images list from storage
-- **`ImportFromIsoCommand`**: Initiates ISO import process
-- **`ImportFromWimCommand`**: Initiates direct WIM file import
+- **`ImportFromIsoCommand`**: Initiates full ISO import process with progress tracking
+- **`ImportFromWimCommand`**: Initiates direct WIM file import with analysis
 
 ### Import Operations
 
 ```csharp
-// ISO Import with custom FilePicker
+// ISO Import with automatic progress dialog and cancellation support
 await viewModel.ImportFromIsoCommand.ExecuteAsync(null);
 
-// WIM Direct Import with standard picker
+// WIM Direct Import with standard picker and progress tracking
 await viewModel.ImportFromWimCommand.ExecuteAsync(null);
 ```
+
+The ISO import process includes:
+1. File picker for ISO selection
+2. Progress dialog with cancellation support
+3. Automatic ISO mounting and dismounting
+4. Windows image detection and extraction
+5. Image analysis and registration
+6. Error handling with user-friendly messages
 
 ### Selection Actions
 
@@ -75,20 +83,25 @@ await viewModel.ImportFromWimCommand.ExecuteAsync(null);
 ### Private Helper Methods
 
 - **`RefreshImagesAsync()`**: Refreshes the images collection from the service
-- **`ImportFromIsoAsync()`**: Imports images from an ISO file using file picker
-- **`ImportFromWimAsync()`**: Imports a WIM or ESD file using file picker
+- **`ImportFromIsoAsync()`**: Imports images from an ISO file using IsoImportService with full progress tracking
+- **`ImportFromWimAsync()`**: Imports a WIM or ESD file using WindowsImageService directly
 - **`DeleteSelectedImageAsync()`**: Deletes selected image from collection only
 - **`DeleteSelectedImageFromDiskAsync()`**: Deletes selected image from both collection and disk
 - **`ViewImageDetails(WindowsImageInfo image)`**: Views detailed information about specified image
-- **`FilterImages()`**: Filters the images based on search text
-- **`CanDeleteSelected()`**: Checks if selected image can be deleted
+- **`LoadIndexDetailsAsync(WindowsImageIndex index)`**: Loads detailed information for a specific image index
+- **`FilterImages()`**: Filters the images based on search text using case-insensitive matching
+- **`CanDeleteSelected()`**: Checks if selected image can be deleted (returns true if image is selected)
 
-### Dialog Helper Methods
+### Enhanced Dialog Helper Methods
 
-- **`ShowErrorDialogAsync(string title, string message)`**: Shows error dialog
-- **`ShowInfoDialogAsync(string title, string message)`**: Shows information dialog
-- **`ShowConfirmationDialogAsync(string title, string message)`**: Shows confirmation dialog
-- **`ShowImportProgressDialogAsync(string title, Func<IProgress<string>, CancellationToken, Task> importOperation)`**: Shows cancellable progress dialog for import operations
+- **`ShowErrorDialogAsync(string title, string message)`**: Shows error dialog with OK button
+- **`ShowInfoDialogAsync(string title, string message)`**: Shows information dialog for user feedback
+- **`ShowConfirmationDialogAsync(string title, string message)`**: Shows Yes/No confirmation dialog
+- **`ShowImportProgressDialogAsync(string title, Func<IProgress<string>, CancellationToken, Task> importOperation)`**:
+  - Shows cancellable progress dialog for import operations
+  - Supports real-time progress updates and user cancellation
+  - Handles both successful completion and cancellation scenarios
+  - Automatically closes dialog on operation completion
 
 ## Usage Examples
 
@@ -170,16 +183,34 @@ viewModel.UpdateSearchFilter("Pro Edition");
 
 ## Dependencies
 
+### External Dependencies
+
 - **CommunityToolkit.Mvvm**: MVVM infrastructure and commands
-- **Bucket.Models.WindowsImageInfo**: Domain model for Windows images
-- **Bucket.Services.WindowsImageService**: Business logic service
 - **Microsoft.UI.Xaml.Controls**: WinUI 3 dialog support
+- **Windows.Storage.Pickers**: File picker functionality
+- **WinRT.Interop**: Window handle interop for file pickers
+
+### Internal Dependencies
+
+- **Bucket.Models.WindowsImageInfo**: Domain model for Windows images
+- **Bucket.Services.WindowsImageService**: Core business logic service for image management
+- **Bucket.Services.IsoImportService**: Specialized service for ISO import operations
+- **Bucket.Common.Constants**: Configuration constants and paths
+- **App.GetService\<IJsonNavigationService\>()**: Navigation service for detail views
+
+### System Dependencies
+
+- **PowerShell**: Required for ISO operations via IsoImportService
+- **DISM**: Required for Windows image analysis
+- **Administrator Rights**: May be required for ISO mounting operations
 
 ## Related Files
 
-- [`ImageManagementPage.md`](../Views/ImageManagementPage.md) - Associated view
-- [`WindowsImageService.md`](../Services/WindowsImageService.md) - Business logic service
+- [`ImageManagementPage.md`](../Views/ImageManagementPage.md) - Associated view implementation
+- [`WindowsImageService.md`](../Services/WindowsImageService.md) - Core business logic service
+- [`IsoImportService.md`](../Services/IsoImportService.md) - ISO import functionality
 - [`WindowsImageInfo.md`](../Models/WindowsImageInfo.md) - Primary domain model
+- [`ImageDetailsPage.md`](../Views/ImageDetailsPage.md) - Detail view for images
 
 ## Best Practices
 
