@@ -25,9 +25,11 @@ public partial class ImageManagementViewModel : ObservableObject
 
 ### State Properties
 
-- **`IsLoading`** (bool): Indicates whether data is currently being loaded
 - **`HasImages`** (bool): Whether any images are available
 - **`StatusMessage`** (string): Current status message for display
+- **`SearchText`** (string): Current search filter text
+- **`ShowEmptyState`** (bool): Whether to show the empty state UI
+- **`ShowImagesList`** (bool): Whether to show the images list UI
 - **`SearchText`** (string): Current search filter text
 
 ### Computed Properties
@@ -83,7 +85,7 @@ The ISO import process includes:
 ### Private Helper Methods
 
 - **`RefreshImagesAsync()`**: Refreshes the images collection from the service
-- **`ImportFromIsoAsync()`**: Imports images from an ISO file using IsoImportService with full progress tracking
+- **`ImportFromIsoAsync()`**: Imports images from an ISO file using WindowsImageService with full progress tracking
 - **`ImportFromWimAsync()`**: Imports a WIM or ESD file using WindowsImageService directly
 - **`DeleteSelectedImageAsync()`**: Deletes selected image from collection only
 - **`DeleteSelectedImageFromDiskAsync()`**: Deletes selected image from both collection and disk
@@ -123,7 +125,6 @@ await viewModel.InitializeAsync();
 
 <!-- Bind to properties -->
 <TextBlock Text="{Binding StatusMessage}" />
-<ProgressRing IsActive="{Binding IsLoading}" />
 
 <!-- Bind to commands -->
 <Button Content="Refresh" Command="{Binding RefreshCommand}" />
@@ -194,13 +195,13 @@ viewModel.UpdateSearchFilter("Pro Edition");
 
 - **Bucket.Models.WindowsImageInfo**: Domain model for Windows images
 - **Bucket.Services.WindowsImageService**: Core business logic service for image management
-- **Bucket.Services.IsoImportService**: Specialized service for ISO import operations
+- **Bucket.Services.WindowsImageService**: Unified service for all Windows image operations (ISO import, WIM import, analysis)
 - **Bucket.Common.Constants**: Configuration constants and paths
 - **App.GetService\<IJsonNavigationService\>()**: Navigation service for detail views
 
 ### System Dependencies
 
-- **PowerShell**: Required for ISO operations via IsoImportService
+- **PowerShell**: Required for ISO operations via WindowsImageService
 - **DISM**: Required for Windows image analysis
 - **Administrator Rights**: May be required for ISO mounting operations
 
@@ -208,7 +209,7 @@ viewModel.UpdateSearchFilter("Pro Edition");
 
 - [`ImageManagementPage.md`](../Views/ImageManagementPage.md) - Associated view implementation
 - [`WindowsImageService.md`](../Services/WindowsImageService.md) - Core business logic service
-- [`IsoImportService.md`](../Services/IsoImportService.md) - ISO import functionality
+- [`WindowsImageService.md`](../Services/WindowsImageService.md) - Unified Windows image management functionality
 - [`WindowsImageInfo.md`](../Models/WindowsImageInfo.md) - Primary domain model
 - [`ImageDetailsPage.md`](../Views/ImageDetailsPage.md) - Detail view for images
 
@@ -224,15 +225,14 @@ private async Task RefreshImagesAsync()
 {
     try
     {
-        IsLoading = true;
         StatusMessage = "Loading images...";
 
         var images = await _service.GetImagesAsync();
         // Update collections
     }
-    finally
+    catch (Exception ex)
     {
-        IsLoading = false;
+        StatusMessage = $"Error loading images: {ex.Message}";
     }
 }
 ```

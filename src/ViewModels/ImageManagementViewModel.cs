@@ -18,7 +18,6 @@ namespace Bucket.ViewModels;
 public partial class ImageManagementViewModel : ObservableObject
 {
     private readonly WindowsImageService _windowsImageService;
-    private readonly IsoImportService _isoImportService;
 
     private ObservableCollection<WindowsImageInfo> _images = new();
     private WindowsImageInfo _selectedImage;
@@ -125,7 +124,6 @@ public partial class ImageManagementViewModel : ObservableObject
     public ImageManagementViewModel()
     {
         _windowsImageService = new WindowsImageService();
-        _isoImportService = new IsoImportService();
 
         // Initialize commands
         RefreshCommand = new AsyncRelayCommand(RefreshImagesAsync);
@@ -292,7 +290,7 @@ public partial class ImageManagementViewModel : ObservableObject
                     // Import the image using the ISO import service
                     await ShowImportProgressDialogAsync("Importing from ISO", async (progress, cancellationToken) =>
                     {
-                        var importedImage = await _isoImportService.ImportFromIsoAsync(
+                        var importedImage = await _windowsImageService.ImportFromIsoAsync(
                             file,
                             customName: "",
                             progress: progress,
@@ -369,14 +367,10 @@ public partial class ImageManagementViewModel : ObservableObject
                     WindowsImageInfo importedImage = null;
                     await ShowImportProgressDialogAsync("Importing WIM/ESD", async (progress, cancellationToken) =>
                     {
-                        // Get a friendly name for the image
-                        var imageName = Path.GetFileNameWithoutExtension(file.Name);
-
                         // Import the image using the service
-                        importedImage = await _windowsImageService.ImportImageAsync(
-                            file.Path,
-                            imageName,
-                            sourceIsoPath: "",
+                        importedImage = await _windowsImageService.ImportFromWimAsync(
+                            file,
+                            customName: "",
                             progress: progress,
                             cancellationToken: cancellationToken);
                     });
