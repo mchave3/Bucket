@@ -493,13 +493,12 @@ public class WindowsImageService
 
                 Logger.Information("Found Windows image: {ImagePath}", mainImageFile);
 
-                // Step 4: Generate destination path
+                // Step 4: Generate destination path using unified naming system
                 var imageName = string.IsNullOrWhiteSpace(customName)
-                    ? Path.GetFileNameWithoutExtension(isoFile.Name)
+                    ? ExtractBaseName(isoFile.Name)
                     : customName;
 
-                var destinationPath = Path.Combine(Constants.ImportedWIMsDirectoryPath,
-                    $"{imageName}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(mainImageFile)}");
+                var destinationPath = GenerateUniqueFilePath(imageName, Path.GetExtension(mainImageFile));
 
                 // Step 5: Copy the image file
                 progress?.Report("Copying Windows image file...");
@@ -1121,24 +1120,12 @@ public class WindowsImageService
 
         var sourceInfo = new FileInfo(sourcePath);
         var extension = sourceInfo.Extension;
-        var targetPath = Path.Combine(_imagesDirectory, $"{targetName}{extension}");
+
+        // Use unified naming system to generate unique file path
+        var targetPath = GenerateUniqueFilePath(targetName, extension);
 
         // Ensure target directory exists
         Directory.CreateDirectory(_imagesDirectory);
-
-        // Check if target already exists
-        if (File.Exists(targetPath))
-        {
-            var counter = 1;
-            var baseName = targetName;
-            do
-            {
-                targetName = $"{baseName}_{counter}";
-                targetPath = Path.Combine(_imagesDirectory, $"{targetName}{extension}");
-                counter++;
-            }
-            while (File.Exists(targetPath));
-        }
 
         // Check available disk space
         var driveInfo = new DriveInfo(Path.GetPathRoot(_imagesDirectory));
@@ -1364,6 +1351,266 @@ public class WindowsImageService
         }
 
         return false;
+    }
+
+    #endregion
+
+    #region Private Methods - File Naming
+
+    /// <summary>
+    /// Generates a unique file name based on the base name and extension, resolving conflicts with a counter.
+    /// </summary>
+    /// <param name="baseName">The base name for the file (without extension).</param>
+    /// <param name="extension">The file extension (e.g., ".wim", ".esd").</param>
+    /// <returns>A unique file name that doesn't conflict with existing files.</returns>
+    private string GenerateUniqueFileName(string baseName, string extension)
+    {
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            throw new ArgumentException("Base name cannot be null or empty.", nameof(baseName));
+        }
+
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            throw new ArgumentException("Extension cannot be null or empty.", nameof(extension));
+        }
+
+        // Ensure extension starts with a dot
+        if (!extension.StartsWith('.'))
+        {
+            extension = "." + extension;
+        }
+
+        // Sanitize the base name to remove invalid file name characters
+        var sanitizedBaseName = SanitizeFileName(baseName);
+
+        // Generate the initial target path
+        var targetPath = Path.Combine(_imagesDirectory, $"{sanitizedBaseName}{extension}");
+
+        // If no conflict, return the original name
+        if (!File.Exists(targetPath))
+        {
+            Logger.Debug("Generated unique file name: {FileName}", $"{sanitizedBaseName}{extension}");
+            return $"{sanitizedBaseName}{extension}";
+        }
+
+        // Find the next available counter
+        var counter = 1;
+        do
+        {
+            var numberedName = $"{sanitizedBaseName}_{counter:D3}";
+            targetPath = Path.Combine(_imagesDirectory, $"{numberedName}{extension}");
+
+            if (!File.Exists(targetPath))
+            {
+                Logger.Debug("Generated unique file name with counter: {FileName}", $"{numberedName}{extension}");
+                return $"{numberedName}{extension}";
+            }
+
+            counter++;
+        }
+        while (counter <= 999); // Limit to avoid infinite loop
+
+        // If we reach here, we have too many conflicts
+        throw new InvalidOperationException($"Unable to generate unique file name for base name '{sanitizedBaseName}'. Too many existing files.");
+    }
+
+    /// <summary>
+    /// Generates the full path for a unique file name.
+    /// </summary>
+    /// <param name="baseName">The base name for the file (without extension).</param>
+    /// <param name="extension">The file extension (e.g., ".wim", ".esd").</param>
+    /// <returns>The full path to the unique file.</returns>
+    private string GenerateUniqueFilePath(string baseName, string extension)
+    {
+        var fileName = GenerateUniqueFileName(baseName, extension);
+        return Path.Combine(_imagesDirectory, fileName);
+    }
+
+    /// <summary>
+    /// Extracts the base name from an original file name, removing the extension.
+    /// </summary>
+    /// <param name="originalFileName">The original file name.</param>
+    /// <returns>The base name without extension.</returns>
+    private string ExtractBaseName(string originalFileName)
+    {
+        if (string.IsNullOrWhiteSpace(originalFileName))
+        {
+            throw new ArgumentException("Original file name cannot be null or empty.", nameof(originalFileName));
+        }
+
+        return Path.GetFileNameWithoutExtension(originalFileName);
+    }
+
+    /// <summary>
+    /// Validates if a file name is valid for the current file system.
+    /// </summary>
+    /// <param name="fileName">The file name to validate.</param>
+    /// <returns>True if the file name is valid, false otherwise.</returns>
+    private bool IsValidFileName(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return false;
+        }
+
+        // Check for invalid characters
+        var invalidChars = Path.GetInvalidFileNameChars();
+        if (fileName.IndexOfAny(invalidChars) >= 0)
+        {
+            return false;
+        }
+
+        // Check for reserved names on Windows
+        string[] reservedNames = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName).ToUpperInvariant();
+
+        if (reservedNames.Contains(nameWithoutExtension))
+        {
+            return false;
+        }
+
+        // Check length (Windows limit is 255 characters for file name)
+        if (fileName.Length > 255)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Sanitizes a file name by removing or replacing invalid characters.
+    /// </summary>
+    /// <param name="fileName">The file name to sanitize.</param>
+    /// <returns>A sanitized file name safe for the file system.</returns>
+    private string SanitizeFileName(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return "UnnamedImage";
+        }
+
+        // Replace invalid characters with underscores
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = fileName;
+
+        foreach (var invalidChar in invalidChars)
+        {
+            sanitized = sanitized.Replace(invalidChar, '_');
+        }
+
+        // Remove multiple consecutive underscores
+        sanitized = System.Text.RegularExpressions.Regex.Replace(sanitized, "_+", "_");
+
+        // Remove leading/trailing underscores and spaces
+        sanitized = sanitized.Trim('_', ' ');
+
+        // Ensure we have something left
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            sanitized = "UnnamedImage";
+        }
+
+        // Truncate if too long (leave room for counter and extension)
+        if (sanitized.Length > 200)
+        {
+            sanitized = sanitized.Substring(0, 200).TrimEnd('_', ' ');
+        }
+
+        return sanitized;
+    }
+
+    /// <summary>
+    /// Checks if a file name would conflict with existing files in the images directory.
+    /// </summary>
+    /// <param name="fileName">The file name to check.</param>
+    /// <returns>True if the file name would conflict, false otherwise.</returns>
+    private bool WouldConflict(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return false;
+        }
+
+        var fullPath = Path.Combine(_imagesDirectory, fileName);
+        return File.Exists(fullPath);
+    }
+
+    #endregion
+
+    #region Rename Image
+
+    /// <summary>
+    /// Renames an existing Windows image file and updates its metadata.
+    /// </summary>
+    /// <param name="imageInfo">The image to rename.</param>
+    /// <param name="newName">The new display name for the image.</param>
+    /// <param name="renamePhysicalFile">Whether to rename the physical file as well.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The updated image information.</returns>
+    public async Task<WindowsImageInfo> RenameImageAsync(WindowsImageInfo imageInfo, string newName, bool renamePhysicalFile = false, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Renaming Windows image: {OldName} -> {NewName} (RenameFile: {RenameFile})", imageInfo.Name, newName, renamePhysicalFile);
+
+        if (imageInfo == null)
+        {
+            throw new ArgumentNullException(nameof(imageInfo));
+        }
+
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            throw new ArgumentException("New name cannot be null or empty.", nameof(newName));
+        }
+
+        if (!IsValidFileName(newName))
+        {
+            throw new ArgumentException($"Invalid file name: {newName}", nameof(newName));
+        }
+
+        try
+        {
+            var oldFilePath = imageInfo.FilePath;
+            var newFilePath = oldFilePath;
+
+            // Rename physical file if requested
+            if (renamePhysicalFile && File.Exists(oldFilePath))
+            {
+                var extension = Path.GetExtension(oldFilePath);
+                newFilePath = GenerateUniqueFilePath(newName, extension);
+
+                // Copy file to new location
+                File.Move(oldFilePath, newFilePath);
+                Logger.Information("Renamed physical file: {OldPath} -> {NewPath}", oldFilePath, newFilePath);
+            }
+
+            // Update image metadata
+            imageInfo.Name = newName;
+            imageInfo.FilePath = newFilePath;
+            imageInfo.ModifiedDate = DateTime.Now;
+
+            // Load existing images and update the collection
+            var existingImages = await GetImagesAsync(cancellationToken);
+            var imageToUpdate = existingImages.FirstOrDefault(img => img.Id == imageInfo.Id);
+
+            if (imageToUpdate != null)
+            {
+                imageToUpdate.Name = newName;
+                imageToUpdate.FilePath = newFilePath;
+                imageToUpdate.ModifiedDate = imageInfo.ModifiedDate;
+
+                // Save the updated collection
+                await SaveImagesAsync(existingImages, cancellationToken);
+            }
+
+            Logger.Information("Successfully renamed Windows image: {Name}", newName);
+            return imageInfo;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to rename Windows image: {OldName} -> {NewName}", imageInfo.Name, newName);
+            throw;
+        }
     }
 
     #endregion
