@@ -10,6 +10,7 @@
 - **Framework**: .NET 9 (net9.0-windows10.0.26100.0)
 - **UI Framework**: WinUI 3 (UseWinUI)
 - **Architecture**: MVVM with CommunityToolkit.Mvvm
+- **Service Architecture**: Specialized services with dependency injection following SRP
 - **Target Platform**: Windows 10/11 (10.0.17763.0+)
 - **Supported Architectures**: x86, x64, ARM64
 
@@ -20,6 +21,17 @@ src/
 ├── Views/           # XAML pages and controls
 ├── ViewModels/      # MVVM ViewModels
 ├── Models/          # Data models
+├── Services/        # Business logic services
+│   ├── WindowsImage/    # Specialized Windows image services
+│   │   ├── IWindowsImageFileService.cs
+│   │   ├── WindowsImageFileService.cs
+│   │   ├── IWindowsImageMetadataService.cs
+│   │   ├── WindowsImageMetadataService.cs
+│   │   ├── IWindowsImagePowerShellService.cs
+│   │   ├── WindowsImagePowerShellService.cs
+│   │   ├── IWindowsImageIsoService.cs
+│   │   └── WindowsImageIsoService.cs
+│   └── WindowsImageService.cs  # Main coordinator service
 ├── Common/          # Common utility classes
 ├── Themes/          # Theme resources and styles
 ├── T4Templates/     # T4 templates for code generation
@@ -69,6 +81,35 @@ src/
 - Use `LoggerSetup.cs` for logging configuration
 - Refer to documentation in `docs/` for details
 
+### Service Architecture (Specialized Services with Dependency Injection)
+- **Follow Single Responsibility Principle (SRP)**: Each service should have one clear responsibility
+- **Use Dependency Injection**: Services should be registered in `App.xaml.cs` and injected via constructor
+- **Create Interfaces**: All services should implement interfaces for testability and loose coupling
+- **Organize Services**: Place specialized services in appropriate subfolders (e.g., `Services/WindowsImage/`)
+- **Service Examples**:
+  - `IWindowsImageFileService`: File operations and path management
+  - `IWindowsImageMetadataService`: JSON metadata persistence and management
+  - `IWindowsImagePowerShellService`: PowerShell execution and parsing
+  - `IWindowsImageIsoService`: ISO mounting and extraction operations
+- **Service Registration Pattern**:
+  ```csharp
+  // In App.xaml.cs ConfigureServices()
+  services.AddSingleton<ISpecializedService, SpecializedService>();
+  services.AddTransient<CoordinatorService>(); // Uses injected specialized services
+  ```
+- **Service Consumption Pattern**:
+  ```csharp
+  public class CoordinatorService
+  {
+      private readonly ISpecializedService _specializedService;
+
+      public CoordinatorService(ISpecializedService specializedService)
+      {
+          _specializedService = specializedService ?? throw new ArgumentNullException(nameof(specializedService));
+      }
+  }
+  ```
+
 ## Project Specifics
 
 ### Navigation
@@ -115,17 +156,35 @@ When generating code for this project:
 1. **Follow MVVM architecture**: Clearly separate UI logic from business logic
 2. **Use CommunityToolkit.Mvvm**: Prefer `[ObservableProperty]` and `[RelayCommand]` attributes
 3. **Follow naming conventions**: Use the established naming patterns in the project
-4. **Integrate with existing structure**: Use appropriate folders
-5. **Document complex code**: Add XML comments for public APIs
-6. **Handle errors**: Include appropriate error handling with logging
-7. **Respect existing patterns**: Observe how other classes are structured
-8. **Consider async operations**: Most Windows imaging operations are long-running
-9. **Handle large files**: WIM files and updates can be several GB in size
-10. **Progress reporting**: Always include progress tracking for long operations
+4. **Use Specialized Services with Dependency Injection**:
+   - Create focused services following Single Responsibility Principle (SRP)
+   - Always create interfaces for services to enable testing and loose coupling
+   - Register services in `App.xaml.cs` and inject via constructor parameters
+   - Organize specialized services in appropriate subfolders (e.g., `Services/WindowsImage/`)
+   - Avoid monolithic services - split complex services into specialized components
+5. **Integrate with existing structure**: Use appropriate folders
+6. **Document complex code**: Add XML comments for public APIs
+7. **Handle errors**: Include appropriate error handling with logging
+8. **Respect existing patterns**: Observe how other classes are structured
+9. **Consider async operations**: Most Windows imaging operations are long-running
+10. **Handle large files**: WIM files and updates can be several GB in size
+11. **Progress reporting**: Always include progress tracking for long operations
 
-11. **Language**: All code and comments must be written in English.
-12. **Documentation Awareness**: When analyzing code for context, always check if related documentation already exists in the `docs/` folder and use it to complement your understanding of the code.
-13. **Documentation Language**: All generated documentation (Markdown files) must be written in English.
+12. **Language**: All code and comments must be written in English.
+13. **Documentation Awareness**: When analyzing code for context, always check if related documentation already exists in the `docs/` folder and use it to complement your understanding of the code.
+14. **Documentation Language**: All generated documentation (Markdown files) must be written in English.
+
+### Service Architecture Guidelines
+
+When creating or refactoring services:
+- **Single Responsibility**: Each service should handle one specific domain or concern
+- **Interface-Based Design**: Always create interfaces for services to enable dependency injection and testing
+- **Constructor Injection**: Use constructor injection for dependencies, validate parameters with `ArgumentNullException`
+- **Service Lifetime Management**: Choose appropriate service lifetimes (Singleton, Transient, Scoped)
+- **Service Organization**: Place specialized services in domain-specific subfolders
+- **Error Handling**: Each service should handle its domain-specific errors appropriately
+- **Logging**: Include comprehensive logging for service operations and errors
+- **Documentation**: Document each service with clear responsibilities and usage examples
 
 ### Domain-Specific Guidelines
 
@@ -136,6 +195,16 @@ When working with Windows imaging functionality:
 - Handle Windows-specific exceptions and error codes
 - Consider memory usage when working with large WIM files
 - Implement proper logging for troubleshooting deployment issues
+
+### Windows Image Services Guidelines
+When working with Windows image services, follow the established specialized service pattern:
+- **IWindowsImageFileService**: Use for file operations, copying, naming, and path management
+- **IWindowsImageMetadataService**: Use for JSON persistence and metadata CRUD operations
+- **IWindowsImagePowerShellService**: Use for PowerShell execution and Windows image analysis
+- **IWindowsImageIsoService**: Use for ISO mounting, extraction, and related operations
+- **WindowsImageService**: Main coordinator service that orchestrates the specialized services
+- Always inject required services via constructor and validate dependencies
+- Prefer delegation to specialized services over implementing operations directly in coordinator services
 
 ### Security & Permissions Guidelines
 - Handle administrator permissions requirements

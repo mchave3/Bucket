@@ -1,11 +1,36 @@
-# WindowsImageService Class Documentation
+# WindowsImageService Class Documentation (Refactored Architecture)
 
 ## Overview
-Central service for managing Windows image files and their metadata using PowerShell Get-WindowsImage cmdlet. Provides comprehensive functionality to analyze, import, manage, and extract detailed information from WIM/ESD files, including ISO mounting and import operations.
+**IMPORTANT**: This service has been refactored into a distributed architecture using dependency injection and specialized services. The WindowsImageService now acts as a coordinator that orchestrates multiple focused services, each with a single responsibility.
+
+The refactored WindowsImageService provides comprehensive functionality to analyze, import, manage, and extract detailed information from WIM/ESD files, including ISO mounting and import operations, through a clean separation of concerns.
+
+## Architecture
+
+### New Structure
+The WindowsImageService has been split into specialized services:
+
+- **WindowsImageFileService**: File operations and path management
+- **WindowsImageMetadataService**: JSON metadata persistence and management
+- **WindowsImagePowerShellService**: PowerShell execution and parsing
+- **WindowsImageIsoService**: ISO mounting and extraction operations
+- **WindowsImageService**: Main coordinator service (this class)
+
+### Dependency Injection
+The service now uses constructor dependency injection:
+
+```csharp
+public WindowsImageService(
+    IWindowsImageMetadataService metadataService,
+    IWindowsImageFileService fileService,
+    IWindowsImagePowerShellService powerShellService,
+    IWindowsImageIsoService isoService)
+```
 
 ## Location
 - **File**: `src/Services/WindowsImageService.cs`
 - **Namespace**: `Bucket.Services`
+- **Related Services**: `src/Services/WindowsImage/` (specialized services)
 
 ## Class Definition
 ```csharp
@@ -14,24 +39,34 @@ public class WindowsImageService
 
 ## Key Features
 
+### Service Coordination
+- Orchestrates multiple specialized services
+- Provides unified API for higher-level operations
+- Handles cross-service validation and error management
+- Maintains backward compatibility with existing code
+
 ### Image Collection Management
+- Delegates to WindowsImageMetadataService for persistence
 - Load and save Windows image collections
 - Manage image metadata and indexing
 - Automatic discovery of existing images
 
 ### Direct Import Operations
-- Import WIM/ESD files directly
+- Coordinates file operations through WindowsImageFileService
+- Uses PowerShell service for image analysis
 - Copy files to managed directory with progress reporting
 - Generate unique names with timestamps
 
 ### ISO Import Operations
+- Delegates to WindowsImageIsoService for ISO operations
 - Mount/dismount ISO files automatically
 - Extract Windows images from mounted ISOs
 - Support for install.wim, install.esd, and boot.wim files
 - Robust error handling and cleanup
 
 ### Image Analysis
-- Deep analysis using PowerShell Get-WindowsImage
+- Uses WindowsImagePowerShellService for deep analysis
+- PowerShell Get-WindowsImage integration
 - Extract detailed metadata for each image index
 - Support for multiple architectures and editions
 

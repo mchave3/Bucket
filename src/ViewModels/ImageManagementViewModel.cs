@@ -121,9 +121,10 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <summary>
     /// Initializes a new instance of the ImageManagementViewModel class.
     /// </summary>
-    public ImageManagementViewModel()
+    /// <param name="windowsImageService">The Windows image service for handling image operations.</param>
+    public ImageManagementViewModel(WindowsImageService windowsImageService)
     {
-        _windowsImageService = new WindowsImageService();
+        _windowsImageService = windowsImageService ?? throw new ArgumentNullException(nameof(windowsImageService));
 
         // Initialize commands
         RefreshCommand = new AsyncRelayCommand(RefreshImagesAsync);
@@ -142,7 +143,7 @@ public partial class ImageManagementViewModel : ObservableObject
         // Watch for property changes
         PropertyChanged += OnPropertyChanged;
 
-        Logger.Information("ImageManagementViewModel initialized");
+        Logger.Information("ImageManagementViewModel initialized with injected WindowsImageService");
     }
 
     #region Commands

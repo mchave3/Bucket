@@ -45,6 +45,15 @@
             // Pre-flight service
             services.AddSingleton<PreFlightService>();
 
+            // Windows Image Services
+            services.AddSingleton<IWindowsImageMetadataService, WindowsImageMetadataService>(provider =>
+                new WindowsImageMetadataService(Constants.ImportedWIMsDirectoryPath));
+            services.AddSingleton<IWindowsImageFileService, WindowsImageFileService>(provider =>
+                new WindowsImageFileService(Constants.ImportedWIMsDirectoryPath));
+            services.AddSingleton<IWindowsImagePowerShellService, WindowsImagePowerShellService>();
+            services.AddSingleton<IWindowsImageIsoService, WindowsImageIsoService>();
+            services.AddSingleton<WindowsImageService>();
+
             return services.BuildServiceProvider();
         }
 

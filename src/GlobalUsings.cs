@@ -1,4 +1,6 @@
 ﻿global using Bucket.Common;
+global using Bucket.Services;
+global using Bucket.Services.WindowsImage;
 global using Bucket.ViewModels;
 global using Bucket.Views;
 global using CommunityToolkit.Mvvm.ComponentModel;
