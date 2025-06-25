@@ -140,6 +140,9 @@ public class WindowsImageService
             progress?.Report("Analyzing image structure...");
             var indices = await _powerShellService.AnalyzeImageAsync(finalImagePath, progress, cancellationToken);
 
+            // Get file information
+            var fileInfo = new FileInfo(finalImagePath);
+
             // Create the WindowsImageInfo object
             var imageInfo = new WindowsImageInfo
             {
@@ -147,7 +150,10 @@ public class WindowsImageService
                 Name = name,
                 FilePath = finalImagePath,
                 SourceIsoPath = sourceIsoPath,
-                ModifiedDate = DateTime.Now,
+                CreatedDate = fileInfo.CreationTime,
+                ModifiedDate = fileInfo.LastWriteTime,
+                FileSizeBytes = fileInfo.Length,
+                ImageType = Path.GetExtension(finalImagePath).TrimStart('.').ToUpperInvariant(),
                 Indices = new System.Collections.ObjectModel.ObservableCollection<WindowsImageIndex>(indices)
             };
 
@@ -302,6 +308,64 @@ public class WindowsImageService
         await _metadataService.SaveImagesAsync(existingImages, cancellationToken);
 
         return imageInfo;
+    }
+
+    #endregion
+
+    #region Public Methods - File Information Refresh
+
+    /// <summary>
+    /// Refreshes file information (size, dates, type) for all images in the collection.
+    /// This is useful for updating metadata after file system changes.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The updated collection of images.</returns>
+    public async Task<ObservableCollection<WindowsImageInfo>> RefreshFileInfoAsync(CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Refreshing file information for all images");
+
+        var images = await _metadataService.GetImagesAsync(cancellationToken);
+        var hasChanges = false;
+
+        foreach (var image in images)
+        {
+            if (File.Exists(image.FilePath))
+            {
+                var fileInfo = new FileInfo(image.FilePath);
+
+                // Update file information if it has changed
+                if (image.FileSizeBytes != fileInfo.Length ||
+                    image.ModifiedDate != fileInfo.LastWriteTime ||
+                    string.IsNullOrEmpty(image.ImageType))
+                {
+                    image.FileSizeBytes = fileInfo.Length;
+                    image.CreatedDate = fileInfo.CreationTime;
+                    image.ModifiedDate = fileInfo.LastWriteTime;
+                    image.ImageType = Path.GetExtension(image.FilePath).TrimStart('.').ToUpperInvariant();
+                    hasChanges = true;
+
+                    Logger.Debug("Updated file info for image: {Name} - Size: {Size} bytes",
+                        image.Name, image.FileSizeBytes);
+                }
+            }
+            else
+            {
+                Logger.Warning("Image file not found: {FilePath}", image.FilePath);
+            }
+        }
+
+        // Save changes if any were made
+        if (hasChanges)
+        {
+            await _metadataService.SaveImagesAsync(images, cancellationToken);
+            Logger.Information("File information refreshed and saved for {Count} images", images.Count);
+        }
+        else
+        {
+            Logger.Information("No file information updates needed");
+        }
+
+        return images;
     }
 
     #endregion

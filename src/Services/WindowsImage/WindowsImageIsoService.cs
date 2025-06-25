@@ -89,14 +89,17 @@ public class WindowsImageIsoService : IWindowsImageIsoService
                 var indices = await _powerShellService.AnalyzeImageAsync(copiedWimPath, progress, cancellationToken);
 
                 // Step 7: Create the WindowsImageInfo object
+                var fileInfo = new FileInfo(copiedWimPath);
                 var imageInfo = new WindowsImageInfo
                 {
                     Id = Guid.NewGuid().ToString(),
                     Name = imageName,
                     FilePath = copiedWimPath,
                     SourceIsoPath = isoFile.Path,
-                    CreatedDate = DateTime.Now,
-                    ModifiedDate = DateTime.Now,
+                    CreatedDate = fileInfo.CreationTime,
+                    ModifiedDate = fileInfo.LastWriteTime,
+                    FileSizeBytes = fileInfo.Length,
+                    ImageType = Path.GetExtension(copiedWimPath).TrimStart('.').ToUpperInvariant(),
                     Indices = new System.Collections.ObjectModel.ObservableCollection<WindowsImageIndex>(indices)
                 };
 
@@ -151,14 +154,17 @@ public class WindowsImageIsoService : IWindowsImageIsoService
             var indices = await _powerShellService.AnalyzeImageAsync(copiedWimPath, progress, cancellationToken);
 
             // Create the WindowsImageInfo object
+            var fileInfo = new FileInfo(copiedWimPath);
             var imageInfo = new WindowsImageInfo
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = imageName,
                 FilePath = copiedWimPath,
                 SourceIsoPath = "",
-                CreatedDate = DateTime.Now,
-                ModifiedDate = DateTime.Now,
+                CreatedDate = fileInfo.CreationTime,
+                ModifiedDate = fileInfo.LastWriteTime,
+                FileSizeBytes = fileInfo.Length,
+                ImageType = Path.GetExtension(copiedWimPath).TrimStart('.').ToUpperInvariant(),
                 Indices = new System.Collections.ObjectModel.ObservableCollection<WindowsImageIndex>(indices)
             };
 
