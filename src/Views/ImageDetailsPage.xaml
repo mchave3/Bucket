@@ -162,9 +162,9 @@
                                             </StackPanel>
 
                                             <Button Grid.Column="2"
-                                                    Content="&#xE712;"
+                                                    Content="&#xE70F;"
                                                     FontFamily="Segoe Fluent Icons"
-                                                    ToolTipService.ToolTip="View Details"
+                                                    ToolTipService.ToolTip="Edit"
                                                     Style="{StaticResource SubtleButtonStyle}"
                                                     Margin="8,0,0,0" />
                                         </Grid>
