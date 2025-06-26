@@ -4,6 +4,7 @@
     x:Name="PageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dev="using:DevWinUI"
     xmlns:local="using:Bucket.Views"
     xmlns:viewmodels="using:Bucket.ViewModels"
     xmlns:models="using:Bucket.Models"
@@ -43,7 +44,7 @@
                 </Button>
 
                 <Button
-                    Content="Import WIM"
+                    Content="Import WIM/ESD"
                     Command="{Binding ImportFromWimCommand}">
                 </Button>
 
@@ -55,67 +56,28 @@
         </Grid>
 
         <!-- Search and Filter Section -->
-        <Grid Grid.Row="1" Margin="24,0,24,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="1" Margin="24,0,24,16"
+                    Orientation="Vertical"
+                    HorizontalAlignment="Center"
+                    Spacing="10">
 
-            <TextBox
-                Grid.Column="0"
-                PlaceholderText="Search images by name, type, or edition..."
-                Text="{Binding SearchText, Mode=TwoWay}"
-                MaxWidth="400"
-                HorizontalAlignment="Left">
-                <TextBox.Resources>
-                    <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="TextBox">
-                                    <Grid>
-                                        <Border
-                                            Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="4"
-                                            Padding="8,6">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
+            <dev:TextBox
+                PlaceholderText="Filter images..."
+                Width="300"
+                VerticalAlignment="Center"
+                Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <dev:TextBox.Content>
+                    <Button Content="&#xE721;" />
+                </dev:TextBox.Content>
+            </dev:TextBox>
 
-                                                <FontIcon
-                                                    Grid.Column="0"
-                                                    Glyph="&#xE71E;"
-                                                    FontSize="14"
-                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                                    Margin="0,0,8,0" />
-
-                                                <ScrollViewer
-                                                    Grid.Column="1"
-                                                    x:Name="ContentElement"
-                                                    HorizontalScrollMode="Auto"
-                                                    HorizontalScrollBarVisibility="Hidden"
-                                                    VerticalScrollMode="Disabled"
-                                                    VerticalScrollBarVisibility="Disabled"
-                                                    ZoomMode="Disabled" />
-                                            </Grid>
-                                        </Border>
-                                    </Grid>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </TextBox.Resources>
-            </TextBox>
             <TextBlock
-                Grid.Column="1"
                 Text="{Binding FilteredImagesCountText}"
                 Style="{StaticResource CaptionTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                VerticalAlignment="Center" />
-        </Grid>
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center" />
+        </StackPanel>
 
         <!-- Main Content - Master-Detail Layout -->
         <Grid Grid.Row="2" Margin="24,0,24,16">
@@ -295,11 +257,12 @@
                             Text="{Binding SelectedImageDisplayName}"
                             Style="{StaticResource BodyStrongTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                            TextTrimming="CharacterEllipsis" />
+                            TextTrimming="CharacterEllipsis"
+                            VerticalAlignment="Center" />
 
                         <Button
                             Grid.Column="1"
-                            Content="Actions"
+                            Content="Details"
                             Command="{Binding ViewImageDetailsCommand}"
                             CommandParameter="{Binding SelectedImage}"
                             Style="{StaticResource DefaultButtonStyle}"
@@ -310,17 +273,17 @@
                 </Border>
 
                 <!-- Detail Content -->
-                <ScrollViewer
+                <Grid
                     Grid.Row="1"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1,0,1,1"
-                    CornerRadius="0,0,4,4"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
 
-                    <StackPanel Margin="16" Spacing="16">
-                        <!-- No Selection State -->
+                    <!-- No Selection State -->
+                    <Border
+                        Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Reverse}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1,0,1,1"
+                        CornerRadius="0,0,4,4">
                         <StackPanel
-                            Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Reverse}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="12">
@@ -334,11 +297,16 @@
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 HorizontalAlignment="Center" />
                         </StackPanel>
+                    </Border>
 
-                        <!-- Selected Image Details -->
-                        <StackPanel
-                            Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}}"
-                            Spacing="16">
+                    <!-- Selected Image Details in ScrollViewer -->
+                    <ScrollViewer
+                        Visibility="{Binding SelectedImage, Converter={StaticResource ObjectToVisibilityConverter}}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1,0,1,1"
+                        CornerRadius="0,0,4,4">
+
+                        <StackPanel Margin="16" Spacing="16">
 
                             <!-- Image Properties -->
                             <StackPanel Spacing="8">
@@ -561,37 +529,9 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
-
-                            <!-- Actions -->
-                            <StackPanel Spacing="8">
-                                <TextBlock
-                                    Text="Actions"
-                                    Style="{StaticResource BodyStrongTextBlockStyle}" />
-
-                                <StackPanel Spacing="8">
-                                    <Button
-                                        Content="Extract Selected Editions"
-                                        Command="{Binding ExtractSelectedIndicesCommand}"
-                                        IsEnabled="False"
-                                        HorizontalAlignment="Stretch">
-                                    </Button>
-                                    <Button
-                                        Content="Mount Image"
-                                        Command="{Binding MountImageCommand}"
-                                        IsEnabled="False"
-                                        HorizontalAlignment="Stretch">
-                                    </Button>
-                                    <Button
-                                        Content="Validate Integrity"
-                                        Command="{Binding ValidateImageCommand}"
-                                        IsEnabled="False"
-                                        HorizontalAlignment="Stretch">
-                                    </Button>
-                                </StackPanel>
-                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </Grid>
 

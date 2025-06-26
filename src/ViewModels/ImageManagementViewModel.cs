@@ -80,7 +80,13 @@ public partial class ImageManagementViewModel : ObservableObject
     public string SearchText
     {
         get => _searchText;
-        set => SetProperty(ref _searchText, value);
+        set
+        {
+            if (SetProperty(ref _searchText, value))
+            {
+                FilterImages();
+            }
+        }
     }
 
     /// <summary>
