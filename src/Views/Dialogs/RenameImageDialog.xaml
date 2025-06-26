@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Bucket.Views.Dialogs.RenameImageDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Rename Image"
+    PrimaryButtonText="Save"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <Grid Width="400" Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Current Information -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <TextBlock Text="Current Image Information"
+                       Style="{StaticResource SubtitleTextBlockStyle}" />
+            <StackPanel Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="File:" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Bind FileName}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Type:" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Bind ImageType}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- New Name Field -->
+        <TextBlock Grid.Row="2"
+                   Text="New Name:"
+                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                   Margin="0,0,0,4" />
+        <TextBox Grid.Row="3"
+                 x:Name="NameTextBox"
+                 Text="{x:Bind ImageName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 PlaceholderText="Enter a new name for this image"
+                 MaxLength="100" />
+
+        <!-- Instructions -->
+        <TextBlock Grid.Row="5"
+                   Text="This will only change the display name. The file name will remain unchanged."
+                   Style="{StaticResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap" />
+    </Grid>
+</ContentDialog>

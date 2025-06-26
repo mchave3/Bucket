@@ -1,10 +1,12 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace Bucket.Models;
 
 /// <summary>
 /// Represents a Windows image index with its associated metadata.
 /// Contains both basic information (available from listing all indices) and detailed information (available when querying a specific index).
 /// </summary>
-public class WindowsImageIndex
+public partial class WindowsImageIndex : ObservableObject
 {
     #region Basic Properties (Available from image listing)
 
@@ -16,12 +18,14 @@ public class WindowsImageIndex
     /// <summary>
     /// Gets or sets the display name of the Windows edition.
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _name = string.Empty;
 
     /// <summary>
     /// Gets or sets the detailed description of the Windows edition.
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _description = string.Empty;
 
     /// <summary>
     /// Gets or sets the architecture of the Windows image (x86, x64, ARM64).
@@ -36,7 +40,8 @@ public class WindowsImageIndex
     /// <summary>
     /// Gets or sets whether this index is included/selected for operations.
     /// </summary>
-    public bool IsIncluded { get; set; } = true;
+    [ObservableProperty]
+    private bool _isIncluded = true;
 
     #endregion
 
@@ -177,6 +182,26 @@ public class WindowsImageIndex
     /// Gets the formatted modification time string.
     /// </summary>
     public string FormattedModifiedTime => ModifiedTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A";
+
+    #endregion
+
+    #region Property Change Handlers
+
+    /// <summary>
+    /// Partial method called when Name property changes.
+    /// </summary>
+    partial void OnNameChanged(string value)
+    {
+        OnPropertyChanged(nameof(DisplayText));
+    }
+
+    /// <summary>
+    /// Partial method called when IsIncluded property changes.
+    /// </summary>
+    partial void OnIsIncludedChanged(bool value)
+    {
+        // This can be used to notify parent objects about selection changes
+    }
 
     #endregion
 }

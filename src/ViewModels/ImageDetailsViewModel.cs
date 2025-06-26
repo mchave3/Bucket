@@ -2,6 +2,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Bucket.Models;
+using Bucket.Services.WindowsImage;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 
@@ -12,6 +13,7 @@ namespace Bucket.ViewModels;
 /// </summary>
 public partial class ImageDetailsViewModel : ObservableObject
 {
+    private readonly IWindowsImageMetadataService _metadataService;
     private WindowsImageInfo _imageInfo;
 
     /// <summary>
@@ -31,8 +33,11 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// <summary>
     /// Initializes a new instance of the ImageDetailsViewModel class.
     /// </summary>
-    public ImageDetailsViewModel()
+    /// <param name="metadataService">The Windows image metadata service.</param>
+    public ImageDetailsViewModel(IWindowsImageMetadataService metadataService)
     {
+        _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));
+
         // Initialize commands
         EditMetadataCommand = new RelayCommand(EditMetadata);
         ExportImageCommand = new AsyncRelayCommand(ExportImageAsync);
@@ -41,6 +46,8 @@ public partial class ImageDetailsViewModel : ObservableObject
         ApplyUpdatesCommand = new AsyncRelayCommand(ApplyUpdatesAsync);
         MountImageCommand = new AsyncRelayCommand(MountImageAsync);
         ExtractFilesCommand = new AsyncRelayCommand(ExtractFilesAsync);
+        RenameImageCommand = new AsyncRelayCommand(RenameImageAsync);
+        EditIndexCommand = new RelayCommand<WindowsImageIndex>(EditIndex);
 
         Logger.Information("ImageDetailsViewModel initialized");
     }
@@ -81,6 +88,16 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// Gets the command to extract files from the image.
     /// </summary>
     public ICommand ExtractFilesCommand { get; }
+
+    /// <summary>
+    /// Gets the command to rename the image.
+    /// </summary>
+    public ICommand RenameImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to edit an index.
+    /// </summary>
+    public ICommand EditIndexCommand { get; }
 
     #endregion
 
@@ -238,6 +255,115 @@ public partial class ImageDetailsViewModel : ObservableObject
         {
             Logger.Error(ex, "Failed to extract files from image: {Name}", ImageInfo.Name);
             await ShowErrorDialogAsync("Extraction Error", $"Failed to extract files: {ex.Message}");
+        }
+    }    /// <summary>
+    /// Renames the Windows image.
+    /// </summary>
+    private async Task RenameImageAsync()
+    {
+        if (ImageInfo == null) return;
+
+        Logger.Information("Opening rename dialog for image: {Name}", ImageInfo.Name);
+
+        try
+        {
+            var dialog = new Views.Dialogs.RenameImageDialog(ImageInfo);
+
+            // Get XamlRoot from the main window
+            if (App.MainWindow?.Content is FrameworkElement element)
+            {
+                dialog.XamlRoot = element.XamlRoot;
+            }
+
+            var result = await dialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                var success = dialog.UpdateImageInfo(ImageInfo);
+
+                if (success)
+                {
+                    // Save the updated image metadata to images.json
+                    try
+                    {
+                        await _metadataService.UpdateImageAsync(ImageInfo);
+                        Logger.Information("Image metadata updated in images.json for '{Name}'", ImageInfo.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "Failed to update image metadata in images.json for '{Name}'", ImageInfo.Name);
+                        await ShowErrorDialogAsync("Update Failed",
+                            "The image was renamed successfully, but failed to update the metadata file. You may need to restart the application.");
+                        return;
+                    }
+
+                    Logger.Information("Image successfully renamed to '{NewName}'", ImageInfo.Name);
+
+                    // Notify that properties may have changed
+                    OnPropertyChanged(nameof(ImageInfo));
+                }
+                else
+                {
+                    await ShowErrorDialogAsync("Rename Failed", "Failed to rename the image. The target file may already exist or be in use.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to rename image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Rename Error", $"Failed to rename image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Opens the edit dialog for a Windows image index.
+    /// </summary>
+    /// <param name="imageIndex">The image index to edit.</param>
+    private async void EditIndex(WindowsImageIndex imageIndex)
+    {
+        if (ImageInfo == null || imageIndex == null) return;
+
+        Logger.Information("Opening edit dialog for index {Index}: {Name}", imageIndex.Index, imageIndex.Name);
+
+        try
+        {
+            var dialog = new Views.Dialogs.EditIndexDialog(imageIndex);
+
+            // Get XamlRoot from the main window
+            if (App.MainWindow?.Content is FrameworkElement element)
+            {
+                dialog.XamlRoot = element.XamlRoot;
+            }
+
+            var result = await dialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                var oldName = imageIndex.Name;
+                var oldDescription = imageIndex.Description;
+
+                dialog.UpdateImageIndex(imageIndex);
+
+                // Save the updated image metadata to images.json
+                try
+                {
+                    await _metadataService.UpdateImageAsync(ImageInfo);
+                    Logger.Information("Index {Index} updated and metadata saved: Name '{OldName}' → '{NewName}', Description changed: {DescriptionChanged}",
+                        imageIndex.Index, oldName, imageIndex.Name, oldDescription != imageIndex.Description);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Failed to update image metadata in images.json after editing index {Index}", imageIndex.Index);
+                    await ShowErrorDialogAsync("Update Failed",
+                        "The index was updated successfully, but failed to save changes to the metadata file. You may need to restart the application.");
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to edit index {Index}: {Name}", imageIndex.Index, imageIndex.Name);
+            await ShowErrorDialogAsync("Edit Error", $"Failed to edit index: {ex.Message}");
         }
     }
 

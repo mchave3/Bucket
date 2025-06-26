@@ -41,4 +41,17 @@ public sealed partial class ImageDetailsPage : Page
             ViewModel.SetImageInfo(imageInfo);
         }
     }
+
+    /// <summary>
+    /// Handles the click event for edit index buttons.
+    /// </summary>
+    /// <param name="sender">The button that was clicked.</param>
+    /// <param name="e">The event arguments.</param>
+    private void EditIndexButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Models.WindowsImageIndex index)
+        {
+            ViewModel?.EditIndexCommand?.Execute(index);
+        }
+    }
 }

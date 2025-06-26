@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="Bucket.Views.Dialogs.EditIndexDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Edit Windows Index"
+    PrimaryButtonText="Save"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <Grid Width="400" Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Index Information -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <TextBlock Text="Index Information"
+                       Style="{StaticResource SubtitleTextBlockStyle}" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Index:" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Bind Index}" />
+                <TextBlock Text="Architecture:" FontWeight="SemiBold" />
+                <TextBlock Text="{x:Bind Architecture}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Name Field -->
+        <TextBlock Grid.Row="2"
+                   Text="Name:"
+                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                   Margin="0,0,0,4" />
+        <TextBox Grid.Row="3"
+                 x:Name="NameTextBox"
+                 Text="{x:Bind IndexName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 PlaceholderText="Enter the display name for this Windows edition"
+                 MaxLength="100" />
+
+        <!-- Description Field -->
+        <TextBlock Grid.Row="5"
+                   Text="Description:"
+                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                   Margin="0,0,0,4" />
+        <TextBox Grid.Row="6"
+                 x:Name="DescriptionTextBox"
+                 Text="{x:Bind IndexDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 PlaceholderText="Enter a detailed description for this Windows edition"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 MinHeight="80"
+                 MaxLength="500"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+    </Grid>
+</ContentDialog>
