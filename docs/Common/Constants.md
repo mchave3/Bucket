@@ -140,6 +140,18 @@ public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryP
 - **Structure**: `%PROGRAMDATA%\Bucket\Configs\`
 - **Usage**: WIMs.xml and other operational configurations
 
+### TempDirectoryPath
+
+```csharp
+public static readonly string TempDirectoryPath = Path.Combine(RootDirectoryPath, "Temp");
+```
+
+- **Type**: `string`
+- **Access**: Public, Static, ReadOnly
+- **Purpose**: Temporary directory for Windows image operations
+- **Structure**: `%PROGRAMDATA%\Bucket\Temp\`
+- **Usage**: WIMGAPI operations requiring temporary workspace
+
 ## Configuration Files
 
 ### WIMsConfigPath
@@ -194,6 +206,7 @@ The constants define the following directory hierarchy:
 ├── Mount\                  (MountDirectoryPath)
 ├── CompletedWIMs\          (CompletedWIMsDirectoryPath)
 ├── ImportedWIMs\           (ImportedWIMsDirectoryPath)
+├── Temp\                   (TempDirectoryPath)
 └── Configs\                (ConfigsDirectoryPath)
     └── WIMs.xml           (WIMsConfigPath)
 ```

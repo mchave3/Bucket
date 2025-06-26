@@ -2,7 +2,7 @@
 
 ## Overview
 
-Service for editing Windows image index metadata using native Windows Imaging API (WIMGAPI). Provides functionality to modify index names and descriptions directly in WIM files, replicating the behavior found in WinToolkit v1 but adapted for the modern Bucket application architecture.
+Service for editing Windows image index metadata using native Windows Imaging API (WIMGAPI). Provides functionality to modify index names and descriptions directly in WIM files with user progress feedback and automatic UI refresh. Replicates the behavior found in WinToolkit v1 but adapted for the modern Bucket application architecture.
 
 ## Location
 

@@ -19,6 +19,7 @@ public partial class WindowsImageIndex : ObservableObject
     /// Gets or sets the display name of the Windows edition.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayText))]
     private string _name = string.Empty;
 
     /// <summary>

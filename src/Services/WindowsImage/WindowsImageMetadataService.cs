@@ -200,6 +200,33 @@ public class WindowsImageMetadataService : IWindowsImageMetadataService
                 imageToUpdate.ModifiedDate = imageInfo.ModifiedDate;
                 imageToUpdate.SourceIsoPath = imageInfo.SourceIsoPath;
 
+                // CRITICAL: Update the Indices collection to persist index-level changes
+                if (imageInfo.Indices != null && imageInfo.Indices.Any())
+                {
+                    // Update each index in the existing image with the corresponding data from the updated image
+                    foreach (var updatedIndex in imageInfo.Indices)
+                    {
+                        var existingIndex = imageToUpdate.Indices?.FirstOrDefault(i => i.Index == updatedIndex.Index);
+                        if (existingIndex != null)
+                        {
+                            // Update index properties
+                            existingIndex.Name = updatedIndex.Name;
+                            existingIndex.Description = updatedIndex.Description;
+                            existingIndex.IsIncluded = updatedIndex.IsIncluded;
+                            // Note: DisplayText is a computed property that will update automatically
+
+                            Logger.Debug("Updated index {Index}: Name='{Name}', Description='{Description}'",
+                                existingIndex.Index, existingIndex.Name, existingIndex.Description);
+                        }
+                        else
+                        {
+                            Logger.Warning("Index {Index} not found in existing image during update", updatedIndex.Index);
+                        }
+                    }
+
+                    Logger.Information("Updated {Count} indices in image metadata", imageInfo.Indices.Count());
+                }
+
                 await SaveImagesAsync(existingImages, cancellationToken);
                 Logger.Information("Successfully updated image metadata: {Name}", imageInfo.Name);
             }

@@ -41,6 +41,7 @@ The pre-flight service ensures that:
   - `C:\ProgramData\Bucket\CompletedWIMs\` (Finished images)
   - `C:\ProgramData\Bucket\ImportedWIMs\` (Imported images)
   - `C:\ProgramData\Bucket\Configs\` (Configuration files)
+  - `C:\ProgramData\Bucket\Temp\` (Temporary operations)
   - `C:\ProgramData\Bucket\Logs\` (Application logs)
 
 #### 3. Write Permissions

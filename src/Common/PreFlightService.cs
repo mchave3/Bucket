@@ -133,6 +133,7 @@ public class PreFlightService
                 Constants.CompletedWIMsDirectoryPath,
                 Constants.ImportedWIMsDirectoryPath,
                 Constants.ConfigsDirectoryPath,
+                Constants.TempDirectoryPath,
                 Constants.LogDirectoryPath
             };
 
@@ -145,6 +146,7 @@ public class PreFlightService
                 "Completed WIMs",
                 "Imported WIMs",
                 "Configs",
+                "Temp",
                 "Logs"
             };
 
@@ -191,6 +193,7 @@ public class PreFlightService
                 Constants.CompletedWIMsDirectoryPath,
                 Constants.ImportedWIMsDirectoryPath,
                 Constants.ConfigsDirectoryPath,
+                Constants.TempDirectoryPath,
                 Constants.LogDirectoryPath
             };
 

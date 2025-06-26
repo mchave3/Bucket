@@ -15,6 +15,7 @@ public static partial class Constants
     public static readonly string CompletedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "CompletedWIMs");
     public static readonly string ImportedWIMsDirectoryPath = Path.Combine(RootDirectoryPath, "ImportedWIMs");
     public static readonly string ConfigsDirectoryPath = Path.Combine(RootDirectoryPath, "Configs");
+    public static readonly string TempDirectoryPath = Path.Combine(RootDirectoryPath, "Temp");
     public static readonly string WIMsConfigPath = Path.Combine(ConfigsDirectoryPath, "WIMs.xml");
 
     // Minimum system requirements

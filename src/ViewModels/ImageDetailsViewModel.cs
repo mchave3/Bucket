@@ -337,6 +337,9 @@ public partial class ImageDetailsViewModel : ObservableObject
 
         Logger.Information("Opening edit dialog for index {Index}: {Name}", imageIndex.Index, imageIndex.Name);
 
+        var oldName = imageIndex.Name;
+        var oldDescription = imageIndex.Description;
+
         try
         {
             var dialog = new Views.Dialogs.EditIndexDialog(imageIndex);
@@ -351,96 +354,146 @@ public partial class ImageDetailsViewModel : ObservableObject
 
             if (result == ContentDialogResult.Primary)
             {
-                var oldName = imageIndex.Name;
-                var oldDescription = imageIndex.Description;
+                Logger.Information("Dialog confirmed for index {Index}. Before update: Name='{OldName}', Description='{OldDescription}'",
+                    imageIndex.Index, oldName, oldDescription);
 
                 // Update the in-memory model first
                 dialog.UpdateImageIndex(imageIndex);
 
+                Logger.Information("After dialog update for index {Index}: Name='{NewName}', Description='{NewDescription}'",
+                    imageIndex.Index, imageIndex.Name, imageIndex.Description);
+
+                // CRITICAL: Update the actual object in ImageInfo.Indices collection
+                var originalIndex = ImageInfo.Indices?.FirstOrDefault(i => i.Index == imageIndex.Index);
+                if (originalIndex != null)
+                {
+                    originalIndex.Name = imageIndex.Name;
+                    originalIndex.Description = imageIndex.Description;
+                    Logger.Information("Updated original index object in ImageInfo.Indices: Index {Index}, Name='{Name}', Description='{Description}'",
+                        originalIndex.Index, originalIndex.Name, originalIndex.Description);
+                }
+                else
+                {
+                    Logger.Error("Could not find original index {Index} in ImageInfo.Indices collection", imageIndex.Index);
+                }
+
                 // Check if we need to update the physical WIM file
                 var nameChanged = oldName != imageIndex.Name;
                 var descriptionChanged = oldDescription != imageIndex.Description;
+
+                Logger.Information("Change detection for index {Index}: nameChanged={NameChanged}, descriptionChanged={DescriptionChanged}",
+                    imageIndex.Index, nameChanged, descriptionChanged);
 
                 if (nameChanged || descriptionChanged)
                 {
                     Logger.Information("Updating WIM file metadata for index {Index}: Name={NameChanged}, Description={DescriptionChanged}",
                         imageIndex.Index, nameChanged, descriptionChanged);
 
-                    // Validate WIM file accessibility
-                    if (!_indexEditingService.IsWimFileAccessible(ImageInfo.FilePath))
+                    // Show progress dialog while updating WIM metadata
+                    await ShowEditProgressDialogAsync("Updating WIM Metadata", async (progress, cancellationToken) =>
                     {
-                        await ShowErrorDialogAsync("File Access Error",
-                            "The WIM file is currently in use by another process or cannot be accessed. Please close any applications that might be using the file and try again.");
+                        progress.Report("Validating WIM file access...");
 
-                        // Revert changes in memory
-                        imageIndex.Name = oldName;
-                        imageIndex.Description = oldDescription;
-                        return;
-                    }
+                        // Validate WIM file accessibility
+                        if (!_indexEditingService.IsWimFileAccessible(ImageInfo.FilePath))
+                        {
+                            throw new InvalidOperationException("The WIM file is currently in use by another process or cannot be accessed. Please close any applications that might be using the file and try again.");
+                        }
 
-                    // Update the physical WIM file
-                    var wimUpdateSuccess = false;
+                        progress.Report("Updating WIM file metadata...");
+
+                        // Update the physical WIM file
+                        var wimUpdateSuccess = false;
+                        try
+                        {
+                            if (nameChanged && descriptionChanged)
+                            {
+                                wimUpdateSuccess = await _indexEditingService.UpdateIndexMetadataAsync(
+                                    ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name,
+                                    oldDescription, imageIndex.Description, cancellationToken);
+                            }
+                            else if (nameChanged)
+                            {
+                                wimUpdateSuccess = await _indexEditingService.UpdateIndexNameAsync(
+                                    ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name, cancellationToken);
+                            }
+                            else if (descriptionChanged)
+                            {
+                                wimUpdateSuccess = await _indexEditingService.UpdateIndexDescriptionAsync(
+                                    ImageInfo.FilePath, imageIndex.Index, oldDescription, imageIndex.Description, cancellationToken);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Failed to update WIM file metadata for index {Index}", imageIndex.Index);
+                            throw new InvalidOperationException($"Failed to update WIM file metadata: {ex.Message}");
+                        }
+
+                        if (!wimUpdateSuccess)
+                        {
+                            throw new InvalidOperationException("Failed to update the WIM file metadata.");
+                        }
+
+                        progress.Report("Saving metadata changes...");
+
+                        Logger.Information("About to save image metadata. ImageInfo.Id={ImageId}, Index {Index} current state: Name='{Name}', Description='{Description}'",
+                            ImageInfo.Id, imageIndex.Index, imageIndex.Name, imageIndex.Description);
+
+                        // Save the updated image metadata to images.json
+                        try
+                        {
+                            await _metadataService.UpdateImageAsync(ImageInfo);
+                            Logger.Information("Index {Index} updated and metadata saved: Name '{OldName}' → '{NewName}', Description changed: {DescriptionChanged}",
+                                imageIndex.Index, oldName, imageIndex.Name, oldDescription != imageIndex.Description);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Failed to update image metadata in images.json after editing index {Index}", imageIndex.Index);
+                            throw new InvalidOperationException("The WIM file was updated successfully, but failed to save changes to the metadata file. You may need to restart the application to see the changes reflected in the interface.");
+                        }
+
+                        progress.Report("Update completed successfully!");
+
+                        Logger.Information("Successfully updated WIM file metadata for index {Index}", imageIndex.Index);
+                    });
+
+                    Logger.Information("Index {Index} editing completed successfully", imageIndex.Index);
+
+                    // Navigate back to Image Management page to show updated data
+                    NavigateToImageManagement();
+                }
+                else
+                {
+                    // No WIM changes needed, just save to metadata file
                     try
                     {
-                        if (nameChanged && descriptionChanged)
-                        {
-                            wimUpdateSuccess = await _indexEditingService.UpdateIndexMetadataAsync(
-                                ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name,
-                                oldDescription, imageIndex.Description);
-                        }
-                        else if (nameChanged)
-                        {
-                            wimUpdateSuccess = await _indexEditingService.UpdateIndexNameAsync(
-                                ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name);
-                        }
-                        else if (descriptionChanged)
-                        {
-                            wimUpdateSuccess = await _indexEditingService.UpdateIndexDescriptionAsync(
-                                ImageInfo.FilePath, imageIndex.Index, oldDescription, imageIndex.Description);
-                        }
+                        await _metadataService.UpdateImageAsync(ImageInfo);
+                        Logger.Information("Index {Index} metadata saved (no WIM changes needed)", imageIndex.Index);
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(ex, "Failed to update WIM file metadata for index {Index}", imageIndex.Index);
-                        wimUpdateSuccess = false;
+                        Logger.Error(ex, "Failed to update image metadata in images.json for index {Index}", imageIndex.Index);
+                        await ShowErrorDialogAsync("Metadata Save Failed",
+                            "Failed to save changes to the metadata file. You may need to restart the application to see the changes reflected in the interface.");
                     }
-
-                    if (!wimUpdateSuccess)
-                    {
-                        await ShowErrorDialogAsync("WIM Update Failed",
-                            "Failed to update the WIM file metadata. The changes have been reverted.");
-
-                        // Revert changes in memory
-                        imageIndex.Name = oldName;
-                        imageIndex.Description = oldDescription;
-                        return;
-                    }
-
-                    Logger.Information("Successfully updated WIM file metadata for index {Index}", imageIndex.Index);
                 }
-
-                // Save the updated image metadata to images.json
-                try
-                {
-                    await _metadataService.UpdateImageAsync(ImageInfo);
-                    Logger.Information("Index {Index} updated and metadata saved: Name '{OldName}' → '{NewName}', Description changed: {DescriptionChanged}",
-                        imageIndex.Index, oldName, imageIndex.Name, oldDescription != imageIndex.Description);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "Failed to update image metadata in images.json after editing index {Index}", imageIndex.Index);
-                    await ShowErrorDialogAsync("Metadata Save Failed",
-                        "The WIM file was updated successfully, but failed to save changes to the metadata file. You may need to restart the application to see the changes reflected in the interface.");
-                    return;
-                }
-
-                Logger.Information("Index {Index} editing completed successfully", imageIndex.Index);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("Index editing was cancelled by user");
+            // Revert changes in memory
+            imageIndex.Name = oldName;
+            imageIndex.Description = oldDescription;
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to edit index {Index}: {Name}", imageIndex.Index, imageIndex.Name);
             await ShowErrorDialogAsync("Edit Error", $"Failed to edit index: {ex.Message}");
+
+            // Revert changes in memory on error
+            imageIndex.Name = oldName;
+            imageIndex.Description = oldDescription;
         }
     }
 
@@ -488,6 +541,135 @@ public partial class ImageDetailsViewModel : ObservableObject
         }
 
         await dialog.ShowAsync();
+    }
+
+    /// <summary>
+    /// Shows an edit progress dialog with cancellation support.
+    /// </summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="editOperation">The edit operation to execute.</param>
+    private async Task ShowEditProgressDialogAsync(string title, Func<IProgress<string>, CancellationToken, Task> editOperation)
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        var progress = new Progress<string>();
+        var progressText = "Starting update...";
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            SecondaryButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Secondary
+        };
+
+        // Create progress content
+        var progressPanel = new StackPanel { Spacing = 16, Margin = new Thickness(0, 16, 0, 16) };
+
+        var progressRing = new Microsoft.UI.Xaml.Controls.ProgressRing { IsActive = true, Width = 48, Height = 48 };
+        var progressLabel = new TextBlock
+        {
+            Text = progressText,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        progressPanel.Children.Add(progressRing);
+        progressPanel.Children.Add(progressLabel);
+
+        dialog.Content = progressPanel;
+
+        // Update progress text
+        progress.ProgressChanged += (s, text) =>
+        {
+            progressLabel.Text = text;
+        };
+
+        // Get XamlRoot from the main window
+        if (App.MainWindow?.Content is FrameworkElement element)
+        {
+            dialog.XamlRoot = element.XamlRoot;
+        }
+
+        // Start the edit operation
+        var editTask = editOperation(progress, cancellationTokenSource.Token);
+
+        // Show dialog and wait for completion or cancellation
+        var dialogTask = dialog.ShowAsync().AsTask();
+
+        var completedTask = await Task.WhenAny(editTask, dialogTask);
+
+        if (completedTask == dialogTask)
+        {
+            // Dialog was closed (cancelled)
+            cancellationTokenSource.Cancel();
+            try
+            {
+                await editTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when cancelled
+            }
+            throw new OperationCanceledException("Edit operation was cancelled by user");
+        }
+        else
+        {
+            // Edit completed, close dialog
+            dialog.Hide();
+            await editTask; // Propagate any exceptions
+        }
+    }
+
+    /// <summary>
+    /// Navigates back to the Image Management page.
+    /// </summary>
+    private void NavigateToImageManagement()
+    {
+        try
+        {
+            // Get the main window's navigation frame
+            if (App.MainWindow?.Content is FrameworkElement mainContent)
+            {
+                // Find the NavigationView in the MainWindow
+                var navView = FindChild<NavigationView>(mainContent);
+                if (navView?.Content is Frame navFrame)
+                {
+                    // Navigate to ImageManagementPage
+                    navFrame.Navigate(typeof(Views.ImageManagementPage));
+                    Logger.Information("Navigated back to Image Management page after successful edit");
+                    return;
+                }
+            }
+
+            Logger.Warning("Could not find navigation frame to navigate back to Image Management page");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error navigating back to Image Management page");
+        }
+    }
+
+    /// <summary>
+    /// Finds a child control of the specified type in the visual tree.
+    /// </summary>
+    /// <typeparam name="T">The type of control to find.</typeparam>
+    /// <param name="parent">The parent element to search from.</param>
+    /// <returns>The found control or null if not found.</returns>
+    private static T FindChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        if (parent == null) return null;
+
+        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(parent, i);
+            if (child is T typedChild)
+                return typedChild;
+
+            var foundChild = FindChild<T>(child);
+            if (foundChild != null)
+                return foundChild;
+        }
+
+        return null;
     }
 
     #endregion

@@ -25,7 +25,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     /// </summary>
     public WindowsImageIndexEditingService()
     {
-        _tempDirectory = Path.Combine(Path.GetTempPath(), "Bucket", "WIMGAPI");
+        _tempDirectory = Path.Combine(Constants.TempDirectoryPath, "WIMGAPI");
         Logger.Debug("WindowsImageIndexEditingService initialized with temp directory: {TempDirectory}", _tempDirectory);
     }
 
@@ -179,41 +179,8 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                     Logger.Debug("DESCRIPTION + DISPLAYDESCRIPTION change applied: {Changed}", beforeDescChange != updatedXml);
                 }
 
-                Logger.Information("Final XML to be written (first 500 chars): {FinalXml}",
-                    updatedXml.Length > 500 ? updatedXml.Substring(0, 500) + "..." : updatedXml);
-
-                // Specifically check for all 4 types of fields in the final XML before cleaning
-                var namePattern = @"<NAME>(.*?)</NAME>";
-                var nameMatches = Regex.Matches(updatedXml, namePattern, RegexOptions.IgnoreCase);
-                Logger.Information("Found {NameCount} NAME fields in final XML before cleaning", nameMatches.Count);
-                for (var i = 0; i < Math.Min(nameMatches.Count, 3); i++)
-                {
-                    Logger.Information("NAME field {Index}: '{Value}'", i + 1, nameMatches[i].Groups[1].Value);
-                }
-
-                var displayNamePattern = @"<DISPLAYNAME>(.*?)</DISPLAYNAME>";
-                var displayNameMatches = Regex.Matches(updatedXml, displayNamePattern, RegexOptions.IgnoreCase);
-                Logger.Information("Found {DisplayNameCount} DISPLAYNAME fields in final XML before cleaning", displayNameMatches.Count);
-                for (var i = 0; i < Math.Min(displayNameMatches.Count, 3); i++)
-                {
-                    Logger.Information("DISPLAYNAME field {Index}: '{Value}'", i + 1, displayNameMatches[i].Groups[1].Value);
-                }
-
-                var descPattern = @"<DESCRIPTION>(.*?)</DESCRIPTION>";
-                var descMatches = Regex.Matches(updatedXml, descPattern, RegexOptions.IgnoreCase);
-                Logger.Information("Found {DescCount} DESCRIPTION fields in final XML before cleaning", descMatches.Count);
-                for (var i = 0; i < Math.Min(descMatches.Count, 3); i++)
-                {
-                    Logger.Information("DESCRIPTION field {Index}: '{Value}'", i + 1, descMatches[i].Groups[1].Value);
-                }
-
-                var displayDescPattern = @"<DISPLAYDESCRIPTION>(.*?)</DISPLAYDESCRIPTION>";
-                var displayDescMatches = Regex.Matches(updatedXml, displayDescPattern, RegexOptions.IgnoreCase);
-                Logger.Information("Found {DisplayDescCount} DISPLAYDESCRIPTION fields in final XML before cleaning", displayDescMatches.Count);
-                for (var i = 0; i < Math.Min(displayDescMatches.Count, 3); i++)
-                {
-                    Logger.Information("DISPLAYDESCRIPTION field {Index}: '{Value}'", i + 1, displayDescMatches[i].Groups[1].Value);
-                }
+                Logger.Information("Final XML to be written (first 200 chars): {FinalXml}",
+                    updatedXml.Length > 200 ? updatedXml.Substring(0, 200) + "..." : updatedXml);
 
                 // Write updated metadata back to WIM
                 var result = SetWimImageInfo(wimFilePath, updatedXml);
@@ -406,26 +373,9 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             var cleanXml = xmlInfo;
 
             Logger.Debug("Original XML length: {OriginalLength}", cleanXml.Length);
-            Logger.Debug("Original XML first 200 chars: {XmlStart}", cleanXml.Length > 200 ? cleanXml.Substring(0, 200) : cleanXml);
-
-            // Check for all 4 field types before any cleaning
-            var nameCountBefore = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
-            var descCountBefore = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            var displayNameCountBefore = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
-            var displayDescCountBefore = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            Logger.Information("Before cleaning - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
-                nameCountBefore, descCountBefore, displayNameCountBefore, displayDescCountBefore);
 
             // Remove newlines exactly like WinToolkit
             cleanXml = ReplaceIgnoreCase(cleanXml, Environment.NewLine, "");
-
-            // Check after newline removal
-            var nameCountAfterNewlines = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
-            var descCountAfterNewlines = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            var displayNameCountAfterNewlines = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
-            var displayDescCountAfterNewlines = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            Logger.Information("After newline removal - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
-                nameCountAfterNewlines, descCountAfterNewlines, displayNameCountAfterNewlines, displayDescCountAfterNewlines);
 
             // Remove extra spaces exactly like WinToolkit
             while (cleanXml.Contains("> ", StringComparison.OrdinalIgnoreCase))
@@ -433,16 +383,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                 cleanXml = ReplaceIgnoreCase(cleanXml, "> ", ">");
             }
 
-            // Check after space removal
-            var nameCountAfterSpaces = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
-            var descCountAfterSpaces = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            var displayNameCountAfterSpaces = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
-            var displayDescCountAfterSpaces = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
-            Logger.Information("After space removal - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
-                nameCountAfterSpaces, descCountAfterSpaces, displayNameCountAfterSpaces, displayDescCountAfterSpaces);
-
             Logger.Debug("Cleaned XML length: {CleanedLength}", cleanXml.Length);
-            Logger.Debug("Cleaned XML first 200 chars: {CleanedXmlStart}", cleanXml.Length > 200 ? cleanXml.Substring(0, 200) : cleanXml);
 
             // Log portions of XML around our target index to verify modifications
             var indexSearch = $"<IMAGE INDEX=\"1\">";
@@ -450,49 +391,9 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             if (indexPos >= 0)
             {
                 var contextStart = Math.Max(0, indexPos - 50);
-                var contextLength = Math.Min(2000, cleanXml.Length - contextStart); // Increased to see much more content
+                var contextLength = Math.Min(800, cleanXml.Length - contextStart); // Reduced context for cleaner logs
                 var context = cleanXml.Substring(contextStart, contextLength);
-                Logger.Information("XML around INDEX 1 (expanded): {XmlContext}", context);
-
-                // Specifically check for all 4 field types in this section
-                var hasName = context.Contains("<NAME>", StringComparison.OrdinalIgnoreCase);
-                var hasDesc = context.Contains("<DESCRIPTION>", StringComparison.OrdinalIgnoreCase);
-                var hasDisplayName = context.Contains("<DISPLAYNAME>", StringComparison.OrdinalIgnoreCase);
-                var hasDisplayDesc = context.Contains("<DISPLAYDESCRIPTION>", StringComparison.OrdinalIgnoreCase);
-                Logger.Information("In cleaned XML section - NAME: {HasName}, DESCRIPTION: {HasDesc}, DISPLAYNAME: {HasDisplayName}, DISPLAYDESCRIPTION: {HasDisplayDesc}",
-                    hasName, hasDesc, hasDisplayName, hasDisplayDesc);
-
-                // Find and log NAME field specifically
-                var namePattern = @"<NAME>(.*?)</NAME>";
-                var nameMatch = Regex.Match(context, namePattern, RegexOptions.IgnoreCase);
-                if (nameMatch.Success)
-                {
-                    Logger.Information("Found NAME field in cleaned XML: '{NameValue}'", nameMatch.Groups[1].Value);
-                }
-
-                // Find and log DISPLAYNAME field specifically
-                var displayNamePattern = @"<DISPLAYNAME>(.*?)</DISPLAYNAME>";
-                var displayNameMatch = Regex.Match(context, displayNamePattern, RegexOptions.IgnoreCase);
-                if (displayNameMatch.Success)
-                {
-                    Logger.Information("Found DISPLAYNAME field in cleaned XML: '{DisplayNameValue}'", displayNameMatch.Groups[1].Value);
-                }
-
-                // Find and log DESCRIPTION field specifically
-                var descPattern = @"<DESCRIPTION>(.*?)</DESCRIPTION>";
-                var descMatch = Regex.Match(context, descPattern, RegexOptions.IgnoreCase);
-                if (descMatch.Success)
-                {
-                    Logger.Information("Found DESCRIPTION field in cleaned XML: '{DescValue}'", descMatch.Groups[1].Value);
-                }
-
-                // Find and log DISPLAYDESCRIPTION field specifically
-                var displayDescPattern = @"<DISPLAYDESCRIPTION>(.*?)</DISPLAYDESCRIPTION>";
-                var displayDescMatch = Regex.Match(context, displayDescPattern, RegexOptions.IgnoreCase);
-                if (displayDescMatch.Success)
-                {
-                    Logger.Information("Found DISPLAYDESCRIPTION field in cleaned XML: '{DisplayDescValue}'", displayDescMatch.Groups[1].Value);
-                }
+                Logger.Debug("XML around INDEX 1: {XmlContext}", context);
             }
 
             // Delete and recreate temporary directory first (like WinToolkit does with true parameter)
