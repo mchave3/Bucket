@@ -156,7 +156,8 @@ When generating code for this project:
 1. **Follow MVVM architecture**: Clearly separate UI logic from business logic
 2. **Use CommunityToolkit.Mvvm**: Prefer `[ObservableProperty]` and `[RelayCommand]` attributes
 3. **Follow naming conventions**: Use the established naming patterns in the project
-4. **Use Specialized Services with Dependency Injection**:
+4. **Leverage MCP Servers**: Don't hesitate to use available Model Context Protocol (MCP) servers to enhance development capabilities, gather additional context, or access external resources that could benefit the project
+5. **Use Specialized Services with Dependency Injection**:
    - Create focused services following Single Responsibility Principle (SRP)
    - Always create interfaces for services to enable testing and loose coupling
    - Register services in `App.xaml.cs` and inject via constructor parameters
