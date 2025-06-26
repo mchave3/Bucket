@@ -1,14 +1,13 @@
-# WindowsImageService Class Documentation (Refactored Architecture)
+# WindowsImageService Class Documentation
 
 ## Overview
-**IMPORTANT**: This service has been refactored into a distributed architecture using dependency injection and specialized services. The WindowsImageService now acts as a coordinator that orchestrates multiple focused services, each with a single responsibility.
 
-The refactored WindowsImageService provides comprehensive functionality to analyze, import, manage, and extract detailed information from WIM/ESD files, including ISO mounting and import operations, through a clean separation of concerns.
+The WindowsImageService is the main coordinator service that provides comprehensive functionality to analyze, import, manage, and extract detailed information from WIM/ESD files, including ISO mounting and import operations. It orchestrates multiple specialized services through dependency injection for clean separation of concerns.
 
 ## Architecture
 
-### New Structure
-The WindowsImageService has been split into specialized services:
+### Service Structure
+The WindowsImageService coordinates multiple specialized services:
 
 - **WindowsImageFileService**: File operations and path management
 - **WindowsImageMetadataService**: JSON metadata persistence and management
@@ -17,7 +16,7 @@ The WindowsImageService has been split into specialized services:
 - **WindowsImageService**: Main coordinator service (this class)
 
 ### Dependency Injection
-The service now uses constructor dependency injection:
+The service uses constructor dependency injection:
 
 ```csharp
 public WindowsImageService(
@@ -43,7 +42,7 @@ public class WindowsImageService
 - Orchestrates multiple specialized services
 - Provides unified API for higher-level operations
 - Handles cross-service validation and error management
-- Maintains backward compatibility with existing code
+- Ensures consistent service interaction patterns
 
 ### Image Collection Management
 - Delegates to WindowsImageMetadataService for persistence

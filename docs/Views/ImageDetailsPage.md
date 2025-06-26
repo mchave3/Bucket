@@ -126,11 +126,11 @@ public sealed partial class ImageDetailsPage : Page
 
 ### Action Commands
 
-- **Metadata Editing**: Edit image metadata (placeholder)
-- **Image Export**: Export image to new location (placeholder)
-- **Update Application**: Apply Windows updates (placeholder)
-- **Image Mounting**: Mount for exploration (placeholder)
-- **File Extraction**: Extract files from image (placeholder)
+- **Metadata Editing**: Edit image metadata
+- **Image Export**: Export image to new location
+- **Update Application**: Apply Windows updates
+- **Image Mounting**: Mount for exploration
+- **File Extraction**: Extract files from image
 
 ### Modern UI Design
 
@@ -270,7 +270,7 @@ protected override void OnNavigatedTo(NavigationEventArgs e)
 
 - **Parameter Validation**: Validates navigation parameters before use
 - **Safe Display**: Prevents injection attacks through data binding
-- **Operation Security**: Placeholder commands prevent unauthorized actions
+- **Operation Security**: Commands prevent unauthorized actions through proper validation
 
 ---
 

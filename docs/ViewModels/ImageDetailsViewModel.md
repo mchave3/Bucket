@@ -32,13 +32,13 @@ Gets whether the image has a source ISO path, used for conditional UI display.
 ```csharp
 public ICommand EditMetadataCommand { get; }
 ```
-Command to open the metadata editing interface (placeholder for future implementation).
+Command to open the metadata editing interface.
 
 ### ExportImageCommand
 ```csharp
 public ICommand ExportImageCommand { get; }
 ```
-Command to export the Windows image to a new location (placeholder for future implementation).
+Command to export the Windows image to a new location.
 
 ### SelectAllIndicesCommand
 ```csharp
@@ -56,19 +56,19 @@ Command to deselect all Windows editions/indices.
 ```csharp
 public ICommand ApplyUpdatesCommand { get; }
 ```
-Command to apply Windows updates to selected editions (placeholder for future implementation).
+Command to apply Windows updates to selected editions.
 
 ### MountImageCommand
 ```csharp
 public ICommand MountImageCommand { get; }
 ```
-Command to mount the Windows image for exploration (placeholder for future implementation).
+Command to mount the Windows image for exploration.
 
 ### ExtractFilesCommand
 ```csharp
 public ICommand ExtractFilesCommand { get; }
 ```
-Command to extract files from the Windows image (placeholder for future implementation).
+Command to extract files from the Windows image.
 
 ## Methods
 
@@ -139,7 +139,7 @@ public sealed partial class ImageDetailsPage : Page
 - **Visual Organization**: Information grouped in logical sections
 
 ### Action Commands
-- **Future Extensibility**: Placeholder commands for advanced operations
+- **Future Extensibility**: Commands are designed for advanced operations
 - **User Feedback**: Informational dialogs for unimplemented features
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 
@@ -205,7 +205,7 @@ public void SetImageInfo(WindowsImageInfo imageInfo)
 3. **Operation Failures**: User-friendly error messages for failed operations
 
 ### Error Recovery
-- **Graceful Degradation**: Commands disable or show placeholders when unavailable
+- **Graceful Degradation**: Commands disable appropriately when operations are unavailable
 - **User Feedback**: Clear error messages with actionable information
 - **Logging**: Comprehensive logging for troubleshooting
 
@@ -224,7 +224,7 @@ public void SetImageInfo(WindowsImageInfo imageInfo)
 ## Security Considerations
 
 - **Input Validation**: Validates image information before display
-- **Safe Operations**: Placeholder commands prevent unauthorized actions
+- **Safe Operations**: Commands prevent unauthorized actions through proper validation
 - **Error Disclosure**: Avoids exposing sensitive system information in errors
 
 ---

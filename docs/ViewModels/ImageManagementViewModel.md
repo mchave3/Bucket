@@ -71,9 +71,9 @@ The ISO import process includes:
 
 ### Detail Panel Actions
 
-- **`ExtractSelectedIndicesCommand`**: Extracts selected indices from an image (placeholder)
-- **`MountImageCommand`**: Mounts an image for modification (placeholder)
-- **`ValidateImageCommand`**: Validates an image's integrity (placeholder)
+- **`ExtractSelectedIndicesCommand`**: Extracts selected indices from an image
+- **`MountImageCommand`**: Mounts an image for modification
+- **`ValidateImageCommand`**: Validates an image's integrity
 
 ## Methods
 
