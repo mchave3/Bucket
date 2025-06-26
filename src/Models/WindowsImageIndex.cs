@@ -143,6 +143,11 @@ public partial class WindowsImageIndex : ObservableObject
     public string DisplayText => $"Index {Index}: {Name}";
 
     /// <summary>
+    /// Gets the index display text for the blue badge (e.g., "Index 5:").
+    /// </summary>
+    public string IndexDisplayText => $"Index {Index}:";
+
+    /// <summary>
     /// Gets the formatted version string with build information.
     /// </summary>
     public string FormattedVersion

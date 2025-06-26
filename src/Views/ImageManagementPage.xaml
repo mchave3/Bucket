@@ -366,7 +366,6 @@
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
                                                         <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="Auto" />
                                                     </Grid.RowDefinitions>
 
                                                     <!-- Edition Name and Actions -->
@@ -380,16 +379,19 @@
                                                             <Border
                                                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                                                 CornerRadius="2"
-                                                                Padding="4,2">
+                                                                Padding="4,2"
+                                                                Height="24">
                                                                 <TextBlock
-                                                                    Text="{x:Bind DisplayText}"
+                                                                    Text="{x:Bind IndexDisplayText}"
                                                                     Style="{StaticResource CaptionTextBlockStyle}"
                                                                     Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
-                                                                    FontWeight="SemiBold" />
+                                                                    FontWeight="SemiBold"
+                                                                    VerticalAlignment="Center" />
                                                             </Border>
                                                             <TextBlock
                                                                 Text="{x:Bind Name}"
-                                                                Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                                                VerticalAlignment="Center" />
                                                         </StackPanel>
 
                                                         <Button
@@ -407,28 +409,25 @@
                                                     </Grid>
 
                                                     <!-- Basic Edition Details -->
-                                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+                                                    <StackPanel Grid.Row="1" Spacing="4" Margin="0,4,0,0">
                                                         <TextBlock
-                                                            Text="{x:Bind Architecture}"
                                                             Style="{StaticResource CaptionTextBlockStyle}"
-                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                                            <Run Text="Size: " FontWeight="SemiBold" />
+                                                            <Run Text="{x:Bind FormattedSize}" />
+                                                        </TextBlock>
+
                                                         <TextBlock
-                                                            Text="{x:Bind FormattedSize}"
                                                             Style="{StaticResource CaptionTextBlockStyle}"
-                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                            TextWrapping="Wrap">
+                                                            <Run Text="Description: " FontWeight="SemiBold" />
+                                                            <Run Text="{x:Bind Description}" />
+                                                        </TextBlock>
                                                     </StackPanel>
 
-                                                    <!-- Edition Description -->
-                                                    <TextBlock
-                                                        Grid.Row="2"
-                                                        Text="{x:Bind Description}"
-                                                        Style="{StaticResource CaptionTextBlockStyle}"
-                                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                                        TextWrapping="Wrap"
-                                                        Margin="0,4,0,0" />
-
                                                     <!-- Detailed Information Panel -->
-                                                    <StackPanel Grid.Row="3" Margin="0,8,0,0">
+                                                    <StackPanel Grid.Row="2" Margin="0,8,0,0">
                                                         <StackPanel.Visibility>
                                                             <Binding Path="HasDetailedInfo" Converter="{StaticResource BooleanToVisibilityConverter}" />
                                                         </StackPanel.Visibility>

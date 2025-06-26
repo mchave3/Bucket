@@ -25,6 +25,7 @@ public class WindowsImageIndex
 ### Computed Properties
 - **`FormattedSize`** (string): Gets the formatted size string for display purposes (e.g., "4.2 GB")
 - **`DisplayText`** (string): Gets the formatted display text for the index (e.g., "Index 1: Windows 11 Pro")
+- **`IndexDisplayText`** (string): Gets the index display text for the blue badge (e.g., "Index 5:")
 
 ## Usage Examples
 
