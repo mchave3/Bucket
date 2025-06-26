@@ -74,9 +74,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="DevWinUI" Version="8.3.0" />
+    <PackageReference Include="DevWinUI" Version="8.4.1" />
     <PackageReference Include="DevWinUI.ContextMenu" Version="8.3.0" />
-    <PackageReference Include="DevWinUI.Controls" Version="8.3.0" />
+    <PackageReference Include="DevWinUI.Controls" Version="8.4.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4188" />
@@ -89,6 +89,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
   <!-- 
 	Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution 
