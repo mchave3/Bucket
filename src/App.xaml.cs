@@ -52,6 +52,7 @@
                 new WindowsImageFileService(Constants.ImportedWIMsDirectoryPath));
             services.AddSingleton<IWindowsImagePowerShellService, WindowsImagePowerShellService>();
             services.AddSingleton<IWindowsImageIsoService, WindowsImageIsoService>();
+            services.AddSingleton<IWindowsImageIndexEditingService, WindowsImageIndexEditingService>();
             services.AddSingleton<WindowsImageService>();
 
             return services.BuildServiceProvider();

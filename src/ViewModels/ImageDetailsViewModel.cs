@@ -14,6 +14,7 @@ namespace Bucket.ViewModels;
 public partial class ImageDetailsViewModel : ObservableObject
 {
     private readonly IWindowsImageMetadataService _metadataService;
+    private readonly IWindowsImageIndexEditingService _indexEditingService;
     private WindowsImageInfo _imageInfo;
 
     /// <summary>
@@ -34,9 +35,11 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// Initializes a new instance of the ImageDetailsViewModel class.
     /// </summary>
     /// <param name="metadataService">The Windows image metadata service.</param>
-    public ImageDetailsViewModel(IWindowsImageMetadataService metadataService)
+    /// <param name="indexEditingService">The Windows image index editing service.</param>
+    public ImageDetailsViewModel(IWindowsImageMetadataService metadataService, IWindowsImageIndexEditingService indexEditingService)
     {
         _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));
+        _indexEditingService = indexEditingService ?? throw new ArgumentNullException(nameof(indexEditingService));
 
         // Initialize commands
         EditMetadataCommand = new RelayCommand(EditMetadata);
@@ -121,15 +124,24 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// <summary>
     /// Opens the metadata editing dialog.
     /// </summary>
-    private void EditMetadata()
+    private async void EditMetadata()
     {
         if (ImageInfo == null) return;
 
         Logger.Information("Opening metadata editor for image: {Name}", ImageInfo.Name);
 
-        // TODO: Implement metadata editing dialog
-        _ = ShowInfoDialogAsync("Edit Metadata",
-            "Metadata editing functionality will be available in a future update.");
+        try
+        {
+            // Show information about available editing options
+            await ShowInfoDialogAsync("Edit Metadata",
+                "To edit index metadata (names and descriptions), use the edit buttons next to each Windows edition below.\n\n" +
+                "Each index can be edited individually to customize the display name and description that appears in Windows setup and deployment tools.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to show metadata editing info for image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Error", $"Failed to show metadata editing options: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -342,7 +354,70 @@ public partial class ImageDetailsViewModel : ObservableObject
                 var oldName = imageIndex.Name;
                 var oldDescription = imageIndex.Description;
 
+                // Update the in-memory model first
                 dialog.UpdateImageIndex(imageIndex);
+
+                // Check if we need to update the physical WIM file
+                var nameChanged = oldName != imageIndex.Name;
+                var descriptionChanged = oldDescription != imageIndex.Description;
+
+                if (nameChanged || descriptionChanged)
+                {
+                    Logger.Information("Updating WIM file metadata for index {Index}: Name={NameChanged}, Description={DescriptionChanged}",
+                        imageIndex.Index, nameChanged, descriptionChanged);
+
+                    // Validate WIM file accessibility
+                    if (!_indexEditingService.IsWimFileAccessible(ImageInfo.FilePath))
+                    {
+                        await ShowErrorDialogAsync("File Access Error",
+                            "The WIM file is currently in use by another process or cannot be accessed. Please close any applications that might be using the file and try again.");
+
+                        // Revert changes in memory
+                        imageIndex.Name = oldName;
+                        imageIndex.Description = oldDescription;
+                        return;
+                    }
+
+                    // Update the physical WIM file
+                    var wimUpdateSuccess = false;
+                    try
+                    {
+                        if (nameChanged && descriptionChanged)
+                        {
+                            wimUpdateSuccess = await _indexEditingService.UpdateIndexMetadataAsync(
+                                ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name,
+                                oldDescription, imageIndex.Description);
+                        }
+                        else if (nameChanged)
+                        {
+                            wimUpdateSuccess = await _indexEditingService.UpdateIndexNameAsync(
+                                ImageInfo.FilePath, imageIndex.Index, oldName, imageIndex.Name);
+                        }
+                        else if (descriptionChanged)
+                        {
+                            wimUpdateSuccess = await _indexEditingService.UpdateIndexDescriptionAsync(
+                                ImageInfo.FilePath, imageIndex.Index, oldDescription, imageIndex.Description);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "Failed to update WIM file metadata for index {Index}", imageIndex.Index);
+                        wimUpdateSuccess = false;
+                    }
+
+                    if (!wimUpdateSuccess)
+                    {
+                        await ShowErrorDialogAsync("WIM Update Failed",
+                            "Failed to update the WIM file metadata. The changes have been reverted.");
+
+                        // Revert changes in memory
+                        imageIndex.Name = oldName;
+                        imageIndex.Description = oldDescription;
+                        return;
+                    }
+
+                    Logger.Information("Successfully updated WIM file metadata for index {Index}", imageIndex.Index);
+                }
 
                 // Save the updated image metadata to images.json
                 try
@@ -354,10 +429,12 @@ public partial class ImageDetailsViewModel : ObservableObject
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "Failed to update image metadata in images.json after editing index {Index}", imageIndex.Index);
-                    await ShowErrorDialogAsync("Update Failed",
-                        "The index was updated successfully, but failed to save changes to the metadata file. You may need to restart the application.");
+                    await ShowErrorDialogAsync("Metadata Save Failed",
+                        "The WIM file was updated successfully, but failed to save changes to the metadata file. You may need to restart the application to see the changes reflected in the interface.");
                     return;
                 }
+
+                Logger.Information("Index {Index} editing completed successfully", imageIndex.Index);
             }
         }
         catch (Exception ex)
