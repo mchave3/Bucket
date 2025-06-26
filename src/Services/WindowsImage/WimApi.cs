@@ -39,21 +39,30 @@ internal static class WimApi
     /// <param name="dwCompressionType">Compression type.</param>
     /// <param name="pdwCreationResult">Creation result (can be IntPtr.Zero).</param>
     /// <returns>Handle to the WIM file or IntPtr.Zero on failure.</returns>
-    [DllImport("wimgapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [DllImport("wimgapi.dll",
+        ExactSpelling = true,
+        EntryPoint = "WIMCreateFile",
+        CallingConvention = CallingConvention.StdCall,
+        CharSet = CharSet.Unicode,
+        SetLastError = true)]
     internal static extern IntPtr WIMCreateFile(
-        string pszWimPath,
+        [MarshalAs(UnmanagedType.LPWStr)] string pszWimPath,
         uint dwDesiredAccess,
         uint dwCreationDisposition,
         uint dwFlagsAndAttributes,
         uint dwCompressionType,
-        IntPtr pdwCreationResult);
+        int pdwCreationResult);
 
     /// <summary>
     /// Closes a WIM handle.
     /// </summary>
     /// <param name="hObject">Handle to close.</param>
     /// <returns>True on success, false on failure.</returns>
-    [DllImport("wimgapi.dll", SetLastError = true)]
+    [DllImport("wimgapi.dll",
+        ExactSpelling = true,
+        EntryPoint = "WIMCloseHandle",
+        CallingConvention = CallingConvention.StdCall,
+        SetLastError = true)]
     internal static extern bool WIMCloseHandle(IntPtr hObject);
 
     /// <summary>
@@ -63,8 +72,12 @@ internal static class WimApi
     /// <param name="ppvImageInfo">Pointer to receive the image information.</param>
     /// <param name="pcbImageInfo">Pointer to receive the size of the image information.</param>
     /// <returns>True on success, false on failure.</returns>
-    [DllImport("wimgapi.dll", SetLastError = true)]
-    internal static extern bool WimGetImageInformation(
+    [DllImport("wimgapi.dll",
+        ExactSpelling = true,
+        EntryPoint = "WIMGetImageInformation",
+        CallingConvention = CallingConvention.StdCall,
+        SetLastError = true)]
+    internal static extern bool WIMGetImageInformation(
         IntPtr hWim,
         out IntPtr ppvImageInfo,
         out IntPtr pcbImageInfo);
@@ -76,8 +89,12 @@ internal static class WimApi
     /// <param name="pvImageInfo">Pointer to the image information.</param>
     /// <param name="cbImageInfo">Size of the image information.</param>
     /// <returns>True on success, false on failure.</returns>
-    [DllImport("wimgapi.dll", SetLastError = true)]
-    internal static extern bool WimSetImageInformation(
+    [DllImport("wimgapi.dll",
+        ExactSpelling = true,
+        EntryPoint = "WIMSetImageInformation",
+        CallingConvention = CallingConvention.StdCall,
+        SetLastError = true)]
+    internal static extern bool WIMSetImageInformation(
         IntPtr hWim,
         IntPtr pvImageInfo,
         uint cbImageInfo);
@@ -88,8 +105,15 @@ internal static class WimApi
     /// <param name="hWim">Handle to the WIM file.</param>
     /// <param name="pszPath">Path to use for temporary files.</param>
     /// <returns>True on success, false on failure.</returns>
-    [DllImport("wimgapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    internal static extern bool WimSetTemporaryPath(IntPtr hWim, string pszPath);
+    [DllImport("wimgapi.dll",
+        ExactSpelling = true,
+        EntryPoint = "WIMSetTemporaryPath",
+        CallingConvention = CallingConvention.StdCall,
+        CharSet = CharSet.Unicode,
+        SetLastError = true)]
+    internal static extern bool WIMSetTemporaryPath(
+        IntPtr hWim,
+        [MarshalAs(UnmanagedType.LPWStr)] string pszPath);
 
     #endregion
 
@@ -114,7 +138,7 @@ internal static class WimApi
     /// <returns>The error message for the last Win32 error.</returns>
     internal static string GetLastErrorMessage()
     {
-        int errorCode = Marshal.GetLastWin32Error();
+        var errorCode = Marshal.GetLastWin32Error();
         return new System.ComponentModel.Win32Exception(errorCode).Message;
     }
 

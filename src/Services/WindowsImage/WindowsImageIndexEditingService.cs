@@ -148,22 +148,78 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                     return false;
                 }
 
+                Logger.Debug("Original XML (first 500 chars): {OriginalXml}",
+                    originalXml.Length > 500 ? originalXml.Substring(0, 500) + "..." : originalXml);
+
                 var updatedXml = originalXml;
 
-                // Update name if changed
+                // Update name if changed - following WinToolkit pattern: NAME + DISPLAYNAME
                 if (nameChanged)
                 {
+                    var beforeNameChange = updatedXml;
+                    // Update internal NAME field
                     updatedXml = RenameImageMetadata(updatedXml, "NAME", index, currentName, newName);
+                    // Update display NAME field (what users see)
+                    updatedXml = RenameImageMetadata(updatedXml, "DISPLAYNAME", index, currentName, newName);
+                    Logger.Debug("XML after NAME + DISPLAYNAME change (first 500 chars): {UpdatedXml}",
+                        updatedXml.Length > 500 ? updatedXml.Substring(0, 500) + "..." : updatedXml);
+                    Logger.Debug("NAME + DISPLAYNAME change applied: {Changed}", beforeNameChange != updatedXml);
                 }
 
-                // Update description if changed
+                // Update description if changed - following WinToolkit pattern: DESCRIPTION + DISPLAYDESCRIPTION
                 if (descriptionChanged)
                 {
+                    var beforeDescChange = updatedXml;
+                    // Update internal DESCRIPTION field
                     updatedXml = RenameImageMetadata(updatedXml, "DESCRIPTION", index, currentDescription, newDescription);
+                    // Update display DESCRIPTION field (what users see)
+                    updatedXml = RenameImageMetadata(updatedXml, "DISPLAYDESCRIPTION", index, currentDescription, newDescription);
+                    Logger.Debug("XML after DESCRIPTION + DISPLAYDESCRIPTION change (first 500 chars): {UpdatedXml}",
+                        updatedXml.Length > 500 ? updatedXml.Substring(0, 500) + "..." : updatedXml);
+                    Logger.Debug("DESCRIPTION + DISPLAYDESCRIPTION change applied: {Changed}", beforeDescChange != updatedXml);
+                }
+
+                Logger.Information("Final XML to be written (first 500 chars): {FinalXml}",
+                    updatedXml.Length > 500 ? updatedXml.Substring(0, 500) + "..." : updatedXml);
+
+                // Specifically check for all 4 types of fields in the final XML before cleaning
+                var namePattern = @"<NAME>(.*?)</NAME>";
+                var nameMatches = Regex.Matches(updatedXml, namePattern, RegexOptions.IgnoreCase);
+                Logger.Information("Found {NameCount} NAME fields in final XML before cleaning", nameMatches.Count);
+                for (var i = 0; i < Math.Min(nameMatches.Count, 3); i++)
+                {
+                    Logger.Information("NAME field {Index}: '{Value}'", i + 1, nameMatches[i].Groups[1].Value);
+                }
+
+                var displayNamePattern = @"<DISPLAYNAME>(.*?)</DISPLAYNAME>";
+                var displayNameMatches = Regex.Matches(updatedXml, displayNamePattern, RegexOptions.IgnoreCase);
+                Logger.Information("Found {DisplayNameCount} DISPLAYNAME fields in final XML before cleaning", displayNameMatches.Count);
+                for (var i = 0; i < Math.Min(displayNameMatches.Count, 3); i++)
+                {
+                    Logger.Information("DISPLAYNAME field {Index}: '{Value}'", i + 1, displayNameMatches[i].Groups[1].Value);
+                }
+
+                var descPattern = @"<DESCRIPTION>(.*?)</DESCRIPTION>";
+                var descMatches = Regex.Matches(updatedXml, descPattern, RegexOptions.IgnoreCase);
+                Logger.Information("Found {DescCount} DESCRIPTION fields in final XML before cleaning", descMatches.Count);
+                for (var i = 0; i < Math.Min(descMatches.Count, 3); i++)
+                {
+                    Logger.Information("DESCRIPTION field {Index}: '{Value}'", i + 1, descMatches[i].Groups[1].Value);
+                }
+
+                var displayDescPattern = @"<DISPLAYDESCRIPTION>(.*?)</DISPLAYDESCRIPTION>";
+                var displayDescMatches = Regex.Matches(updatedXml, displayDescPattern, RegexOptions.IgnoreCase);
+                Logger.Information("Found {DisplayDescCount} DISPLAYDESCRIPTION fields in final XML before cleaning", displayDescMatches.Count);
+                for (var i = 0; i < Math.Min(displayDescMatches.Count, 3); i++)
+                {
+                    Logger.Information("DISPLAYDESCRIPTION field {Index}: '{Value}'", i + 1, displayDescMatches[i].Groups[1].Value);
                 }
 
                 // Write updated metadata back to WIM
-                return SetWimImageInfo(wimFilePath, updatedXml);
+                var result = SetWimImageInfo(wimFilePath, updatedXml);
+
+                // Verify that the changes were persisted
+                return result && VerifyMetadataChanges(wimFilePath, index, newName, newDescription);
             }
             catch (Exception ex)
             {
@@ -220,11 +276,52 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                 return false;
             }
 
-            // Update the specific metadata field
+            // Update the specific metadata field - following WinToolkit pattern
             var updatedXml = RenameImageMetadata(originalXml, metadataType, index, currentValue, newValue);
 
+            // Also update the corresponding DISPLAY field if it's NAME or DESCRIPTION
+            if (metadataType == "NAME")
+            {
+                updatedXml = RenameImageMetadata(updatedXml, "DISPLAYNAME", index, currentValue, newValue);
+                Logger.Debug("Updated both NAME and DISPLAYNAME fields for index {Index}", index);
+            }
+            else if (metadataType == "DESCRIPTION")
+            {
+                updatedXml = RenameImageMetadata(updatedXml, "DISPLAYDESCRIPTION", index, currentValue, newValue);
+                Logger.Debug("Updated both DESCRIPTION and DISPLAYDESCRIPTION fields for index {Index}", index);
+            }
+
             // Write updated metadata back to WIM
-            return SetWimImageInfo(wimFilePath, updatedXml);
+            var success = SetWimImageInfo(wimFilePath, updatedXml);
+
+            if (success)
+            {
+                Logger.Information("Successfully updated {MetadataType} for index {Index} in {WimFile}", metadataType, index, wimFilePath);
+
+                // Brief verification that the file was updated - wait for file system sync
+                Thread.Sleep(500);
+                var verificationXml = GetWimImageInfo(wimFilePath);
+                if (!string.IsNullOrEmpty(verificationXml))
+                {
+                    // Parse the verification XML to check the specific index
+                    var verified = VerifySpecificFieldChange(verificationXml, index, metadataType, newValue);
+                    if (verified)
+                    {
+                        Logger.Information("Verification successful: {MetadataType} change persisted in {WimFile}", metadataType, wimFilePath);
+                    }
+                    else
+                    {
+                        Logger.Warning("Verification failed: {MetadataType} change may not have persisted in {WimFile}", metadataType, wimFilePath);
+                        success = false; // Mark as failed if verification fails
+                    }
+                }
+                else
+                {
+                    Logger.Warning("Could not retrieve WIM metadata for verification");
+                }
+            }
+
+            return success;
         }
         catch (Exception ex)
         {
@@ -238,7 +335,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     /// </summary>
     private string GetWimImageInfo(string wimFilePath)
     {
-        IntPtr wimHandle = IntPtr.Zero;
+        var wimHandle = IntPtr.Zero;
 
         try
         {
@@ -252,11 +349,11 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                 WimApi.WIM_OPEN_EXISTING,
                 WimApi.WIM_FLAG_SHARE_WRITE,
                 WimApi.WIM_COMPRESS_NONE,
-                IntPtr.Zero);
+                0);
 
             if (wimHandle == IntPtr.Zero)
             {
-                string error = WimApi.GetLastErrorMessage();
+                var error = WimApi.GetLastErrorMessage();
                 Logger.Error("Failed to open WIM file {WimFile}: {Error}", wimFilePath, error);
                 return null;
             }
@@ -264,7 +361,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             // Get image information
             IntPtr infoPtr;
             IntPtr sizePtr;
-            var success = WimApi.WimGetImageInformation(wimHandle, out infoPtr, out sizePtr);
+            var success = WimApi.WIMGetImageInformation(wimHandle, out infoPtr, out sizePtr);
 
             if (!success)
             {
@@ -296,62 +393,161 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
 
     /// <summary>
     /// Sets the XML metadata for a WIM file using native APIs.
+    /// Follows the exact pattern used by WinToolkit for maximum compatibility.
     /// </summary>
     private bool SetWimImageInfo(string wimFilePath, string xmlInfo)
     {
-        IntPtr wimHandle = IntPtr.Zero;
-        IntPtr xmlBuffer = IntPtr.Zero;
+        var wimHandle = IntPtr.Zero;
+        IntPtr xmlBuffer;
 
         try
         {
-            // Clean up XML (remove extra newlines and spaces)
-            string cleanXml = xmlInfo.Replace(Environment.NewLine, "");
-            while (cleanXml.Contains("> "))
+            // Clean up XML exactly like WinToolkit does
+            var cleanXml = xmlInfo;
+
+            Logger.Debug("Original XML length: {OriginalLength}", cleanXml.Length);
+            Logger.Debug("Original XML first 200 chars: {XmlStart}", cleanXml.Length > 200 ? cleanXml.Substring(0, 200) : cleanXml);
+
+            // Check for all 4 field types before any cleaning
+            var nameCountBefore = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
+            var descCountBefore = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            var displayNameCountBefore = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
+            var displayDescCountBefore = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            Logger.Information("Before cleaning - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
+                nameCountBefore, descCountBefore, displayNameCountBefore, displayDescCountBefore);
+
+            // Remove newlines exactly like WinToolkit
+            cleanXml = ReplaceIgnoreCase(cleanXml, Environment.NewLine, "");
+
+            // Check after newline removal
+            var nameCountAfterNewlines = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
+            var descCountAfterNewlines = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            var displayNameCountAfterNewlines = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
+            var displayDescCountAfterNewlines = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            Logger.Information("After newline removal - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
+                nameCountAfterNewlines, descCountAfterNewlines, displayNameCountAfterNewlines, displayDescCountAfterNewlines);
+
+            // Remove extra spaces exactly like WinToolkit
+            while (cleanXml.Contains("> ", StringComparison.OrdinalIgnoreCase))
             {
-                cleanXml = cleanXml.Replace("> ", ">");
+                cleanXml = ReplaceIgnoreCase(cleanXml, "> ", ">");
             }
 
-            // Create temporary directory if needed
-            EnsureTempDirectory();
+            // Check after space removal
+            var nameCountAfterSpaces = Regex.Matches(cleanXml, @"<NAME>.*?</NAME>", RegexOptions.IgnoreCase).Count;
+            var descCountAfterSpaces = Regex.Matches(cleanXml, @"<DESCRIPTION>.*?</DESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            var displayNameCountAfterSpaces = Regex.Matches(cleanXml, @"<DISPLAYNAME>.*?</DISPLAYNAME>", RegexOptions.IgnoreCase).Count;
+            var displayDescCountAfterSpaces = Regex.Matches(cleanXml, @"<DISPLAYDESCRIPTION>.*?</DISPLAYDESCRIPTION>", RegexOptions.IgnoreCase).Count;
+            Logger.Information("After space removal - NAME: {NameCount}, DESCRIPTION: {DescCount}, DISPLAYNAME: {DisplayNameCount}, DISPLAYDESCRIPTION: {DisplayDescCount}",
+                nameCountAfterSpaces, descCountAfterSpaces, displayNameCountAfterSpaces, displayDescCountAfterSpaces);
 
-            // Open WIM file with write access
+            Logger.Debug("Cleaned XML length: {CleanedLength}", cleanXml.Length);
+            Logger.Debug("Cleaned XML first 200 chars: {CleanedXmlStart}", cleanXml.Length > 200 ? cleanXml.Substring(0, 200) : cleanXml);
+
+            // Log portions of XML around our target index to verify modifications
+            var indexSearch = $"<IMAGE INDEX=\"1\">";
+            var indexPos = cleanXml.IndexOf(indexSearch, StringComparison.OrdinalIgnoreCase);
+            if (indexPos >= 0)
+            {
+                var contextStart = Math.Max(0, indexPos - 50);
+                var contextLength = Math.Min(2000, cleanXml.Length - contextStart); // Increased to see much more content
+                var context = cleanXml.Substring(contextStart, contextLength);
+                Logger.Information("XML around INDEX 1 (expanded): {XmlContext}", context);
+
+                // Specifically check for all 4 field types in this section
+                var hasName = context.Contains("<NAME>", StringComparison.OrdinalIgnoreCase);
+                var hasDesc = context.Contains("<DESCRIPTION>", StringComparison.OrdinalIgnoreCase);
+                var hasDisplayName = context.Contains("<DISPLAYNAME>", StringComparison.OrdinalIgnoreCase);
+                var hasDisplayDesc = context.Contains("<DISPLAYDESCRIPTION>", StringComparison.OrdinalIgnoreCase);
+                Logger.Information("In cleaned XML section - NAME: {HasName}, DESCRIPTION: {HasDesc}, DISPLAYNAME: {HasDisplayName}, DISPLAYDESCRIPTION: {HasDisplayDesc}",
+                    hasName, hasDesc, hasDisplayName, hasDisplayDesc);
+
+                // Find and log NAME field specifically
+                var namePattern = @"<NAME>(.*?)</NAME>";
+                var nameMatch = Regex.Match(context, namePattern, RegexOptions.IgnoreCase);
+                if (nameMatch.Success)
+                {
+                    Logger.Information("Found NAME field in cleaned XML: '{NameValue}'", nameMatch.Groups[1].Value);
+                }
+
+                // Find and log DISPLAYNAME field specifically
+                var displayNamePattern = @"<DISPLAYNAME>(.*?)</DISPLAYNAME>";
+                var displayNameMatch = Regex.Match(context, displayNamePattern, RegexOptions.IgnoreCase);
+                if (displayNameMatch.Success)
+                {
+                    Logger.Information("Found DISPLAYNAME field in cleaned XML: '{DisplayNameValue}'", displayNameMatch.Groups[1].Value);
+                }
+
+                // Find and log DESCRIPTION field specifically
+                var descPattern = @"<DESCRIPTION>(.*?)</DESCRIPTION>";
+                var descMatch = Regex.Match(context, descPattern, RegexOptions.IgnoreCase);
+                if (descMatch.Success)
+                {
+                    Logger.Information("Found DESCRIPTION field in cleaned XML: '{DescValue}'", descMatch.Groups[1].Value);
+                }
+
+                // Find and log DISPLAYDESCRIPTION field specifically
+                var displayDescPattern = @"<DISPLAYDESCRIPTION>(.*?)</DISPLAYDESCRIPTION>";
+                var displayDescMatch = Regex.Match(context, displayDescPattern, RegexOptions.IgnoreCase);
+                if (displayDescMatch.Success)
+                {
+                    Logger.Information("Found DISPLAYDESCRIPTION field in cleaned XML: '{DisplayDescValue}'", displayDescMatch.Groups[1].Value);
+                }
+            }
+
+            // Delete and recreate temporary directory first (like WinToolkit does with true parameter)
+            CleanupAndRecreateTempDirectory();
+
+            // Open WIM file with write access (exactly like WinToolkit)
             wimHandle = WimApi.WIMCreateFile(
                 wimFilePath,
                 WimApi.WIM_GENERIC_WRITE,
                 WimApi.WIM_OPEN_EXISTING,
                 WimApi.WIM_FLAG_SHARE_WRITE,
                 WimApi.WIM_COMPRESS_NONE,
-                IntPtr.Zero);
+                0);
 
             if (wimHandle == IntPtr.Zero)
             {
-                string error = WimApi.GetLastErrorMessage();
+                var error = WimApi.GetLastErrorMessage();
                 Logger.Error("Failed to open WIM file for writing {WimFile}: {Error}", wimFilePath, error);
                 return false;
             }
 
-            // Set temporary path for WIM operations
-            WimApi.WimSetTemporaryPath(wimHandle, _tempDirectory);
+            // Set temporary path for WIM operations (directory exists from recreate step)
+            // WinToolkit always calls this after ensuring directory exists
+            var tempSetResult = WimApi.WIMSetTemporaryPath(wimHandle, _tempDirectory);
+            if (!tempSetResult)
+            {
+                var error = WimApi.GetLastErrorMessage();
+                Logger.Error("Failed to set temporary path {TempPath}: {Error}", _tempDirectory, error);
+                return false; // Fail if we can't set the temp path like WinToolkit expects
+            }
+            Logger.Debug("Successfully set temporary path: {TempPath}", _tempDirectory);
 
-            // Convert string to Unicode byte array
-            byte[] xmlBytes = Encoding.Unicode.GetBytes(cleanXml);
-            int xmlLength = xmlBytes.Length;
+            // Convert string to Unicode byte array (like WinToolkit)
+            var xmlBytes = Encoding.Unicode.GetBytes(cleanXml);
+            var xmlLength = xmlBytes.Length;
 
             // Allocate unmanaged memory for XML
             xmlBuffer = Marshal.AllocHGlobal(xmlLength);
             Marshal.Copy(xmlBytes, 0, xmlBuffer, xmlLength);
 
             // Set the image information
-            bool success = WimApi.WimSetImageInformation(wimHandle, xmlBuffer, (uint)xmlLength);
+            var success = WimApi.WIMSetImageInformation(wimHandle, xmlBuffer, (uint)xmlLength);
 
             if (!success)
             {
-                string error = WimApi.GetLastErrorMessage();
+                var error = WimApi.GetLastErrorMessage();
                 Logger.Error("Failed to set WIM image information for {WimFile}: {Error}", wimFilePath, error);
                 return false;
             }
 
             Logger.Information("Successfully updated WIM metadata for {WimFile}", Path.GetFileName(wimFilePath));
+
+            // Force a delay to ensure the file is properly closed and written
+            Task.Delay(500).Wait();
+
             return true;
         }
         catch (Exception ex)
@@ -361,98 +557,187 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
         }
         finally
         {
-            if (xmlBuffer != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(xmlBuffer);
-            }
+            // Following WinToolkit pattern: they don't explicitly free xmlBuffer
+            // The WIM API apparently handles this internally
 
             if (wimHandle != IntPtr.Zero)
             {
                 WimApi.WIMCloseHandle(wimHandle);
+                Logger.Debug("WIM handle closed for {WimFile}", Path.GetFileName(wimFilePath));
             }
 
-            // Clean up temporary directory
-            CleanupTempDirectory();
+            // Clean up temporary directory exactly like WinToolkit does (with false parameter)
+            // This means delete the directory completely without recreating it
+            try
+            {
+                if (Directory.Exists(_tempDirectory))
+                {
+                    Directory.Delete(_tempDirectory, true);
+                    Logger.Debug("Deleted temporary directory completely: {TempDirectory}", _tempDirectory);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(ex, "Error during final temp directory cleanup: {TempDirectory}", _tempDirectory);
+            }
+
+            // Force garbage collection (like WinToolkit's FreeRAM call)
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // Give more time for the file system to sync
+            Thread.Sleep(1000);
         }
     }
 
     /// <summary>
     /// Modifies XML metadata to rename a specific field for a given index.
-    /// Based on the RenameImage logic from WinToolkit.
+    /// Based on the exact RenameImage logic from WinToolkit.
     /// </summary>
     private string RenameImageMetadata(string xmlData, string fieldType, int index, string currentValue, string newValue)
     {
+        Logger.Debug("RenameImageMetadata called with fieldType={FieldType}, index={Index}, currentValue={CurrentValue}, newValue={NewValue}",
+            fieldType, index, currentValue, newValue);
+
+        var nData = "";
         try
         {
-            string updatedXml = "";
-            string[] imageSections = Regex.Split(xmlData, "<IMAGE INDEX=", RegexOptions.IgnoreCase);
+            // Use WinToolkit's EXACT logic - Regex.Split with "<IMAGE INDEX="
+            var splitParts = Regex.Split(xmlData, "<IMAGE INDEX=");
+            Logger.Debug("Split XML into {PartCount} parts", splitParts.Length);
 
-            foreach (string section in imageSections)
+            foreach (var D in splitParts)
             {
-                string currentSection = section;
+                var DE = D;
 
-                // Add back the IMAGE INDEX tag if this is not the first section
-                if (currentSection.StartsWith("\""))
+                // WinToolkit logic: if section starts with quote, add back the IMAGE INDEX prefix
+                if (DE.StartsWith("\"", StringComparison.OrdinalIgnoreCase))
                 {
-                    currentSection = "<IMAGE INDEX=" + currentSection;
+                    DE = "<IMAGE INDEX=" + DE;
+                    Logger.Debug("Reconstructed section with IMAGE INDEX prefix, first 100 chars: {FirstChars}",
+                        DE.Length > 100 ? DE.Substring(0, 100) + "..." : DE);
                 }
 
-                // Check if this is the section for our target index
-                if (currentSection.StartsWith($"<IMAGE INDEX=\"{index}\">", StringComparison.OrdinalIgnoreCase))
+                // Check if this is the section for our target index (exactly like WinToolkit)
+                if (DE.StartsWith($"<IMAGE INDEX=\"{index}\">", StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.Debug("Processing XML section for index {Index}", index);
+                    Logger.Information("Found target section for index {Index}", index);
+                    Logger.Debug("Target section content (first 300 chars): {SectionContent}",
+                        DE.Length > 300 ? DE.Substring(0, 300) + "..." : DE);
 
-                    // Check if the field exists with current value
-                    string fieldPattern = $"<{fieldType}>{Regex.Escape(currentValue)}</{fieldType}>";
-                    string emptyFieldPattern = $"<{fieldType}></{fieldType}>";
+                    var originalDE = DE;
 
-                    if (Regex.IsMatch(currentSection, fieldPattern, RegexOptions.IgnoreCase))
+                    // Check if the field exists (exactly like WinToolkit logic)
+                    if (DE.Contains($"<{fieldType}>", StringComparison.OrdinalIgnoreCase))
                     {
-                        // Replace existing field with new value
-                        currentSection = Regex.Replace(
-                            currentSection,
-                            fieldPattern,
-                            $"<{fieldType}>{newValue}</{fieldType}>",
-                            RegexOptions.IgnoreCase);
+                        Logger.Debug("Field {FieldType} exists in section", fieldType);
 
-                        Logger.Debug("Replaced existing {FieldType} field for index {Index}", fieldType, index);
-                    }
-                    else if (Regex.IsMatch(currentSection, emptyFieldPattern, RegexOptions.IgnoreCase))
-                    {
-                        // Replace empty field with new value
-                        currentSection = Regex.Replace(
-                            currentSection,
-                            emptyFieldPattern,
-                            $"<{fieldType}>{newValue}</{fieldType}>",
-                            RegexOptions.IgnoreCase);
+                        // Extract current value from XML to see what we're actually looking for
+                        var fieldPattern = $"<{fieldType}>(.*?)</{fieldType}>";
+                        var fieldMatch = Regex.Match(DE, fieldPattern, RegexOptions.IgnoreCase);
+                        var actualCurrentValue = fieldMatch.Success ? fieldMatch.Groups[1].Value : "";
 
-                        Logger.Debug("Replaced empty {FieldType} field for index {Index}", fieldType, index);
+                        Logger.Information("Field {FieldType} - searching for: '{SearchValue}', found in XML: '{ActualValue}'",
+                            fieldType, currentValue, actualCurrentValue);
+
+                        // Case 1: Field exists with current value - replace it
+                        var searchPattern = $"<{fieldType}>{currentValue}</{fieldType}>";
+                        if (DE.Contains(searchPattern, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var before = DE;
+                            DE = ReplaceIgnoreCase(DE, searchPattern, $"<{fieldType}>{newValue}</{fieldType}>");
+                            Logger.Information("Replaced existing {FieldType} field with value for index {Index}. Changed: {Changed}",
+                                fieldType, index, before != DE);
+                        }
+                        else
+                        {
+                            Logger.Warning("Could not find exact match for {FieldType} field. Expected: '{Expected}', but XML contains: '{Actual}'",
+                                fieldType, searchPattern, $"<{fieldType}>{actualCurrentValue}</{fieldType}>");
+
+                            // Try to replace with the actual current value instead
+                            var actualPattern = $"<{fieldType}>{actualCurrentValue}</{fieldType}>";
+                            var before = DE;
+                            DE = ReplaceIgnoreCase(DE, actualPattern, $"<{fieldType}>{newValue}</{fieldType}>");
+                            Logger.Information("Replaced {FieldType} using actual XML value for index {Index}. Changed: {Changed}",
+                                fieldType, index, before != DE);
+                        }
+
+                        // Case 2: Field exists but is empty - replace it
+                        if (DE.Contains($"<{fieldType}></{fieldType}>", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var before = DE;
+                            DE = ReplaceIgnoreCase(DE, $"<{fieldType}></{fieldType}>", $"<{fieldType}>{newValue}</{fieldType}>");
+                            Logger.Information("Replaced empty {FieldType} field for index {Index}. Changed: {Changed}",
+                                fieldType, index, before != DE);
+                        }
                     }
                     else
                     {
-                        // Add new field after the IMAGE INDEX tag
-                        string insertPattern = $"<IMAGE INDEX=\"{index}\">";
-                        string replacement = $"<IMAGE INDEX=\"{index}\">\n    <{fieldType}>{newValue}</{fieldType}>";
+                        // Case 3: Field doesn't exist - add it after the IMAGE INDEX tag
+                        var before = DE;
+                        DE = ReplaceIgnoreCase(DE, $"<IMAGE INDEX=\"{index}\">", $"<IMAGE INDEX=\"{index}\">\n    <{fieldType}>{newValue}</{fieldType}>");
+                        Logger.Information("Added new {FieldType} field for index {Index}. Changed: {Changed}",
+                            fieldType, index, before != DE);
+                    }
 
-                        currentSection = Regex.Replace(
-                            currentSection,
-                            Regex.Escape(insertPattern),
-                            replacement,
-                            RegexOptions.IgnoreCase);
-
-                        Logger.Debug("Added new {FieldType} field for index {Index}", fieldType, index);
+                    if (originalDE != DE)
+                    {
+                        Logger.Debug("Modified section content (first 300 chars): {ModifiedContent}",
+                            DE.Length > 300 ? DE.Substring(0, 300) + "..." : DE);
                     }
                 }
 
-                updatedXml += currentSection;
+                // WinToolkit logic: accumulate ALL sections directly
+                nData += DE;
             }
 
-            return updatedXml;
+            Logger.Debug("Final XML length: {FinalLength}, Original length: {OriginalLength}", nData.Length, xmlData.Length);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to rename image metadata for {FieldType} on index {Index}", fieldType, index);
-            return xmlData; // Return original data on failure
+            // Return original data on any error (exactly like WinToolkit)
+            Logger.Warning(ex, "Error processing XML metadata for fieldType={FieldType}, index={Index}", fieldType, index);
+            nData = xmlData;
+        }
+
+        return nData;
+    }
+
+    /// <summary>
+    /// Case-insensitive string replacement matching WinToolkit's ReplaceIgnoreCase behavior.
+    /// </summary>
+    private string ReplaceIgnoreCase(string input, string oldValue, string newValue)
+    {
+        if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(oldValue))
+            return input;
+
+        // Try simple replace first (like WinToolkit does)
+        var standardReplace = input.Replace(oldValue, newValue);
+        if (!input.Contains(oldValue, StringComparison.OrdinalIgnoreCase))
+        {
+            return standardReplace;
+        }
+
+        try
+        {
+            var sb = new StringBuilder();
+            var currentIndex = 0;
+            var searchIndex = input.IndexOf(oldValue, StringComparison.OrdinalIgnoreCase);
+
+            while (searchIndex != -1)
+            {
+                sb.Append(input.Substring(currentIndex, searchIndex - currentIndex));
+                sb.Append(newValue);
+                currentIndex = searchIndex + oldValue.Length;
+                searchIndex = input.IndexOf(oldValue, currentIndex, StringComparison.OrdinalIgnoreCase);
+            }
+
+            sb.Append(input.Substring(currentIndex));
+            return sb.ToString();
+        }
+        catch
+        {
+            return input;
         }
     }
 
@@ -463,7 +748,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     {
         const int maxWaitTime = 5000; // 5 seconds
         const int sleepInterval = 100; // 100ms
-        int elapsedTime = 0;
+        var elapsedTime = 0;
 
         while (elapsedTime < maxWaitTime)
         {
@@ -500,6 +785,35 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     }
 
     /// <summary>
+    /// Cleans up and recreates the temporary directory used for WIM operations (like WinToolkit's true parameter).
+    /// </summary>
+    private void CleanupAndRecreateTempDirectory()
+    {
+        try
+        {
+            if (Directory.Exists(_tempDirectory))
+            {
+                Directory.Delete(_tempDirectory, true);
+                Logger.Debug("Deleted temporary directory: {TempDirectory}", _tempDirectory);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug(ex, "Failed to delete temporary directory (attempting to continue): {TempDirectory}", _tempDirectory);
+        }
+
+        try
+        {
+            Directory.CreateDirectory(_tempDirectory);
+            Logger.Debug("Recreated temporary directory: {TempDirectory}", _tempDirectory);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Failed to recreate temporary directory: {TempDirectory}", _tempDirectory);
+        }
+    }
+
+    /// <summary>
     /// Cleans up the temporary directory used for WIM operations.
     /// </summary>
     private void CleanupTempDirectory()
@@ -517,6 +831,144 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             Logger.Debug(ex, "Failed to cleanup temporary directory (non-critical): {TempDirectory}", _tempDirectory);
             // Non-critical error, continue
         }
+    }
+
+    /// <summary>
+    /// Verifies that the metadata changes were actually persisted to the WIM file.
+    /// </summary>
+    private bool VerifyMetadataChanges(string wimFilePath, int index, string expectedName, string expectedDescription)
+    {
+        try
+        {
+            // Wait a moment for any file system caching to complete
+            Thread.Sleep(500);
+
+            var xmlInfo = GetWimImageInfo(wimFilePath);
+            if (string.IsNullOrEmpty(xmlInfo))
+            {
+                Logger.Warning("Could not retrieve WIM metadata for verification");
+                return false;
+            }
+
+            Logger.Debug("XML after writing to WIM (first 500 chars): {VerificationXml}",
+                xmlInfo.Length > 500 ? xmlInfo.Substring(0, 500) + "..." : xmlInfo);
+
+            // Parse the XML to find the specific index
+            var imageSections = Regex.Split(xmlInfo, "<IMAGE INDEX=", RegexOptions.IgnoreCase);
+            foreach (var section in imageSections)
+            {
+                if (section.StartsWith($"\"{index}\">", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Extract the name and description from this section
+                    var nameMatch = Regex.Match(section, "<NAME>(.*?)</NAME>", RegexOptions.IgnoreCase);
+                    var descMatch = Regex.Match(section, "<DESCRIPTION>(.*?)</DESCRIPTION>", RegexOptions.IgnoreCase);
+
+                    var actualName = nameMatch.Success ? nameMatch.Groups[1].Value : "";
+                    var actualDescription = descMatch.Success ? descMatch.Groups[1].Value : "";
+
+                    var nameMatches = actualName.Equals(expectedName, StringComparison.OrdinalIgnoreCase);
+                    var descMatches = actualDescription.Equals(expectedDescription, StringComparison.OrdinalIgnoreCase);
+
+                    Logger.Information("Verification for index {Index}: Name={NameMatch} (expected: '{ExpectedName}', actual: '{ActualName}'), Description={DescMatch} (expected: '{ExpectedDesc}', actual: '{ActualDesc}')",
+                        index, nameMatches, expectedName, actualName, descMatches, expectedDescription, actualDescription);
+
+                    return nameMatches && descMatches;
+                }
+            }
+
+            Logger.Warning("Could not find index {Index} in WIM metadata during verification", index);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error during metadata verification for {WimFile} index {Index}", wimFilePath, index);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Verifies that a specific field was changed to the expected value for a given index.
+    /// </summary>
+    private bool VerifySpecificFieldChange(string xmlInfo, int index, string fieldType, string expectedValue)
+    {
+        try
+        {
+            // Parse the XML to find the specific index using the same logic as WinToolkit
+            var imageSections = Regex.Split(xmlInfo, "<IMAGE INDEX=", RegexOptions.IgnoreCase);
+            foreach (var section in imageSections)
+            {
+                var currentSection = section;
+                if (currentSection.StartsWith("\"", StringComparison.OrdinalIgnoreCase))
+                {
+                    currentSection = "<IMAGE INDEX=" + currentSection;
+                }
+
+                if (currentSection.StartsWith($"<IMAGE INDEX=\"{index}\">", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Look for the specific field
+                    var fieldStart = $"<{fieldType}>";
+                    var fieldEnd = $"</{fieldType}>";
+
+                    var startIndex = currentSection.IndexOf(fieldStart, StringComparison.OrdinalIgnoreCase);
+                    if (startIndex != -1)
+                    {
+                        startIndex += fieldStart.Length;
+                        var endIndex = currentSection.IndexOf(fieldEnd, startIndex, StringComparison.OrdinalIgnoreCase);
+                        if (endIndex != -1)
+                        {
+                            var actualValue = currentSection.Substring(startIndex, endIndex - startIndex);
+                            var matches = string.Equals(actualValue, expectedValue, StringComparison.OrdinalIgnoreCase);
+
+                            Logger.Debug("Field verification for {FieldType} on index {Index}: expected='{Expected}', actual='{Actual}', matches={Matches}",
+                                fieldType, index, expectedValue, actualValue, matches);
+
+                            return matches;
+                        }
+                    }
+
+                    Logger.Warning("Could not find {FieldType} field in index {Index} during verification", fieldType, index);
+                    return false;
+                }
+            }
+
+            Logger.Warning("Could not find index {Index} during field verification", index);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error during field verification for {FieldType} on index {Index}", fieldType, index);
+            return false;
+        }
+    }
+
+    #endregion
+
+    #region Private Helper Methods
+
+    /// <summary>
+    /// Waits for a file to become accessible by repeatedly trying to access it.
+    /// </summary>
+    private void WaitForFileAccess(string filePath, int maxWaitTime = 5000)
+    {
+        var elapsedTime = 0;
+        const int retryInterval = 100;
+
+        while (elapsedTime < maxWaitTime)
+        {
+            try
+            {
+                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return; // File is accessible
+            }
+            catch (IOException)
+            {
+                // File is still in use, wait and retry
+                Thread.Sleep(retryInterval);
+                elapsedTime += retryInterval;
+            }
+        }
+
+        Logger.Warning("File still in use after {MaxWaitTime}ms: {FilePath}", maxWaitTime, filePath);
     }
 
     #endregion
