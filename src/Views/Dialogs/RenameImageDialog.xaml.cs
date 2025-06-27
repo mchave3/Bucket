@@ -54,7 +54,7 @@ public sealed partial class RenameImageDialog : ContentDialog
         // Validate input
         if (string.IsNullOrWhiteSpace(ImageName))
         {
-            // TODO: Show validation error
+            ShowValidationError("Name Required", "Please enter a name for the image.");
             args.Cancel = true;
             return;
         }
@@ -63,7 +63,7 @@ public sealed partial class RenameImageDialog : ContentDialog
         var invalidChars = Path.GetInvalidFileNameChars();
         if (ImageName.ToCharArray().Any(c => invalidChars.Contains(c)))
         {
-            // TODO: Show validation error
+            ShowValidationError("Invalid Characters", "The name contains invalid characters. Please remove any of the following characters: " + string.Join(" ", invalidChars));
             args.Cancel = true;
             return;
         }
@@ -125,5 +125,23 @@ public sealed partial class RenameImageDialog : ContentDialog
             Logger.Error(ex, "Failed to rename image from '{OldName}' to '{NewName}'", oldName, newName);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Shows a validation error to the user.
+    /// </summary>
+    /// <param name="title">The error title.</param>
+    /// <param name="message">The error message.</param>
+    private async void ShowValidationError(string title, string message)
+    {
+        var errorDialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            CloseButtonText = "OK",
+            XamlRoot = this.XamlRoot
+        };
+
+        await errorDialog.ShowAsync();
     }
 }

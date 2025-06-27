@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Bucket.Models;
@@ -161,60 +160,60 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <summary>
     /// Gets the command to refresh the images list.
     /// </summary>
-    public ICommand RefreshCommand { get; }
+    public IAsyncRelayCommand RefreshCommand { get; }
 
     /// <summary>
     /// Gets the command to import images from an ISO file.
     /// </summary>
-    public ICommand ImportFromIsoCommand { get; }
+    public IAsyncRelayCommand ImportFromIsoCommand { get; }
 
     /// <summary>
     /// Gets the command to import a WIM file directly.
     /// </summary>
-    public ICommand ImportFromWimCommand { get; }
+    public IAsyncRelayCommand ImportFromWimCommand { get; }
 
     /// <summary>
     /// Gets the command to delete the selected image from the list.
     /// </summary>
-    public ICommand DeleteSelectedCommand { get; }
+    public IAsyncRelayCommand DeleteSelectedCommand { get; }
 
     /// <summary>
     /// Gets the command to delete the selected image from both list and disk.
     /// </summary>
-    public ICommand DeleteSelectedFromDiskCommand { get; }    /// <summary>
+    public IAsyncRelayCommand DeleteSelectedFromDiskCommand { get; }    /// <summary>
     /// Gets the command to view detailed information about an image.
     /// </summary>
-    public ICommand ViewImageDetailsCommand { get; }
+    public IRelayCommand<WindowsImageInfo> ViewImageDetailsCommand { get; }
 
     /// <summary>
     /// Gets the command to extract selected indices from an image.
     /// </summary>
-    public ICommand ExtractSelectedIndicesCommand { get; }
+    public IRelayCommand ExtractSelectedIndicesCommand { get; }
 
     /// <summary>
     /// Gets the command to mount an image.
     /// </summary>
-    public ICommand MountImageCommand { get; }
+    public IRelayCommand MountImageCommand { get; }
 
     /// <summary>
     /// Gets the command to validate an image's integrity.
     /// </summary>
-    public ICommand ValidateImageCommand { get; }
+    public IRelayCommand ValidateImageCommand { get; }
 
     /// <summary>
     /// Gets the command to load detailed information for a specific image index.
     /// </summary>
-    public ICommand LoadIndexDetailsCommand { get; }
+    public IAsyncRelayCommand<WindowsImageIndex> LoadIndexDetailsCommand { get; }
 
     /// <summary>
     /// Gets the command to move the selected image up in the list.
     /// </summary>
-    public ICommand MoveImageUpCommand { get; }
+    public IAsyncRelayCommand MoveImageUpCommand { get; }
 
     /// <summary>
     /// Gets the command to move the selected image down in the list.
     /// </summary>
-    public ICommand MoveImageDownCommand { get; }
+    public IAsyncRelayCommand MoveImageDownCommand { get; }
 
     /// <summary>
     /// Gets whether the selected image can be moved up in the list.
@@ -694,8 +693,8 @@ public partial class ImageManagementViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(CanMoveImageUp));
         OnPropertyChanged(nameof(CanMoveImageDown));
-        ((AsyncRelayCommand)MoveImageUpCommand).NotifyCanExecuteChanged();
-        ((AsyncRelayCommand)MoveImageDownCommand).NotifyCanExecuteChanged();
+        ((IAsyncRelayCommand)MoveImageUpCommand).NotifyCanExecuteChanged();
+        ((IAsyncRelayCommand)MoveImageDownCommand).NotifyCanExecuteChanged();
     }
 
     /// <summary>

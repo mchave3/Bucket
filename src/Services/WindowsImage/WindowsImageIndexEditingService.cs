@@ -59,11 +59,11 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
         Logger.Information("Updating index {Index} name: '{CurrentName}' → '{NewName}' in {WimFile}",
             index, currentName, newName, Path.GetFileName(wimFilePath));
 
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             try
             {
-                return UpdateIndexMetadata(wimFilePath, index, "NAME", currentName, newName);
+                return await UpdateIndexMetadata(wimFilePath, index, "NAME", currentName, newName);
             }
             catch (Exception ex)
             {
@@ -99,11 +99,11 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
         Logger.Information("Updating index {Index} description in {WimFile}",
             index, Path.GetFileName(wimFilePath));
 
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             try
             {
-                return UpdateIndexMetadata(wimFilePath, index, "DESCRIPTION", currentDescription, newDescription);
+                return await UpdateIndexMetadata(wimFilePath, index, "DESCRIPTION", currentDescription, newDescription);
             }
             catch (Exception ex)
             {
@@ -136,7 +136,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
         Logger.Information("Updating index {Index} metadata in {WimFile}: Name={NameChanged}, Description={DescriptionChanged}",
             index, Path.GetFileName(wimFilePath), nameChanged, descriptionChanged);
 
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             try
             {
@@ -183,7 +183,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
                     updatedXml.Length > 200 ? updatedXml.Substring(0, 200) + "..." : updatedXml);
 
                 // Write updated metadata back to WIM
-                var result = SetWimImageInfo(wimFilePath, updatedXml);
+                var result = await SetWimImageInfo(wimFilePath, updatedXml);
 
                 // Verify that the changes were persisted
                 return result && VerifyMetadataChanges(wimFilePath, index, newName, newDescription);
@@ -231,7 +231,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     /// <summary>
     /// Updates a specific metadata field for an index in a WIM file.
     /// </summary>
-    private bool UpdateIndexMetadata(string wimFilePath, int index, string metadataType, string currentValue, string newValue)
+    private async Task<bool> UpdateIndexMetadata(string wimFilePath, int index, string metadataType, string currentValue, string newValue)
     {
         try
         {
@@ -259,7 +259,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             }
 
             // Write updated metadata back to WIM
-            var success = SetWimImageInfo(wimFilePath, updatedXml);
+            var success = await SetWimImageInfo(wimFilePath, updatedXml);
 
             if (success)
             {
@@ -362,10 +362,10 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
     /// Sets the XML metadata for a WIM file using native APIs.
     /// Follows the exact pattern used by WinToolkit for maximum compatibility.
     /// </summary>
-    private bool SetWimImageInfo(string wimFilePath, string xmlInfo)
+    private async Task<bool> SetWimImageInfo(string wimFilePath, string xmlInfo)
     {
         var wimHandle = IntPtr.Zero;
-        IntPtr xmlBuffer;
+        var xmlBuffer = IntPtr.Zero;
 
         try
         {
@@ -447,7 +447,7 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
             Logger.Information("Successfully updated WIM metadata for {WimFile}", Path.GetFileName(wimFilePath));
 
             // Force a delay to ensure the file is properly closed and written
-            Task.Delay(500).Wait();
+            await Task.Delay(500, CancellationToken.None);
 
             return true;
         }
@@ -458,8 +458,11 @@ public class WindowsImageIndexEditingService : IWindowsImageIndexEditingService
         }
         finally
         {
-            // Following WinToolkit pattern: they don't explicitly free xmlBuffer
-            // The WIM API apparently handles this internally
+            // Free the allocated XML buffer
+            if (xmlBuffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(xmlBuffer);
+            }
 
             if (wimHandle != IntPtr.Zero)
             {

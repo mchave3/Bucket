@@ -30,45 +30,57 @@ Gets whether the image has a source ISO path, used for conditional UI display.
 
 ### EditMetadataCommand
 ```csharp
-public ICommand EditMetadataCommand { get; }
+public IAsyncRelayCommand EditMetadataCommand { get; }
 ```
 Command to open the metadata editing interface.
 
 ### ExportImageCommand
 ```csharp
-public ICommand ExportImageCommand { get; }
+public IAsyncRelayCommand ExportImageCommand { get; }
 ```
 Command to export the Windows image to a new location.
 
 ### SelectAllIndicesCommand
 ```csharp
-public ICommand SelectAllIndicesCommand { get; }
+public IRelayCommand SelectAllIndicesCommand { get; }
 ```
 Command to select all Windows editions/indices for operations.
 
 ### SelectNoIndicesCommand
 ```csharp
-public ICommand SelectNoIndicesCommand { get; }
+public IRelayCommand SelectNoIndicesCommand { get; }
 ```
 Command to deselect all Windows editions/indices.
 
 ### ApplyUpdatesCommand
 ```csharp
-public ICommand ApplyUpdatesCommand { get; }
+public IAsyncRelayCommand ApplyUpdatesCommand { get; }
 ```
 Command to apply Windows updates to selected editions.
 
 ### MountImageCommand
 ```csharp
-public ICommand MountImageCommand { get; }
+public IAsyncRelayCommand MountImageCommand { get; }
 ```
 Command to mount the Windows image for exploration.
 
 ### ExtractFilesCommand
 ```csharp
-public ICommand ExtractFilesCommand { get; }
+public IAsyncRelayCommand ExtractFilesCommand { get; }
 ```
 Command to extract files from the Windows image.
+
+### RenameImageCommand
+```csharp
+public IAsyncRelayCommand RenameImageCommand { get; }
+```
+Command to rename the Windows image.
+
+### EditIndexCommand
+```csharp
+public IAsyncRelayCommand<WindowsImageIndex> EditIndexCommand { get; }
+```
+Command to edit a specific Windows image index.
 
 ## Methods
 

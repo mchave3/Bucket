@@ -275,7 +275,7 @@ bool canMoveDown = viewModel.CanMoveImageDown;
 
 ```csharp
 // Use AsyncRelayCommand for async operations
-public ICommand RefreshCommand { get; }
+public IAsyncRelayCommand RefreshCommand { get; }
 
 private async Task RefreshImagesAsync()
 {

@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Bucket.Models;
@@ -42,7 +41,7 @@ public partial class ImageDetailsViewModel : ObservableObject
         _indexEditingService = indexEditingService ?? throw new ArgumentNullException(nameof(indexEditingService));
 
         // Initialize commands
-        EditMetadataCommand = new RelayCommand(EditMetadata);
+        EditMetadataCommand = new AsyncRelayCommand(EditMetadata);
         ExportImageCommand = new AsyncRelayCommand(ExportImageAsync);
         SelectAllIndicesCommand = new RelayCommand(SelectAllIndices);
         SelectNoIndicesCommand = new RelayCommand(SelectNoIndices);
@@ -50,7 +49,7 @@ public partial class ImageDetailsViewModel : ObservableObject
         MountImageCommand = new AsyncRelayCommand(MountImageAsync);
         ExtractFilesCommand = new AsyncRelayCommand(ExtractFilesAsync);
         RenameImageCommand = new AsyncRelayCommand(RenameImageAsync);
-        EditIndexCommand = new RelayCommand<WindowsImageIndex>(EditIndex);
+        EditIndexCommand = new AsyncRelayCommand<WindowsImageIndex>(EditIndex);
 
         Logger.Information("ImageDetailsViewModel initialized");
     }
@@ -60,47 +59,47 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// <summary>
     /// Gets the command to edit image metadata.
     /// </summary>
-    public ICommand EditMetadataCommand { get; }
+    public IAsyncRelayCommand EditMetadataCommand { get; }
 
     /// <summary>
     /// Gets the command to export the image.
     /// </summary>
-    public ICommand ExportImageCommand { get; }
+    public IAsyncRelayCommand ExportImageCommand { get; }
 
     /// <summary>
     /// Gets the command to select all indices.
     /// </summary>
-    public ICommand SelectAllIndicesCommand { get; }
+    public IRelayCommand SelectAllIndicesCommand { get; }
 
     /// <summary>
     /// Gets the command to select no indices.
     /// </summary>
-    public ICommand SelectNoIndicesCommand { get; }
+    public IRelayCommand SelectNoIndicesCommand { get; }
 
     /// <summary>
     /// Gets the command to apply updates to the image.
     /// </summary>
-    public ICommand ApplyUpdatesCommand { get; }
+    public IAsyncRelayCommand ApplyUpdatesCommand { get; }
 
     /// <summary>
     /// Gets the command to mount the image.
     /// </summary>
-    public ICommand MountImageCommand { get; }
+    public IAsyncRelayCommand MountImageCommand { get; }
 
     /// <summary>
     /// Gets the command to extract files from the image.
     /// </summary>
-    public ICommand ExtractFilesCommand { get; }
+    public IAsyncRelayCommand ExtractFilesCommand { get; }
 
     /// <summary>
     /// Gets the command to rename the image.
     /// </summary>
-    public ICommand RenameImageCommand { get; }
+    public IAsyncRelayCommand RenameImageCommand { get; }
 
     /// <summary>
     /// Gets the command to edit an index.
     /// </summary>
-    public ICommand EditIndexCommand { get; }
+    public IAsyncRelayCommand<WindowsImageIndex> EditIndexCommand { get; }
 
     #endregion
 
@@ -124,7 +123,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// <summary>
     /// Opens the metadata editing dialog.
     /// </summary>
-    private async void EditMetadata()
+    private async Task EditMetadata()
     {
         if (ImageInfo == null) return;
 
@@ -331,7 +330,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// Opens the edit dialog for a Windows image index.
     /// </summary>
     /// <param name="imageIndex">The image index to edit.</param>
-    private async void EditIndex(WindowsImageIndex imageIndex)
+    private async Task EditIndex(WindowsImageIndex imageIndex)
     {
         if (ImageInfo == null || imageIndex == null) return;
 

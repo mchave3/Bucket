@@ -60,7 +60,7 @@ public sealed partial class EditIndexDialog : ContentDialog
         // Validate input
         if (string.IsNullOrWhiteSpace(IndexName))
         {
-            // TODO: Show validation error
+            ShowValidationError("Name is required", "Please enter a name for the Windows edition.");
             args.Cancel = true;
             return;
         }
@@ -85,5 +85,23 @@ public sealed partial class EditIndexDialog : ContentDialog
 
         Logger.Information("Updated index {Index}: Name '{OldName}' → '{NewName}', Description changed: {DescriptionChanged}",
             Index, oldName, imageIndex.Name, oldDescription != imageIndex.Description);
+    }
+
+    /// <summary>
+    /// Shows a validation error to the user.
+    /// </summary>
+    /// <param name="title">The error title.</param>
+    /// <param name="message">The error message.</param>
+    private async void ShowValidationError(string title, string message)
+    {
+        var errorDialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            CloseButtonText = "OK",
+            XamlRoot = this.XamlRoot
+        };
+
+        await errorDialog.ShowAsync();
     }
 }
