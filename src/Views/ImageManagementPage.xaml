@@ -132,10 +132,39 @@
                     BorderThickness="1"
                     CornerRadius="4,4,0,0"
                     Padding="16,12">
-                    <TextBlock
-                        Text="Windows Images"
-                        Style="{StaticResource BodyStrongTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="Windows Images"
+                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            VerticalAlignment="Center" />
+
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <Button
+                                Content="&#xE70E;"
+                                ToolTipService.ToolTip="Move selected image up"
+                                Command="{Binding MoveImageUpCommand}"
+                                IsEnabled="{Binding CanMoveImageUp}"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                FontFamily="Segoe Fluent Icons"/>
+                            <Button
+                                Content="&#xE70D;"
+                                ToolTipService.ToolTip="Move selected image down"
+                                Command="{Binding MoveImageDownCommand}"
+                                IsEnabled="{Binding CanMoveImageDown}"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                FontFamily="Segoe Fluent Icons"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- Images List -->

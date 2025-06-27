@@ -69,6 +69,13 @@ The ISO import process includes:
 - **`DeleteSelectedFromDiskCommand`**: Removes selected image from collection and disk
 - **`ViewImageDetailsCommand`**: Displays detailed information about an image
 
+### Image Reordering Actions
+
+- **`MoveImageUpCommand`**: Moves the selected image up in the list
+- **`MoveImageDownCommand`**: Moves the selected image down in the list
+- **`CanMoveImageUp`** (bool): Whether the selected image can be moved up (not at the top)
+- **`CanMoveImageDown`** (bool): Whether the selected image can be moved down (not at the bottom)
+
 ### Detail Panel Actions
 
 - **`ExtractSelectedIndicesCommand`**: Extracts selected indices from an image
@@ -91,6 +98,11 @@ The ISO import process includes:
 - **`DeleteSelectedImageFromDiskAsync()`**: Deletes selected image from both collection and disk
 - **`ViewImageDetails(WindowsImageInfo image)`**: Views detailed information about specified image
 - **`LoadIndexDetailsAsync(WindowsImageIndex index)`**: Loads detailed information for a specific image index
+- **`MoveImageUp()`**: Moves the selected image up one position in the list (async with persistence)
+- **`MoveImageDown()`**: Moves the selected image down one position in the list (async with persistence)
+- **`UpdateMoveCommandStates()`**: Updates the move command states based on current selection
+- **`CanMoveUp()`**: Helper method for AsyncRelayCommand to check if image can be moved up
+- **`CanMoveDown()`**: Helper method for AsyncRelayCommand to check if image can be moved down
 - **`FilterImages()`**: Filters the images based on search text using case-insensitive matching
 - **`CanDeleteSelected()`**: Checks if selected image can be deleted (returns true if image is selected)
 
@@ -143,6 +155,41 @@ viewModel.SearchText = "Windows 11";
 viewModel.UpdateSearchFilter("Pro Edition");
 ```
 
+### Image Reordering
+
+```csharp
+// Move selected image up
+if (viewModel.CanMoveImageUp)
+{
+    viewModel.MoveImageUpCommand.Execute(null);
+}
+
+// Move selected image down
+if (viewModel.CanMoveImageDown)
+{
+    viewModel.MoveImageDownCommand.Execute(null);
+}
+
+// Check if movement is possible
+bool canMoveUp = viewModel.CanMoveImageUp;
+bool canMoveDown = viewModel.CanMoveImageDown;
+```
+
+### XAML Binding for Reordering
+
+```xml
+<!-- Move buttons in master header -->
+<Button Content="&#xE70E;"
+        ToolTipService.ToolTip="Move selected image up"
+        Command="{Binding MoveImageUpCommand}"
+        IsEnabled="{Binding CanMoveImageUp}" />
+
+<Button Content="&#xE70D;"
+        ToolTipService.ToolTip="Move selected image down"
+        Command="{Binding MoveImageDownCommand}"
+        IsEnabled="{Binding CanMoveImageDown}" />
+```
+
 ## Features
 
 ### File Import Capabilities
@@ -181,6 +228,15 @@ viewModel.UpdateSearchFilter("Pro Edition");
 - **Property Change Notification**: Implements INotifyPropertyChanged
 - **Dependent Property Updates**: Related properties update automatically
 - **UI Synchronization**: Maintains consistent UI state
+
+### Image Reordering Capabilities
+
+- **Manual Sorting**: Users can manually reorder images using up/down buttons
+- **Position-aware Commands**: Move commands are automatically enabled/disabled based on position
+- **Synchronized Collections**: Both main and filtered collections are kept in sync during moves
+- **Persistent Order**: Image order is automatically saved to JSON file after each move
+- **Error Handling**: Robust error handling with user feedback for save operations
+- **Visual Feedback**: Status messages confirm successful move operations and save status
 
 ## Dependencies
 
@@ -277,6 +333,75 @@ private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
 }
 ```
 
+### Image Reordering Best Practices
+
+```csharp
+// Handle move operations with validation and persistence
+private async Task MoveImageUp()
+{
+    if (SelectedImage == null) return;
+
+    var currentIndex = Images.IndexOf(SelectedImage);
+    if (currentIndex > 0)
+    {
+        // Safe logging with null protection
+        var imageName = SelectedImage.Name ?? "Unnamed Image";
+        Logger.Information("Moving image '{ImageName}' up from position {From} to {To}",
+            imageName, currentIndex, currentIndex - 1);
+
+        // Perform the move
+        Images.Move(currentIndex, currentIndex - 1);
+
+        // Update filtered collection if needed
+        var filteredIndex = FilteredImages.IndexOf(SelectedImage);
+        if (filteredIndex >= 0 && filteredIndex > 0)
+        {
+            FilteredImages.Move(filteredIndex, filteredIndex - 1);
+        }
+
+        // Update command states
+        UpdateMoveCommandStates();
+
+        // Save the new order to file for persistence
+        try
+        {
+            await _windowsImageService.SaveImagesOrderAsync(Images.ToList());
+            StatusMessage = $"Moved '{imageName}' up";
+            Logger.Information("Successfully saved new order after moving image up");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to save image order after moving up");
+            StatusMessage = $"Moved '{imageName}' up (order not saved)";
+        }
+    }
+}
+```
+
+### State Management for Reordering
+
+```csharp
+// Update command states when selection changes
+private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+{
+    switch (e.PropertyName)
+    {
+        case nameof(SelectedImage):
+            // Update all command states including move commands
+            UpdateMoveCommandStates();
+            break;
+    }
+}
+
+private void UpdateMoveCommandStates()
+{
+    OnPropertyChanged(nameof(CanMoveImageUp));
+    OnPropertyChanged(nameof(CanMoveImageDown));
+    ((AsyncRelayCommand)MoveImageUpCommand).NotifyCanExecuteChanged();
+    ((AsyncRelayCommand)MoveImageDownCommand).NotifyCanExecuteChanged();
+}
+```
+
 ## Common Error Scenarios
 
 ### Service Integration Issues
@@ -346,3 +471,5 @@ public void Dispose()
 ---
 
 **Note**: This documentation may have been generated automatically by AI and could potentially contain errors. Please verify the information against the actual source code and report any discrepancies.
+
+**Last Updated**: June 27, 2025 - Updated to reflect image reordering functionality with persistence, async operations, and null safety improvements.

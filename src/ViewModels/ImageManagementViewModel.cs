@@ -141,6 +141,10 @@ public partial class ImageManagementViewModel : ObservableObject
         ViewImageDetailsCommand = new RelayCommand<WindowsImageInfo>(ViewImageDetails);
         LoadIndexDetailsCommand = new AsyncRelayCommand<WindowsImageIndex>(LoadIndexDetailsAsync);
 
+        // Move commands for image reordering
+        MoveImageUpCommand = new AsyncRelayCommand(MoveImageUp, CanMoveUp);
+        MoveImageDownCommand = new AsyncRelayCommand(MoveImageDown, CanMoveDown);
+
         // Placeholder commands for detail panel
         ExtractSelectedIndicesCommand = new RelayCommand(() => { /* TODO: Implement */ });
         MountImageCommand = new RelayCommand(() => { /* TODO: Implement */ });
@@ -201,6 +205,26 @@ public partial class ImageManagementViewModel : ObservableObject
     /// Gets the command to load detailed information for a specific image index.
     /// </summary>
     public ICommand LoadIndexDetailsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to move the selected image up in the list.
+    /// </summary>
+    public ICommand MoveImageUpCommand { get; }
+
+    /// <summary>
+    /// Gets the command to move the selected image down in the list.
+    /// </summary>
+    public ICommand MoveImageDownCommand { get; }
+
+    /// <summary>
+    /// Gets whether the selected image can be moved up in the list.
+    /// </summary>
+    public bool CanMoveImageUp => SelectedImage != null && Images.IndexOf(SelectedImage) > 0;
+
+    /// <summary>
+    /// Gets whether the selected image can be moved down in the list.
+    /// </summary>
+    public bool CanMoveImageDown => SelectedImage != null && Images.IndexOf(SelectedImage) < Images.Count - 1;
 
     #endregion
 
@@ -488,6 +512,24 @@ public partial class ImageManagementViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Checks if the selected image can be moved up.
+    /// </summary>
+    /// <returns>True if the image can be moved up, false otherwise.</returns>
+    private bool CanMoveUp()
+    {
+        return CanMoveImageUp;
+    }
+
+    /// <summary>
+    /// Checks if the selected image can be moved down.
+    /// </summary>
+    /// <returns>True if the image can be moved down, false otherwise.</returns>
+    private bool CanMoveDown()
+    {
+        return CanMoveImageDown;
+    }
+
+    /// <summary>
     /// Views detailed information about the specified image.
     /// </summary>
     /// <param name="image">The image to view details for.</param>
@@ -562,6 +604,101 @@ public partial class ImageManagementViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Moves the selected image up in the list.
+    /// </summary>
+    private async Task MoveImageUp()
+    {
+        if (SelectedImage == null) return;
+
+        var currentIndex = Images.IndexOf(SelectedImage);
+        if (currentIndex > 0)
+        {
+            var imageName = SelectedImage.Name ?? "Unnamed Image";
+            Logger.Information("Moving image '{ImageName}' up from position {From} to {To}",
+                imageName, currentIndex, currentIndex - 1);
+
+            // Move in the main collection
+            Images.Move(currentIndex, currentIndex - 1);
+
+            // Update the filtered collection to maintain consistency
+            var filteredIndex = FilteredImages.IndexOf(SelectedImage);
+            if (filteredIndex >= 0 && filteredIndex > 0)
+            {
+                FilteredImages.Move(filteredIndex, filteredIndex - 1);
+            }
+
+            // Update command states
+            UpdateMoveCommandStates();
+
+            // Save the new order to file
+            try
+            {
+                await _windowsImageService.SaveImagesOrderAsync(Images.ToList());
+                StatusMessage = $"Moved '{imageName}' up";
+                Logger.Information("Successfully saved new order after moving image up");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to save image order after moving up");
+                StatusMessage = $"Moved '{imageName}' up (order not saved)";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Moves the selected image down in the list.
+    /// </summary>
+    private async Task MoveImageDown()
+    {
+        if (SelectedImage == null) return;
+
+        var currentIndex = Images.IndexOf(SelectedImage);
+        if (currentIndex < Images.Count - 1)
+        {
+            var imageName = SelectedImage.Name ?? "Unnamed Image";
+            Logger.Information("Moving image '{ImageName}' down from position {From} to {To}",
+                imageName, currentIndex, currentIndex + 1);
+
+            // Move in the main collection
+            Images.Move(currentIndex, currentIndex + 1);
+
+            // Update the filtered collection to maintain consistency
+            var filteredIndex = FilteredImages.IndexOf(SelectedImage);
+            if (filteredIndex >= 0 && filteredIndex < FilteredImages.Count - 1)
+            {
+                FilteredImages.Move(filteredIndex, filteredIndex + 1);
+            }
+
+            // Update command states
+            UpdateMoveCommandStates();
+
+            // Save the new order to file
+            try
+            {
+                await _windowsImageService.SaveImagesOrderAsync(Images.ToList());
+                StatusMessage = $"Moved '{imageName}' down";
+                Logger.Information("Successfully saved new order after moving image down");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to save image order after moving down");
+                StatusMessage = $"Moved '{imageName}' down (order not saved)";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Updates the move command states based on the current selection.
+    /// </summary>
+    private void UpdateMoveCommandStates()
+    {
+        OnPropertyChanged(nameof(CanMoveImageUp));
+        OnPropertyChanged(nameof(CanMoveImageDown));
+        ((AsyncRelayCommand)MoveImageUpCommand).NotifyCanExecuteChanged();
+        ((AsyncRelayCommand)MoveImageDownCommand).NotifyCanExecuteChanged();
+    }
+
+    /// <summary>
     /// Filters the images based on the search text.
     /// </summary>
     private void FilterImages()
@@ -602,6 +739,8 @@ public partial class ImageManagementViewModel : ObservableObject
                 // Update command can execute states
                 ((AsyncRelayCommand)DeleteSelectedCommand).NotifyCanExecuteChanged();
                 ((AsyncRelayCommand)DeleteSelectedFromDiskCommand).NotifyCanExecuteChanged();
+                // Update move command states
+                UpdateMoveCommandStates();
                 // Update selected image display name
                 OnPropertyChanged(nameof(SelectedImageDisplayName));
                 Logger.Information("SelectedImageDisplayName updated to: {DisplayName}", SelectedImageDisplayName);

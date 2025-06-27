@@ -68,6 +68,17 @@ public class WindowsImageService
         await _metadataService.SaveImagesAsync(images, cancellationToken);
     }
 
+    /// <summary>
+    /// Saves the order of Windows images asynchronously to maintain user preferences.
+    /// </summary>
+    /// <param name="images">The collection of images in the desired order.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public async Task SaveImagesOrderAsync(IList<WindowsImageInfo> images, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Saving image order with {Count} images", images.Count);
+        await _metadataService.SaveImagesAsync(images, cancellationToken);
+    }
+
     #endregion
 
     #region Public Methods - Image Analysis
