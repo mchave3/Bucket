@@ -44,6 +44,12 @@ public partial class WindowsImageIndex : ObservableObject
     [ObservableProperty]
     private bool _isIncluded = true;
 
+    /// <summary>
+    /// Gets or sets whether this index is selected for single-selection scenarios.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSelected = false;
+
     #endregion
 
     #region Detailed Properties (Available from specific index query)

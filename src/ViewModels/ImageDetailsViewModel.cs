@@ -45,6 +45,12 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets or sets the currently selected index for single-selection operations.
+    /// </summary>
+    [ObservableProperty]
+    private WindowsImageIndex? _selectedIndex;
+
+    /// <summary>
     /// Initializes a new instance of the ImageDetailsViewModel class.
     /// </summary>
     /// <param name="metadataService">The Windows image metadata service.</param>
@@ -65,6 +71,8 @@ public partial class ImageDetailsViewModel : ObservableObject
         ApplyUpdatesCommand = new AsyncRelayCommand(ApplyUpdatesAsync);
         MountImageCommand = new AsyncRelayCommand(MountImageAsync);
         UnmountImageCommand = new AsyncRelayCommand(UnmountImageAsync);
+        UnmountImageSaveCommand = new AsyncRelayCommand(UnmountImageSaveAsync);
+        UnmountImageDiscardCommand = new AsyncRelayCommand(UnmountImageDiscardAsync);
         OpenMountDirectoryCommand = new AsyncRelayCommand(OpenMountDirectoryAsync);
         DeleteImageCommand = new AsyncRelayCommand(DeleteImageAsync);
         MakeIsoCommand = new AsyncRelayCommand(MakeIsoAsync);
@@ -113,6 +121,16 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// Gets the command to unmount the image.
     /// </summary>
     public IAsyncRelayCommand UnmountImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to unmount the image and save changes.
+    /// </summary>
+    public IAsyncRelayCommand UnmountImageSaveCommand { get; }
+
+    /// <summary>
+    /// Gets the command to unmount the image and discard changes.
+    /// </summary>
+    public IAsyncRelayCommand UnmountImageDiscardCommand { get; }
 
     /// <summary>
     /// Gets the command to open the mount directory.
@@ -168,8 +186,39 @@ public partial class ImageDetailsViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSourceIso));
         Logger.Information("Set image info for details view: {Name}", imageInfo?.Name);
 
+        // Select the first index by default for single-selection mode
+        if (imageInfo?.Indices?.Count > 0)
+        {
+            SelectedIndex = imageInfo.Indices.First();
+            UpdateIndexSelection(SelectedIndex);
+        }
+
         // Refresh mounted images for this image file
         await RefreshMountedImagesAsync();
+    }
+
+    /// <summary>
+    /// Updates the selection state for single-selection mode.
+    /// </summary>
+    /// <param name="selectedIndex">The index to select.</param>
+    public void UpdateIndexSelection(WindowsImageIndex selectedIndex)
+    {
+        if (ImageInfo?.Indices == null) return;
+
+        // Clear all selections first
+        foreach (var index in ImageInfo.Indices)
+        {
+            index.IsSelected = false;
+        }
+
+        // Set the selected index
+        if (selectedIndex != null)
+        {
+            selectedIndex.IsSelected = true;
+            SelectedIndex = selectedIndex;
+        }
+
+        Logger.Debug("Updated index selection to: {IndexName}", selectedIndex?.Name ?? "None");
     }
 
     /// <summary>
@@ -279,7 +328,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Applies Windows updates to the selected indices.
+    /// Applies Windows updates to the selected index.
     /// </summary>
     private async Task ApplyUpdatesAsync()
     {
@@ -287,19 +336,18 @@ public partial class ImageDetailsViewModel : ObservableObject
 
         try
         {
-            var selectedIndices = ImageInfo.Indices.Where(i => i.IsIncluded).ToList();
-            if (selectedIndices.Count == 0)
+            if (SelectedIndex == null)
             {
                 await ShowInfoDialogAsync("No Selection",
-                    "Please select at least one Windows edition to apply updates to.");
+                    "Please select a Windows edition to apply updates to.");
                 return;
             }
 
             // TODO: Implement update application
             await ShowInfoDialogAsync("Apply Updates",
-                $"Update application for {selectedIndices.Count} selected edition(s) will be available in a future update.");
-            Logger.Information("Update application dialog shown for {Count} selected indices in image: {Name}", 
-                selectedIndices.Count, ImageInfo.Name);
+                $"Update application for the selected edition ({SelectedIndex.Name}) will be available in a future update.");
+            Logger.Information("Update application dialog shown for selected index in image: {Name}, Index: {IndexName}", 
+                ImageInfo.Name, SelectedIndex.Name);
         }
         catch (Exception ex)
         {
@@ -317,22 +365,14 @@ public partial class ImageDetailsViewModel : ObservableObject
 
         try
         {
-            var selectedIndices = ImageInfo.Indices.Where(i => i.IsIncluded).ToList();
-            if (selectedIndices.Count == 0)
+            if (SelectedIndex == null)
             {
                 await ShowInfoDialogAsync("No Selection",
-                    "Please select at least one Windows edition to mount.");
+                    "Please select a Windows edition to mount.");
                 return;
             }
 
-            if (selectedIndices.Count > 1)
-            {
-                await ShowInfoDialogAsync("Multiple Selection",
-                    "Please select only one Windows edition to mount at a time.");
-                return;
-            }
-
-            var selectedIndex = selectedIndices.First();
+            var selectedIndex = SelectedIndex;
 
             // Check if already mounted
             if (await _mountService.IsImageMountedAsync(ImageInfo.FilePath, selectedIndex.Index))
@@ -426,6 +466,134 @@ public partial class ImageDetailsViewModel : ObservableObject
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to unmount image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Unmounts the selected mounted image and saves changes.
+    /// </summary>
+    private async Task UnmountImageSaveAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            var mountedImages = MountedImages.ToList();
+            if (mountedImages.Count == 0)
+            {
+                await ShowInfoDialogAsync("No Mounted Images",
+                    "There are no mounted images for this WIM file.");
+                return;
+            }
+
+            MountedImageInfo selectedMount = null;
+            if (mountedImages.Count == 1)
+            {
+                selectedMount = mountedImages.First();
+            }
+            else
+            {
+                // Show selection dialog for multiple mounts
+                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
+                
+                // Get XamlRoot from the main window
+                if (App.MainWindow?.Content is FrameworkElement element)
+                {
+                    selectDialog.XamlRoot = element.XamlRoot;
+                }
+                
+                var result = await selectDialog.ShowAsync();
+                
+                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
+                {
+                    Logger.Debug("User cancelled mount selection or no mount selected");
+                    return;
+                }
+                
+                selectedMount = selectDialog.SelectedMount;
+                Logger.Information("User selected mount for unmounting with save: Index {Index}, Path: {MountPath}", 
+                    selectedMount.Index, selectedMount.MountPath);
+            }
+
+            await ShowEditProgressDialogAsync("Unmount Image (Save Changes)", async (progress, cancellationToken) =>
+            {
+                await _unmountService.UnmountImageAsync(selectedMount, true, progress, cancellationToken);
+
+                // Refresh mounted images list
+                await RefreshMountedImagesAsync();
+
+                progress?.Report("Successfully unmounted image and saved changes");
+                Logger.Information("Successfully unmounted image with save: {ImagePath}, Index: {Index}", selectedMount.ImagePath, selectedMount.Index);
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to unmount image with save: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Unmounts the selected mounted image and discards changes.
+    /// </summary>
+    private async Task UnmountImageDiscardAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            var mountedImages = MountedImages.ToList();
+            if (mountedImages.Count == 0)
+            {
+                await ShowInfoDialogAsync("No Mounted Images",
+                    "There are no mounted images for this WIM file.");
+                return;
+            }
+
+            MountedImageInfo selectedMount = null;
+            if (mountedImages.Count == 1)
+            {
+                selectedMount = mountedImages.First();
+            }
+            else
+            {
+                // Show selection dialog for multiple mounts
+                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
+                
+                // Get XamlRoot from the main window
+                if (App.MainWindow?.Content is FrameworkElement element)
+                {
+                    selectDialog.XamlRoot = element.XamlRoot;
+                }
+                
+                var result = await selectDialog.ShowAsync();
+                
+                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
+                {
+                    Logger.Debug("User cancelled mount selection or no mount selected");
+                    return;
+                }
+                
+                selectedMount = selectDialog.SelectedMount;
+                Logger.Information("User selected mount for unmounting with discard: Index {Index}, Path: {MountPath}", 
+                    selectedMount.Index, selectedMount.MountPath);
+            }
+
+            await ShowEditProgressDialogAsync("Unmount Image (Discard Changes)", async (progress, cancellationToken) =>
+            {
+                await _unmountService.UnmountImageAsync(selectedMount, false, progress, cancellationToken);
+
+                // Refresh mounted images list
+                await RefreshMountedImagesAsync();
+
+                progress?.Report("Successfully unmounted image and discarded changes");
+                Logger.Information("Successfully unmounted image with discard: {ImagePath}, Index: {Index}", selectedMount.ImagePath, selectedMount.Index);
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to unmount image with discard: {Name}", ImageInfo.Name);
             await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
         }
     }
