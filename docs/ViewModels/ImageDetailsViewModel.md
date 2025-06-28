@@ -1,7 +1,7 @@
 # ImageDetailsViewModel Class Documentation
 
 ## Overview
-ViewModel for the Windows Image Details page that provides comprehensive functionality for viewing, editing, and managing detailed information about Windows images and their editions.
+ViewModel for the Windows Image Details page that handles displaying and editing detailed information about Windows images, including their indices and metadata.
 
 ## Location
 - **File**: `src/ViewModels/ImageDetailsViewModel.cs`
@@ -18,13 +18,13 @@ public partial class ImageDetailsViewModel : ObservableObject
 ```csharp
 public WindowsImageInfo ImageInfo { get; set; }
 ```
-Gets or sets the image information being displayed in the details view.
+Gets or sets the image information being displayed.
 
 ### HasSourceIso
 ```csharp
 public bool HasSourceIso { get; }
 ```
-Gets whether the image has a source ISO path, used for conditional UI display.
+Gets whether the image has a source ISO path.
 
 ## Commands
 
@@ -32,55 +32,55 @@ Gets whether the image has a source ISO path, used for conditional UI display.
 ```csharp
 public IAsyncRelayCommand EditMetadataCommand { get; }
 ```
-Command to open the metadata editing interface.
+Command to show information about editing image metadata.
 
 ### ExportImageCommand
 ```csharp
 public IAsyncRelayCommand ExportImageCommand { get; }
 ```
-Command to export the Windows image to a new location.
+Command to export the image (placeholder for future implementation).
 
 ### SelectAllIndicesCommand
 ```csharp
 public IRelayCommand SelectAllIndicesCommand { get; }
 ```
-Command to select all Windows editions/indices for operations.
+Command to select all Windows indices.
 
 ### SelectNoIndicesCommand
 ```csharp
 public IRelayCommand SelectNoIndicesCommand { get; }
 ```
-Command to deselect all Windows editions/indices.
+Command to deselect all Windows indices.
 
 ### ApplyUpdatesCommand
 ```csharp
 public IAsyncRelayCommand ApplyUpdatesCommand { get; }
 ```
-Command to apply Windows updates to selected editions.
+Command to apply Windows updates to selected indices.
 
 ### MountImageCommand
 ```csharp
 public IAsyncRelayCommand MountImageCommand { get; }
 ```
-Command to mount the Windows image for exploration.
+Command to mount the image.
 
 ### ExtractFilesCommand
 ```csharp
 public IAsyncRelayCommand ExtractFilesCommand { get; }
 ```
-Command to extract files from the Windows image.
+Command to extract files from the image.
 
 ### RenameImageCommand
 ```csharp
 public IAsyncRelayCommand RenameImageCommand { get; }
 ```
-Command to rename the Windows image.
+Command to rename the image.
 
 ### EditIndexCommand
 ```csharp
 public IAsyncRelayCommand<WindowsImageIndex> EditIndexCommand { get; }
 ```
-Command to edit a specific Windows image index.
+Command to edit a Windows image index. **Updated behavior**: After editing, the page now refreshes the current data instead of navigating back to Image Management.
 
 ## Methods
 
@@ -90,154 +90,71 @@ public void SetImageInfo(WindowsImageInfo imageInfo)
 ```
 Sets the image information to display and updates related properties.
 
+### RefreshImageDataAsync (New)
+```csharp
+private async Task RefreshImageDataAsync()
+```
+Refreshes the current image data to reflect any changes made. This method:
+- Retrieves updated image data from the metadata service
+- Updates the current ImageInfo with refreshed data
+- Maintains the user's current view on the Image Details page
+- Handles errors gracefully without interrupting user flow
+
 ## Usage Examples
 
-### Navigation with Parameter
+### Basic Usage
 ```csharp
-// Navigate to image details page with image data
-var navService = App.GetService<IJsonNavigationService>();
-navService.NavigateTo(typeof(Views.ImageDetailsPage), selectedImage);
+var viewModel = App.GetService<ImageDetailsViewModel>();
+viewModel.SetImageInfo(imageInfo);
 ```
 
-### ViewModel Setup in Page
+### Editing an Index
 ```csharp
-public sealed partial class ImageDetailsPage : Page
-{
-    public ImageDetailsViewModel ViewModel { get; }
-
-    public ImageDetailsPage()
-    {
-        ViewModel = App.GetService<ImageDetailsViewModel>();
-        this.DataContext = ViewModel;
-        this.InitializeComponent();
-    }
-
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        if (e.Parameter is WindowsImageInfo imageInfo)
-        {
-            ViewModel.SetImageInfo(imageInfo);
-        }
-    }
-}
-```
-
-### Data Binding in XAML
-```xml
-<!-- Display image information -->
-<TextBlock Text="{x:Bind ViewModel.ImageInfo.Name, Mode=OneWay}" />
-<TextBlock Text="{x:Bind ViewModel.ImageInfo.FormattedFileSize, Mode=OneWay}" />
-
-<!-- Command binding -->
-<Button Content="Select All" Command="{x:Bind ViewModel.SelectAllIndicesCommand}" />
-<Button Content="Export Image" Command="{x:Bind ViewModel.ExportImageCommand}" />
-
-<!-- Conditional visibility -->
-<TextBlock Text="{x:Bind ViewModel.ImageInfo.SourceIsoPath, Mode=OneWay}"
-           Visibility="{x:Bind ViewModel.HasSourceIso, Mode=OneWay}" />
+// The EditIndexCommand now refreshes the current page instead of navigating away
+await viewModel.EditIndexCommand.ExecuteAsync(imageIndex);
+// User remains on Image Details page with updated data
 ```
 
 ## Features
 
-### Index Selection Management
-- **Select All**: Marks all Windows editions as included for operations
-- **Select None**: Clears selection from all Windows editions
-- **Individual Selection**: Each edition can be toggled independently
-
-### Image Information Display
-- **Comprehensive Metadata**: File path, size, dates, type, source ISO
-- **Edition Details**: Complete information about each Windows edition
-- **Visual Organization**: Information grouped in logical sections
-
-### Action Commands
-- **Future Extensibility**: Commands are designed for advanced operations
-- **User Feedback**: Informational dialogs for unimplemented features
-- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Image Details Display**: Shows comprehensive information about Windows images
+- **Index Editing**: Edit names and descriptions of Windows image indices
+- **In-Place Refresh**: After editing, data is refreshed without navigation (improved UX)
+- **Progress Tracking**: Shows progress dialogs for long-running operations
+- **Error Handling**: Comprehensive error handling with user-friendly dialogs
+- **Validation**: Input validation for edit operations
+- **Cancellation Support**: Operations can be cancelled by users
 
 ## Dependencies
 
-- **CommunityToolkit.Mvvm**: MVVM infrastructure and commands
-- **Bucket.Models.WindowsImageInfo**: Domain model for Windows images
-- **Microsoft.UI.Xaml.Controls**: WinUI 3 dialog support
-- **DevWinUI Navigation Services**: Page navigation functionality
+- `IWindowsImageMetadataService`: For loading and saving image metadata
+- `IWindowsImageIndexEditingService`: For editing Windows image indices
+- `CommunityToolkit.Mvvm`: For MVVM infrastructure
+- Various dialog services for user interaction
 
 ## Related Files
-
-- [`ImageDetailsPage.md`](../Views/ImageDetailsPage.md) - Associated view
-- [`ImageManagementViewModel.md`](./ImageManagementViewModel.md) - Parent page ViewModel
-- [`WindowsImageInfo.md`](../Models/WindowsImageInfo.md) - Primary domain model
+- [`ImageDetailsPage.md`](../Views/ImageDetailsPage.md)
+- [`WindowsImageInfo.md`](../Models/WindowsImageInfo.md)
+- [`WindowsImageIndex.md`](../Models/WindowsImageIndex.md)
+- [`IWindowsImageMetadataService.md`](../Services/WindowsImage/IWindowsImageMetadataService.md)
+- [`EditIndexDialog.md`](../Views/Dialogs/EditIndexDialog.md)
 
 ## Best Practices
 
-### ViewModel Initialization
-```csharp
-// Always initialize through dependency injection
-var viewModel = App.GetService<ImageDetailsViewModel>();
-
-// Set image data during navigation
-protected override void OnNavigatedTo(NavigationEventArgs e)
-{
-    if (e.Parameter is WindowsImageInfo imageInfo)
-    {
-        ViewModel.SetImageInfo(imageInfo);
-    }
-}
-```
-
-### Error Handling
-```csharp
-// Commands include comprehensive error handling
-try
-{
-    // Perform operation
-}
-catch (Exception ex)
-{
-    Logger.Error(ex, "Operation failed for image: {Name}", ImageInfo.Name);
-    await ShowErrorDialogAsync("Operation Error", ex.Message);
-}
-```
-
-### Property Updates
-```csharp
-// Notify dependent properties when ImageInfo changes
-public void SetImageInfo(WindowsImageInfo imageInfo)
-{
-    ImageInfo = imageInfo;
-    OnPropertyChanged(nameof(HasSourceIso));
-}
-```
+- Always check for null values before operations
+- Use async/await pattern for long-running operations
+- Provide progress feedback for operations that may take time
+- Handle cancellation tokens properly
+- Log important operations and errors
 
 ## Error Handling
 
-### Common Scenarios
-1. **Null Image Info**: Commands check for null ImageInfo before proceeding
-2. **Navigation Errors**: Handles cases where no image parameter is provided
-3. **Operation Failures**: User-friendly error messages for failed operations
-
-### Error Recovery
-- **Graceful Degradation**: Commands disable appropriately when operations are unavailable
-- **User Feedback**: Clear error messages with actionable information
-- **Logging**: Comprehensive logging for troubleshooting
-
-## Performance Considerations
-
-### Memory Management
-- **Efficient Data Binding**: Uses x:Bind for better performance
-- **Lazy Loading**: Commands are created only when needed
-- **Resource Cleanup**: Proper disposal of resources and event handlers
-
-### UI Responsiveness
-- **Async Operations**: All potentially long-running operations are async
-- **Progress Reporting**: User feedback for operations that take time
-- **Non-blocking UI**: Commands don't block the UI thread
-
-## Security Considerations
-
-- **Input Validation**: Validates image information before display
-- **Safe Operations**: Commands prevent unauthorized actions through proper validation
-- **Error Disclosure**: Avoids exposing sensitive system information in errors
+The ViewModel handles various error scenarios:
+- **Null References**: Checks for null ImageInfo before operations
+- **File Access Errors**: Handles file system exceptions during WIM operations
+- **Metadata Errors**: Graceful handling of metadata save/load failures
+- **Cancellation**: Proper handling of user-cancelled operations
+- **Validation Errors**: Input validation with user-friendly error messages
 
 ---
 

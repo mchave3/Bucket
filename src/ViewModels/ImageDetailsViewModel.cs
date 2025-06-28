@@ -4,6 +4,7 @@ using Bucket.Models;
 using Bucket.Services.WindowsImage;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using System.Linq;
 
 namespace Bucket.ViewModels;
 
@@ -458,8 +459,8 @@ public partial class ImageDetailsViewModel : ObservableObject
 
                     Logger.Information("Index {Index} editing completed successfully", imageIndex.Index);
 
-                    // Navigate back to Image Management page to show updated data
-                    NavigateToImageManagement();
+                    // Refresh the current page data to show updated information
+                    await RefreshImageDataAsync();
                 }
                 else
                 {
@@ -619,57 +620,47 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Navigates back to the Image Management page.
+    /// Refreshes the current image data to reflect any changes made.
     /// </summary>
-    private void NavigateToImageManagement()
+    private async Task RefreshImageDataAsync()
     {
+        if (ImageInfo == null)
+        {
+            Logger.Warning("Cannot refresh image data: ImageInfo is null");
+            return;
+        }
+
         try
         {
-            // Get the main window's navigation frame
-            if (App.MainWindow?.Content is FrameworkElement mainContent)
-            {
-                // Find the NavigationView in the MainWindow
-                var navView = FindChild<NavigationView>(mainContent);
-                if (navView?.Content is Frame navFrame)
-                {
-                    // Navigate to ImageManagementPage
-                    navFrame.Navigate(typeof(Views.ImageManagementPage));
-                    Logger.Information("Navigated back to Image Management page after successful edit");
-                    return;
-                }
-            }
+            Logger.Information("Refreshing image data for: {Name}", ImageInfo.Name);
 
-            Logger.Warning("Could not find navigation frame to navigate back to Image Management page");
+            // Get the updated image data from the metadata service
+            var allImages = await _metadataService.GetImagesAsync();
+            var updatedImage = allImages.FirstOrDefault(img => 
+                string.Equals(img.FilePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase));
+
+            if (updatedImage != null)
+            {
+                // Update the current ImageInfo with the refreshed data
+                ImageInfo = updatedImage;
+                OnPropertyChanged(nameof(HasSourceIso));
+                
+                Logger.Information("Successfully refreshed image data for: {Name}", ImageInfo.Name);
+            }
+            else
+            {
+                Logger.Warning("Could not find updated image data for: {Name}", ImageInfo.Name);
+            }
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Error navigating back to Image Management page");
+            Logger.Error(ex, "Failed to refresh image data for: {Name}", ImageInfo?.Name);
+            // Don't show error dialog here as it might interrupt the user flow
+            // The existing data will remain displayed
         }
     }
 
-    /// <summary>
-    /// Finds a child control of the specified type in the visual tree.
-    /// </summary>
-    /// <typeparam name="T">The type of control to find.</typeparam>
-    /// <param name="parent">The parent element to search from.</param>
-    /// <returns>The found control or null if not found.</returns>
-    private static T FindChild<T>(DependencyObject parent) where T : DependencyObject
-    {
-        if (parent == null) return null;
 
-        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(parent, i);
-            if (child is T typedChild)
-                return typedChild;
-
-            var foundChild = FindChild<T>(child);
-            if (foundChild != null)
-                return foundChild;
-        }
-
-        return null;
-    }
 
     #endregion
 }
