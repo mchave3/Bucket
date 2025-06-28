@@ -36,7 +36,39 @@ Gets or sets the currently selected index for single-selection operations. Used 
 ```csharp
 public ObservableCollection<MountedImageInfo> MountedImages { get; set; }
 ```
-Gets the collection of currently mounted images for this image file.
+Gets the collection of currently mounted images for this image file. When this collection changes, it automatically notifies all button state properties.
+
+### Button State Properties (Smart UI Control)
+
+#### IsSelectedIndexMounted
+```csharp
+public bool IsSelectedIndexMounted { get; }
+```
+Gets whether the currently selected index is mounted. Used internally for button state calculations.
+
+#### CanMount
+```csharp
+public bool CanMount { get; }
+```
+Gets whether the Mount command can be executed. Returns `true` when an index is selected and not currently mounted.
+
+#### CanUnmount
+```csharp
+public bool CanUnmount { get; }
+```
+Gets whether the Unmount commands can be executed. Returns `true` when an index is selected and currently mounted.
+
+#### CanOpenMountDirectory
+```csharp
+public bool CanOpenMountDirectory { get; }
+```
+Gets whether the Open Mount Directory command can be executed. Returns `true` when an index is selected and currently mounted.
+
+#### CanDelete
+```csharp
+public bool CanDelete { get; }
+```
+Gets whether the Delete command can be executed. Returns `true` when an index is selected and not currently mounted (prevents deletion of mounted images).
 
 ## Commands
 
@@ -210,10 +242,13 @@ await viewModel.EditIndexCommand.ExecuteAsync(imageIndex);
 
 - **Image Details Display**: Shows comprehensive information about Windows images
 - **Single-Selection Mode**: Uses ListView with single selection instead of multiple checkboxes for better UX
+- **Smart Button States**: Buttons are automatically enabled/disabled based on selection and mount status
 - **Index Editing**: Edit names and descriptions of Windows image indices
 - **Granular Unmount Control**: Separate Save and Discard unmount operations
+- **Real-time State Updates**: Button states update automatically when mount/unmount operations complete
+- **Index-Specific Operations**: All operations work on the currently selected index
 - **In-Place Refresh**: After editing, data is refreshed without navigation (improved UX)
-- **Progress Tracking**: Shows progress dialogs for long-running operations
+- **Progress Tracking**: Shows progress dialogs with user-friendly messages
 - **Error Handling**: Comprehensive error handling with user-friendly dialogs
 - **Validation**: Input validation for edit operations
 - **Cancellation Support**: Operations can be cancelled by users

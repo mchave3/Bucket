@@ -56,7 +56,7 @@ public class WindowsImageMountService : IWindowsImageMountService
 
             // Execute mount command using PowerShell
             var command = $"Mount-WindowsImage -ImagePath '{imagePath}' -Index {index} -Path '{mountPath}'";
-            await ExecutePowerShellCommandAsync(command, progress, cancellationToken);
+            await ExecutePowerShellCommandAsync(command, index, progress, cancellationToken);
 
             // Verify mount was successful
             if (!await IsImageMountedAsync(imagePath, index, cancellationToken))
@@ -196,11 +196,11 @@ public class WindowsImageMountService : IWindowsImageMountService
     /// <summary>
     /// Executes a PowerShell command and reports progress.
     /// </summary>
-    private async Task ExecutePowerShellCommandAsync(string command, IProgress<string> progress, CancellationToken cancellationToken)
+    private async Task ExecutePowerShellCommandAsync(string command, int index, IProgress<string> progress, CancellationToken cancellationToken)
     {
         try
         {
-            progress?.Report($"Executing PowerShell: {command}");
+            progress?.Report($"Mounting index {index}, please wait...");
 
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();

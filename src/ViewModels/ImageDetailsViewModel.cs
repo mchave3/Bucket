@@ -41,13 +41,60 @@ public partial class ImageDetailsViewModel : ObservableObject
     public ObservableCollection<MountedImageInfo> MountedImages
     {
         get => _mountedImages;
-        set => SetProperty(ref _mountedImages, value);
+        set
+        {
+            SetProperty(ref _mountedImages, value);
+            // Notify button state properties when mounted images change
+            OnPropertyChanged(nameof(CanMount));
+            OnPropertyChanged(nameof(CanUnmount));
+            OnPropertyChanged(nameof(CanOpenMountDirectory));
+            OnPropertyChanged(nameof(CanDelete));
+            OnPropertyChanged(nameof(IsSelectedIndexMounted));
+        }
     }
+
+    /// <summary>
+    /// Gets whether the currently selected index is mounted.
+    /// </summary>
+    public bool IsSelectedIndexMounted
+    {
+        get
+        {
+            if (SelectedIndex == null || ImageInfo == null) return false;
+            return MountedImages.Any(m => string.Equals(m.ImagePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase) 
+                                         && m.Index == SelectedIndex.Index);
+        }
+    }
+
+    /// <summary>
+    /// Gets whether the Mount command can be executed.
+    /// </summary>
+    public bool CanMount => SelectedIndex != null && !IsSelectedIndexMounted;
+
+    /// <summary>
+    /// Gets whether the Unmount commands can be executed.
+    /// </summary>
+    public bool CanUnmount => SelectedIndex != null && IsSelectedIndexMounted;
+
+    /// <summary>
+    /// Gets whether the Open Mount Directory command can be executed.
+    /// </summary>
+    public bool CanOpenMountDirectory => SelectedIndex != null && IsSelectedIndexMounted;
+
+    /// <summary>
+    /// Gets whether the Delete command can be executed.
+    /// </summary>
+    public bool CanDelete => SelectedIndex != null && !IsSelectedIndexMounted;
 
     /// <summary>
     /// Gets or sets the currently selected index for single-selection operations.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanMount))]
+    [NotifyPropertyChangedFor(nameof(CanUnmount))]
+    [NotifyPropertyChangedFor(nameof(CanOpenMountDirectory))]
+    [NotifyPropertyChangedFor(nameof(CanDelete))]
+    [NotifyPropertyChangedFor(nameof(IsSelectedIndexMounted))]
     private WindowsImageIndex? _selectedIndex;
 
     /// <summary>
@@ -240,6 +287,13 @@ public partial class ImageDetailsViewModel : ObservableObject
             {
                 MountedImages.Add(mount);
             }
+
+            // Manually notify button state properties after updating mounted images
+            OnPropertyChanged(nameof(CanMount));
+            OnPropertyChanged(nameof(CanUnmount));
+            OnPropertyChanged(nameof(CanOpenMountDirectory));
+            OnPropertyChanged(nameof(CanDelete));
+            OnPropertyChanged(nameof(IsSelectedIndexMounted));
 
             Logger.Debug("Refreshed mounted images: {Count} mounts found for {ImagePath}", currentImageMounts.Count, ImageInfo.FilePath);
         }
@@ -475,45 +529,20 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// </summary>
     private async Task UnmountImageSaveAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            var mountedImages = MountedImages.ToList();
-            if (mountedImages.Count == 0)
-            {
-                await ShowInfoDialogAsync("No Mounted Images",
-                    "There are no mounted images for this WIM file.");
-                return;
-            }
+            // Find the mounted image for the selected index
+            var selectedMount = MountedImages.FirstOrDefault(m => 
+                string.Equals(m.ImagePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase) 
+                && m.Index == SelectedIndex.Index);
 
-            MountedImageInfo selectedMount = null;
-            if (mountedImages.Count == 1)
+            if (selectedMount == null)
             {
-                selectedMount = mountedImages.First();
-            }
-            else
-            {
-                // Show selection dialog for multiple mounts
-                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
-                
-                // Get XamlRoot from the main window
-                if (App.MainWindow?.Content is FrameworkElement element)
-                {
-                    selectDialog.XamlRoot = element.XamlRoot;
-                }
-                
-                var result = await selectDialog.ShowAsync();
-                
-                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
-                {
-                    Logger.Debug("User cancelled mount selection or no mount selected");
-                    return;
-                }
-                
-                selectedMount = selectDialog.SelectedMount;
-                Logger.Information("User selected mount for unmounting with save: Index {Index}, Path: {MountPath}", 
-                    selectedMount.Index, selectedMount.MountPath);
+                await ShowInfoDialogAsync("Index Not Mounted",
+                    $"The selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) is not currently mounted.");
+                return;
             }
 
             await ShowEditProgressDialogAsync("Unmount Image (Save Changes)", async (progress, cancellationToken) =>
@@ -539,45 +568,20 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// </summary>
     private async Task UnmountImageDiscardAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            var mountedImages = MountedImages.ToList();
-            if (mountedImages.Count == 0)
-            {
-                await ShowInfoDialogAsync("No Mounted Images",
-                    "There are no mounted images for this WIM file.");
-                return;
-            }
+            // Find the mounted image for the selected index
+            var selectedMount = MountedImages.FirstOrDefault(m => 
+                string.Equals(m.ImagePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase) 
+                && m.Index == SelectedIndex.Index);
 
-            MountedImageInfo selectedMount = null;
-            if (mountedImages.Count == 1)
+            if (selectedMount == null)
             {
-                selectedMount = mountedImages.First();
-            }
-            else
-            {
-                // Show selection dialog for multiple mounts
-                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
-                
-                // Get XamlRoot from the main window
-                if (App.MainWindow?.Content is FrameworkElement element)
-                {
-                    selectDialog.XamlRoot = element.XamlRoot;
-                }
-                
-                var result = await selectDialog.ShowAsync();
-                
-                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
-                {
-                    Logger.Debug("User cancelled mount selection or no mount selected");
-                    return;
-                }
-                
-                selectedMount = selectDialog.SelectedMount;
-                Logger.Information("User selected mount for unmounting with discard: Index {Index}, Path: {MountPath}", 
-                    selectedMount.Index, selectedMount.MountPath);
+                await ShowInfoDialogAsync("Index Not Mounted",
+                    $"The selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) is not currently mounted.");
+                return;
             }
 
             await ShowEditProgressDialogAsync("Unmount Image (Discard Changes)", async (progress, cancellationToken) =>
@@ -599,38 +603,34 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Opens the mount directory for the mounted image.
+    /// Opens the mount directory for the selected mounted index.
     /// </summary>
     private async Task OpenMountDirectoryAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            var mountedImages = MountedImages.ToList();
-            if (mountedImages.Count == 0)
+            // Find the mounted image for the selected index
+            var selectedMount = MountedImages.FirstOrDefault(m => 
+                string.Equals(m.ImagePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase) 
+                && m.Index == SelectedIndex.Index);
+
+            if (selectedMount == null)
             {
-                await ShowInfoDialogAsync("No Mounted Images",
-                    "There are no mounted images for this WIM file.");
+                await ShowInfoDialogAsync("Index Not Mounted",
+                    $"The selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) is not currently mounted.");
                 return;
             }
 
-            // If only one mount, open it directly
-            if (mountedImages.Count == 1)
-            {
-                await _mountService.OpenMountDirectoryAsync(mountedImages.First());
-                Logger.Information("Opened mount directory for: {MountPath}", mountedImages.First().MountPath);
-            }
-            else
-            {
-                // TODO: Show selection dialog for multiple mounts
-                await ShowInfoDialogAsync("Multiple Mounts",
-                    $"Multiple images are mounted:\n\n{string.Join("\n", mountedImages.Select(m => $"Index {m.Index}: {m.MountPath}"))}\n\nPlease navigate to the desired mount directory manually.");
-            }
+            await _mountService.OpenMountDirectoryAsync(selectedMount);
+            Logger.Information("Opened mount directory for selected index {Index}: {MountPath}", 
+                SelectedIndex.Index, selectedMount.MountPath);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to open mount directory for image: {Name}", ImageInfo.Name);
+            Logger.Error(ex, "Failed to open mount directory for selected index {Index}: {Name}", 
+                SelectedIndex?.Index, ImageInfo.Name);
             await ShowErrorDialogAsync("Open Directory Error", $"Failed to open mount directory: {ex.Message}");
         }
     }
@@ -657,22 +657,22 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Creates an ISO from the Windows image.
+    /// Creates an ISO from the selected Windows image index.
     /// </summary>
     private async Task MakeIsoAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            // TODO: Implement ISO creation
+            // TODO: Implement ISO creation for selected index
             await ShowInfoDialogAsync("Make ISO",
-                "ISO creation functionality will be available in a future update.");
-            Logger.Information("ISO creation dialog shown for: {Name}", ImageInfo.Name);
+                $"ISO creation functionality for the selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) will be available in a future update.");
+            Logger.Information("ISO creation dialog shown for selected index {Index}: {Name}", SelectedIndex.Index, ImageInfo.Name);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to create ISO from image: {Name}", ImageInfo.Name);
+            Logger.Error(ex, "Failed to create ISO from selected index {Index}: {Name}", SelectedIndex?.Index, ImageInfo.Name);
             await ShowErrorDialogAsync("ISO Creation Error", $"Failed to create ISO: {ex.Message}");
         }
     }
@@ -699,43 +699,43 @@ public partial class ImageDetailsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Rebuilds the Windows image with maximum compression.
+    /// Rebuilds the selected Windows image index with maximum compression.
     /// </summary>
     private async Task RebuildImageAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            // TODO: Implement image rebuilding
+            // TODO: Implement image rebuilding for selected index
             await ShowInfoDialogAsync("Rebuild Image",
-                "Image rebuilding functionality will be available in a future update.");
-            Logger.Information("Image rebuilding dialog shown for: {Name}", ImageInfo.Name);
+                $"Image rebuilding functionality for the selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) will be available in a future update.");
+            Logger.Information("Image rebuilding dialog shown for selected index {Index}: {Name}", SelectedIndex.Index, ImageInfo.Name);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to rebuild image: {Name}", ImageInfo.Name);
+            Logger.Error(ex, "Failed to rebuild selected index {Index}: {Name}", SelectedIndex?.Index, ImageInfo.Name);
             await ShowErrorDialogAsync("Rebuild Error", $"Failed to rebuild image: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Extracts files from the Windows image.
+    /// Extracts files from the selected Windows image index.
     /// </summary>
     private async Task ExtractFilesAsync()
     {
-        if (ImageInfo == null) return;
+        if (ImageInfo == null || SelectedIndex == null) return;
 
         try
         {
-            // TODO: Implement file extraction
+            // TODO: Implement file extraction for selected index
             await ShowInfoDialogAsync("Extract Files",
-                "File extraction functionality will be available in a future update.");
-            Logger.Information("File extraction dialog shown for: {Name}", ImageInfo.Name);
+                $"File extraction functionality for the selected index ({SelectedIndex.Index}: {SelectedIndex.Name}) will be available in a future update.");
+            Logger.Information("File extraction dialog shown for selected index {Index}: {Name}", SelectedIndex.Index, ImageInfo.Name);
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Failed to extract files from image: {Name}", ImageInfo.Name);
+            Logger.Error(ex, "Failed to extract files from selected index {Index}: {Name}", SelectedIndex?.Index, ImageInfo.Name);
             await ShowErrorDialogAsync("Extraction Error", $"Failed to extract files: {ex.Message}");
         }
     }    /// <summary>

@@ -47,8 +47,7 @@ Modern CommandBar with organized operations:
 Modern single-selection interface for Windows editions:
 
 #### Header
-- **Title**: "Windows Editions"
-- **Instruction**: "Select one edition" (replaces old Select All/None buttons)
+- **Title**: "Windows Editions" (clean, minimal design)
 
 #### Edition List (ListView)
 - **Selection Mode**: Single selection (replaces multiple checkboxes)
@@ -76,7 +75,6 @@ Modern single-selection interface for Windows editions:
 Index 1: Windows 10 Pro
 ▶ Index 2: Windows 10 Home     [Selected]
 Index 3: Windows 10 Enterprise
-"Select one edition"
 [Unmount Save] [Unmount Discard]
 ```
 
@@ -113,7 +111,7 @@ Handles the edit button click for individual Windows editions.
 
 ### Single-Selection Interface
 - **Consistent UX**: Matches Image Management page selection behavior
-- **Clear Intent**: User can only select one edition at a time
+- **Clear Intent**: User can only select one edition at a time (intuitive ListView behavior)
 - **Auto-Selection**: First edition automatically selected on page load
 - **Visual Feedback**: Selected item highlighted in ListView
 

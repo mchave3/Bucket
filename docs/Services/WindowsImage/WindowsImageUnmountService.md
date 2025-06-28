@@ -188,7 +188,7 @@ await unmountService.CleanupOrphanedMountsAsync(
 ## Features
 
 - **Save/Discard Control**: Option to save or discard changes when unmounting
-- **Progress Reporting**: Detailed progress updates during all operations
+- **Progress Reporting**: User-friendly progress updates during all operations (e.g., "Unmounting index 2 and saving changes...")
 - **Force Unmount**: Emergency unmount capability for stuck mounts
 - **Batch Operations**: Ability to unmount all images at once
 - **Cleanup Operations**: Automatic cleanup of orphaned mount directories

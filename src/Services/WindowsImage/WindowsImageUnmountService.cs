@@ -39,7 +39,7 @@ public class WindowsImageUnmountService : IWindowsImageUnmountService
             var saveDiscardParam = saveChanges ? " -Save" : " -Discard";
             var command = $"Dismount-WindowsImage -Path '{mountedImage.MountPath}'{saveDiscardParam}";
             
-            var actionText = saveChanges ? "Dismounting and saving changes..." : "Dismounting and discarding changes...";
+            var actionText = saveChanges ? $"Unmounting index {mountedImage.Index} and saving changes..." : $"Unmounting index {mountedImage.Index} and discarding changes...";
             progress?.Report(actionText);
             
             await ExecutePowerShellCommandAsync(command, cancellationToken);
@@ -112,7 +112,7 @@ public class WindowsImageUnmountService : IWindowsImageUnmountService
             throw new ArgumentNullException(nameof(mountedImage));
 
         Logger.Warning("Force unmounting Windows image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
-        progress?.Report("Force unmounting image (discarding all changes)...");
+        progress?.Report($"Force unmounting index {mountedImage.Index} (discarding all changes)...");
 
         try
         {

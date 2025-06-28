@@ -106,20 +106,23 @@
                     HorizontalAlignment="Left">
                     <AppBarButton Label="Mount" 
                                   Command="{x:Bind ViewModel.MountImageCommand}"
+                                  IsEnabled="{x:Bind ViewModel.CanMount, Mode=OneWay}"
                                   ToolTipService.ToolTip="Mount the selected Windows edition">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C3;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE896;" />
                         </AppBarButton.Icon>
                     </AppBarButton>
-                    <AppBarButton Label="Unmount Save" 
+                    <AppBarButton Label="Unmount | Save" 
                                   Command="{x:Bind ViewModel.UnmountImageSaveCommand}"
+                                  IsEnabled="{x:Bind ViewModel.CanUnmount, Mode=OneWay}"
                                   ToolTipService.ToolTip="Unmount the mounted image and save changes">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE74E;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F7;" />
                         </AppBarButton.Icon>
                     </AppBarButton>
-                    <AppBarButton Label="Unmount Discard" 
+                    <AppBarButton Label="Unmount | Discard" 
                                   Command="{x:Bind ViewModel.UnmountImageDiscardCommand}"
+                                  IsEnabled="{x:Bind ViewModel.CanUnmount, Mode=OneWay}"
                                   ToolTipService.ToolTip="Unmount the mounted image and discard changes">
                         <AppBarButton.Icon>
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F6;" />
@@ -127,6 +130,7 @@
                     </AppBarButton>
                     <AppBarButton Label="Open Mount" 
                                   Command="{x:Bind ViewModel.OpenMountDirectoryCommand}"
+                                  IsEnabled="{x:Bind ViewModel.CanOpenMountDirectory, Mode=OneWay}"
                                   ToolTipService.ToolTip="Open the mount directory in Explorer">
                         <AppBarButton.Icon>
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE838;" />
@@ -137,6 +141,7 @@
                     
                     <AppBarButton Label="Delete" 
                                   Command="{x:Bind ViewModel.DeleteImageCommand}"
+                                  IsEnabled="{x:Bind ViewModel.CanDelete, Mode=OneWay}"
                                   ToolTipService.ToolTip="Delete this image">
                         <AppBarButton.Icon>
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE74D;" />
@@ -144,23 +149,26 @@
                     </AppBarButton>
                     <AppBarButton Label="Make ISO" 
                                   Command="{x:Bind ViewModel.MakeIsoCommand}"
-                                  ToolTipService.ToolTip="Create an ISO from this image">
+                                  IsEnabled="{x:Bind ViewModel.SelectedIndex, Mode=OneWay, Converter={StaticResource ObjectToBooleanConverter}}"
+                                  ToolTipService.ToolTip="Create an ISO from the selected index">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8B7;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE958;" />
                         </AppBarButton.Icon>
                     </AppBarButton>
                     <AppBarButton Label="Merge SWM" 
                                   Command="{x:Bind ViewModel.MergeSWMCommand}"
+                                  IsEnabled="{x:Bind ViewModel.SelectedIndex, Mode=OneWay, Converter={StaticResource ObjectToBooleanConverter}}"
                                   ToolTipService.ToolTip="Merge SWM files into a single WIM">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8C8;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEA3C;" />
                         </AppBarButton.Icon>
                     </AppBarButton>
                     <AppBarButton Label="Rebuild" 
                                   Command="{x:Bind ViewModel.RebuildImageCommand}"
-                                  ToolTipService.ToolTip="Rebuild the image with maximum compression">
+                                  IsEnabled="{x:Bind ViewModel.SelectedIndex, Mode=OneWay, Converter={StaticResource ObjectToBooleanConverter}}"
+                                  ToolTipService.ToolTip="Rebuild the selected index with maximum compression">
                         <AppBarButton.Icon>
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE895;" />
                         </AppBarButton.Icon>
                     </AppBarButton>
                 </CommandBar>
@@ -170,22 +178,8 @@
                         CornerRadius="8"
                         Padding="16">
                     <StackPanel Spacing="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0"
-                                       Text="Windows Editions"
-                                       Style="{StaticResource SubtitleTextBlockStyle}" />
-
-                            <TextBlock Grid.Column="1"
-                                       Text="Select one edition"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       VerticalAlignment="Center" />
-                        </Grid>
+                        <TextBlock Text="Windows Editions"
+                                   Style="{StaticResource SubtitleTextBlockStyle}" />
 
                         <ListView ItemsSource="{x:Bind ViewModel.ImageInfo.Indices, Mode=OneWay}"
                                   SelectedItem="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"

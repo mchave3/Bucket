@@ -89,12 +89,19 @@ var includedIndices = indices.Where(i => i.IsIncluded).ToList();
 
 ### Selection Management
 ```csharp
-// Toggle selection state
+// Legacy property (IsIncluded) - maintained for compatibility
 index.IsIncluded = !index.IsIncluded;
 
-// Bulk selection operations
-indices.ForEach(i => i.IsIncluded = true); // Select all
-indices.ForEach(i => i.IsIncluded = false); // Deselect all
+// New single-selection property (IsSelected) - used in modern UI
+index.IsSelected = true; // Select this index
+otherIndices.ForEach(i => i.IsSelected = false); // Deselect others
+
+// Single-selection pattern (recommended)
+void SelectIndex(WindowsImageIndex targetIndex, List<WindowsImageIndex> allIndices)
+{
+    allIndices.ForEach(i => i.IsSelected = false); // Clear all
+    targetIndex.IsSelected = true; // Select target
+}
 ```
 
 ## Error Handling

@@ -134,7 +134,7 @@ Executes a PowerShell command with progress reporting.
 
 **Features:**
 - Uses injected PowerShell service
-- Reports progress messages
+- Reports user-friendly progress messages (e.g., "Mounting index 1, please wait...")
 - Handles cancellation
 - Logs command execution
 
