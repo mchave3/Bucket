@@ -54,6 +54,8 @@
             services.AddSingleton<IWindowsImagePowerShellService, WindowsImagePowerShellService>();
             services.AddSingleton<IWindowsImageIsoService, WindowsImageIsoService>();
             services.AddSingleton<IWindowsImageIndexEditingService, WindowsImageIndexEditingService>();
+            services.AddSingleton<IWindowsImageMountService, WindowsImageMountService>();
+            services.AddSingleton<IWindowsImageUnmountService, WindowsImageUnmountService>();
             services.AddSingleton<WindowsImageService>();
 
             var serviceProvider = services.BuildServiceProvider();

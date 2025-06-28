@@ -42,18 +42,6 @@
                         <TextBlock Text="Rename" />
                     </StackPanel>
                 </Button>
-
-                <Button
-                    Content="Edit Metadata"
-                    Command="{x:Bind ViewModel.EditMetadataCommand}"
-                    Style="{StaticResource DefaultButtonStyle}">
-                </Button>
-
-                <Button
-                    Content="Export Image"
-                    Command="{x:Bind ViewModel.ExportImageCommand}"
-                    Style="{StaticResource DefaultButtonStyle}">
-                </Button>
             </StackPanel>
         </Grid>
 
@@ -110,6 +98,65 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+
+                <!-- Command Bar -->
+                <CommandBar 
+                    Background="Transparent"
+                    DefaultLabelPosition="Right"
+                    HorizontalAlignment="Left">
+                    <AppBarButton Label="Mount" 
+                                  Command="{x:Bind ViewModel.MountImageCommand}"
+                                  ToolTipService.ToolTip="Mount the selected Windows edition">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C3;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Unmount" 
+                                  Command="{x:Bind ViewModel.UnmountImageCommand}"
+                                  ToolTipService.ToolTip="Unmount the mounted image">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7AC;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Open Mount" 
+                                  Command="{x:Bind ViewModel.OpenMountDirectoryCommand}"
+                                  ToolTipService.ToolTip="Open the mount directory in Explorer">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE838;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    
+                    <AppBarSeparator />
+                    
+                    <AppBarButton Label="Delete" 
+                                  Command="{x:Bind ViewModel.DeleteImageCommand}"
+                                  ToolTipService.ToolTip="Delete this image">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE74D;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Make ISO" 
+                                  Command="{x:Bind ViewModel.MakeIsoCommand}"
+                                  ToolTipService.ToolTip="Create an ISO from this image">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8B7;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Merge SWM" 
+                                  Command="{x:Bind ViewModel.MergeSWMCommand}"
+                                  ToolTipService.ToolTip="Merge SWM files into a single WIM">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8C8;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Label="Rebuild" 
+                                  Command="{x:Bind ViewModel.RebuildImageCommand}"
+                                  ToolTipService.ToolTip="Rebuild the image with maximum compression">
+                        <AppBarButton.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                </CommandBar>
 
                 <!-- Windows Editions Card -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -218,32 +265,6 @@
                         </ListView>
                     </StackPanel>
                 </Border>
-
-                <!-- Actions Card -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8"
-                        Padding="16">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Actions"
-                                   Style="{StaticResource SubtitleTextBlockStyle}"
-                                   Margin="0,0,0,8" />
-
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <Button Content="Apply Updates"
-                                    Command="{x:Bind ViewModel.ApplyUpdatesCommand}"
-                                    Style="{StaticResource AccentButtonStyle}" />
-
-                            <Button Content="Mount Image"
-                                    Command="{x:Bind ViewModel.MountImageCommand}"
-                                    Style="{StaticResource DefaultButtonStyle}" />
-
-                            <Button Content="Extract Files"
-                                    Command="{x:Bind ViewModel.ExtractFilesCommand}"
-                                    Style="{StaticResource DefaultButtonStyle}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
             </StackPanel>
         </ScrollViewer>
     </Grid>

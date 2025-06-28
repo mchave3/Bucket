@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `MainViewModel` class serves as the primary view model for the main window of the Bucket application. It demonstrates the logging system functionality and provides a foundation for main application operations following MVVM architecture patterns.
+The `MainViewModel` class serves as the primary view model for the main window of the Bucket application. It manages mounted Windows images and provides functionality for viewing, unmounting, and opening mount directories. This ViewModel follows MVVM architecture patterns and integrates with specialized Windows image services.
 
 ## Location
 
@@ -15,37 +15,81 @@ The `MainViewModel` class serves as the primary view model for the main window o
 public partial class MainViewModel : ObservableObject
 ```
 
-## Commands
+## Properties
 
-### TestLogging
+### MountedImages
 
 ```csharp
-[RelayCommand]
-private void TestLogging()
+[ObservableProperty]
+private ObservableCollection<MountedImageInfo> mountedImages = new();
 ```
 
-- **Purpose**: Demonstrates comprehensive logging system functionality
-- **Access**: Private (exposed through RelayCommand)
-- **Functionality**:
-  - Tests all log levels (Debug, Information, Warning, Error)
-  - Demonstrates structured logging with parameters
-  - Shows domain-specific logging for Windows imaging operations
-  - Includes performance measurement logging
-  - Tests error handling and exception logging
+- **Type**: `ObservableCollection<MountedImageInfo>`
+- **Purpose**: Collection of currently mounted Windows images
+- **Access**: Public (via generated property)
+- **Binding**: Supports two-way data binding for UI lists
+
+## Commands
+
+### RefreshMountedImagesCommand
+
+```csharp
+public IAsyncRelayCommand RefreshMountedImagesCommand { get; }
+```
+
+- **Purpose**: Refreshes the list of mounted Windows images
+- **Type**: Async command without parameters
+- **Implementation**: Calls `RefreshMountedImagesAsync()`
+
+### OpenMountDirectoryCommand
+
+```csharp
+public IAsyncRelayCommand<MountedImageInfo> OpenMountDirectoryCommand { get; }
+```
+
+- **Purpose**: Opens the mount directory for a specific mounted image in Windows Explorer
+- **Type**: Async command with `MountedImageInfo` parameter
+- **Implementation**: Calls `OpenMountDirectoryAsync(MountedImageInfo)`
+
+### UnmountImageCommand
+
+```csharp
+public IAsyncRelayCommand<MountedImageInfo> UnmountImageCommand { get; }
+```
+
+- **Purpose**: Unmounts a specific Windows image with progress dialog
+- **Type**: Async command with `MountedImageInfo` parameter
+- **Implementation**: Calls `UnmountImageAsync(MountedImageInfo)`
+
+## Constructor
+
+```csharp
+public MainViewModel(IWindowsImageMountService mountService, IWindowsImageUnmountService unmountService)
+```
+
+**Parameters:**
+- `mountService`: Service for mounting operations and retrieving mounted images
+- `unmountService`: Service for unmounting operations
+
+**Features:**
+- Dependency injection of specialized services
+- Automatic loading of mounted images on startup
+- Command initialization
 
 ## Usage Examples
 
-### Basic Implementation
+### Basic Implementation in Page
 
 ```csharp
-public partial class MyPage : Page
+public sealed partial class HomeLandingPage : Page
 {
     public MainViewModel ViewModel { get; }
 
-    public MyPage()
+    public HomeLandingPage()
     {
-        ViewModel = App.GetService<MainViewModel>();
         this.InitializeComponent();
+        ViewModel = App.GetService<MainViewModel>();
+        DataContext = ViewModel; // Important for command binding
     }
 }
 ```
@@ -53,139 +97,185 @@ public partial class MyPage : Page
 ### Command Binding in XAML
 
 ```xml
-<Button Content="Test Logging"
-        Command="{x:Bind ViewModel.TestLoggingCommand}" />
+<!-- Refresh button -->
+<Button Content="Refresh" 
+        Command="{Binding RefreshMountedImagesCommand}" />
+
+<!-- Open folder button for specific image -->
+<Button Content="Open Folder"
+        Command="{Binding DataContext.OpenMountDirectoryCommand, ElementName=PageRoot}"
+        CommandParameter="{x:Bind}" />
+
+<!-- Unmount button for specific image -->
+<Button Content="Unmount"
+        Command="{Binding DataContext.UnmountImageCommand, ElementName=PageRoot}"
+        CommandParameter="{x:Bind}" />
+```
+
+### Data Binding for Image List
+
+```xml
+<ListView ItemsSource="{Binding MountedImages}">
+    <ListView.ItemTemplate>
+        <DataTemplate x:DataType="models:MountedImageInfo">
+            <Grid>
+                <TextBlock Text="{x:Bind DisplayText}" />
+                <TextBlock Text="{x:Bind MountPath}" />
+            </Grid>
+        </DataTemplate>
+    </ListView.ItemTemplate>
+</ListView>
 ```
 
 ## Features
 
-### Logging Demonstration
+### Mounted Image Management
 
-The `TestLogging` command provides comprehensive examples of:
+1. **Automatic Refresh**: Loads mounted images on ViewModel initialization
+2. **Real-time Updates**: Refreshes image list after unmount operations
+3. **Error Handling**: Comprehensive error handling with user-friendly dialogs
+4. **Progress Reporting**: Shows progress dialogs during long-running operations
 
-1. **Log Level Testing**:
-   - Debug messages (developer mode only)
-   - Information for general application flow
-   - Warning messages for attention-worthy events
-   - Error handling with full exception context
+### User Interface Integration
 
-2. **Structured Logging**:
-   - User interaction tracking with timestamps
-   - Windows imaging domain-specific logging patterns
-   - Progress tracking for long-running operations
+1. **Command Pattern**: All operations exposed as bindable commands
+2. **Observable Collections**: Automatic UI updates when image list changes
+3. **Parameter Binding**: Commands accept specific image parameters
+4. **Dialog Management**: Handles progress and error dialogs
 
-3. **Performance Monitoring**:
-   - Execution time measurement using `Stopwatch`
-   - Performance metrics logging for optimization
+### Service Integration
 
-4. **Error Handling**:
-   - Exception logging with full context
-   - Structured error information for debugging
-
-### MVVM Compliance
-
-- Inherits from `ObservableObject` (CommunityToolkit.Mvvm)
-- Uses `[RelayCommand]` for command implementation
-- Follows partial class pattern for MVVM source generators
-- Demonstrates proper logging integration in ViewModels
+1. **Mount Service**: Uses `IWindowsImageMountService` for querying and directory operations
+2. **Unmount Service**: Uses `IWindowsImageUnmountService` for dismounting operations
+3. **Dependency Injection**: Services injected via constructor
+4. **Service Coordination**: Coordinates between mount and unmount services
 
 ## Dependencies
 
 ### Core Dependencies
 
 - **CommunityToolkit.Mvvm**: MVVM infrastructure and source generators
-- **LoggerSetup**: Global logging access via `Logger` property
+- **Microsoft.UI.Xaml**: WinUI 3 framework for dialogs
+- **Bucket.Services.WindowsImage**: Windows image management services
 
-### Related Classes
+### Service Dependencies
 
-- **LoggerSetup**: Provides global `Logger` instance
-- **AppHelper**: Configuration management for developer mode
+- **IWindowsImageMountService**: Mount operations and image querying
+- **IWindowsImageUnmountService**: Unmount operations
 
-## Advanced Usage Examples
+### Model Dependencies
 
-### Logging Best Practices Demonstration
+- **MountedImageInfo**: Model representing mounted image information
+
+## Private Methods
+
+### RefreshMountedImagesAsync
 
 ```csharp
-// Information logging with context
-Logger.Information("User action: {ActionName} triggered by {User}",
-    "TestLogging", Environment.UserName);
-
-// Domain-specific structured logging
-Logger.Information("WIM Analysis: Found {ImageCount} images in {FilePath}",
-    imageCount, wimFilePath);
-
-// Performance measurement
-var stopwatch = Stopwatch.StartNew();
-// ... operation ...
-stopwatch.Stop();
-Logger.Information("Performance: {Operation} completed in {ElapsedMs}ms",
-    operationName, stopwatch.ElapsedMilliseconds);
-
-// Exception handling
-try
-{
-    // ... risky operation ...
-}
-catch (Exception ex)
-{
-    Logger.Error(ex, "Operation failed during {Context}", contextInfo);
-}
+private async Task RefreshMountedImagesAsync()
 ```
+
+- **Purpose**: Retrieves current mounted images and updates the collection
+- **Error Handling**: Logs errors but doesn't throw exceptions
+- **Performance**: Clears and repopulates collection efficiently
+
+### OpenMountDirectoryAsync
+
+```csharp
+private async Task OpenMountDirectoryAsync(MountedImageInfo mountedImage)
+```
+
+- **Purpose**: Opens Windows Explorer to the mount directory
+- **Validation**: Checks for null parameters
+- **Error Handling**: Shows error dialog if operation fails
+
+### UnmountImageAsync
+
+```csharp
+private async Task UnmountImageAsync(MountedImageInfo mountedImage)
+```
+
+- **Purpose**: Unmounts image with progress dialog and error handling
+- **Features**:
+  - Progress dialog with indeterminate progress bar
+  - Automatic list refresh after successful unmount
+  - Error dialog for failures
+  - Comprehensive logging
+
+### ShowUnmountProgressDialogAsync
+
+```csharp
+private async Task ShowUnmountProgressDialogAsync(MountedImageInfo mountedImage)
+```
+
+- **Purpose**: Shows progress dialog during unmount operation
+- **Features**:
+  - Indeterminate progress bar
+  - Cancel button support
+  - Automatic dialog closure on completion
+
+### Dialog Helper Methods
+
+- `ShowErrorDialogAsync`: Displays error messages to user
+- `ShowInfoDialogAsync`: Displays informational messages
 
 ## Related Files
 
-- [`LoggerSetup.md`](../Common/LoggerSetup.md) - Logging system configuration
-- [`Logging-System.md`](../Logging-System.md) - Complete logging documentation
-- [`AppHelper.md`](../Common/AppHelper.md) - Application configuration helpers
+- [`IWindowsImageMountService.md`](../Services/WindowsImage/IWindowsImageMountService.md) - Mount service interface
+- [`IWindowsImageUnmountService.md`](../Services/WindowsImage/IWindowsImageUnmountService.md) - Unmount service interface
+- [`MountedImageInfo.md`](../Models/MountedImageInfo.md) - Mounted image model
+- [`HomeLandingPage.md`](../Views/HomeLandingPage.md) - Main page using this ViewModel
 
 ## Best Practices
 
 ### ViewModel Design
 
-1. **Initialization Logging**: Log ViewModel creation for debugging
-2. **Command Implementation**: Use RelayCommand for consistent command patterns
-3. **Structured Logging**: Include relevant context in all log messages
-4. **Error Handling**: Always log exceptions with full context
+1. **Service Injection**: Use constructor injection for all dependencies
+2. **Command Pattern**: Expose all operations as commands for UI binding
+3. **Error Handling**: Always provide user feedback for errors
+4. **Logging**: Log all operations for debugging and monitoring
 
-### Logging Integration
+### UI Integration
 
-1. **Use Global Logger**: Access `Logger` directly without injection
-2. **Structured Messages**: Include parameters for machine-readable logs
-3. **Performance Tracking**: Measure and log operation timing
-4. **Context Information**: Include user and environment details
+1. **DataContext Setting**: Always set DataContext in code-behind
+2. **Command Binding**: Use proper ElementName binding for commands with parameters
+3. **Progress Feedback**: Show progress for long-running operations
+4. **Error Display**: Use dialogs for error communication
 
-### Testing and Debugging
+### Performance
 
-1. **Developer Mode**: Leverage developer mode for enhanced debugging
-2. **Log Level Awareness**: Understand when messages will/won't appear
-3. **Exception Simulation**: Test error handling paths regularly
+1. **Async Operations**: All file/service operations are async
+2. **Collection Updates**: Efficient collection management
+3. **Resource Cleanup**: Proper disposal of resources
+4. **Background Loading**: Initial data loading doesn't block UI
 
 ## Error Handling
 
 ### Common Scenarios
 
-- **Logger Access**: Logger is globally available and null-safe
-- **Command Execution**: RelayCommand handles exceptions automatically
-- **Thread Safety**: Serilog logger is thread-safe for concurrent access
+- **Service Unavailable**: Handles cases where services fail to initialize
+- **Mount Operation Failures**: Comprehensive error reporting for mount/unmount failures
+- **Permission Issues**: Handles administrator privilege requirements
+- **File System Errors**: Graceful handling of file system access issues
 
 ### Error Recovery
 
-- **Logging Failures**: Logger configuration includes fallback mechanisms
-- **Command Errors**: RelayCommand provides automatic error boundaries
-- **State Management**: ObservableObject handles property change notifications
-
-## Performance Considerations
-
-- **Logging Overhead**: Minimal performance impact in production mode
-- **Developer Mode**: Enhanced logging in developer mode for debugging
-- **Async Operations**: Consider async patterns for long-running operations
-- **Memory Usage**: Structured logging parameters are efficiently handled
+- **Retry Mechanisms**: Users can retry operations via refresh command
+- **Graceful Degradation**: Application continues functioning even if some operations fail
+- **User Feedback**: Clear error messages guide users to solutions
 
 ## Security Considerations
 
-- **User Information**: Be cautious about logging sensitive user data
-- **File Paths**: Log paths may contain user information
-- **Exception Details**: Full exception details may expose system information
+- **Path Validation**: All mount paths are validated before operations
+- **Privilege Escalation**: Handles administrator privilege requirements appropriately
+- **File System Access**: Validates permissions before file operations
+
+## Performance Considerations
+
+- **Lazy Loading**: Images loaded only when needed
+- **Efficient Updates**: Collection updates minimize UI redraws
+- **Background Operations**: Long-running operations don't block UI thread
+- **Memory Management**: Proper disposal of resources and event handlers
 
 ---
 

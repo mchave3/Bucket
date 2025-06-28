@@ -5,6 +5,7 @@ using Bucket.Services.WindowsImage;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
 using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace Bucket.ViewModels;
 
@@ -15,7 +16,10 @@ public partial class ImageDetailsViewModel : ObservableObject
 {
     private readonly IWindowsImageMetadataService _metadataService;
     private readonly IWindowsImageIndexEditingService _indexEditingService;
+    private readonly IWindowsImageMountService _mountService;
+    private readonly IWindowsImageUnmountService _unmountService;
     private WindowsImageInfo _imageInfo;
+    private ObservableCollection<MountedImageInfo> _mountedImages = new();
 
     /// <summary>
     /// Gets or sets the image information being displayed.
@@ -32,14 +36,26 @@ public partial class ImageDetailsViewModel : ObservableObject
     public bool HasSourceIso => !string.IsNullOrWhiteSpace(ImageInfo?.SourceIsoPath);
 
     /// <summary>
+    /// Gets the collection of currently mounted images for this image file.
+    /// </summary>
+    public ObservableCollection<MountedImageInfo> MountedImages
+    {
+        get => _mountedImages;
+        set => SetProperty(ref _mountedImages, value);
+    }
+
+    /// <summary>
     /// Initializes a new instance of the ImageDetailsViewModel class.
     /// </summary>
     /// <param name="metadataService">The Windows image metadata service.</param>
     /// <param name="indexEditingService">The Windows image index editing service.</param>
-    public ImageDetailsViewModel(IWindowsImageMetadataService metadataService, IWindowsImageIndexEditingService indexEditingService)
+    /// <param name="mountService">The Windows image mount service.</param>
+    public ImageDetailsViewModel(IWindowsImageMetadataService metadataService, IWindowsImageIndexEditingService indexEditingService, IWindowsImageMountService mountService, IWindowsImageUnmountService unmountService)
     {
         _metadataService = metadataService ?? throw new ArgumentNullException(nameof(metadataService));
         _indexEditingService = indexEditingService ?? throw new ArgumentNullException(nameof(indexEditingService));
+        _mountService = mountService ?? throw new ArgumentNullException(nameof(mountService));
+        _unmountService = unmountService ?? throw new ArgumentNullException(nameof(unmountService));
 
         // Initialize commands
         EditMetadataCommand = new AsyncRelayCommand(EditMetadata);
@@ -48,6 +64,12 @@ public partial class ImageDetailsViewModel : ObservableObject
         SelectNoIndicesCommand = new RelayCommand(SelectNoIndices);
         ApplyUpdatesCommand = new AsyncRelayCommand(ApplyUpdatesAsync);
         MountImageCommand = new AsyncRelayCommand(MountImageAsync);
+        UnmountImageCommand = new AsyncRelayCommand(UnmountImageAsync);
+        OpenMountDirectoryCommand = new AsyncRelayCommand(OpenMountDirectoryAsync);
+        DeleteImageCommand = new AsyncRelayCommand(DeleteImageAsync);
+        MakeIsoCommand = new AsyncRelayCommand(MakeIsoAsync);
+        MergeSWMCommand = new AsyncRelayCommand(MergeSWMAsync);
+        RebuildImageCommand = new AsyncRelayCommand(RebuildImageAsync);
         ExtractFilesCommand = new AsyncRelayCommand(ExtractFilesAsync);
         RenameImageCommand = new AsyncRelayCommand(RenameImageAsync);
         EditIndexCommand = new AsyncRelayCommand<WindowsImageIndex>(EditIndex);
@@ -88,6 +110,36 @@ public partial class ImageDetailsViewModel : ObservableObject
     public IAsyncRelayCommand MountImageCommand { get; }
 
     /// <summary>
+    /// Gets the command to unmount the image.
+    /// </summary>
+    public IAsyncRelayCommand UnmountImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to open the mount directory.
+    /// </summary>
+    public IAsyncRelayCommand OpenMountDirectoryCommand { get; }
+
+    /// <summary>
+    /// Gets the command to delete the image.
+    /// </summary>
+    public IAsyncRelayCommand DeleteImageCommand { get; }
+
+    /// <summary>
+    /// Gets the command to create an ISO from the image.
+    /// </summary>
+    public IAsyncRelayCommand MakeIsoCommand { get; }
+
+    /// <summary>
+    /// Gets the command to merge SWM files.
+    /// </summary>
+    public IAsyncRelayCommand MergeSWMCommand { get; }
+
+    /// <summary>
+    /// Gets the command to rebuild the image.
+    /// </summary>
+    public IAsyncRelayCommand RebuildImageCommand { get; }
+
+    /// <summary>
     /// Gets the command to extract files from the image.
     /// </summary>
     public IAsyncRelayCommand ExtractFilesCommand { get; }
@@ -110,11 +162,42 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// Sets the image information to display.
     /// </summary>
     /// <param name="imageInfo">The image information to display.</param>
-    public void SetImageInfo(WindowsImageInfo imageInfo)
+    public async void SetImageInfo(WindowsImageInfo imageInfo)
     {
         ImageInfo = imageInfo;
         OnPropertyChanged(nameof(HasSourceIso));
         Logger.Information("Set image info for details view: {Name}", imageInfo?.Name);
+
+        // Refresh mounted images for this image file
+        await RefreshMountedImagesAsync();
+    }
+
+    /// <summary>
+    /// Refreshes the list of mounted images for the current image file.
+    /// </summary>
+    public async Task RefreshMountedImagesAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            var allMountedImages = await _mountService.GetMountedImagesAsync();
+            var currentImageMounts = allMountedImages
+                .Where(m => string.Equals(m.ImagePath, ImageInfo.FilePath, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            MountedImages.Clear();
+            foreach (var mount in currentImageMounts)
+            {
+                MountedImages.Add(mount);
+            }
+
+            Logger.Debug("Refreshed mounted images: {Count} mounts found for {ImagePath}", currentImageMounts.Count, ImageInfo.FilePath);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to refresh mounted images for {ImagePath}", ImageInfo?.FilePath);
+        }
     }
 
     #endregion
@@ -234,15 +317,237 @@ public partial class ImageDetailsViewModel : ObservableObject
 
         try
         {
-            // TODO: Implement image mounting
-            await ShowInfoDialogAsync("Mount Image",
-                "Image mounting functionality will be available in a future update.");
-            Logger.Information("Image mount dialog shown for: {Name}", ImageInfo.Name);
+            var selectedIndices = ImageInfo.Indices.Where(i => i.IsIncluded).ToList();
+            if (selectedIndices.Count == 0)
+            {
+                await ShowInfoDialogAsync("No Selection",
+                    "Please select at least one Windows edition to mount.");
+                return;
+            }
+
+            if (selectedIndices.Count > 1)
+            {
+                await ShowInfoDialogAsync("Multiple Selection",
+                    "Please select only one Windows edition to mount at a time.");
+                return;
+            }
+
+            var selectedIndex = selectedIndices.First();
+
+            // Check if already mounted
+            if (await _mountService.IsImageMountedAsync(ImageInfo.FilePath, selectedIndex.Index))
+            {
+                await ShowInfoDialogAsync("Already Mounted",
+                    $"Index {selectedIndex.Index} ({selectedIndex.Name}) is already mounted.");
+                return;
+            }
+
+            await ShowEditProgressDialogAsync("Mount Image", async (progress, cancellationToken) =>
+            {
+                var mountedImage = await _mountService.MountImageAsync(
+                    ImageInfo.FilePath,
+                    selectedIndex.Index,
+                    ImageInfo.Name,
+                    selectedIndex.Name,
+                    progress,
+                    cancellationToken);
+
+                // Refresh mounted images list
+                await RefreshMountedImagesAsync();
+
+                progress?.Report($"Successfully mounted to: {mountedImage.MountPath}");
+                Logger.Information("Successfully mounted image: {ImagePath}, Index: {Index}", ImageInfo.FilePath, selectedIndex.Index);
+            });
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to mount image: {Name}", ImageInfo.Name);
             await ShowErrorDialogAsync("Mount Error", $"Failed to mount image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Unmounts the selected mounted image.
+    /// </summary>
+    private async Task UnmountImageAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            var mountedImages = MountedImages.ToList();
+            if (mountedImages.Count == 0)
+            {
+                await ShowInfoDialogAsync("No Mounted Images",
+                    "There are no mounted images for this WIM file.");
+                return;
+            }
+
+            MountedImageInfo selectedMount = null;
+            if (mountedImages.Count == 1)
+            {
+                selectedMount = mountedImages.First();
+            }
+            else
+            {
+                // Show selection dialog for multiple mounts
+                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
+                
+                // Get XamlRoot from the main window
+                if (App.MainWindow?.Content is FrameworkElement element)
+                {
+                    selectDialog.XamlRoot = element.XamlRoot;
+                }
+                
+                var result = await selectDialog.ShowAsync();
+                
+                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
+                {
+                    Logger.Debug("User cancelled mount selection or no mount selected");
+                    return;
+                }
+                
+                selectedMount = selectDialog.SelectedMount;
+                Logger.Information("User selected mount for unmounting: Index {Index}, Path: {MountPath}", 
+                    selectedMount.Index, selectedMount.MountPath);
+            }
+
+            await ShowEditProgressDialogAsync("Unmount Image", async (progress, cancellationToken) =>
+            {
+                await _unmountService.UnmountImageAsync(selectedMount, true, progress, cancellationToken);
+
+                // Refresh mounted images list
+                await RefreshMountedImagesAsync();
+
+                progress?.Report("Successfully unmounted image");
+                Logger.Information("Successfully unmounted image: {ImagePath}, Index: {Index}", selectedMount.ImagePath, selectedMount.Index);
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to unmount image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Opens the mount directory for the mounted image.
+    /// </summary>
+    private async Task OpenMountDirectoryAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            var mountedImages = MountedImages.ToList();
+            if (mountedImages.Count == 0)
+            {
+                await ShowInfoDialogAsync("No Mounted Images",
+                    "There are no mounted images for this WIM file.");
+                return;
+            }
+
+            // If only one mount, open it directly
+            if (mountedImages.Count == 1)
+            {
+                await _mountService.OpenMountDirectoryAsync(mountedImages.First());
+                Logger.Information("Opened mount directory for: {MountPath}", mountedImages.First().MountPath);
+            }
+            else
+            {
+                // TODO: Show selection dialog for multiple mounts
+                await ShowInfoDialogAsync("Multiple Mounts",
+                    $"Multiple images are mounted:\n\n{string.Join("\n", mountedImages.Select(m => $"Index {m.Index}: {m.MountPath}"))}\n\nPlease navigate to the desired mount directory manually.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to open mount directory for image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Open Directory Error", $"Failed to open mount directory: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Deletes the Windows image.
+    /// </summary>
+    private async Task DeleteImageAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            // TODO: Implement image deletion
+            await ShowInfoDialogAsync("Delete Image",
+                "Image deletion functionality will be available in a future update.");
+            Logger.Information("Image deletion dialog shown for: {Name}", ImageInfo.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to delete image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Delete Error", $"Failed to delete image: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Creates an ISO from the Windows image.
+    /// </summary>
+    private async Task MakeIsoAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            // TODO: Implement ISO creation
+            await ShowInfoDialogAsync("Make ISO",
+                "ISO creation functionality will be available in a future update.");
+            Logger.Information("ISO creation dialog shown for: {Name}", ImageInfo.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to create ISO from image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("ISO Creation Error", $"Failed to create ISO: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Merges SWM files into a single WIM.
+    /// </summary>
+    private async Task MergeSWMAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            // TODO: Implement SWM merging
+            await ShowInfoDialogAsync("Merge SWM",
+                "SWM merging functionality will be available in a future update.");
+            Logger.Information("SWM merging dialog shown for: {Name}", ImageInfo.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to merge SWM files for image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("SWM Merge Error", $"Failed to merge SWM files: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the Windows image with maximum compression.
+    /// </summary>
+    private async Task RebuildImageAsync()
+    {
+        if (ImageInfo == null) return;
+
+        try
+        {
+            // TODO: Implement image rebuilding
+            await ShowInfoDialogAsync("Rebuild Image",
+                "Image rebuilding functionality will be available in a future update.");
+            Logger.Information("Image rebuilding dialog shown for: {Name}", ImageInfo.Name);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to rebuild image: {Name}", ImageInfo.Name);
+            await ShowErrorDialogAsync("Rebuild Error", $"Failed to rebuild image: {ex.Message}");
         }
     }
 
