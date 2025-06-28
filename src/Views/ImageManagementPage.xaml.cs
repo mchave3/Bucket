@@ -25,7 +25,7 @@ public sealed partial class ImageManagementPage : Page
         ViewModel = App.GetService<ImageManagementViewModel>();
         this.DataContext = ViewModel;
         this.InitializeComponent();
-        Logger.Information("ImageManagementPage initialized");
+        Logger.Debug("ImageManagementPage initialized");
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public sealed partial class ImageManagementPage : Page
     {
         base.OnNavigatedTo(e);
 
-        Logger.Information("Navigated to ImageManagementPage");
+        Logger.Debug("Navigated to ImageManagementPage");
 
         try
         {

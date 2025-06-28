@@ -136,6 +136,8 @@ public class WindowsImageFileService : IWindowsImageFileService
         if (!File.Exists(targetPath))
         {
             Logger.Debug("Generated unique file name: {FileName}", $"{sanitizedBaseName}{extension}");
+            Logger.Verbose("File name generation details: BaseName='{BaseName}', Sanitized='{SanitizedName}', Extension='{Extension}'", 
+                baseName, sanitizedBaseName, extension);
             return $"{sanitizedBaseName}{extension}";
         }
 

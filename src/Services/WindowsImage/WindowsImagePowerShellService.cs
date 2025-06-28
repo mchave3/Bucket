@@ -68,6 +68,7 @@ public class WindowsImagePowerShellService : IWindowsImagePowerShellService
             var errorBuilder = new StringBuilder();
 
             // Use PowerShell Get-WindowsImage to analyze the image
+            Logger.Verbose("Executing PowerShell command: Get-WindowsImage -ImagePath '{ImagePath}' | ConvertTo-Json -Depth 10", imagePath);
             using var process = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -118,6 +119,7 @@ public class WindowsImagePowerShellService : IWindowsImagePowerShellService
                 }
                 else if (errorMessage.Contains("Get-WindowsImage") && errorMessage.Contains("not recognized"))
                 {
+                    Logger.Fatal("Critical dependency missing: Get-WindowsImage PowerShell cmdlet not available. Application cannot function without Windows PowerShell module for imaging.");
                     throw new InvalidOperationException("The Get-WindowsImage PowerShell cmdlet is not available. Please ensure the Windows PowerShell module for imaging is installed.");
                 }
 

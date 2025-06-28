@@ -61,6 +61,7 @@ namespace Bucket.Common
                 Logger = new LoggerConfiguration()
                     .WriteTo.Console()
                     .CreateLogger();
+                Logger.Fatal(ex, "Critical failure during logger configuration - falling back to console logging. Application logging may be incomplete.");
             }
         }
 

@@ -128,6 +128,7 @@ public class WindowsImageMetadataService : IWindowsImageMetadataService
             await File.WriteAllTextAsync(_imagesDataPath, jsonContent, cancellationToken);
 
             Logger.Debug("Successfully saved {Count} Windows images metadata", images.Count());
+            Logger.Verbose("Metadata file written to: {FilePath} with {FileSize} bytes", _imagesDataPath, new FileInfo(_imagesDataPath).Length);
         }
         catch (Exception ex)
         {

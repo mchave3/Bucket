@@ -22,7 +22,7 @@ public sealed partial class ImageDetailsPage : Page
         ViewModel = App.GetService<ImageDetailsViewModel>();
         this.DataContext = ViewModel;
         this.InitializeComponent();
-        Logger.Information("ImageDetailsPage initialized");
+        Logger.Debug("ImageDetailsPage initialized");
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ public sealed partial class ImageDetailsPage : Page
     {
         base.OnNavigatedTo(e);
 
-        Logger.Information("Navigated to ImageDetailsPage");
+        Logger.Debug("Navigated to ImageDetailsPage");
 
         // Pass the image information to the ViewModel
         if (e.Parameter is Models.WindowsImageInfo imageInfo)

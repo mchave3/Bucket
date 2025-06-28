@@ -31,6 +31,7 @@
 
         private static IServiceProvider ConfigureServices()
         {
+            Logger.Verbose("Starting dependency injection container configuration");
             var services = new ServiceCollection();
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
@@ -55,7 +56,9 @@
             services.AddSingleton<IWindowsImageIndexEditingService, WindowsImageIndexEditingService>();
             services.AddSingleton<WindowsImageService>();
 
-            return services.BuildServiceProvider();
+            var serviceProvider = services.BuildServiceProvider();
+            Logger.Verbose("Dependency injection container configured with {ServiceCount} services", services.Count);
+            return serviceProvider;
         }
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)

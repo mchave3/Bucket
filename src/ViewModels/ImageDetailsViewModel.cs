@@ -52,7 +52,7 @@ public partial class ImageDetailsViewModel : ObservableObject
         RenameImageCommand = new AsyncRelayCommand(RenameImageAsync);
         EditIndexCommand = new AsyncRelayCommand<WindowsImageIndex>(EditIndex);
 
-        Logger.Information("ImageDetailsViewModel initialized");
+        Logger.Debug("ImageDetailsViewModel initialized");
     }
 
     #region Commands
@@ -151,13 +151,12 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo == null) return;
 
-        Logger.Information("Starting image export for: {Name}", ImageInfo.Name);
-
         try
         {
             // TODO: Implement image export functionality
             await ShowInfoDialogAsync("Export Image",
                 "Image export functionality will be available in a future update.");
+            Logger.Information("Image export dialog shown for: {Name}", ImageInfo.Name);
         }
         catch (Exception ex)
         {
@@ -173,7 +172,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo?.Indices == null) return;
 
-        Logger.Information("Selecting all indices for image: {Name}", ImageInfo.Name);
+        Logger.Debug("Selecting all indices for image: {Name}", ImageInfo.Name);
 
         foreach (var index in ImageInfo.Indices)
         {
@@ -188,7 +187,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo?.Indices == null) return;
 
-        Logger.Information("Deselecting all indices for image: {Name}", ImageInfo.Name);
+        Logger.Debug("Deselecting all indices for image: {Name}", ImageInfo.Name);
 
         foreach (var index in ImageInfo.Indices)
         {
@@ -203,8 +202,6 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo == null) return;
 
-        Logger.Information("Starting update application for image: {Name}", ImageInfo.Name);
-
         try
         {
             var selectedIndices = ImageInfo.Indices.Where(i => i.IsIncluded).ToList();
@@ -218,6 +215,8 @@ public partial class ImageDetailsViewModel : ObservableObject
             // TODO: Implement update application
             await ShowInfoDialogAsync("Apply Updates",
                 $"Update application for {selectedIndices.Count} selected edition(s) will be available in a future update.");
+            Logger.Information("Update application dialog shown for {Count} selected indices in image: {Name}", 
+                selectedIndices.Count, ImageInfo.Name);
         }
         catch (Exception ex)
         {
@@ -233,13 +232,12 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo == null) return;
 
-        Logger.Information("Starting image mount for: {Name}", ImageInfo.Name);
-
         try
         {
             // TODO: Implement image mounting
             await ShowInfoDialogAsync("Mount Image",
                 "Image mounting functionality will be available in a future update.");
+            Logger.Information("Image mount dialog shown for: {Name}", ImageInfo.Name);
         }
         catch (Exception ex)
         {
@@ -255,13 +253,12 @@ public partial class ImageDetailsViewModel : ObservableObject
     {
         if (ImageInfo == null) return;
 
-        Logger.Information("Starting file extraction for image: {Name}", ImageInfo.Name);
-
         try
         {
             // TODO: Implement file extraction
             await ShowInfoDialogAsync("Extract Files",
                 "File extraction functionality will be available in a future update.");
+            Logger.Information("File extraction dialog shown for: {Name}", ImageInfo.Name);
         }
         catch (Exception ex)
         {

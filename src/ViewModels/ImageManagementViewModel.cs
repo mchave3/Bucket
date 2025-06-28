@@ -42,11 +42,9 @@ public partial class ImageManagementViewModel : ObservableObject
         get => _selectedImage;
         set
         {
-            Logger.Information("SelectedImage changing from {OldValue} to {NewValue}",
+            Logger.Debug("SelectedImage changed from '{OldValue}' to '{NewValue}'",
                 _selectedImage?.Name ?? "null", value?.Name ?? "null");
             SetProperty(ref _selectedImage, value);
-            Logger.Information("SelectedImage changed. Current value: {CurrentValue}",
-                _selectedImage?.Name ?? "null");
         }
     }
 
@@ -152,7 +150,7 @@ public partial class ImageManagementViewModel : ObservableObject
         // Watch for property changes
         PropertyChanged += OnPropertyChanged;
 
-        Logger.Information("ImageManagementViewModel initialized with injected WindowsImageService");
+        Logger.Debug("ImageManagementViewModel initialized with injected WindowsImageService");
     }
 
     #region Commands
