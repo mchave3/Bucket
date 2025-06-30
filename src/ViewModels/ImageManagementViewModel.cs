@@ -261,6 +261,10 @@ public partial class ImageManagementViewModel : ObservableObject
         {
             StatusMessage = "Loading images...";
 
+            // Preserve the currently selected image's identifier for restoration after refresh
+            string selectedImagePath = SelectedImage?.FilePath;
+            Logger.Debug("Preserving selected image path for restoration: {Path}", selectedImagePath ?? "null");
+
             var images = await _windowsImageService.GetImagesAsync();
 
             Images.Clear();
@@ -269,8 +273,13 @@ public partial class ImageManagementViewModel : ObservableObject
                 Images.Add(image);
             }
 
-            FilterImages();
             HasImages = Images.Count > 0;
+
+            // Filter images first to populate FilteredImages (without selection preservation since we handle it separately)
+            FilterImages(preserveSelection: false);
+            
+            // Restore selection using FilteredImages since that's what the UI is bound to
+            RestoreSelection(selectedImagePath, FilteredImages, "refresh");
 
             StatusMessage = $"Loaded {Images.Count} images";
             Logger.Information("Successfully refreshed {Count} Windows images", Images.Count);
@@ -614,15 +623,21 @@ public partial class ImageManagementViewModel : ObservableObject
             Logger.Information("Moving image '{ImageName}' up from position {From} to {To}",
                 imageName, currentIndex, currentIndex - 1);
 
+            // Preserve the selected image reference before moving
+            var selectedImageToPreserve = SelectedImage;
+
             // Move in the main collection
             Images.Move(currentIndex, currentIndex - 1);
 
             // Update the filtered collection to maintain consistency
-            var filteredIndex = FilteredImages.IndexOf(SelectedImage);
+            var filteredIndex = FilteredImages.IndexOf(selectedImageToPreserve);
             if (filteredIndex >= 0 && filteredIndex > 0)
             {
                 FilteredImages.Move(filteredIndex, filteredIndex - 1);
             }
+
+            // Restore the selection after the move operations
+            SelectedImage = selectedImageToPreserve;
 
             // Update command states
             UpdateMoveCommandStates();
@@ -656,15 +671,21 @@ public partial class ImageManagementViewModel : ObservableObject
             Logger.Information("Moving image '{ImageName}' down from position {From} to {To}",
                 imageName, currentIndex, currentIndex + 1);
 
+            // Preserve the selected image reference before moving
+            var selectedImageToPreserve = SelectedImage;
+
             // Move in the main collection
             Images.Move(currentIndex, currentIndex + 1);
 
             // Update the filtered collection to maintain consistency
-            var filteredIndex = FilteredImages.IndexOf(SelectedImage);
+            var filteredIndex = FilteredImages.IndexOf(selectedImageToPreserve);
             if (filteredIndex >= 0 && filteredIndex < FilteredImages.Count - 1)
             {
                 FilteredImages.Move(filteredIndex, filteredIndex + 1);
             }
+
+            // Restore the selection after the move operations
+            SelectedImage = selectedImageToPreserve;
 
             // Update command states
             UpdateMoveCommandStates();
@@ -696,10 +717,53 @@ public partial class ImageManagementViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Restores the selection to the image with the specified file path.
+    /// </summary>
+    /// <param name="selectedImagePath">The file path of the image to select.</param>
+    /// <param name="searchInCollection">The collection to search for the image (Images or FilteredImages).</param>
+    /// <param name="operationName">The name of the operation for logging purposes.</param>
+    private void RestoreSelection(string selectedImagePath, IEnumerable<WindowsImageInfo> searchInCollection, string operationName)
+    {
+        if (string.IsNullOrEmpty(selectedImagePath))
+        {
+            Logger.Debug("RestoreSelection: No selectedImagePath provided for {Operation}", operationName);
+            return;
+        }
+
+        var imageToSelect = searchInCollection.FirstOrDefault(img => img.FilePath == selectedImagePath);
+        if (imageToSelect != null)
+        {
+            SelectedImage = imageToSelect;
+            Logger.Debug("Restored selection after {Operation} to: {Name}", operationName, imageToSelect.Name);
+        }
+        else
+        {
+            Logger.Debug("Could not restore selection after {Operation} - image not found with path: {Path}", operationName, selectedImagePath);
+        }
+    }
+
+    /// <summary>
     /// Filters the images based on the search text.
     /// </summary>
     private void FilterImages()
     {
+        FilterImages(preserveSelection: true);
+    }
+
+    /// <summary>
+    /// Filters the images based on the search text.
+    /// </summary>
+    /// <param name="preserveSelection">Whether to preserve the current selection during filtering.</param>
+    private void FilterImages(bool preserveSelection)
+    {
+        string selectedImagePath = null;
+        
+        if (preserveSelection)
+        {
+            // Preserve the currently selected image for restoration after filtering
+            selectedImagePath = SelectedImage?.FilePath;
+        }
+
         FilteredImages.Clear();
 
         var filteredItems = string.IsNullOrWhiteSpace(SearchText)
@@ -714,9 +778,23 @@ public partial class ImageManagementViewModel : ObservableObject
 
         foreach (var item in filteredItems)
         {
-            FilteredImages.Add(item);        }
+            FilteredImages.Add(item);
+        }
 
-        Logger.Debug("Filtered images: {Count} of {Total}", FilteredImages.Count, Images.Count);
+        // Restore selection if the selected image is still in the filtered results
+        if (preserveSelection && !string.IsNullOrEmpty(selectedImagePath))
+        {
+            var imageToSelect = FilteredImages.FirstOrDefault(img => img.FilePath == selectedImagePath);
+            if (imageToSelect != null && imageToSelect != SelectedImage)
+            {
+                SelectedImage = imageToSelect;
+            }
+            else if (imageToSelect == null && SelectedImage != null)
+            {
+                // Selected image was filtered out, clear selection
+                SelectedImage = null;
+            }
+        }
         OnPropertyChanged(nameof(FilteredImagesCountText));
     }
 
@@ -727,12 +805,9 @@ public partial class ImageManagementViewModel : ObservableObject
     /// <param name="e">The property change event arguments.</param>
     private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        Logger.Debug("Property changed: {PropertyName}", e.PropertyName);
-
         switch (e.PropertyName)
         {
             case nameof(SelectedImage):
-                Logger.Information("SelectedImage property changed - updating related properties");
                 // Update command can execute states
                 ((AsyncRelayCommand)DeleteSelectedCommand).NotifyCanExecuteChanged();
                 ((AsyncRelayCommand)DeleteSelectedFromDiskCommand).NotifyCanExecuteChanged();
@@ -740,7 +815,6 @@ public partial class ImageManagementViewModel : ObservableObject
                 UpdateMoveCommandStates();
                 // Update selected image display name
                 OnPropertyChanged(nameof(SelectedImageDisplayName));
-                Logger.Information("SelectedImageDisplayName updated to: {DisplayName}", SelectedImageDisplayName);
                 break;
 
             case nameof(SearchText):
