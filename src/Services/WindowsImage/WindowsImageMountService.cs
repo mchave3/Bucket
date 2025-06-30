@@ -40,6 +40,10 @@ public class WindowsImageMountService : IWindowsImageMountService
         
         progress?.Report("Preparing to mount image...");
 
+        // Create unique mount directory
+        var mountPath = GetMountDirectoryPath(imagePath, index);
+        bool mountDirectoryCreated = false;
+
         try
         {
             // Check if already mounted
@@ -48,9 +52,9 @@ public class WindowsImageMountService : IWindowsImageMountService
                 throw new InvalidOperationException($"Image index {index} is already mounted.");
             }
 
-            // Create unique mount directory
-            var mountPath = GetMountDirectoryPath(imagePath, index);
+            // Create mount directory
             Directory.CreateDirectory(mountPath);
+            mountDirectoryCreated = true;
 
             progress?.Report($"Mounting to: {mountPath}");
 
@@ -81,14 +85,25 @@ public class WindowsImageMountService : IWindowsImageMountService
 
             return mountedImage;
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("Mount operation was cancelled by user: {ImagePath}, Index: {Index}", imagePath, index);
+            
+            // Clean up mount directory if it was created
+            await CleanupMountDirectoryOnCancellation(mountPath, mountDirectoryCreated);
+            
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to mount image: {ImagePath}, Index: {Index}", imagePath, index);
+            
+            // Clean up mount directory if it was created
+            await CleanupMountDirectoryOnCancellation(mountPath, mountDirectoryCreated);
+            
             throw;
         }
     }
-
-
 
     /// <inheritdoc />
     public async Task<List<MountedImageInfo>> GetMountedImagesAsync(CancellationToken cancellationToken = default)
@@ -187,17 +202,99 @@ public class WindowsImageMountService : IWindowsImageMountService
         return Path.Combine(Constants.MountDirectoryPath, directoryName);
     }
 
+    /// <inheritdoc />
+    public async Task CleanupOrphanedMountDirectoriesAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default)
+    {
+        Logger.Information("Starting cleanup of orphaned mount directories");
+        progress?.Report("Checking for orphaned mount directories...");
 
+        try
+        {
+            if (!Directory.Exists(Constants.MountDirectoryPath))
+            {
+                Logger.Debug("Mount directory does not exist, nothing to clean up");
+                progress?.Report("No mount directory found");
+                return;
+            }
+
+            // Get currently mounted images
+            var mountedImages = await GetMountedImagesAsync(cancellationToken);
+            var activeMountPaths = mountedImages.Select(m => m.MountPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // Get all directories in the mount path
+            var allMountDirectories = Directory.GetDirectories(Constants.MountDirectoryPath);
+            var orphanedDirectories = allMountDirectories.Where(dir => !activeMountPaths.Contains(dir)).ToList();
+
+            if (orphanedDirectories.Count == 0)
+            {
+                Logger.Information("No orphaned mount directories found");
+                progress?.Report("No orphaned directories found");
+                return;
+            }
+
+            Logger.Information("Found {Count} orphaned mount directories", orphanedDirectories.Count);
+            progress?.Report($"Found {orphanedDirectories.Count} orphaned directories to clean up");
+
+            for (int i = 0; i < orphanedDirectories.Count; i++)
+            {
+                var orphanedDir = orphanedDirectories[i];
+                var dirName = Path.GetFileName(orphanedDir);
+                
+                progress?.Report($"Cleaning up directory {i + 1}/{orphanedDirectories.Count}: {dirName}");
+                
+                try
+                {
+                    // Try DISM cleanup first
+                    try
+                    {
+                        await ExecuteDismCleanupAsync(orphanedDir);
+                        Logger.Debug("DISM cleanup completed for orphaned directory: {Directory}", orphanedDir);
+                    }
+                    catch (Exception dismEx)
+                    {
+                        Logger.Debug(dismEx, "DISM cleanup failed for orphaned directory, trying manual cleanup: {Directory}", orphanedDir);
+                        await AttemptManualCleanup(orphanedDir);
+                    }
+
+                    // Remove directory if empty
+                    if (Directory.Exists(orphanedDir))
+                    {
+                        var remainingFiles = Directory.GetFileSystemEntries(orphanedDir);
+                        if (remainingFiles.Length == 0)
+                        {
+                            Directory.Delete(orphanedDir);
+                            Logger.Information("Removed empty orphaned directory: {Directory}", orphanedDir);
+                        }
+                        else
+                        {
+                            Logger.Warning("Orphaned directory still contains {FileCount} files after cleanup: {Directory}", remainingFiles.Length, orphanedDir);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed to clean up orphaned directory: {Directory}", orphanedDir);
+                }
+            }
+
+            progress?.Report("Orphaned directory cleanup completed");
+            Logger.Information("Completed cleanup of orphaned mount directories");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to cleanup orphaned mount directories");
+            throw;
+        }
+    }
 
     #region Private Methods
-
-
 
     /// <summary>
     /// Executes a PowerShell command and reports progress.
     /// </summary>
     private async Task ExecutePowerShellCommandAsync(string command, int index, IProgress<string> progress, CancellationToken cancellationToken)
     {
+        Process process = null;
         try
         {
             progress?.Report($"Mounting index {index}, please wait...");
@@ -205,7 +302,7 @@ public class WindowsImageMountService : IWindowsImageMountService
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
 
-            using var process = new Process
+            process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -238,7 +335,29 @@ public class WindowsImageMountService : IWindowsImageMountService
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
+            // Register cancellation callback to kill the process
+            using var cancellationRegistration = cancellationToken.Register(() =>
+            {
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        Logger.Information("Cancelling PowerShell process due to user cancellation");
+                        process.Kill();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed to kill PowerShell process during cancellation");
+                }
+            });
+
             await Task.Run(() => process.WaitForExit(), cancellationToken);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("PowerShell command was cancelled by user", cancellationToken);
+            }
 
             if (process.ExitCode != 0)
             {
@@ -263,10 +382,19 @@ public class WindowsImageMountService : IWindowsImageMountService
 
             Logger.Debug("PowerShell command executed successfully: {Command}", command);
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("PowerShell command was cancelled: {Command}", command);
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "PowerShell command failed: {Command}", command);
             throw;
+        }
+        finally
+        {
+            process?.Dispose();
         }
     }
 
@@ -445,6 +573,154 @@ public class WindowsImageMountService : IWindowsImageMountService
             Logger.Error(ex, "Failed to parse mounted image element");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Cleans up mount directory after cancellation or failure.
+    /// </summary>
+    private async Task CleanupMountDirectoryOnCancellation(string mountPath, bool mountDirectoryCreated)
+    {
+        if (!mountDirectoryCreated || !Directory.Exists(mountPath))
+            return;
+
+        try
+        {
+            await Task.Delay(1000); // Wait a moment for any processes to release handles
+            
+            // Check if the directory has any files (indicating partial mount)
+            var files = Directory.GetFileSystemEntries(mountPath);
+            if (files.Length > 0)
+            {
+                Logger.Warning("Mount directory contains files after cancellation, attempting DISM cleanup: {MountPath}", mountPath);
+                
+                // Try to use DISM to clean up the partial mount first
+                try
+                {
+                    await ExecuteDismCleanupAsync(mountPath);
+                    Logger.Information("DISM cleanup completed for mount path: {MountPath}", mountPath);
+                }
+                catch (Exception dismEx)
+                {
+                    Logger.Warning(dismEx, "DISM cleanup failed, attempting manual cleanup: {MountPath}", mountPath);
+                    
+                    // Fallback to manual cleanup
+                    await AttemptManualCleanup(mountPath);
+                }
+            }
+            
+            // Remove the mount directory itself if it still exists and is empty
+            if (Directory.Exists(mountPath))
+            {
+                var remainingFiles = Directory.GetFileSystemEntries(mountPath);
+                if (remainingFiles.Length == 0)
+                {
+                    Directory.Delete(mountPath);
+                    Logger.Information("Empty mount directory removed after cancellation: {MountPath}", mountPath);
+                }
+                else
+                {
+                    Logger.Warning("Mount directory still contains {FileCount} files after cleanup attempts: {MountPath}", remainingFiles.Length, mountPath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to clean up mount directory after cancellation: {MountPath}", mountPath);
+        }
+    }
+
+    /// <summary>
+    /// Uses DISM to clean up a partial mount.
+    /// </summary>
+    private async Task ExecuteDismCleanupAsync(string mountPath)
+    {
+        var command = $"Dismount-WindowsImage -Path '{mountPath}' -Discard";
+        
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-Command \"{command}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+        await Task.Run(() => process.WaitForExit());
+        
+        // Don't throw exception if DISM cleanup fails - we'll try manual cleanup
+        if (process.ExitCode != 0)
+        {
+            Logger.Debug("DISM cleanup returned exit code {ExitCode} for path: {MountPath}", process.ExitCode, mountPath);
+        }
+    }
+
+    /// <summary>
+    /// Attempts manual cleanup of mount directory files.
+    /// </summary>
+    private async Task AttemptManualCleanup(string mountPath)
+    {
+        await Task.Run(() =>
+        {
+            try
+            {
+                // Try to remove read-only attributes and delete
+                var files = Directory.GetFileSystemEntries(mountPath, "*", SearchOption.AllDirectories);
+                
+                // Remove read-only attributes from files
+                foreach (var file in files.Where(f => File.Exists(f)))
+                {
+                    try
+                    {
+                        var attributes = File.GetAttributes(file);
+                        if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                        {
+                            File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                        }
+                    }
+                    catch (Exception attrEx)
+                    {
+                        Logger.Debug(attrEx, "Failed to remove read-only attribute from file: {File}", file);
+                    }
+                }
+                
+                // Try to delete directories recursively
+                var directories = Directory.GetDirectories(mountPath);
+                foreach (var dir in directories)
+                {
+                    try
+                    {
+                        Directory.Delete(dir, true);
+                    }
+                    catch (Exception dirEx)
+                    {
+                        Logger.Debug(dirEx, "Failed to delete directory during manual cleanup: {Directory}", dir);
+                    }
+                }
+                
+                // Try to delete remaining files
+                var remainingFiles = Directory.GetFiles(mountPath);
+                foreach (var file in remainingFiles)
+                {
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception fileEx)
+                    {
+                        Logger.Debug(fileEx, "Failed to delete file during manual cleanup: {File}", file);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(ex, "Manual cleanup encountered errors for path: {MountPath}", mountPath);
+            }
+        });
     }
 
     #endregion

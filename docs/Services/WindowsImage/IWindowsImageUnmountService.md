@@ -54,18 +54,6 @@ Forces the unmount of a Windows image, discarding any changes. Use this when nor
 
 **Returns:** Task representing the force unmount operation
 
-### CleanupOrphanedMountsAsync
-```csharp
-Task CleanupOrphanedMountsAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default)
-```
-Cleans up orphaned mount directories that are no longer in use.
-
-**Parameters:**
-- `progress`: Progress reporter for cleanup updates (optional)
-- `cancellationToken`: Cancellation token (optional)
-
-**Returns:** Task representing the cleanup operation
-
 ## Usage Examples
 
 ### Basic Unmount with Changes Saved
@@ -103,19 +91,12 @@ catch (Exception)
 await _unmountService.UnmountAllImagesAsync(saveChanges: true, progress);
 ```
 
-### Cleanup Orphaned Directories
-```csharp
-// Clean up orphaned mount directories
-await _unmountService.CleanupOrphanedMountsAsync(progress);
-```
-
 ## Features
 
 - **Save Changes Control**: Option to save or discard changes when unmounting
 - **Progress Reporting**: Detailed progress updates during unmount operations
 - **Force Unmount**: Emergency unmount capability for stuck mounts
 - **Batch Operations**: Ability to unmount all images at once
-- **Cleanup Operations**: Automatic cleanup of orphaned mount directories
 - **Error Handling**: Comprehensive error handling with specific error messages
 - **PowerShell Integration**: Uses native PowerShell Dismount-WindowsImage cmdlets
 
@@ -137,9 +118,8 @@ await _unmountService.CleanupOrphanedMountsAsync(progress);
 2. **Handle Cancellation**: Support cancellation tokens for responsive UI
 3. **Save Changes by Default**: Default to saving changes unless explicitly discarding
 4. **Use Force Unmount Sparingly**: Only use force unmount when normal unmount fails
-5. **Clean Up Regularly**: Periodically clean up orphaned mount directories
-6. **Error Handling**: Always wrap unmount operations in try-catch blocks
-7. **Refresh UI**: Refresh mounted images list after unmount operations
+5. **Error Handling**: Always wrap unmount operations in try-catch blocks
+6. **Refresh UI**: Refresh mounted images list after unmount operations
 
 ## Error Handling
 

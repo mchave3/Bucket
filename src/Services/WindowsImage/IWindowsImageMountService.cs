@@ -50,5 +50,11 @@ public interface IWindowsImageMountService
     /// <returns>The mount directory path.</returns>
     string GetMountDirectoryPath(string imagePath, int index);
 
-
+    /// <summary>
+    /// Cleans up orphaned mount directories that are not currently active.
+    /// </summary>
+    /// <param name="progress">Optional progress reporter.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the cleanup operation.</returns>
+    Task CleanupOrphanedMountDirectoriesAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default);
 } 

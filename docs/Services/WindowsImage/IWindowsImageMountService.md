@@ -75,6 +75,18 @@ Gets the mount directory path for a specific image and index.
 
 **Returns:** The mount directory path
 
+### CleanupOrphanedMountDirectoriesAsync
+```csharp
+Task CleanupOrphanedMountDirectoriesAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default);
+```
+Cleans up orphaned mount directories that are not currently active.
+
+**Parameters:**
+- `progress`: Optional progress reporter
+- `cancellationToken`: The cancellation token (optional)
+
+**Returns:** A task representing the cleanup operation
+
 ## Usage Examples
 
 ### Basic Mount Operation
@@ -116,6 +128,12 @@ foreach (var mount in mountedImages)
 ### Opening Mount Directory
 ```csharp
 await mountService.OpenMountDirectoryAsync(mountedImage);
+```
+
+### Cleaning Up Orphaned Directories
+```csharp
+var progress = new Progress<string>(message => Console.WriteLine(message));
+await mountService.CleanupOrphanedMountDirectoriesAsync(progress);
 ```
 
 ## Features

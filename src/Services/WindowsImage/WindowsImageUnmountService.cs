@@ -148,67 +148,7 @@ public class WindowsImageUnmountService : IWindowsImageUnmountService
         }
     }
 
-    /// <inheritdoc />
-    public async Task CleanupOrphanedMountsAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default)
-    {
-        Logger.Information("Starting cleanup of orphaned mount directories");
-        progress?.Report("Checking for orphaned mount directories...");
 
-        try
-        {
-            if (!Directory.Exists(Constants.MountDirectoryPath))
-            {
-                Logger.Debug("Mount directory does not exist, nothing to clean up");
-                return;
-            }
-
-            var mountedImages = await _mountService.GetMountedImagesAsync(cancellationToken);
-            var activeMountPaths = mountedImages.Select(m => m.MountPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var allMountDirectories = Directory.GetDirectories(Constants.MountDirectoryPath);
-            var orphanedDirectories = allMountDirectories.Where(dir => !activeMountPaths.Contains(dir)).ToList();
-
-            if (orphanedDirectories.Count == 0)
-            {
-                Logger.Information("No orphaned mount directories found");
-                progress?.Report("No orphaned directories found");
-                return;
-            }
-
-            Logger.Information("Found {Count} orphaned mount directories", orphanedDirectories.Count);
-
-            for (int i = 0; i < orphanedDirectories.Count; i++)
-            {
-                var orphanedDir = orphanedDirectories[i];
-                try
-                {
-                    progress?.Report($"Cleaning up: {Path.GetFileName(orphanedDir)}");
-                    
-                    if (Directory.GetFileSystemEntries(orphanedDir).Length == 0)
-                    {
-                        Directory.Delete(orphanedDir);
-                        Logger.Debug("Deleted empty orphaned directory: {Directory}", orphanedDir);
-                    }
-                    else
-                    {
-                        Logger.Warning("Orphaned directory is not empty, skipping: {Directory}", orphanedDir);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning(ex, "Failed to clean up orphaned directory: {Directory}", orphanedDir);
-                }
-            }
-
-            progress?.Report("Cleanup completed");
-            Logger.Information("Completed cleanup of orphaned mount directories");
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Failed to cleanup orphaned mount directories");
-            throw;
-        }
-    }
 
     #region Private Methods
 

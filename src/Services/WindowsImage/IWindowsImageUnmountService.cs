@@ -37,11 +37,5 @@ public interface IWindowsImageUnmountService
     /// <returns>A task representing the force unmount operation.</returns>
     Task ForceUnmountImageAsync(MountedImageInfo mountedImage, IProgress<string> progress = null, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Cleans up orphaned mount directories that are no longer in use.
-    /// </summary>
-    /// <param name="progress">The progress reporter with status messages.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task representing the cleanup operation.</returns>
-    Task CleanupOrphanedMountsAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default);
+
 } 

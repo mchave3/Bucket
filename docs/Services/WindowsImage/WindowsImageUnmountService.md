@@ -95,24 +95,6 @@ Forces the unmount of a Windows image, discarding any changes. Use when normal u
 
 **Warning:** This method discards all changes and forcibly removes directories.
 
-### CleanupOrphanedMountsAsync
-```csharp
-public async Task CleanupOrphanedMountsAsync(IProgress<string> progress = null, CancellationToken cancellationToken = default)
-```
-Cleans up orphaned mount directories that are no longer in use.
-
-**Process:**
-1. Checks if mount directory exists
-2. Gets list of currently mounted images
-3. Identifies directories not associated with active mounts
-4. Removes empty orphaned directories
-5. Skips non-empty directories for safety
-
-**Safety Features:**
-- **Conservative Approach**: Only deletes empty directories
-- **Active Mount Check**: Verifies directories are truly orphaned
-- **Error Handling**: Continues processing even if individual deletions fail
-
 ## Private Methods
 
 ### ExecutePowerShellCommandAsync
@@ -179,19 +161,12 @@ await unmountService.UnmountAllImagesAsync(
     new Progress<string>(msg => Console.WriteLine(msg)));
 ```
 
-### Cleanup Orphaned Directories
-```csharp
-await unmountService.CleanupOrphanedMountsAsync(
-    new Progress<string>(msg => Console.WriteLine(msg)));
-```
-
 ## Features
 
 - **Save/Discard Control**: Option to save or discard changes when unmounting
 - **Progress Reporting**: User-friendly progress updates during all operations (e.g., "Unmounting index 2 and saving changes...")
 - **Force Unmount**: Emergency unmount capability for stuck mounts
 - **Batch Operations**: Ability to unmount all images at once
-- **Cleanup Operations**: Automatic cleanup of orphaned mount directories
 - **Error Resilience**: Continues operation even when individual operations fail
 - **PowerShell Integration**: Uses native PowerShell Dismount-WindowsImage cmdlets
 - **Directory Management**: Safe and intelligent mount directory cleanup
@@ -222,7 +197,6 @@ await unmountService.CleanupOrphanedMountsAsync(
 1. **Save by Default**: Default to saving changes unless explicitly discarding
 2. **Force Unmount Sparingly**: Only use force unmount when normal unmount fails
 3. **Batch Processing**: Use UnmountAllImagesAsync for multiple images
-4. **Regular Cleanup**: Periodically run cleanup for orphaned directories
 
 ### Error Handling
 1. **Graceful Degradation**: Handle individual failures in batch operations

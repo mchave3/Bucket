@@ -63,6 +63,20 @@ namespace Bucket.ViewModels
         {
             try
             {
+                // Clean up orphaned mount directories on first load
+                if (MountedImages.Count == 0)
+                {
+                    try
+                    {
+                        await _mountService.CleanupOrphanedMountDirectoriesAsync();
+                        Logger.Debug("Orphaned mount directory cleanup completed");
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        Logger.Warning(cleanupEx, "Failed to cleanup orphaned mount directories during startup");
+                    }
+                }
+
                 var mountedImages = await _mountService.GetMountedImagesAsync();
                 
                 MountedImages.Clear();

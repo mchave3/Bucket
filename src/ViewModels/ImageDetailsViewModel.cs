@@ -453,9 +453,18 @@ public partial class ImageDetailsViewModel : ObservableObject
                 Logger.Information("Successfully mounted image: {ImagePath}, Index: {Index}", ImageInfo.FilePath, selectedIndex.Index);
             });
         }
+        catch (OperationCanceledException)
+        {
+            Logger.Information("Mount operation was cancelled by user");
+            // Refresh mounted images list to ensure UI state is correct after cancellation
+            await RefreshMountedImagesAsync();
+            // Don't show error dialog for user cancellation
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to mount image: {Name}", ImageInfo.Name);
+            // Refresh mounted images list to ensure UI state is correct after error
+            await RefreshMountedImagesAsync();
             await ShowErrorDialogAsync("Mount Error", $"Failed to mount image: {ex.Message}");
         }
     }
