@@ -108,19 +108,15 @@ public IAsyncRelayCommand MountImageCommand { get; }
 ```
 Command to mount the selected Windows edition. **Updated behavior**: Now works with single-selection mode using the `SelectedIndex` property.
 
-### UnmountImageCommand
-```csharp
-public IAsyncRelayCommand UnmountImageCommand { get; }
-```
-Command to unmount the mounted image with default save behavior (legacy command).
 
-### UnmountImageSaveCommand (New)
+
+### UnmountImageSaveCommand
 ```csharp
 public IAsyncRelayCommand UnmountImageSaveCommand { get; }
 ```
 Command to unmount the mounted image and **save all changes** to the WIM file. Executes PowerShell command `Dismount-WindowsImage -Save`.
 
-### UnmountImageDiscardCommand (New)
+### UnmountImageDiscardCommand
 ```csharp
 public IAsyncRelayCommand UnmountImageDiscardCommand { get; }
 ```

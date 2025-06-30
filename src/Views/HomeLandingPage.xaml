@@ -25,104 +25,136 @@
                             JsonNavigationService="{x:Bind local:App.Current.NavService}" />
 
         <!-- Mounted Images Section -->
-        <ScrollViewer Grid.Row="1" Margin="24,0,24,24">
-            <StackPanel Spacing="24">
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8"
-                        Padding="16">
-                    <StackPanel Spacing="12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" Margin="24,0,24,24">
+            <!-- Content when images are mounted -->
+            <ScrollViewer Visibility="{x:Bind ViewModel.ShowMountedImagesList, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Spacing="24">
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="8"
+                            Padding="16">
+                        <StackPanel Spacing="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
-                                       Text="Mounted Images"
-                                       Style="{StaticResource SubtitleTextBlockStyle}" />
+                                <TextBlock Grid.Column="0"
+                                           Text="Mounted Images"
+                                           Style="{StaticResource SubtitleTextBlockStyle}" />
 
-                            <Button Grid.Column="1"
-                                    Command="{x:Bind ViewModel.RefreshMountedImagesCommand}"
-                                    Style="{StaticResource DefaultButtonStyle}">
-                                <Button.Content>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" FontSize="16" />
-                                        <TextBlock Text="Refresh" />
-                                    </StackPanel>
-                                </Button.Content>
-                            </Button>
-                        </Grid>
+                                <Button Grid.Column="1"
+                                        Command="{x:Bind ViewModel.RefreshMountedImagesCommand}"
+                                        Style="{StaticResource DefaultButtonStyle}">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" FontSize="16" />
+                                            <TextBlock Text="Refresh" />
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                            </Grid>
 
-                        <!-- Mounted Images List -->
-                        <ItemsControl ItemsSource="{x:Bind ViewModel.MountedImages, Mode=OneWay}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:MountedImageInfo">
-                                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                            CornerRadius="4"
-                                            Padding="12"
-                                            Margin="0,4">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
+                            <!-- Mounted Images List -->
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.MountedImages, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MountedImageInfo">
+                                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                CornerRadius="4"
+                                                Padding="12"
+                                                Margin="0,4">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
 
-                                            <StackPanel Grid.Column="0" Spacing="4">
-                                                <TextBlock Text="{x:Bind DisplayText}"
-                                                           Style="{StaticResource BodyStrongTextBlockStyle}" />
-                                                <TextBlock Text="{x:Bind MountPath}"
-                                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                           IsTextSelectionEnabled="True" />
-                                                <TextBlock Text="{x:Bind FormattedMountTime}"
-                                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                            </StackPanel>
+                                                <StackPanel Grid.Column="0" Spacing="4">
+                                                    <TextBlock Text="{x:Bind DisplayText}"
+                                                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+                                                    <TextBlock Text="{x:Bind MountPath}"
+                                                               Style="{StaticResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                               IsTextSelectionEnabled="True" />
+                                                    <TextBlock Text="{x:Bind FormattedMountTime}"
+                                                               Style="{StaticResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                </StackPanel>
 
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                                                <Button Content="&#xE838;"
-                                                        FontFamily="Segoe Fluent Icons"
-                                                        ToolTipService.ToolTip="Open Mount Directory"
-                                                        Command="{Binding DataContext.OpenMountDirectoryCommand, ElementName=HomeLandingPageRoot}"
-                                                        CommandParameter="{x:Bind}"
-                                                        Style="{StaticResource SubtleButtonStyle}" />
-                                                <Button Content="&#xE7AC;"
-                                                        FontFamily="Segoe Fluent Icons"
-                                                        ToolTipService.ToolTip="Unmount"
-                                                        Command="{Binding DataContext.UnmountImageCommand, ElementName=HomeLandingPageRoot}"
-                                                        CommandParameter="{x:Bind}"
-                                                        Style="{StaticResource SubtleButtonStyle}" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                                <CommandBar Grid.Column="1" 
+                                                            Background="Transparent"
+                                                            DefaultLabelPosition="Right"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center">
+                                                    <AppBarButton Label="Open" 
+                                                                  Command="{Binding DataContext.OpenMountDirectoryCommand, ElementName=HomeLandingPageRoot}"
+                                                                  CommandParameter="{x:Bind}"
+                                                                  ToolTipService.ToolTip="Open Mount Directory">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE838;" />
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton Label="Save" 
+                                                                  Command="{Binding DataContext.UnmountImageSaveCommand, ElementName=HomeLandingPageRoot}"
+                                                                  CommandParameter="{x:Bind}"
+                                                                  ToolTipService.ToolTip="Unmount and Save Changes">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F7;" />
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                    <AppBarButton Label="Discard" 
+                                                                  Command="{Binding DataContext.UnmountImageDiscardCommand, ElementName=HomeLandingPageRoot}"
+                                                                  CommandParameter="{x:Bind}"
+                                                                  ToolTipService.ToolTip="Unmount and Discard Changes">
+                                                        <AppBarButton.Icon>
+                                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8F6;" />
+                                                        </AppBarButton.Icon>
+                                                    </AppBarButton>
+                                                </CommandBar>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
-                        <!-- Empty State -->
-                        <Border Visibility="{x:Bind ViewModel.MountedImages.Count, Mode=OneWay, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Reverse}"
-                                Background="{ThemeResource SubtleFillColorTertiaryBrush}"
-                                CornerRadius="4"
-                                Padding="16">
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <FontIcon FontFamily="Segoe Fluent Icons" 
-                                          Glyph="&#xE7C3;" 
-                                          FontSize="48"
-                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="No images are currently mounted"
-                                           Style="{StaticResource BodyTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           HorizontalAlignment="Center" />
-                                <TextBlock Text="Go to Image Management to mount Windows images"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                           HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+            <!-- Empty State - Full Height -->
+            <Grid Visibility="{x:Bind ViewModel.ShowEmptyState, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <!-- Refresh button in top-right corner -->
+                <Button HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Command="{x:Bind ViewModel.RefreshMountedImagesCommand}"
+                        Style="{StaticResource DefaultButtonStyle}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" FontSize="16" />
+                            <TextBlock Text="Refresh" />
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                
+                <!-- Centered empty state content -->
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="16"
+                            MaxWidth="400">
+                    <FontIcon Glyph="&#xE7C3;"
+                              FontSize="48"
+                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Text="No images are currently mounted"
+                               Style="{StaticResource SubtitleTextBlockStyle}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Go to Image Management to mount Windows images and they will appear here."
+                               Style="{StaticResource BodyTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>
 

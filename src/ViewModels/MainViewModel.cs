@@ -23,8 +23,23 @@ namespace Bucket.ViewModels
         public ObservableCollection<MountedImageInfo> MountedImages
         {
             get => _mountedImages;
-            set => SetProperty(ref _mountedImages, value);
+            set
+            {
+                SetProperty(ref _mountedImages, value);
+                OnPropertyChanged(nameof(ShowEmptyState));
+                OnPropertyChanged(nameof(ShowMountedImagesList));
+            }
         }
+
+        /// <summary>
+        /// Gets whether the empty state should be shown (no mounted images).
+        /// </summary>
+        public bool ShowEmptyState => MountedImages.Count == 0;
+
+        /// <summary>
+        /// Gets whether the mounted images list should be shown (has mounted images).
+        /// </summary>
+        public bool ShowMountedImagesList => MountedImages.Count > 0;
 
         /// <summary>
         /// Gets the command to refresh mounted images.
@@ -36,10 +51,17 @@ namespace Bucket.ViewModels
         /// </summary>
         public IAsyncRelayCommand<MountedImageInfo> OpenMountDirectoryCommand { get; }
 
+
+
         /// <summary>
-        /// Gets the command to unmount an image.
+        /// Gets the command to unmount an image and save changes.
         /// </summary>
-        public IAsyncRelayCommand<MountedImageInfo> UnmountImageCommand { get; }
+        public IAsyncRelayCommand<MountedImageInfo> UnmountImageSaveCommand { get; }
+
+        /// <summary>
+        /// Gets the command to unmount an image and discard changes.
+        /// </summary>
+        public IAsyncRelayCommand<MountedImageInfo> UnmountImageDiscardCommand { get; }
 
         public MainViewModel(IWindowsImageMountService mountService, IWindowsImageUnmountService unmountService)
         {
@@ -48,7 +70,8 @@ namespace Bucket.ViewModels
             
             RefreshMountedImagesCommand = new AsyncRelayCommand(RefreshMountedImagesAsync);
             OpenMountDirectoryCommand = new AsyncRelayCommand<MountedImageInfo>(OpenMountDirectoryAsync);
-            UnmountImageCommand = new AsyncRelayCommand<MountedImageInfo>(UnmountImageAsync);
+            UnmountImageSaveCommand = new AsyncRelayCommand<MountedImageInfo>(UnmountImageSaveAsync);
+            UnmountImageDiscardCommand = new AsyncRelayCommand<MountedImageInfo>(UnmountImageDiscardAsync);
 
             Logger.Debug("MainViewModel initialized");
             
@@ -84,6 +107,10 @@ namespace Bucket.ViewModels
                 {
                     MountedImages.Add(mount);
                 }
+                
+                // Notify UI that the empty state might have changed
+                OnPropertyChanged(nameof(ShowEmptyState));
+                OnPropertyChanged(nameof(ShowMountedImagesList));
 
                 Logger.Information("Refreshed mounted images: {Count} images found", mountedImages.Count);
             }
@@ -112,35 +139,16 @@ namespace Bucket.ViewModels
             }
         }
 
-        /// <summary>
-        /// Unmounts a mounted image.
-        /// </summary>
-        private async Task UnmountImageAsync(MountedImageInfo mountedImage)
-        {
-            if (mountedImage == null) return;
 
-            try
-            {
-                Logger.Information("Starting unmount operation for image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
-                
-                // Show progress dialog and perform unmount operation
-                await ShowUnmountProgressDialogAsync(mountedImage);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Failed to unmount image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
-                await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// Shows a progress dialog for unmount operation.
         /// </summary>
-        private async Task ShowUnmountProgressDialogAsync(MountedImageInfo mountedImage)
+        private async Task ShowUnmountProgressDialogAsync(MountedImageInfo mountedImage, bool saveChanges = true, string title = "Unmounting Image")
         {
             var progressDialog = new ContentDialog
             {
-                Title = "Unmounting Image",
+                Title = title,
                 Content = new StackPanel
                 {
                     Spacing = 12,
@@ -172,7 +180,7 @@ namespace Bucket.ViewModels
             {
                 try
                 {
-                    await _unmountService.UnmountImageAsync(mountedImage, true);
+                    await _unmountService.UnmountImageAsync(mountedImage, saveChanges);
                     return true;
                 }
                 catch
@@ -193,14 +201,57 @@ namespace Bucket.ViewModels
             if (success)
             {
                 await RefreshMountedImagesAsync(); // Refresh the list
-                Logger.Information("Successfully unmounted image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
+                Logger.Information("Successfully unmounted image: {ImagePath}, Index: {Index}, SaveChanges: {SaveChanges}", mountedImage.ImagePath, mountedImage.Index, saveChanges);
                 
                 // Show success message
-                await ShowInfoDialogAsync("Unmount Successful", "The image has been unmounted successfully.");
+                var successMessage = saveChanges ? "The image has been unmounted and changes have been saved." : "The image has been unmounted and changes have been discarded.";
+                await ShowInfoDialogAsync("Unmount Successful", successMessage);
             }
             else
             {
                 throw new InvalidOperationException("Unmount operation failed.");
+            }
+        }
+
+        /// <summary>
+        /// Unmounts a mounted image and saves changes.
+        /// </summary>
+        private async Task UnmountImageSaveAsync(MountedImageInfo mountedImage)
+        {
+            if (mountedImage == null) return;
+
+            try
+            {
+                Logger.Information("Starting unmount save operation for image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
+                
+                // Show progress dialog and perform unmount operation with save
+                await ShowUnmountProgressDialogAsync(mountedImage, true, "Unmounting and Saving Changes");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to unmount and save image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
+                await ShowErrorDialogAsync("Unmount Save Error", $"Failed to unmount and save image: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Unmounts a mounted image and discards changes.
+        /// </summary>
+        private async Task UnmountImageDiscardAsync(MountedImageInfo mountedImage)
+        {
+            if (mountedImage == null) return;
+
+            try
+            {
+                Logger.Information("Starting unmount discard operation for image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
+                
+                // Show progress dialog and perform unmount operation without save
+                await ShowUnmountProgressDialogAsync(mountedImage, false, "Unmounting and Discarding Changes");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to unmount and discard image: {ImagePath}, Index: {Index}", mountedImage.ImagePath, mountedImage.Index);
+                await ShowErrorDialogAsync("Unmount Discard Error", $"Failed to unmount and discard image: {ex.Message}");
             }
         }
 

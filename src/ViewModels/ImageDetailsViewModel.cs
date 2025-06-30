@@ -117,7 +117,7 @@ public partial class ImageDetailsViewModel : ObservableObject
         SelectNoIndicesCommand = new RelayCommand(SelectNoIndices);
         ApplyUpdatesCommand = new AsyncRelayCommand(ApplyUpdatesAsync);
         MountImageCommand = new AsyncRelayCommand(MountImageAsync);
-        UnmountImageCommand = new AsyncRelayCommand(UnmountImageAsync);
+        
         UnmountImageSaveCommand = new AsyncRelayCommand(UnmountImageSaveAsync);
         UnmountImageDiscardCommand = new AsyncRelayCommand(UnmountImageDiscardAsync);
         OpenMountDirectoryCommand = new AsyncRelayCommand(OpenMountDirectoryAsync);
@@ -164,10 +164,7 @@ public partial class ImageDetailsViewModel : ObservableObject
     /// </summary>
     public IAsyncRelayCommand MountImageCommand { get; }
 
-    /// <summary>
-    /// Gets the command to unmount the image.
-    /// </summary>
-    public IAsyncRelayCommand UnmountImageCommand { get; }
+    
 
     /// <summary>
     /// Gets the command to unmount the image and save changes.
@@ -469,69 +466,7 @@ public partial class ImageDetailsViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Unmounts the selected mounted image.
-    /// </summary>
-    private async Task UnmountImageAsync()
-    {
-        if (ImageInfo == null) return;
 
-        try
-        {
-            var mountedImages = MountedImages.ToList();
-            if (mountedImages.Count == 0)
-            {
-                await ShowInfoDialogAsync("No Mounted Images",
-                    "There are no mounted images for this WIM file.");
-                return;
-            }
-
-            MountedImageInfo selectedMount = null;
-            if (mountedImages.Count == 1)
-            {
-                selectedMount = mountedImages.First();
-            }
-            else
-            {
-                // Show selection dialog for multiple mounts
-                var selectDialog = new Views.Dialogs.SelectMountDialog(mountedImages);
-                
-                // Get XamlRoot from the main window
-                if (App.MainWindow?.Content is FrameworkElement element)
-                {
-                    selectDialog.XamlRoot = element.XamlRoot;
-                }
-                
-                var result = await selectDialog.ShowAsync();
-                
-                if (result != ContentDialogResult.Primary || selectDialog.SelectedMount == null)
-                {
-                    Logger.Debug("User cancelled mount selection or no mount selected");
-                    return;
-                }
-                
-                selectedMount = selectDialog.SelectedMount;
-                Logger.Information("User selected mount for unmounting: Index {Index}, Path: {MountPath}", 
-                    selectedMount.Index, selectedMount.MountPath);
-            }
-
-            await ShowEditProgressDialogAsync("Unmount Image", async (progress, cancellationToken) =>
-            {
-                await _unmountService.UnmountImageAsync(selectedMount, true, progress, cancellationToken);
-
-                // Refresh mounted images list
-                await RefreshMountedImagesAsync();
-
-                progress?.Report("Successfully unmounted image");
-                Logger.Information("Successfully unmounted image: {ImagePath}, Index: {Index}", selectedMount.ImagePath, selectedMount.Index);
-            });
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Failed to unmount image: {Name}", ImageInfo.Name);
-            await ShowErrorDialogAsync("Unmount Error", $"Failed to unmount image: {ex.Message}");
-        }
-    }
 
     /// <summary>
     /// Unmounts the selected mounted image and saves changes.

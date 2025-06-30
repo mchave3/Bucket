@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `MainViewModel` class serves as the primary view model for the main window of the Bucket application. It manages mounted Windows images and provides functionality for viewing, unmounting, and opening mount directories. This ViewModel follows MVVM architecture patterns and integrates with specialized Windows image services.
+The `MainViewModel` class serves as the primary view model for the home landing page of the Bucket application. It manages mounted Windows images and provides functionality for viewing, unmounting (with save/discard options), and opening mount directories. This ViewModel follows MVVM architecture patterns and integrates with specialized Windows image services.
 
 ## Location
 
@@ -20,14 +20,36 @@ public partial class MainViewModel : ObservableObject
 ### MountedImages
 
 ```csharp
-[ObservableProperty]
-private ObservableCollection<MountedImageInfo> mountedImages = new();
+public ObservableCollection<MountedImageInfo> MountedImages { get; set; }
 ```
 
 - **Type**: `ObservableCollection<MountedImageInfo>`
 - **Purpose**: Collection of currently mounted Windows images
-- **Access**: Public (via generated property)
+- **Access**: Public with automatic property change notifications
 - **Binding**: Supports two-way data binding for UI lists
+- **Auto-update**: Notifies `ShowEmptyState` and `ShowMountedImagesList` on changes
+
+### ShowEmptyState
+
+```csharp
+public bool ShowEmptyState => MountedImages.Count == 0;
+```
+
+- **Type**: `bool`
+- **Purpose**: Determines whether to show the empty state UI when no images are mounted
+- **Access**: Read-only computed property
+- **Usage**: Used for conditional visibility of empty state message
+
+### ShowMountedImagesList
+
+```csharp
+public bool ShowMountedImagesList => MountedImages.Count > 0;
+```
+
+- **Type**: `bool`
+- **Purpose**: Determines whether to show the mounted images list
+- **Access**: Read-only computed property
+- **Usage**: Used for conditional visibility of the images list UI
 
 ## Commands
 
@@ -40,6 +62,7 @@ public IAsyncRelayCommand RefreshMountedImagesCommand { get; }
 - **Purpose**: Refreshes the list of mounted Windows images
 - **Type**: Async command without parameters
 - **Implementation**: Calls `RefreshMountedImagesAsync()`
+- **Features**: Includes orphaned mount directory cleanup on first load
 
 ### OpenMountDirectoryCommand
 
@@ -51,15 +74,27 @@ public IAsyncRelayCommand<MountedImageInfo> OpenMountDirectoryCommand { get; }
 - **Type**: Async command with `MountedImageInfo` parameter
 - **Implementation**: Calls `OpenMountDirectoryAsync(MountedImageInfo)`
 
-### UnmountImageCommand
+### UnmountImageSaveCommand
 
 ```csharp
-public IAsyncRelayCommand<MountedImageInfo> UnmountImageCommand { get; }
+public IAsyncRelayCommand<MountedImageInfo> UnmountImageSaveCommand { get; }
 ```
 
-- **Purpose**: Unmounts a specific Windows image with progress dialog
+- **Purpose**: Unmounts a specific Windows image while saving changes
 - **Type**: Async command with `MountedImageInfo` parameter
-- **Implementation**: Calls `UnmountImageAsync(MountedImageInfo)`
+- **Implementation**: Calls `UnmountImageSaveAsync(MountedImageInfo)`
+- **Features**: Shows progress dialog with "Unmounting and Saving Changes" title
+
+### UnmountImageDiscardCommand
+
+```csharp
+public IAsyncRelayCommand<MountedImageInfo> UnmountImageDiscardCommand { get; }
+```
+
+- **Purpose**: Unmounts a specific Windows image while discarding changes
+- **Type**: Async command with `MountedImageInfo` parameter
+- **Implementation**: Calls `UnmountImageDiscardAsync(MountedImageInfo)`
+- **Features**: Shows progress dialog with "Unmounting and Discarding Changes" title
 
 ## Constructor
 
@@ -69,12 +104,13 @@ public MainViewModel(IWindowsImageMountService mountService, IWindowsImageUnmoun
 
 **Parameters:**
 - `mountService`: Service for mounting operations and retrieving mounted images
-- `unmountService`: Service for unmounting operations
+- `unmountService`: Service for unmounting operations with save/discard options
 
 **Features:**
 - Dependency injection of specialized services
 - Automatic loading of mounted images on startup
 - Command initialization
+- Parameter validation with `ArgumentNullException`
 
 ## Usage Examples
 
@@ -99,32 +135,36 @@ public sealed partial class HomeLandingPage : Page
 ```xml
 <!-- Refresh button -->
 <Button Content="Refresh" 
-        Command="{Binding RefreshMountedImagesCommand}" />
+        Command="{x:Bind ViewModel.RefreshMountedImagesCommand}" />
 
-<!-- Open folder button for specific image -->
-<Button Content="Open Folder"
-        Command="{Binding DataContext.OpenMountDirectoryCommand, ElementName=PageRoot}"
-        CommandParameter="{x:Bind}" />
-
-<!-- Unmount button for specific image -->
-<Button Content="Unmount"
-        Command="{Binding DataContext.UnmountImageCommand, ElementName=PageRoot}"
-        CommandParameter="{x:Bind}" />
+<!-- CommandBar with actions for each image -->
+<CommandBar Background="Transparent" DefaultLabelPosition="Right">
+    <AppBarButton Label="Open" 
+                  Command="{Binding DataContext.OpenMountDirectoryCommand, ElementName=PageRoot}"
+                  CommandParameter="{x:Bind}" />
+    <AppBarButton Label="Save" 
+                  Command="{Binding DataContext.UnmountImageSaveCommand, ElementName=PageRoot}"
+                  CommandParameter="{x:Bind}" />
+    <AppBarButton Label="Discard" 
+                  Command="{Binding DataContext.UnmountImageDiscardCommand, ElementName=PageRoot}"
+                  CommandParameter="{x:Bind}" />
+</CommandBar>
 ```
 
-### Data Binding for Image List
+### Data Binding with Empty State
 
 ```xml
-<ListView ItemsSource="{Binding MountedImages}">
-    <ListView.ItemTemplate>
-        <DataTemplate x:DataType="models:MountedImageInfo">
-            <Grid>
-                <TextBlock Text="{x:Bind DisplayText}" />
-                <TextBlock Text="{x:Bind MountPath}" />
-            </Grid>
-        </DataTemplate>
-    </ListView.ItemTemplate>
-</ListView>
+<!-- Mounted images list -->
+<ItemsControl ItemsSource="{x:Bind ViewModel.MountedImages, Mode=OneWay}"
+              Visibility="{x:Bind ViewModel.ShowMountedImagesList, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+    <!-- Item template -->
+</ItemsControl>
+
+<!-- Empty state -->
+<StackPanel Visibility="{x:Bind ViewModel.ShowEmptyState, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+    <FontIcon Glyph="&#xE7C3;" />
+    <TextBlock Text="No images are currently mounted" />
+</StackPanel>
 ```
 
 ## Features
@@ -133,35 +173,34 @@ public sealed partial class HomeLandingPage : Page
 
 1. **Automatic Refresh**: Loads mounted images on ViewModel initialization
 2. **Real-time Updates**: Refreshes image list after unmount operations
-3. **Error Handling**: Comprehensive error handling with user-friendly dialogs
-4. **Progress Reporting**: Shows progress dialogs during long-running operations
+3. **Orphaned Cleanup**: Cleans up orphaned mount directories on first load
+4. **Dual Unmount Options**: Separate commands for save and discard operations
 
 ### User Interface Integration
 
 1. **Command Pattern**: All operations exposed as bindable commands
 2. **Observable Collections**: Automatic UI updates when image list changes
 3. **Parameter Binding**: Commands accept specific image parameters
-4. **Dialog Management**: Handles progress and error dialogs
+4. **State Management**: Properties for controlling UI visibility
 
-### Service Integration
+### Progress and Error Handling
 
-1. **Mount Service**: Uses `IWindowsImageMountService` for querying and directory operations
-2. **Unmount Service**: Uses `IWindowsImageUnmountService` for dismounting operations
-3. **Dependency Injection**: Services injected via constructor
-4. **Service Coordination**: Coordinates between mount and unmount services
+1. **Progress Dialogs**: Shows indeterminate progress for long operations
+2. **Custom Titles**: Different dialog titles for save vs discard operations
+3. **Success Messages**: Differentiated success messages based on operation type
+4. **Error Dialogs**: User-friendly error messages with operation context
 
 ## Dependencies
 
 ### Core Dependencies
 
 - **CommunityToolkit.Mvvm**: MVVM infrastructure and source generators
-- **Microsoft.UI.Xaml**: WinUI 3 framework for dialogs
-- **Bucket.Services.WindowsImage**: Windows image management services
+- **Microsoft.UI.Xaml**: WinUI 3 framework for dialogs and UI elements
 
 ### Service Dependencies
 
-- **IWindowsImageMountService**: Mount operations and image querying
-- **IWindowsImageUnmountService**: Unmount operations
+- **IWindowsImageMountService**: Mount operations, image querying, and directory operations
+- **IWindowsImageUnmountService**: Unmount operations with save/discard options
 
 ### Model Dependencies
 
@@ -176,8 +215,9 @@ private async Task RefreshMountedImagesAsync()
 ```
 
 - **Purpose**: Retrieves current mounted images and updates the collection
+- **Features**: Orphaned mount directory cleanup on first load
 - **Error Handling**: Logs errors but doesn't throw exceptions
-- **Performance**: Clears and repopulates collection efficiently
+- **Notifications**: Updates `ShowEmptyState` and `ShowMountedImagesList` properties
 
 ### OpenMountDirectoryAsync
 
@@ -189,93 +229,42 @@ private async Task OpenMountDirectoryAsync(MountedImageInfo mountedImage)
 - **Validation**: Checks for null parameters
 - **Error Handling**: Shows error dialog if operation fails
 
-### UnmountImageAsync
+### UnmountImageSaveAsync
 
 ```csharp
-private async Task UnmountImageAsync(MountedImageInfo mountedImage)
+private async Task UnmountImageSaveAsync(MountedImageInfo mountedImage)
 ```
 
-- **Purpose**: Unmounts image with progress dialog and error handling
-- **Features**:
-  - Progress dialog with indeterminate progress bar
-  - Automatic list refresh after successful unmount
-  - Error dialog for failures
-  - Comprehensive logging
+- **Purpose**: Unmounts image while saving changes
+- **Features**: Custom progress dialog title and logging
+- **Error Handling**: Specific error dialog for save operations
+
+### UnmountImageDiscardAsync
+
+```csharp
+private async Task UnmountImageDiscardAsync(MountedImageInfo mountedImage)
+```
+
+- **Purpose**: Unmounts image while discarding changes
+- **Features**: Custom progress dialog title and logging
+- **Error Handling**: Specific error dialog for discard operations
 
 ### ShowUnmountProgressDialogAsync
 
 ```csharp
-private async Task ShowUnmountProgressDialogAsync(MountedImageInfo mountedImage)
+private async Task ShowUnmountProgressDialogAsync(MountedImageInfo mountedImage, bool saveChanges = true, string title = "Unmounting Image")
 ```
 
-- **Purpose**: Shows progress dialog during unmount operation
-- **Features**:
+- **Purpose**: Shows progress dialog and performs unmount operation
+- **Parameters**: 
+  - `saveChanges`: Whether to save or discard changes
+  - `title`: Custom dialog title
+- **Features**: 
   - Indeterminate progress bar
-  - Cancel button support
-  - Automatic dialog closure on completion
-
-### Dialog Helper Methods
-
-- `ShowErrorDialogAsync`: Displays error messages to user
-- `ShowInfoDialogAsync`: Displays informational messages
-
-## Related Files
-
-- [`IWindowsImageMountService.md`](../Services/WindowsImage/IWindowsImageMountService.md) - Mount service interface
-- [`IWindowsImageUnmountService.md`](../Services/WindowsImage/IWindowsImageUnmountService.md) - Unmount service interface
-- [`MountedImageInfo.md`](../Models/MountedImageInfo.md) - Mounted image model
-- [`HomeLandingPage.md`](../Views/HomeLandingPage.md) - Main page using this ViewModel
-
-## Best Practices
-
-### ViewModel Design
-
-1. **Service Injection**: Use constructor injection for all dependencies
-2. **Command Pattern**: Expose all operations as commands for UI binding
-3. **Error Handling**: Always provide user feedback for errors
-4. **Logging**: Log all operations for debugging and monitoring
-
-### UI Integration
-
-1. **DataContext Setting**: Always set DataContext in code-behind
-2. **Command Binding**: Use proper ElementName binding for commands with parameters
-3. **Progress Feedback**: Show progress for long-running operations
-4. **Error Display**: Use dialogs for error communication
-
-### Performance
-
-1. **Async Operations**: All file/service operations are async
-2. **Collection Updates**: Efficient collection management
-3. **Resource Cleanup**: Proper disposal of resources
-4. **Background Loading**: Initial data loading doesn't block UI
-
-## Error Handling
-
-### Common Scenarios
-
-- **Service Unavailable**: Handles cases where services fail to initialize
-- **Mount Operation Failures**: Comprehensive error reporting for mount/unmount failures
-- **Permission Issues**: Handles administrator privilege requirements
-- **File System Errors**: Graceful handling of file system access issues
-
-### Error Recovery
-
-- **Retry Mechanisms**: Users can retry operations via refresh command
-- **Graceful Degradation**: Application continues functioning even if some operations fail
-- **User Feedback**: Clear error messages guide users to solutions
-
-## Security Considerations
-
-- **Path Validation**: All mount paths are validated before operations
-- **Privilege Escalation**: Handles administrator privilege requirements appropriately
-- **File System Access**: Validates permissions before file operations
-
-## Performance Considerations
-
-- **Lazy Loading**: Images loaded only when needed
-- **Efficient Updates**: Collection updates minimize UI redraws
-- **Background Operations**: Long-running operations don't block UI thread
-- **Memory Management**: Proper disposal of resources and event handlers
+  - Background task execution
+  - Automatic dialog closure
+  - Success/failure handling
+  - Differentiated success messages
 
 ---
 
