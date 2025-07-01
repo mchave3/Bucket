@@ -1,12 +1,12 @@
-# 📋 Cahier des charges : Intégration du module MSCatalogLTS
+# 📋 Specifications: Native C# Implementation of the Microsoft Update Catalog Service
 
-## 🎯 Objectif du projet
+## 🎯 Project Objective
 
-Intégrer le module PowerShell MSCatalogLTS dans l'application WinUI 3 Bucket en créant une nouvelle page "Microsoft Update Catalog" qui permettra aux utilisateurs de rechercher, visualiser et télécharger les mises à jour Windows directement depuis l'interface graphique.
+Rewrite the functionality of the PowerShell module MSCatalogLTS as a native C# service within the WinUI 3 Bucket application. The new "Microsoft Update Catalog" page will allow users to search, view, and download Windows updates directly from the graphical interface, using a fully managed C# implementation with no dependency on PowerShell scripts or modules.
 
-## 📐 Architecture technique
+## 📐 Technical Architecture
 
-### 🏗️ Structure des fichiers à créer
+### 🏗️ File Structure to Create
 
 ```
 src/
@@ -34,9 +34,9 @@ docs/
         └── MSCatalogService.md
 ```
 
-## 🎨 Conception de l'interface utilisateur
+## 🎨 User Interface Design
 
-### 📱 Disposition de la page proposée
+### 📱 Proposed Page Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -89,44 +89,17 @@ docs/
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 🎛️ Composants d'interface détaillés
+### 🎛️ Detailed Interface Components
 
-#### 1. **Search Panel** (Panneau de recherche)
-- **RadioButtons** : Choix entre "Search Query" et "Operating System"
-- **Mode Search Query** :
-  - TextBox pour la requête de recherche
-  - CheckBox "Strict Search" et "All Pages"
-  - Button "Search" avec icône de recherche
-- **Mode Operating System** :
-  - ComboBox pour OS (Windows 10, Windows 11, Windows Server)
-  - ComboBox pour Version (22H2, 23H2, 24H2, etc.)
-  - ComboBox pour Update Type (Cumulative, Security, etc.)
-  - ComboBox pour Architecture (All, x64, x86, ARM64)
+- **Search Panel**: RadioButtons for mode, TextBox, ComboBoxes, CheckBoxes, Search button.
+- **Filters Panel**: Advanced options, DatePickers, NumberBoxes.
+- **Results Panel**: DataGrid with actions, sorting, selection, group actions.
+- **Status Panel**: Status indicator, progress bar, cancel button.
 
-#### 2. **Filters Panel** (Panneau de filtres)
-- CheckBoxes pour options avancées
-- DatePickers pour plage de dates
-- NumberBoxes pour taille min/max
+## 🔧 Technical Specifications
 
-#### 3. **Results Panel** (Panneau de résultats)
-- **Header** : Compteur de résultats et options de tri
-- **DataGrid** avec colonnes :
-  - Title (avec boutons d'action)
-  - Classification
-  - Date
-  - Size
-- **Footer** : Actions groupées
+### 📊 Data Models
 
-#### 4. **Status Panel** (Panneau de statut)
-- Indicateur de statut
-- Barre de progression pour téléchargements
-- Bouton d'annulation
-
-## 🔧 Spécifications techniques
-
-### 📊 Modèles de données
-
-#### MSCatalogUpdate.cs
 ```csharp
 public class MSCatalogUpdate
 {
@@ -141,10 +114,7 @@ public class MSCatalogUpdate
     public string[] FileNames { get; set; }
     public bool IsSelected { get; set; }
 }
-```
 
-#### MSCatalogSearchRequest.cs
-```csharp
 public class MSCatalogSearchRequest
 {
     public SearchMode Mode { get; set; }
@@ -174,7 +144,7 @@ public enum SearchMode
 }
 ```
 
-### 🔌 Service d'intégration
+### 🔌 Integration Service
 
 #### IMSCatalogService.cs
 ```csharp
@@ -187,9 +157,10 @@ public interface IMSCatalogService
 }
 ```
 
+**All logic for searching, HTML parsing, downloading, and Excel export must be implemented natively in C# using .NET libraries such as HttpClient, HtmlAgilityPack for .NET, and EPPlus or ClosedXML for Excel export. There must be no dependency on PowerShell, PowerShell modules, or script execution.**
+
 ### 🎭 ViewModel
 
-#### MicrosoftUpdateCatalogViewModel.cs - Propriétés principales
 ```csharp
 [ObservableProperty] private SearchMode selectedSearchMode;
 [ObservableProperty] private string searchQuery;
@@ -216,7 +187,7 @@ public interface IMSCatalogService
 [ObservableProperty] private bool canCancel;
 ```
 
-#### Commandes principales
+**Main Commands:**
 ```csharp
 public IAsyncRelayCommand SearchCommand { get; }
 public IAsyncRelayCommand<MSCatalogUpdate> DownloadUpdateCommand { get; }
@@ -227,11 +198,11 @@ public IRelayCommand ClearSelectionCommand { get; }
 public IRelayCommand CancelCommand { get; }
 ```
 
-## 🔗 Intégration dans l'application
+## 🔗 Application Integration
 
 ### 📍 Navigation
 
-#### Modification de `AppData.json`
+#### Edit `AppData.json`
 ```json
 {
   "UniqueId": "Bucket.Views.MicrosoftUpdateCatalogPage",
@@ -242,176 +213,99 @@ public IRelayCommand CancelCommand { get; }
 }
 ```
 
-#### Ajout dans les mappings T4
-- `NavigationPageMappings.tt` : Ajout de la page
-- `BreadcrumbPageMappings.tt` : Configuration du breadcrumb
+### 🔧 Dependency Injection
 
-### 🔧 Injection de dépendances
-
-#### Modification de `App.xaml.cs`
+#### Edit `App.xaml.cs`
 ```csharp
-// Dans ConfigureServices()
+// In ConfigureServices()
 services.AddTransient<MicrosoftUpdateCatalogViewModel>();
 services.AddSingleton<IMSCatalogService, MSCatalogService>();
 ```
 
-## 📋 Fonctionnalités détaillées
+## 📋 Detailed Features
 
-### 🔍 Recherche
-1. **Mode Search Query** : Recherche libre avec support des mots-clés
-2. **Mode Operating System** : Recherche guidée par OS/Version/Type
-3. **Filtres avancés** : Dates, tailles, types spéciaux
-4. **Recherche stricte** : Correspondance exacte
-5. **Pagination** : Support de toutes les pages
+- **Search**: Query mode, OS mode, advanced filters, strict search, pagination.
+- **Results Display**: Sortable table, multi-selection, row actions, result counter.
+- **Download**: Individual and batch, real-time progress, cancellation, error handling.
+- **Export**: Excel export, selective export, full metadata.
 
-### 📊 Affichage des résultats
-1. **Table triable** : Tri par colonne avec indicateurs visuels
-2. **Sélection multiple** : CheckBoxes pour sélection groupée
-3. **Actions par ligne** : Détails, téléchargement, export
-4. **Compteur de résultats** : Nombre total et sélectionnés
+## 🎨 Design and UX
 
-### 💾 Téléchargement
-1. **Téléchargement individuel** : Un update à la fois
-2. **Téléchargement groupé** : Plusieurs updates sélectionnés
-3. **Progression en temps réel** : Barre de progression et pourcentage
-4. **Annulation** : Possibilité d'annuler les téléchargements
-5. **Gestion des erreurs** : Messages d'erreur explicites
+- Light/dark themes, Fluent icons, consistent with Bucket.
+- Responsive design, resizable panels, touch-friendly.
+- Accessibility: screen reader, keyboard navigation, contrast, tooltips.
 
-### 📤 Export
-1. **Export Excel** : Génération de fichiers .xlsx
-2. **Export sélectif** : Uniquement les éléments sélectionnés
-3. **Métadonnées complètes** : Toutes les propriétés des updates
+## 🔒 Security and Performance
 
-## 🎨 Design et UX
+- Input validation, secure download, file path verification, permission checks.
+- Async search, background downloads, caching, pagination, cancellation.
 
-### 🎭 Thèmes
-- Support des thèmes clair/sombre de l'application
-- Icônes Fluent Design System
-- Cohérence avec le design existant de Bucket
+## 📝 Error Handling
 
-### 📱 Responsive Design
-- Adaptation aux différentes tailles d'écran
-- Panels redimensionnables si nécessaire
-- Navigation tactile friendly
+- Network errors, service errors, file errors, validation errors.
+- Clear user messages, suggestions, logs, toast notifications.
 
-### ♿ Accessibilité
-- Support des lecteurs d'écran
-- Navigation au clavier
-- Contrastes appropriés
-- Tooltips explicatifs
+## 📦 Default Storage Location for Downloads
 
-## 🔒 Sécurité et performance
+**Default base folder:**  
+`C:\ProgramData\Bucket\Updates`
 
-### 🛡️ Sécurité
-- Validation des entrées utilisateur
-- Gestion sécurisée des téléchargements
-- Vérification des chemins de fichiers
-- Gestion des permissions d'écriture
+**Folder structure logic:**  
+For each downloaded update, the application must create a subfolder hierarchy based on the update's metadata:
 
-### ⚡ Performance
-- Recherche asynchrone non-bloquante
-- Téléchargements en arrière-plan
-- Cache des résultats de recherche
-- Pagination pour les gros résultats
-- Annulation des opérations longues
+- **Level 1:** Operating System (e.g., `Windows 11`)
+- **Level 2:** Version (e.g., `24H2`)
+- **Level 3:** Update Type (e.g., `Cumulative Updates`, `Security Updates`, etc.)
 
-## 📝 Gestion des erreurs
+**Example:**  
+For a cumulative update for Windows 11 24H2, the full path will be:  
+`C:\ProgramData\Bucket\Updates\Windows 11\24H2\Cumulative Updates\`
 
-### 🚨 Scénarios d'erreur
-1. **Erreurs réseau** : Perte de connexion, timeouts
-2. **Erreurs de service** : Catalogue Microsoft indisponible
-3. **Erreurs de fichier** : Permissions, espace disque
-4. **Erreurs de validation** : Paramètres invalides
+**Rules:**
+- This structure must be created automatically for each download if it does not already exist.
+- The update file(s) must be saved in the appropriate subfolder according to their OS, version, and update type.
+- This logic applies to all update types and combinations (e.g., .NET Framework, Security Updates, etc.).
 
-### 💬 Messages utilisateur
-- Messages d'erreur explicites et actionnables
-- Suggestions de résolution
-- Logs détaillés pour le débogage
-- Notifications toast pour les opérations longues
+**Pseudocode for path construction:**
+```csharp
+var basePath = @"C:\ProgramData\Bucket\Updates";
+var osFolder = update.OperatingSystem; // e.g., "Windows 11"
+var versionFolder = update.Version;    // e.g., "24H2"
+var typeFolder = update.Classification ?? update.UpdateType; // e.g., "Cumulative Updates"
+var fullPath = Path.Combine(basePath, osFolder, versionFolder, typeFolder);
+Directory.CreateDirectory(fullPath);
+// Save file(s) to fullPath
+```
 
-## 📊 Tests et validation
+**Note**: This specifications document was generated automatically and may contain errors. Please verify the information against the actual project needs and report any discrepancies. 
 
-### 🧪 Tests unitaires
-- Tests des ViewModels
-- Tests des Services
-- Tests des modèles de données
-- Mocks des services externes
+The project delivers a fully native C# implementation of the Microsoft Update Catalog features.
 
-### 🔍 Tests d'intégration
-- Tests de l'intégration PowerShell
-- Tests de téléchargement
-- Tests d'export Excel
-- Tests de navigation
+## 🔎 Reference to Original PowerShell Module Logic
 
-### 👥 Tests utilisateur
-- Validation de l'UX
-- Tests de performance
-- Tests d'accessibilité
-- Validation multi-écrans
+For all business logic (search, filtering, HTML parsing, download, error handling, etc.), the original MSCatalogLTS PowerShell module serves as a functional reference.
 
-## 📅 Planning de développement
+- The C# implementation must reproduce all features and behaviors present in the PowerShell module, but using .NET libraries and idioms.
+- The PowerShell code (especially `Get-MSCatalogUpdate`, `Save-MSCatalogUpdate`, and related helpers) should be consulted for:
+  - Query construction and parameter mapping
+  - HTML parsing and data extraction logic
+  - Filtering and sorting rules
+  - Download and file management logic
+  - Error handling and edge cases
 
-### Phase 1 : Infrastructure (1-2 semaines)
-- Création des modèles de données
-- Implémentation du service MSCatalog
-- Configuration de l'injection de dépendances
+**The C# code must not call or embed PowerShell, but should faithfully reproduce the business logic and user experience.**
 
-### Phase 2 : Interface utilisateur (2-3 semaines)
-- Création de la page XAML
-- Implémentation du ViewModel
-- Intégration de la navigation
+## 🧩 Code Consistency and Project Standards
 
-### Phase 3 : Fonctionnalités avancées (1-2 semaines)
-- Téléchargements multiples
-- Export Excel
-- Gestion des erreurs avancée
+All code (Views, ViewModels, Services, Models) for the Microsoft Update Catalog feature must strictly follow the same architectural, naming, and implementation conventions as the rest of the Bucket application.
 
-### Phase 4 : Tests et polish (1 semaine)
-- Tests complets
-- Optimisations performance
-- Documentation finale
+- **Follow the MVVM pattern** as implemented in other pages (e.g., use of CommunityToolkit.Mvvm, `[ObservableProperty]`, `[RelayCommand]`, etc.).
+- **Naming conventions** (PascalCase for classes/methods/properties, camelCase for locals, etc.) must be respected.
+- **File structure**: Place files in the same folders and with the same naming patterns as existing features (e.g., `src/Views/`, `src/ViewModels/`, etc.).
+- **Dependency injection**: Register and inject services in the same way as other services (see `App.xaml.cs`).
+- **UI/UX**: XAML pages must use the same design system, resource dictionaries, and theming as the rest of the app.
+- **Logging, error handling, and progress reporting**: Use the same logging and error handling patterns as in other services and ViewModels.
+- **Documentation**: Generate and structure documentation for new classes in the same way as for existing ones (see `docs/`).
+- **Testing**: Write unit and integration tests following the same structure and tools as for other features.
 
-## 📚 Documentation
-
-### 📖 Documentation technique
-- Documentation des classes selon le standard Bucket
-- Exemples d'utilisation
-- Guide d'intégration
-- API Reference
-
-### 👤 Documentation utilisateur
-- Guide d'utilisation de la page
-- FAQ sur les mises à jour Windows
-- Troubleshooting guide
-
-## 🔧 Détails d'implémentation
-
-### 🔄 Intégration PowerShell
-Le service MSCatalogService utilisera le module PowerShell MSCatalogLTS existant via :
-- `System.Management.Automation` pour l'exécution PowerShell
-- Sérialisation JSON pour l'échange de données
-- Gestion des erreurs PowerShell vers C#
-
-### 📦 Gestion des dépendances
-- Copie du module MSCatalogLTS dans le dossier de l'application
-- Chargement dynamique du module au démarrage
-- Vérification de la disponibilité de PowerShell
-
-### 🎯 Points d'attention
-1. **Performance** : Les recherches peuvent être lentes, nécessité d'UI non-bloquante
-2. **Fiabilité** : Le catalogue Microsoft peut être temporairement indisponible
-3. **Taille des fichiers** : Les updates peuvent être volumineux (plusieurs GB)
-4. **Permissions** : Nécessité de permissions d'écriture pour les téléchargements
-
----
-
-## 📋 Questions pour finaliser la conception
-
-1. **Préférences d'interface** : Y a-t-il des ajustements souhaités sur la disposition proposée ?
-2. **Fonctionnalités prioritaires** : Quelles fonctionnalités sont les plus importantes à implémenter en premier ?
-3. **Intégration** : Souhaitez-vous une intégration avec les autres fonctionnalités de Bucket (ex: application directe aux images montées) ?
-4. **Stockage** : Où souhaitez-vous stocker les updates téléchargés par défaut ?
-
----
-
-**Note**: Ce document de cahier des charges a été généré automatiquement et peut contenir des erreurs. Veuillez vérifier les informations par rapport aux besoins réels du projet et signaler toute divergence. 
+**The goal is to ensure that the new code is fully consistent, maintainable, and indistinguishable in style and structure from the rest of the Bucket project.** 
