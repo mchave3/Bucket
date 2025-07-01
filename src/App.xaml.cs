@@ -1,4 +1,6 @@
-﻿namespace Bucket
+﻿using Bucket.Services.MSCatalog;
+
+namespace Bucket
 {
     public partial class App : Application
     {
@@ -57,6 +59,10 @@
             services.AddSingleton<IWindowsImageMountService, WindowsImageMountService>();
             services.AddSingleton<IWindowsImageUnmountService, WindowsImageUnmountService>();
             services.AddSingleton<WindowsImageService>();
+
+            // MS Catalog Services
+            services.AddSingleton<IMSCatalogService, MSCatalogService>();
+            services.AddTransient<MicrosoftUpdateCatalogViewModel>();
 
             var serviceProvider = services.BuildServiceProvider();
             Logger.Verbose("Dependency injection container configured with {ServiceCount} services", services.Count);

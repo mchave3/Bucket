@@ -17,5 +17,6 @@ public partial class NavigationPageMappings
     {
         {"Bucket.Views.HomeLandingPage", typeof(Bucket.Views.HomeLandingPage)},
         {"Bucket.Views.ImageManagementPage", typeof(Bucket.Views.ImageManagementPage)},
+        {"Bucket.Views.MicrosoftUpdateCatalogPage", typeof(Bucket.Views.MicrosoftUpdateCatalogPage)},
     };
 }

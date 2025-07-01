@@ -22,6 +22,13 @@
           "Subtitle": "Manage Windows Images",
           "ImagePath": "ms-appx:///Assets/Fluent/ic_fluent_cube_24_regular.png",
           "HideItem": false
+        },
+        {
+          "UniqueId": "Bucket.Views.MicrosoftUpdateCatalogPage",
+          "Title": "Update Catalog",
+          "Subtitle": "Download Windows Updates",
+          "IconGlyph": "\uE8F1",
+          "HideItem": false
         }
       ]
     }

@@ -11,4 +11,15 @@
     <!-- Object to Visibility Converter -->
     <common:ObjectToVisibilityConverter x:Key="ObjectToVisibilityConverter" />
 
+    <!-- MS Catalog Converters -->
+    <common:SearchModeToVisibilityConverter x:Key="SearchModeToVisibilityConverter" />
+    <common:EnumToIntConverter x:Key="EnumToIntConverter" />
+    <common:BooleanNegationConverter x:Key="BooleanNegationConverter" />
+    <common:ZeroToTrueConverter x:Key="ZeroToTrueConverter" />
+    <common:ZeroToVisibleConverter x:Key="ZeroToVisibleConverter" />
+    <common:DateFormatConverter x:Key="DateFormatConverter" />
+    <common:GreaterThanZeroToBoolConverter x:Key="GreaterThanZeroToBoolConverter" />
+    <common:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter" />
+    <common:StringFormatConverter x:Key="StringFormatConverter" />
+
 </ResourceDictionary>

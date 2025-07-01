@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Bucket.Views.MicrosoftUpdateCatalogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:Bucket.Models"
+    xmlns:tv="using:WinUI.TableView"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <Grid Grid.Row="0" Margin="24,24,24,16">
+            <StackPanel Spacing="8">
+                <TextBlock 
+                    Text="Microsoft Update Catalog" 
+                    Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock 
+                    Text="Search and download Windows updates from the Microsoft Update Catalog"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Search and Filter Section -->
+        <ScrollViewer Grid.Row="1" Margin="24,0,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24">
+                <StackPanel Spacing="24">
+                    
+                    <!-- Search Mode Selection -->
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Search Mode" 
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <RadioButtons SelectedIndex="{x:Bind ViewModel.SearchMode, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                            <RadioButton Content="Search by Operating System"/>
+                            <RadioButton Content="Custom Search Query"/>
+                        </RadioButtons>
+                    </StackPanel>
+
+                    <!-- Operating System Search Panel -->
+                    <Grid Visibility="{x:Bind ViewModel.SearchMode, Mode=OneWay, Converter={StaticResource SearchModeToVisibilityConverter}, ConverterParameter=OperatingSystem}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <ComboBox Grid.Column="0" 
+                                  Header="Operating System" 
+                                  ItemsSource="{x:Bind ViewModel.OperatingSystems}" 
+                                  SelectedItem="{x:Bind ViewModel.SelectedOperatingSystem, Mode=TwoWay}"
+                                  Margin="0,0,12,0" 
+                                  HorizontalAlignment="Stretch"/>
+
+                        <ComboBox Grid.Column="1" 
+                                  Header="Version" 
+                                  ItemsSource="{x:Bind ViewModel.Versions}" 
+                                  SelectedItem="{x:Bind ViewModel.SelectedVersion, Mode=TwoWay}"
+                                  Margin="0,0,12,0" 
+                                  HorizontalAlignment="Stretch"/>
+
+                        <ComboBox Grid.Column="2" 
+                                  Header="Update Type" 
+                                  ItemsSource="{x:Bind ViewModel.UpdateTypes}" 
+                                  SelectedItem="{x:Bind ViewModel.SelectedUpdateType, Mode=TwoWay}"
+                                  Margin="0,0,12,0" 
+                                  HorizontalAlignment="Stretch"/>
+
+                        <ComboBox Grid.Column="3" 
+                                  Header="Architecture" 
+                                  ItemsSource="{x:Bind ViewModel.Architectures}" 
+                                  SelectedItem="{x:Bind ViewModel.SelectedArchitecture, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"/>
+                    </Grid>
+
+                    <!-- Custom Search Panel -->
+                    <TextBox Header="Search Query"
+                             Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay}"
+                             PlaceholderText="Enter search terms (e.g., KB5031356)"
+                             Visibility="{x:Bind ViewModel.SearchMode, Mode=OneWay, Converter={StaticResource SearchModeToVisibilityConverter}, ConverterParameter=SearchQuery}"/>
+
+                    <!-- Advanced Filters -->
+                    <Expander Header="Advanced Filters" HorizontalAlignment="Stretch">
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Exclusion Filters -->
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0" Spacing="8">
+                                <TextBlock Text="Exclusions" Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <CheckBox Content="Exclude Preview Updates" 
+                                          IsChecked="{x:Bind ViewModel.ExcludePreview, Mode=TwoWay}"/>
+                                <CheckBox Content="Exclude Dynamic Updates" 
+                                          IsChecked="{x:Bind ViewModel.ExcludeDynamic, Mode=TwoWay}"/>
+                                <CheckBox Content="Exclude .NET Framework" 
+                                          IsChecked="{x:Bind ViewModel.ExcludeFramework, Mode=TwoWay}"/>
+                            </StackPanel>
+
+                            <!-- Date Filters -->
+                            <StackPanel Grid.Column="1" Margin="0,0,16,0" Spacing="8">
+                                <TextBlock Text="Date Range" Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <DatePicker Header="From Date" 
+                                            SelectedDate="{x:Bind ViewModel.MinDate, Mode=TwoWay}"/>
+                                <DatePicker Header="To Date" 
+                                            SelectedDate="{x:Bind ViewModel.MaxDate, Mode=TwoWay}"/>
+                            </StackPanel>
+
+                            <!-- Sort Options -->
+                            <StackPanel Grid.Column="2" Spacing="8">
+                                <TextBlock Text="Sort Options" Style="{StaticResource CaptionTextBlockStyle}" 
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <ComboBox Header="Sort By" 
+                                          ItemsSource="{x:Bind ViewModel.SortOptions}" 
+                                          SelectedItem="{x:Bind ViewModel.SortBy, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"/>
+                                <CheckBox Content="Sort Descending" 
+                                          IsChecked="{x:Bind ViewModel.SortDescending, Mode=TwoWay}"/>
+                                <NumberBox Header="Max Pages" 
+                                           Value="{x:Bind ViewModel.MaxPages, Mode=TwoWay}" 
+                                           Minimum="1" Maximum="50" 
+                                           SpinButtonPlacementMode="Inline"/>
+                            </StackPanel>
+                        </Grid>
+                    </Expander>
+
+                    <!-- Search Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" 
+                                Command="{x:Bind ViewModel.SearchUpdatesCommand}" 
+                                IsEnabled="{x:Bind ViewModel.IsSearching, Mode=OneWay, Converter={StaticResource BooleanNegationConverter}}"
+                                Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE721;" FontSize="16"/>
+                                <TextBlock Text="Search Updates"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="2" 
+                                Command="{x:Bind ViewModel.CancelSearchCommand}" 
+                                Visibility="{x:Bind ViewModel.IsSearching, Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE711;" FontSize="16"/>
+                                <TextBlock Text="Cancel"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Search Progress -->
+                    <StackPanel Visibility="{x:Bind ViewModel.IsSearching, Mode=OneWay}" Spacing="8">
+                        <ProgressBar Value="{x:Bind ViewModel.SearchProgress, Mode=OneWay}" 
+                                     Maximum="100" 
+                                     IsIndeterminate="{x:Bind ViewModel.SearchProgress, Mode=OneWay, Converter={StaticResource ZeroToTrueConverter}}"/>
+                        <TextBlock Text="{x:Bind ViewModel.SearchStatus, Mode=OneWay}" 
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <!-- Results Section -->
+        <Grid Grid.Row="2" Margin="24,0,24,16">
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                
+                <Grid>
+                    <!-- Results Header -->
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="0,0,0,1"
+                            CornerRadius="8,8,0,0"
+                            Padding="16,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Search Results"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+
+                            <TextBlock Grid.Column="1"
+                                       Text="{x:Bind ViewModel.Updates.Count, Mode=OneWay, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} updates found'}"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Results Content -->
+                    <Grid Grid.Row="1">
+                        <!-- TableView -->
+                        <tv:TableView x:Name="ResultsTableView"
+                                      ItemsSource="{x:Bind ViewModel.Updates, Mode=OneWay}"
+                                      AutoGenerateColumns="False"
+                                      GridLinesVisibility="Horizontal"
+                                      SelectionMode="Extended"
+                                      Visibility="{x:Bind ViewModel.Updates.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
+                            <tv:TableView.Columns>
+                                <tv:TableViewCheckBoxColumn Header="Select" 
+                                                            Binding="{Binding IsSelected, Mode=TwoWay}"
+                                                            Width="60"/>
+                                <tv:TableViewTextColumn Header="Title" 
+                                                        Binding="{Binding Title}" 
+                                                        Width="*"/>
+                                <tv:TableViewTextColumn Header="Products" 
+                                                        Binding="{Binding Products}" 
+                                                        Width="150"/>
+                                <tv:TableViewTextColumn Header="Classification" 
+                                                        Binding="{Binding Classification}" 
+                                                        Width="150"/>
+                                <tv:TableViewTextColumn Header="Last Updated" 
+                                                        Binding="{Binding LastUpdated, Converter={StaticResource DateFormatConverter}}" 
+                                                        Width="100"/>
+                                <tv:TableViewTextColumn Header="Size" 
+                                                        Binding="{Binding Size}" 
+                                                        Width="80"/>
+                                <tv:TableViewTextColumn Header="Version" 
+                                                        Binding="{Binding Version}" 
+                                                        Width="100"/>
+                            </tv:TableView.Columns>
+                        </tv:TableView>
+
+                        <!-- Empty State -->
+                        <StackPanel Visibility="{x:Bind ViewModel.Updates.Count, Mode=OneWay, Converter={StaticResource ZeroToVisibleConverter}}"
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center"
+                                    Spacing="16"
+                                    MaxWidth="400">
+                            <FontIcon Glyph="&#xE721;" 
+                                      FontSize="48"
+                                      Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                            <TextBlock Text="No updates found"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Please search for updates using the filters above. Try adjusting your search criteria or expanding the date range."
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Action Bar -->
+        <Border Grid.Row="3" 
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" 
+                BorderThickness="0,1,0,0"
+                Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Selection Actions -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <Button Command="{x:Bind ViewModel.SelectAllUpdatesCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE8B3;" FontSize="14"/>
+                            <TextBlock Text="Select All"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{x:Bind ViewModel.DeselectAllUpdatesCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE8E6;" FontSize="14"/>
+                            <TextBlock Text="Deselect All"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Download Section -->
+                <StackPanel Grid.Column="2" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Center" 
+                            Spacing="12"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind ViewModel.SelectedUpdates.Count, Mode=OneWay, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0} selected'}" 
+                               Style="{StaticResource BodyTextBlockStyle}"/>
+                    
+                    <Button Command="{x:Bind ViewModel.SelectDownloadFolderCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="14"/>
+                            <TextBlock Text="Change Download Folder"/>
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock Text="{x:Bind ViewModel.DefaultDownloadPath, Mode=OneWay}" 
+                               VerticalAlignment="Center" 
+                               MaxWidth="300" 
+                               TextTrimming="CharacterEllipsis" 
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Export and Download Buttons -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
+                    <Button Command="{x:Bind ViewModel.ExportToExcelCommand}" 
+                            IsEnabled="{x:Bind ViewModel.Updates.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroToBoolConverter}}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE729;" FontSize="14"/>
+                            <TextBlock Text="Export to Excel"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{x:Bind ViewModel.DownloadSelectedUpdatesCommand}"
+                            Style="{StaticResource AccentButtonStyle}"
+                            IsEnabled="{x:Bind ViewModel.SelectedUpdates.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroToBoolConverter}}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE896;" FontSize="14"/>
+                            <TextBlock Text="Download Selected"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Download Progress Overlay -->
+        <Grid Grid.Row="0" Grid.RowSpan="4" 
+              Background="{ThemeResource SystemControlBackgroundAltMediumHighBrush}"
+              Visibility="{x:Bind ViewModel.IsDownloading, Mode=OneWay}">
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="32" 
+                    Width="400"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Downloading Updates" 
+                               Style="{StaticResource SubtitleTextBlockStyle}" 
+                               HorizontalAlignment="Center"/>
+                    
+                    <ProgressBar Value="{x:Bind ViewModel.DownloadProgress, Mode=OneWay}" 
+                                 Maximum="100" 
+                                 Height="8"/>
+                    
+                    <TextBlock Text="{x:Bind ViewModel.DownloadStatus, Mode=OneWay}" 
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap" 
+                               TextAlignment="Center"
+                               Style="{StaticResource BodyTextBlockStyle}"/>
+                    
+                    <Button Command="{x:Bind ViewModel.CancelDownloadCommand}" 
+                            HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE711;" FontSize="16"/>
+                            <TextBlock Text="Cancel Download"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page> 
