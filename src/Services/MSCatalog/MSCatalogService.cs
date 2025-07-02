@@ -57,6 +57,10 @@ public class MSCatalogService : IMSCatalogService
                 Logger.Debug("Fetching page {CurrentPage}: {Url}", currentPage, url);
                 var response = await _httpClient.GetStringAsync(url, cancellationToken);
 
+                // Log response details for debugging
+                Logger.Debug("Response received - Length: {Length} characters", response.Length);
+                Logger.Verbose("Raw HTML response (first 1000 chars): {HtmlSnippet}", response.Length > 1000 ? response.Substring(0, 1000) : response);
+
                 var doc = new HtmlDocument();
                 doc.LoadHtml(response);
 
@@ -76,8 +80,12 @@ public class MSCatalogService : IMSCatalogService
                 currentPage++;
             }
 
+            Logger.Debug("Before filtering: {Count} updates", updates.Count);
+            
             // Apply filters
             updates = ApplyFilters(updates, request).ToList();
+            
+            Logger.Debug("After filtering: {Count} updates", updates.Count);
 
             // Apply sorting
             updates = ApplySorting(updates, request).ToList();
@@ -319,19 +327,105 @@ public class MSCatalogService : IMSCatalogService
     {
         var updates = new List<MSCatalogUpdate>();
 
+        Logger.Debug("Starting to parse updates from HTML document");
+        
+        // Log all table elements for debugging
+        var allTables = doc.DocumentNode.SelectNodes("//table");
+        Logger.Debug("Found {TableCount} table elements in document", allTables?.Count ?? 0);
+        
+        if (allTables != null)
+        {
+            for (int i = 0; i < allTables.Count; i++)
+            {
+                var tableId = allTables[i].GetAttributeValue("id", "no-id");
+                var tableClass = allTables[i].GetAttributeValue("class", "no-class");
+                Logger.Debug("Table {Index}: id='{Id}', class='{Class}'", i, tableId, tableClass);
+            }
+        }
+
         // Find the results table
         var table = doc.DocumentNode.SelectSingleNode("//table[@id='ctl00_catalogBody_updateMatches']");
         if (table == null)
         {
-            return updates;
+            Logger.Warning("Could not find results table with id 'ctl00_catalogBody_updateMatches'");
+            
+            // Try alternative selectors
+            var alternativeTable = doc.DocumentNode.SelectSingleNode("//table[contains(@id, 'updateMatches')]");
+            if (alternativeTable != null)
+            {
+                Logger.Debug("Found alternative table with id: {Id}", alternativeTable.GetAttributeValue("id", ""));
+                table = alternativeTable;
+            }
+            else
+            {
+                // Look for any table with results-like content
+                var resultsTables = doc.DocumentNode.SelectNodes("//table[.//tr[contains(@class, 'result')]]");
+                if (resultsTables != null && resultsTables.Count > 0)
+                {
+                    Logger.Debug("Found {Count} tables with result-like rows", resultsTables.Count);
+                    table = resultsTables[0];
+                }
+            }
+            
+            if (table == null)
+            {
+                Logger.Error("No suitable results table found in the document");
+                return updates;
+            }
+        }
+
+        Logger.Debug("Found results table with id: {TableId}", table.GetAttributeValue("id", "no-id"));
+
+        // Log all rows in the table for debugging
+        var allRows = table.SelectNodes(".//tr");
+        Logger.Debug("Found {RowCount} total rows in results table", allRows?.Count ?? 0);
+        
+        if (allRows != null)
+        {
+            for (int i = 0; i < Math.Min(allRows.Count, 5); i++) // Log first 5 rows
+            {
+                var rowClass = allRows[i].GetAttributeValue("class", "no-class");
+                var cellCount = allRows[i].SelectNodes("./td")?.Count ?? 0;
+                Logger.Debug("Row {Index}: class='{Class}', cells={CellCount}", i, rowClass, cellCount);
+            }
         }
 
         // Parse each row (skip header)
         var rows = table.SelectNodes(".//tr[@class='resultsBackGround' or @class='resultsBackGroundHighlight']");
         if (rows == null)
         {
-            return updates;
+            Logger.Warning("Could not find result rows with expected classes");
+            
+            // Try alternative row selectors
+            var alternativeRows = table.SelectNodes(".//tr[contains(@class, 'result')]");
+            if (alternativeRows != null)
+            {
+                Logger.Debug("Found {Count} rows with alternative selector", alternativeRows.Count);
+                rows = alternativeRows;
+            }
+            else
+            {
+                // Try to get all rows except the first (header)
+                var allTableRows = table.SelectNodes(".//tr");
+                if (allTableRows != null && allTableRows.Count > 1)
+                {
+                    rows = new HtmlNodeCollection(allTableRows[0]);
+                    for (int i = 1; i < allTableRows.Count; i++)
+                    {
+                        rows.Add(allTableRows[i]);
+                    }
+                    Logger.Debug("Using all rows except header: {Count} rows", rows.Count);
+                }
+            }
+            
+            if (rows == null)
+            {
+                Logger.Error("No result rows found with any selector");
+                return updates;
+            }
         }
+
+        Logger.Debug("Found {RowCount} result rows to parse", rows.Count);
 
         foreach (var row in rows)
         {
@@ -341,6 +435,11 @@ public class MSCatalogService : IMSCatalogService
                 if (update != null)
                 {
                     updates.Add(update);
+                    Logger.Debug("Successfully parsed update: {Title}", update.Title);
+                }
+                else
+                {
+                    Logger.Debug("ParseUpdateRow returned null for a row");
                 }
             }
             catch (Exception ex)
@@ -349,6 +448,7 @@ public class MSCatalogService : IMSCatalogService
             }
         }
 
+        Logger.Debug("Completed parsing updates: {Count} updates found", updates.Count);
         return updates;
     }
 
@@ -357,9 +457,18 @@ public class MSCatalogService : IMSCatalogService
         var cells = row.SelectNodes("./td");
         if (cells == null || cells.Count < 5)
         {
+            Logger.Debug("Row has insufficient cells: {CellCount} (minimum 5 required)", cells?.Count ?? 0);
+            if (cells != null)
+            {
+                for (int i = 0; i < cells.Count; i++)
+                {
+                    Logger.Debug("Cell {Index}: '{Content}'", i, cells[i].InnerText.Trim());
+                }
+            }
             return null;
         }
 
+        Logger.Debug("Parsing row with {CellCount} cells", cells.Count);
         var update = new MSCatalogUpdate();
 
         // Title (column 2)
@@ -367,40 +476,110 @@ public class MSCatalogService : IMSCatalogService
         if (titleLink != null)
         {
             update.Title = HttpUtility.HtmlDecode(titleLink.InnerText.Trim());
+            Logger.Debug("Extracted title: {Title}", update.Title);
             
             // Extract GUID from onclick attribute
             var onclick = titleLink.GetAttributeValue("onclick", "");
-            var guidMatch = Regex.Match(onclick, @"'([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'");
+            Logger.Debug("Link onclick attribute: {OnClick}", onclick);
+            // Try multiple GUID patterns
+            var guidMatch = Regex.Match(onclick, @"""([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})""");
+            if (!guidMatch.Success)
+            {
+                guidMatch = Regex.Match(onclick, @"'([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'");
+            }
             if (guidMatch.Success)
             {
                 update.Guid = guidMatch.Groups[1].Value;
+                Logger.Debug("Extracted GUID: {Guid}", update.Guid);
             }
+            else
+            {
+                Logger.Debug("No GUID found in onclick attribute");
+            }
+        }
+        else
+        {
+            Logger.Debug("No title link found in cell 1");
+            Logger.Debug("Cell 1 content: {Content}", cells[1].InnerText.Trim());
         }
 
         // Products (column 3)
         update.Products = HttpUtility.HtmlDecode(cells[2].InnerText.Trim());
+        Logger.Debug("Extracted products: {Products}", update.Products);
 
         // Classification (column 4)
         update.Classification = HttpUtility.HtmlDecode(cells[3].InnerText.Trim());
+        Logger.Debug("Extracted classification: {Classification}", update.Classification);
 
         // Last Updated (column 5)
-        if (DateTime.TryParse(cells[4].InnerText.Trim(), out var lastUpdated))
+        var lastUpdatedText = cells[4].InnerText.Trim();
+        Logger.Debug("Last updated text: {LastUpdatedText}", lastUpdatedText);
+        
+        // Try multiple date formats
+        var dateFormats = new[]
         {
-            update.LastUpdated = lastUpdated;
+            "M/d/yyyy",      // US format: 6/26/2025
+            "d/M/yyyy",      // EU format: 26/6/2025
+            "MM/dd/yyyy",    // US format with leading zeros
+            "dd/MM/yyyy",    // EU format with leading zeros
+            "yyyy-MM-dd",    // ISO format
+            "M/dd/yyyy",     // Mixed format
+            "dd/M/yyyy"      // Mixed format
+        };
+        
+        bool dateParsed = false;
+        foreach (var format in dateFormats)
+        {
+            if (DateTime.TryParseExact(lastUpdatedText, format, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var lastUpdated))
+            {
+                update.LastUpdated = lastUpdated;
+                Logger.Debug("Parsed last updated with format '{Format}': {LastUpdated}", format, lastUpdated);
+                dateParsed = true;
+                break;
+            }
+        }
+        
+        if (!dateParsed)
+        {
+            // Try general parsing as fallback
+            if (DateTime.TryParse(lastUpdatedText, out var lastUpdated))
+            {
+                update.LastUpdated = lastUpdated;
+                Logger.Debug("Parsed last updated with general parsing: {LastUpdated}", lastUpdated);
+            }
+            else
+            {
+                Logger.Debug("Failed to parse last updated date with any format");
+            }
         }
 
         // Version (column 6) - may not exist
         if (cells.Count > 5)
         {
             update.Version = HttpUtility.HtmlDecode(cells[5].InnerText.Trim());
+            Logger.Debug("Extracted version: {Version}", update.Version);
         }
 
         // Size (column 7) - may not exist
         if (cells.Count > 6)
         {
             var sizeText = cells[6].InnerText.Trim();
-            update.Size = sizeText;
-            update.SizeInBytes = ParseSize(sizeText);
+            // Clean up size text - remove extra whitespace and newlines
+            sizeText = Regex.Replace(sizeText, @"\s+", " ");
+            // Extract just the size part (before any additional info)
+            var sizeMatch = Regex.Match(sizeText, @"([\d.,]+\s*[KMGT]?B)");
+            if (sizeMatch.Success)
+            {
+                update.Size = sizeMatch.Groups[1].Value.Trim();
+                update.SizeInBytes = ParseSize(update.Size);
+                Logger.Debug("Extracted size: {Size} ({SizeInBytes} bytes)", update.Size, update.SizeInBytes);
+            }
+            else
+            {
+                update.Size = sizeText;
+                update.SizeInBytes = ParseSize(sizeText);
+                Logger.Debug("Extracted size (raw): {Size} ({SizeInBytes} bytes)", update.Size, update.SizeInBytes);
+            }
         }
 
         // Extract additional info from title
@@ -513,58 +692,109 @@ public class MSCatalogService : IMSCatalogService
 
     private IEnumerable<MSCatalogUpdate> ApplyFilters(IEnumerable<MSCatalogUpdate> updates, MSCatalogSearchRequest request)
     {
+        var originalCount = updates.Count();
+        Logger.Debug("Starting filters with {Count} updates", originalCount);
+        
         // Filter by preview
         if (!request.IncludePreview)
         {
+            var beforeCount = updates.Count();
             updates = updates.Where(u => !u.Title.Contains("Preview", StringComparison.OrdinalIgnoreCase));
+            var afterCount = updates.Count();
+            Logger.Debug("Preview filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         // Filter by dynamic
         if (!request.IncludeDynamic)
         {
+            var beforeCount = updates.Count();
             updates = updates.Where(u => !u.Title.Contains("Dynamic", StringComparison.OrdinalIgnoreCase));
+            var afterCount = updates.Count();
+            Logger.Debug("Dynamic filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         // Filter by framework
         if (request.ExcludeFramework)
         {
+            var beforeCount = updates.Count();
             updates = updates.Where(u => !u.Title.Contains(".NET Framework", StringComparison.OrdinalIgnoreCase));
+            var afterCount = updates.Count();
+            Logger.Debug("Framework exclude filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
         else if (request.GetFramework)
         {
+            var beforeCount = updates.Count();
             updates = updates.Where(u => u.Title.Contains(".NET Framework", StringComparison.OrdinalIgnoreCase));
+            var afterCount = updates.Count();
+            Logger.Debug("Framework only filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         // Filter by date
         if (request.FromDate.HasValue)
         {
-            updates = updates.Where(u => u.LastUpdated >= request.FromDate.Value);
+            var beforeCount = updates.Count();
+            Logger.Debug("Applying FromDate filter: {FromDate}", request.FromDate.Value);
+            updates = updates.Where(u => {
+                var include = u.LastUpdated >= request.FromDate.Value;
+                if (!include)
+                {
+                    Logger.Verbose("Excluding update '{Title}' - date {UpdateDate} < {FromDate}", u.Title, u.LastUpdated, request.FromDate.Value);
+                }
+                return include;
+            });
+            var afterCount = updates.Count();
+            Logger.Debug("FromDate filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         if (request.ToDate.HasValue)
         {
-            updates = updates.Where(u => u.LastUpdated <= request.ToDate.Value);
+            var beforeCount = updates.Count();
+            Logger.Debug("Applying ToDate filter: {ToDate}", request.ToDate.Value);
+            updates = updates.Where(u => {
+                var include = u.LastUpdated <= request.ToDate.Value;
+                if (!include)
+                {
+                    Logger.Verbose("Excluding update '{Title}' - date {UpdateDate} > {ToDate}", u.Title, u.LastUpdated, request.ToDate.Value);
+                }
+                return include;
+            });
+            var afterCount = updates.Count();
+            Logger.Debug("ToDate filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         // Filter by size
         if (request.MinSize.HasValue)
         {
+            var beforeCount = updates.Count();
             var minSizeInBytes = (long)(request.MinSize.Value * 1024 * 1024);
+            Logger.Debug("Applying MinSize filter: {MinSize} MB ({MinSizeBytes} bytes)", request.MinSize.Value, minSizeInBytes);
             updates = updates.Where(u => u.SizeInBytes >= minSizeInBytes);
+            var afterCount = updates.Count();
+            Logger.Debug("MinSize filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         if (request.MaxSize.HasValue)
         {
+            var beforeCount = updates.Count();
             var maxSizeInBytes = (long)(request.MaxSize.Value * 1024 * 1024);
+            Logger.Debug("Applying MaxSize filter: {MaxSize} MB ({MaxSizeBytes} bytes)", request.MaxSize.Value, maxSizeInBytes);
             updates = updates.Where(u => u.SizeInBytes <= maxSizeInBytes);
+            var afterCount = updates.Count();
+            Logger.Debug("MaxSize filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
         // Filter by architecture
         if (!string.IsNullOrWhiteSpace(request.Architecture) && request.Architecture != "All")
         {
+            var beforeCount = updates.Count();
+            Logger.Debug("Applying Architecture filter: {Architecture}", request.Architecture);
             updates = updates.Where(u => u.Title.Contains(request.Architecture, StringComparison.OrdinalIgnoreCase));
+            var afterCount = updates.Count();
+            Logger.Debug("Architecture filter: {Before} → {After} (removed {Removed})", beforeCount, afterCount, beforeCount - afterCount);
         }
 
+        var finalCount = updates.Count();
+        Logger.Debug("Filtering completed: {Original} → {Final} updates", originalCount, finalCount);
         return updates;
     }
 
