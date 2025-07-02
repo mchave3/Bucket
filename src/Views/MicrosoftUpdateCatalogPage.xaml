@@ -232,32 +232,31 @@
                         <!-- TableView -->
                         <tv:TableView x:Name="ResultsTableView"
                                       ItemsSource="{x:Bind ViewModel.Updates, Mode=OneWay}"
+                                      SelectionMode="Multiple"
+                                      SelectionUnit="Row"
+                                      IsReadOnly="True"
                                       AutoGenerateColumns="False"
                                       GridLinesVisibility="Horizontal"
-                                      SelectionMode="Extended"
                                       Visibility="{x:Bind ViewModel.Updates.Count, Mode=OneWay, Converter={StaticResource GreaterThanZeroToVisibilityConverter}}">
                             <tv:TableView.Columns>
-                                <tv:TableViewCheckBoxColumn Header="Select" 
-                                                            Binding="{Binding IsSelected, Mode=TwoWay}"
-                                                            Width="60"/>
                                 <tv:TableViewTextColumn Header="Title" 
                                                         Binding="{Binding Title}" 
                                                         Width="*"/>
                                 <tv:TableViewTextColumn Header="Products" 
                                                         Binding="{Binding Products}" 
-                                                        Width="150"/>
+                                                        Width="Auto"/>
                                 <tv:TableViewTextColumn Header="Classification" 
                                                         Binding="{Binding Classification}" 
-                                                        Width="150"/>
+                                                        Width="Auto"/>
                                 <tv:TableViewTextColumn Header="Last Updated" 
                                                         Binding="{Binding LastUpdated, Converter={StaticResource DateFormatConverter}}" 
-                                                        Width="100"/>
+                                                        Width="Auto"/>
                                 <tv:TableViewTextColumn Header="Size" 
                                                         Binding="{Binding Size}" 
-                                                        Width="80"/>
+                                                        Width="Auto"/>
                                 <tv:TableViewTextColumn Header="Version" 
                                                         Binding="{Binding Version}" 
-                                                        Width="100"/>
+                                                        Width="Auto"/>
                             </tv:TableView.Columns>
                         </tv:TableView>
 
