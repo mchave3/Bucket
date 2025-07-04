@@ -1,4 +1,5 @@
-﻿using Bucket.Services.MSCatalog;
+﻿using Bucket.Services;
+using Bucket.Services.MSCatalog;
 
 namespace Bucket
 {
@@ -62,6 +63,7 @@ namespace Bucket
 
             // MS Catalog Services
             services.AddSingleton<IMSCatalogService, MSCatalogService>();
+            services.AddSingleton<IWindowsVersionsConfigService, WindowsVersionsConfigService>();
             services.AddTransient<MicrosoftUpdateCatalogViewModel>();
 
             var serviceProvider = services.BuildServiceProvider();

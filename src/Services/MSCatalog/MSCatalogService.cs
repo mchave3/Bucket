@@ -34,7 +34,6 @@ public class MSCatalogService : IMSCatalogService
         
         var updates = new List<MSCatalogUpdate>();
         var currentPage = 1;
-        var totalPages = 1;
 
         try
         {
@@ -43,15 +42,18 @@ public class MSCatalogService : IMSCatalogService
             Logger.Debug("Built search query: {Query}", searchQuery);
 
             // Keep searching until all pages are processed or limit reached
-            var maxPagesToProcess = request.AllPages ? int.MaxValue : 5;
-            while (currentPage <= totalPages && currentPage <= maxPagesToProcess)
+            var maxPagesToProcess = request.AllPages ? 40 : request.MaxPages; // Microsoft limit is 40 pages
+            var hasNextPage = true;
+            
+            while (hasNextPage && currentPage <= maxPagesToProcess)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var url = $"{SearchUrl}?q={HttpUtility.UrlEncode(searchQuery)}";
                 if (currentPage > 1)
                 {
-                    url += $"&PageNo={currentPage}";
+                    // Use 'p' parameter like PowerShell module (page number is 0-based for p parameter)
+                    url += $"&p={currentPage - 1}";
                 }
 
                 Logger.Debug("Fetching page {CurrentPage}: {Url}", currentPage, url);
@@ -64,12 +66,8 @@ public class MSCatalogService : IMSCatalogService
                 var doc = new HtmlDocument();
                 doc.LoadHtml(response);
 
-                // Extract total pages on first request
-                if (currentPage == 1)
-                {
-                    totalPages = ExtractTotalPages(doc);
-                    Logger.Information("Total pages available: {TotalPages}", totalPages);
-                }
+                // No need to extract total pages upfront like PowerShell module
+                // We check for next page link on each iteration
 
                 // Parse updates from the current page
                 var pageUpdates = ParseUpdates(doc, request);
@@ -77,7 +75,46 @@ public class MSCatalogService : IMSCatalogService
 
                 Logger.Debug("Found {Count} updates on page {Page}", pageUpdates.Count, currentPage);
 
+                // Debug: Log all navigation links found
+                var allLinks = doc.DocumentNode.SelectNodes("//a[contains(@id, 'Page') or contains(text(), 'Next') or contains(text(), 'Previous')]");
+                if (allLinks != null)
+                {
+                    Logger.Debug("Found {Count} navigation links:", allLinks.Count);
+                    foreach (var link in allLinks)
+                    {
+                        var id = link.GetAttributeValue("id", "no-id");
+                        var text = link.InnerText?.Trim() ?? "no-text";
+                        var onclick = link.GetAttributeValue("onclick", "no-onclick");
+                        Logger.Debug("  Link: id='{Id}', text='{Text}', onclick='{OnClick}'", id, text, onclick);
+                    }
+                }
+                
+                // Check if there's a next page (try multiple selectors)
+                var nextPageNode = doc.DocumentNode.SelectSingleNode("//a[@id='ctl00_catalogBody_nextPageLink']") ??
+                                  doc.DocumentNode.SelectSingleNode("//a[@id='ctl00_catalogBody_nextPageLinkText']") ??
+                                  doc.DocumentNode.SelectSingleNode("//a[contains(text(), 'Next')]") ??
+                                  doc.DocumentNode.SelectSingleNode("//a[contains(@onclick, 'nextPageLinkText')]");
+                
+                hasNextPage = nextPageNode != null;
+                
+                if (hasNextPage)
+                {
+                    Logger.Debug("Next page link found (selector: {Selector}), continuing to page {NextPage}", 
+                        nextPageNode.GetAttributeValue("id", "no-id"), currentPage + 1);
+                }
+                else
+                {
+                    Logger.Debug("No next page link found, stopping pagination");
+                }
+
                 currentPage++;
+                
+                // Microsoft Catalog limit is 40 pages (like in PowerShell module)
+                if (currentPage > 40)
+                {
+                    Logger.Warning("Reached Microsoft Catalog page limit (40 pages), stopping");
+                    break;
+                }
             }
 
             Logger.Debug("Before filtering: {Count} updates", updates.Count);
@@ -297,30 +334,10 @@ public class MSCatalogService : IMSCatalogService
 
     private int ExtractTotalPages(HtmlDocument doc)
     {
-        // Find the pagination control
-        var paginationNode = doc.DocumentNode.SelectSingleNode("//div[@class='resultsPageNumberGroup']");
-        if (paginationNode == null)
-        {
-            return 1;
-        }
-
-        // Extract page numbers
-        var pageLinks = paginationNode.SelectNodes(".//a[@class='resultsPageNumber']");
-        if (pageLinks == null || !pageLinks.Any())
-        {
-            return 1;
-        }
-
-        var maxPage = 1;
-        foreach (var link in pageLinks)
-        {
-            if (int.TryParse(link.InnerText.Trim(), out var pageNum))
-            {
-                maxPage = Math.Max(maxPage, pageNum);
-            }
-        }
-
-        return maxPage;
+        // Like PowerShell module, we don't need to determine total pages upfront
+        // We just check for next page link on each iteration
+        // Return 1 for first page, pagination logic will handle the rest
+        return 1;
     }
 
     private List<MSCatalogUpdate> ParseUpdates(HtmlDocument doc, MSCatalogSearchRequest request)

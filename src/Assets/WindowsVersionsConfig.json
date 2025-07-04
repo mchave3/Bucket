@@ -1,0 +1,386 @@
+{
+  "operatingSystems": {
+    "Windows 11": {
+      "displayName": "Windows 11",
+      "versions": [
+        {
+          "version": "24H2",
+          "displayName": "24H2 (2024 Update)",
+          "buildNumber": "26100",
+          "releaseDate": "2024-10-01",
+          "supportedArchitectures": ["x64", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "23H2",
+          "displayName": "23H2 (2023 Update)",
+          "buildNumber": "22631",
+          "releaseDate": "2023-10-31",
+          "supportedArchitectures": ["x64", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "22H2",
+          "displayName": "22H2 (2022 Update)",
+          "buildNumber": "22621",
+          "releaseDate": "2022-09-20",
+          "supportedArchitectures": ["x64", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "21H2",
+          "displayName": "21H2 (Original Release)",
+          "buildNumber": "22000",
+          "releaseDate": "2021-10-05",
+          "supportedArchitectures": ["x64", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        }
+      ]
+    },
+    "Windows 10": {
+      "displayName": "Windows 10",
+      "versions": [
+        {
+          "version": "22H2",
+          "displayName": "22H2 (October 2022 Update)",
+          "buildNumber": "19045",
+          "releaseDate": "2022-10-18",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "21H2",
+          "displayName": "21H2 (November 2021 Update)",
+          "buildNumber": "19044",
+          "releaseDate": "2021-11-16",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "21H1",
+          "displayName": "21H1 (May 2021 Update)",
+          "buildNumber": "19043",
+          "releaseDate": "2021-05-18",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "20H2",
+          "displayName": "20H2 (October 2020 Update)",
+          "buildNumber": "19042",
+          "releaseDate": "2020-10-20",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "2004",
+          "displayName": "2004 (May 2020 Update)",
+          "buildNumber": "19041",
+          "releaseDate": "2020-05-27",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1909",
+          "displayName": "1909 (November 2019 Update)",
+          "buildNumber": "18363",
+          "releaseDate": "2019-11-12",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1903",
+          "displayName": "1903 (May 2019 Update)",
+          "buildNumber": "18362",
+          "releaseDate": "2019-05-21",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1809",
+          "displayName": "1809 (October 2018 Update)",
+          "buildNumber": "17763",
+          "releaseDate": "2018-10-02",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1803",
+          "displayName": "1803 (April 2018 Update)",
+          "buildNumber": "17134",
+          "releaseDate": "2018-04-30",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1709",
+          "displayName": "1709 (Fall Creators Update)",
+          "buildNumber": "16299",
+          "releaseDate": "2017-10-17",
+          "supportedArchitectures": ["x64", "x86", "ARM64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1703",
+          "displayName": "1703 (Creators Update)",
+          "buildNumber": "15063",
+          "releaseDate": "2017-04-05",
+          "supportedArchitectures": ["x64", "x86"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1607",
+          "displayName": "1607 (Anniversary Update)",
+          "buildNumber": "14393",
+          "releaseDate": "2016-08-02",
+          "supportedArchitectures": ["x64", "x86"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1511",
+          "displayName": "1511 (November Update)",
+          "buildNumber": "10586",
+          "releaseDate": "2015-11-10",
+          "supportedArchitectures": ["x64", "x86"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        },
+        {
+          "version": "1507",
+          "displayName": "1507 (RTM)",
+          "buildNumber": "10240",
+          "releaseDate": "2015-07-29",
+          "supportedArchitectures": ["x64", "x86"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            "Feature Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        }
+      ]
+    },
+    "Windows Server 2022": {
+      "displayName": "Windows Server 2022",
+      "versions": [
+        {
+          "version": "21H2",
+          "displayName": "21H2 (Standard/Datacenter)",
+          "buildNumber": "20348",
+          "releaseDate": "2021-08-18",
+          "supportedArchitectures": ["x64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        }
+      ]
+    },
+    "Windows Server 2019": {
+      "displayName": "Windows Server 2019",
+      "versions": [
+        {
+          "version": "1809",
+          "displayName": "1809 (Standard/Datacenter)",
+          "buildNumber": "17763",
+          "releaseDate": "2018-10-02",
+          "supportedArchitectures": ["x64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        }
+      ]
+    },
+    "Windows Server 2016": {
+      "displayName": "Windows Server 2016",
+      "versions": [
+        {
+          "version": "1607",
+          "displayName": "1607 (Standard/Datacenter)",
+          "buildNumber": "14393",
+          "releaseDate": "2016-09-26",
+          "supportedArchitectures": ["x64"],
+          "supportedUpdateTypes": [
+            "Cumulative Update",
+            "Dynamic Update",
+            ".NET Framework",
+            "Security Update",
+            "Driver"
+          ]
+        }
+      ]
+    }
+  },
+  "architectures": {
+    "x64": {
+      "displayName": "64-bit (x64)",
+      "description": "Standard 64-bit Intel/AMD architecture"
+    },
+    "x86": {
+      "displayName": "32-bit (x86)",
+      "description": "32-bit Intel/AMD architecture"
+    },
+    "ARM64": {
+      "displayName": "64-bit ARM (ARM64)",
+      "description": "64-bit ARM architecture"
+    }
+  },
+  "updateTypes": {
+    "Cumulative Update": {
+      "displayName": "Cumulative Update",
+      "description": "Monthly security and quality updates"
+    },
+    "Dynamic Update": {
+      "displayName": "Dynamic Update",
+      "description": "Updates for Windows Setup and drivers"
+    },
+    "Feature Update": {
+      "displayName": "Feature Update",
+      "description": "Major Windows version updates"
+    },
+    ".NET Framework": {
+      "displayName": ".NET Framework",
+      "description": "Updates for .NET Framework components"
+    },
+    "Security Update": {
+      "displayName": "Security Update",
+      "description": "Security-only updates"
+    },
+    "Driver": {
+      "displayName": "Driver",
+      "description": "Hardware driver updates"
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2024-12-19",
+    "description": "Windows versions configuration for Microsoft Update Catalog filtering"
+  }
+} 

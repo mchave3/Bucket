@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Bucket.Models;
+using Bucket.Services;
 using Bucket.Services.MSCatalog;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,6 +21,7 @@ namespace Bucket.ViewModels;
 public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
 {
     private readonly IMSCatalogService _msUpdateService;
+    private readonly IWindowsVersionsConfigService _configService;
     private CancellationTokenSource _searchCancellationTokenSource;
     private CancellationTokenSource _downloadCancellationTokenSource;
 
@@ -57,7 +59,7 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
     private string selectedOperatingSystem = "Windows 11";
 
     [ObservableProperty]
-    private string selectedVersion = "22H2";
+    private string selectedVersion = "24H2";
 
     [ObservableProperty]
     private string selectedUpdateType = "Cumulative Update";
@@ -92,45 +94,13 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
     [ObservableProperty]
     private string defaultDownloadPath;
 
-    public ObservableCollection<string> OperatingSystems { get; } = new()
-    {
-        "Windows 11",
-        "Windows 10",
-        "Windows Server 2022",
-        "Windows Server 2019",
-        "Windows Server 2016"
-    };
+    public ObservableCollection<string> OperatingSystems { get; } = new();
 
-    public ObservableCollection<string> Versions { get; } = new()
-    {
-        "23H2",
-        "22H2",
-        "21H2",
-        "21H1",
-        "20H2",
-        "2004",
-        "1909",
-        "1903"
-    };
+    public ObservableCollection<string> Versions { get; } = new();
 
-    public ObservableCollection<string> UpdateTypes { get; } = new()
-    {
-        "Cumulative Update",
-        "Dynamic Update",
-        "Feature Update",
-        ".NET Framework",
-        "Security Update",
-        "Driver",
-        "All"
-    };
+    public ObservableCollection<string> UpdateTypes { get; } = new();
 
-    public ObservableCollection<string> Architectures { get; } = new()
-    {
-        "x64",
-        "x86",
-        "ARM64",
-        "All"
-    };
+    public ObservableCollection<string> Architectures { get; } = new();
 
     public ObservableCollection<string> SortOptions { get; } = new()
     {
@@ -139,9 +109,10 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
         "Title"
     };
 
-    public MicrosoftUpdateCatalogViewModel(IMSCatalogService msUpdateService)
+    public MicrosoftUpdateCatalogViewModel(IMSCatalogService msUpdateService, IWindowsVersionsConfigService configService)
     {
         _msUpdateService = msUpdateService ?? throw new ArgumentNullException(nameof(msUpdateService));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         
         // Set default download path
         DefaultDownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Bucket", "Updates");
@@ -149,6 +120,9 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
         // Initialize with some default values
         MinDate = DateTimeOffset.Now.AddMonths(-6);
         MaxDate = DateTimeOffset.Now;
+
+        // Initialize collections asynchronously
+        _ = InitializeCollectionsAsync();
 
         Logger.Information("MicrosoftUpdateCatalogViewModel initialized");
     }
@@ -385,7 +359,8 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
             ToDate = MaxDate?.DateTime,
             SortBy = SortBy,
             Descending = SortDescending,
-            AllPages = MaxPages > 1
+            AllPages = false, // Use MaxPages limit instead of all pages
+            MaxPages = MaxPages
         };
 
         return request;
@@ -421,6 +396,114 @@ public partial class MicrosoftUpdateCatalogViewModel : ObservableObject
     partial void OnSearchModeChanged(SearchMode value)
     {
         Logger.Information("Search mode changed to: {Mode}", value);
+    }
+
+    partial void OnSelectedOperatingSystemChanged(string value)
+    {
+        Logger.Information("Operating system changed to: {OS}", value);
+        _ = UpdateVersionsAsync();
+    }
+
+    partial void OnSelectedVersionChanged(string value)
+    {
+        Logger.Information("Version changed to: {Version}", value);
+        _ = UpdateArchitecturesAndUpdateTypesAsync();
+    }
+
+    private async Task InitializeCollectionsAsync()
+    {
+        try
+        {
+            // Load operating systems
+            var operatingSystems = await _configService.GetOperatingSystemsAsync();
+            foreach (var os in operatingSystems)
+            {
+                OperatingSystems.Add(os);
+            }
+
+            // Set default OS and load its versions
+            if (OperatingSystems.Any())
+            {
+                SelectedOperatingSystem = OperatingSystems.First();
+                await UpdateVersionsAsync();
+            }
+
+            Logger.Information("Collections initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error initializing collections");
+        }
+    }
+
+    private async Task UpdateVersionsAsync()
+    {
+        try
+        {
+            Versions.Clear();
+            
+            if (string.IsNullOrEmpty(SelectedOperatingSystem))
+                return;
+
+            var versions = await _configService.GetVersionsForOperatingSystemAsync(SelectedOperatingSystem);
+            foreach (var version in versions)
+            {
+                Versions.Add(version);
+            }
+
+            // Set default version
+            if (Versions.Any())
+            {
+                SelectedVersion = Versions.First();
+                await UpdateArchitecturesAndUpdateTypesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error updating versions for OS: {OS}", SelectedOperatingSystem);
+        }
+    }
+
+    private async Task UpdateArchitecturesAndUpdateTypesAsync()
+    {
+        try
+        {
+            Architectures.Clear();
+            UpdateTypes.Clear();
+            
+            if (string.IsNullOrEmpty(SelectedOperatingSystem) || string.IsNullOrEmpty(SelectedVersion))
+                return;
+
+            // Update architectures
+            var architectures = await _configService.GetArchitecturesForVersionAsync(SelectedOperatingSystem, SelectedVersion);
+            foreach (var arch in architectures)
+            {
+                Architectures.Add(arch);
+            }
+
+            // Update update types
+            var updateTypes = await _configService.GetUpdateTypesForVersionAsync(SelectedOperatingSystem, SelectedVersion);
+            foreach (var updateType in updateTypes)
+            {
+                UpdateTypes.Add(updateType);
+            }
+
+            // Set defaults
+            if (Architectures.Any())
+            {
+                SelectedArchitecture = Architectures.Contains("x64") ? "x64" : Architectures.First();
+            }
+
+            if (UpdateTypes.Any())
+            {
+                SelectedUpdateType = UpdateTypes.Contains("Cumulative Update") ? "Cumulative Update" : UpdateTypes.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error updating architectures and update types for OS: {OS}, Version: {Version}", 
+                SelectedOperatingSystem, SelectedVersion);
+        }
     }
 
     public void HandleUpdateSelectionChanged(MSCatalogUpdate update, bool isSelected)

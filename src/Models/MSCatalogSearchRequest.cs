@@ -48,6 +48,11 @@ namespace Bucket.Models
         public bool AllPages { get; set; }
 
         /// <summary>
+        /// Gets or sets the maximum number of pages to process (ignored if AllPages is true)
+        /// </summary>
+        public int MaxPages { get; set; } = 5;
+
+        /// <summary>
         /// Gets or sets whether to include preview updates
         /// </summary>
         public bool IncludePreview { get; set; }
