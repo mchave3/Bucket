@@ -33,6 +33,17 @@ namespace Bucket.ViewModels
                 ProcessInfoHelper.Version, Settings.LastUpdateCheck);
         }
 
+        /// <summary>
+        /// Initializes the ViewModel by automatically checking for updates.
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            Logger.Information("Initializing AppUpdateSettingViewModel - checking for updates");
+
+            // Automatically check for updates when the page loads
+            await CheckForUpdateAsync();
+        }
+
         [RelayCommand]
         private async Task CheckForUpdateAsync()
         {
