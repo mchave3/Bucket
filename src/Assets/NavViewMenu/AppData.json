@@ -1,34 +1,40 @@
-﻿{
-  "$schema": "https://raw.githubusercontent.com/Ghost1372/DevWinUI/refs/heads/main/AppData.Schema.json",
+{
+  "$schema": "./AppData.Schema.json",
   "Groups": [
     {
-      "UniqueId": "Bucket",
-      "Title": "Bucket",
-      "ImagePath": "ms-appx:///Assets/AppIcon.png",
-      "IsSpecialSection": false,
+      "UniqueId": "Bucket.Views.HomeLandingPage",
+      "Title": "Home",
       "ShowItemsWithoutGroup": true,
-      "IsExpanded": false,
       "Items": [
         {
           "UniqueId": "Bucket.Views.HomeLandingPage",
           "Title": "Home",
-          "Subtitle": "Home Landing Page",
-          "IconGlyph": "\uE80F",
-          "HideItem": true
-        },
+          "HideItem": true,
+          "IconGlyph": "\uE80F"
+        }
+      ]
+    },
+    {
+      "UniqueId": "Utility",
+      "Title": "Utility",
+      "IconGlyph": "\uE90F",
+      "IsExpanded": true,
+      "UseBuiltInNavigationViewInfoBadgeStyle": true,
+      "Items": [
         {
           "UniqueId": "Bucket.Views.ImageManagementPage",
           "Title": "Image Management",
           "Subtitle": "Manage Windows Images",
           "IconGlyph": "\uE7C3",
-          "HideItem": false
+          "HideItem": true
         },
         {
           "UniqueId": "Bucket.Views.MicrosoftUpdateCatalogPage",
           "Title": "Update Catalog",
           "Subtitle": "Download Windows Updates",
           "IconGlyph": "\uE8F1",
-          "HideItem": false
+          "HideItem": true,
+          "IsPreview": true
         }
       ]
     }

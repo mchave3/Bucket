@@ -102,7 +102,7 @@ public partial class BreadcrumbPageMappings
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/Ghost1372/DevWinUI/refs/heads/main/AppData.Schema.json",
+  "$schema": "https://raw.githubusercontent.com/ghost1372/DevWinUI/refs/heads/main/tools/AppData.Schema.json",
   "Groups": [
     {
       "UniqueId": "Bucket",
