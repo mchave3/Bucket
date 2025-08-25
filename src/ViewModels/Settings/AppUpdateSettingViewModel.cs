@@ -110,25 +110,7 @@ namespace Bucket.ViewModels
         [RelayCommand]
         private async Task GetReleaseNotesAsync()
         {
-            ContentDialog dialog = new ContentDialog()
-            {
-                Title = "Release Note",
-                CloseButtonText = "Close",
-                Content = new ScrollViewer
-                {
-                    Content = new TextBlock
-                    {
-                        Text = ChangeLog,
-                        Margin = new Thickness(10)
-                    },
-                    Margin = new Thickness(10)
-                },
-                Margin = new Thickness(10),
-                DefaultButton = ContentDialogButton.Close,
-                XamlRoot = App.MainWindow.Content.XamlRoot
-            };
-
-            await dialog.ShowAsync();
+            await MessageBox.ShowInfoAsync(ChangeLog, "Release Notes", MessageBoxButtons.OK);
         }
     }
 }
