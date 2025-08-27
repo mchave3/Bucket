@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Bucket.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Bucket.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

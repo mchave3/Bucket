@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Bucket.App.Tests (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Bucket.App.Tests (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
