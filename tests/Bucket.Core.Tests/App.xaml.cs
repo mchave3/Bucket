@@ -1,5 +1,10 @@
 ﻿namespace Bucket.Core.Tests
 {
+    public static class Constants
+    {
+        public static readonly string RootDirectoryPath = Path.GetTempPath();
+    }
+
     public partial class App : Application
     {
         public new static App Current => (App)Application.Current;

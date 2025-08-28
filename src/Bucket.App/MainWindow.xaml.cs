@@ -1,10 +1,14 @@
 ﻿using Microsoft.UI.Windowing;
+using Bucket.Core.Helpers;
 
 namespace Bucket.App.Views
 {
     public sealed partial class MainWindow : Window
     {
         public MainViewModel ViewModel { get; }
+
+        public string AppVersion => VersionHelper.GetAppVersion();
+
         public MainWindow()
         {
             ViewModel = App.GetService<MainViewModel>();

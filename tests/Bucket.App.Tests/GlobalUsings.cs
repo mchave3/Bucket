@@ -1,4 +1,5 @@
-﻿global using Bucket.App.Tests.Views;
+﻿global using Bucket.App.Common;
+global using Bucket.App.Tests.Views;
 global using Microsoft.UI;
 global using Microsoft.UI.Xaml;
 global using Microsoft.UI.Xaml.Controls;

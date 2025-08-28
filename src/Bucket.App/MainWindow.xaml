@@ -16,7 +16,7 @@
                   Title="{x:Bind dev:ProcessInfoHelper.ProductName}"
                   IsBackButtonVisible="True"
                   IsPaneToggleButtonVisible="True"
-                  Subtitle="{x:Bind dev:ProcessInfoHelper.VersionWithPrefix}">
+                  Subtitle="{x:Bind AppVersion, Mode=OneWay}">
             <AutoSuggestBox MinWidth="320"
                             VerticalAlignment="Center"
                             PlaceholderText="Search"
@@ -52,4 +52,3 @@
         </NavigationView>
     </Grid>
 </Window>
-
