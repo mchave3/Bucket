@@ -9,6 +9,9 @@
     <GeneratePriFile>false</GeneratePriFile>
     <EnableDefaultPriItems>false</EnableDefaultPriItems>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Disable problematic publish profiles and trimming during CI builds -->
+    <PublishProfile Condition="'$(MSBuildProjectName)' != '$(ProjectName)' OR '$(BuildingProject)' != 'true'"></PublishProfile>
+    <PublishTrimmed Condition="'$(Configuration)' == 'Release' AND '$(BuildingProject)' != 'true'">false</PublishTrimmed>
   </PropertyGroup>
 
   <!-- Specific fixes for test projects -->
@@ -18,5 +21,9 @@
     <GeneratePriFile>false</GeneratePriFile>
     <EnableDefaultPriItems>false</EnableDefaultPriItems>
     <UseWinUI>false</UseWinUI>
+    <PublishProfile></PublishProfile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
   </PropertyGroup>
 </Project>

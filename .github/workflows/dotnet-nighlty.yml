@@ -162,6 +162,9 @@ jobs:
           "/p:UseWinUI=false"
           "/p:WindowsAppSDKSelfContained=false"
           "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
+          "/p:PublishProfile="
+          "/p:PublishTrimmed=false"
+          "/p:EnableMsixTooling=true"
         )
 
         # Try running the tests with enhanced parameters
@@ -191,6 +194,9 @@ jobs:
             "/p:UseWinUI=false"
             "/p:WindowsAppSDKSelfContained=false"
             "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
+            "/p:PublishProfile="
+            "/p:PublishTrimmed=false"
+            "/p:EnableMsixTooling=true"
           )
 
           try {
