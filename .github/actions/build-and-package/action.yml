@@ -50,7 +50,7 @@ inputs:
 outputs:
   package-path:
     description: 'Path to the created package'
-    value: ${{ steps.create-package.outputs.package-path }}
+    value: ${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip
   package-size:
     description: 'Size of the created package in MB'
     value: ${{ steps.verify-package.outputs.package-size }}
@@ -178,7 +178,10 @@ runs:
       run: |
         Write-Host "🔍 Verifying package integrity..."
 
-        $packagePath = "${{ steps.create-package.outputs.package-path }}"
+        # Recalculate package name (same as in create-package step)
+        $packagePath = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+
+        Write-Host "🔧 Looking for package: $packagePath"
 
         if (Test-Path $packagePath) {
           $packageInfo = Get-Item $packagePath
@@ -200,13 +203,14 @@ runs:
     - name: 📊 Build Summary
       shell: pwsh
       run: |
-        # Recalculate runtime ID for display
+        # Recalculate values for display
         $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
+        $packageName = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
 
         Write-Host "📊 Build Summary:"
         Write-Host "  • Platform: ${{ inputs.platform }}"
         Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
         Write-Host "  • Runtime: $runtimeIdentifier"
-        Write-Host "  • Package: ${{ steps.create-package.outputs.package-path }}"
+        Write-Host "  • Package: $packageName"
         Write-Host "  • Package Size: ${{ steps.verify-package.outputs.package-size }} MB"
         Write-Host "  • Status: ✅ Build and packaging completed successfully"

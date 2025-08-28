@@ -42,7 +42,7 @@ outputs:
     value: ${{ steps.publish-release.outputs.html_url }}
   tag-name:
     description: 'Name of the created tag'
-    value: ${{ steps.tag-info.outputs.tag-name }}
+    value: v${{ inputs.app-version }}
   release-id:
     description: 'ID of the created release'
     value: ${{ steps.publish-release.outputs.id }}
@@ -75,7 +75,8 @@ runs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
 
-        TAG_NAME="${{ steps.tag-info.outputs.tag-name }}"
+        # Recalculate tag name directly
+        TAG_NAME="v${{ inputs.app-version }}"
         echo "📌 Creating tag: $TAG_NAME"
 
         # Check if tag already exists locally
@@ -98,12 +99,15 @@ runs:
         # Install auto-changelog
         npm install -g auto-changelog
 
+        # Recalculate tag name directly
+        TAG_NAME="v${{ inputs.app-version }}"
+
         # Generate changelog for this specific version
         auto-changelog \
           --tag-pattern .+ \
           --commit-limit false \
-          --starting-version ${{ steps.tag-info.outputs.tag-name }} \
-          --ending-version ${{ steps.tag-info.outputs.tag-name }} \
+          --starting-version $TAG_NAME \
+          --ending-version $TAG_NAME \
           --hide-credit
 
         echo "📄 Changelog preview (first 20 lines):"
@@ -131,8 +135,8 @@ runs:
       with:
         artifacts: ${{ inputs.artifacts-pattern }}
         bodyFile: "CHANGELOG.md"
-        name: ${{ steps.tag-info.outputs.release-title }}
-        tag: ${{ steps.tag-info.outputs.tag-name }}
+        name: ${{ inputs.release-name }} v${{ inputs.app-version }}
+        tag: v${{ inputs.app-version }}
         token: ${{ inputs.github-token }}
         prerelease: ${{ inputs.is-prerelease }}
         makeLatest: ${{ inputs.make-latest }}
@@ -143,9 +147,13 @@ runs:
     - name: ✅ Release Summary
       shell: bash
       run: |
+        # Recalculate values for display
+        TAG_NAME="v${{ inputs.app-version }}"
+        RELEASE_TITLE="${{ inputs.release-name }} v${{ inputs.app-version }}"
+
         echo "✅ Release Management Summary:"
-        echo "  • Tag: ${{ steps.tag-info.outputs.tag-name }}"
-        echo "  • Release Title: ${{ steps.tag-info.outputs.release-title }}"
+        echo "  • Tag: $TAG_NAME"
+        echo "  • Release Title: $RELEASE_TITLE"
         echo "  • Release URL: ${{ steps.publish-release.outputs.html_url }}"
         echo "  • Release ID: ${{ steps.publish-release.outputs.id }}"
         echo "  • Pre-release: ${{ inputs.is-prerelease }}"
