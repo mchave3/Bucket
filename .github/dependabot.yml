@@ -50,9 +50,3 @@ updates:
         # WindowsAppSDK updates often require testing
       - dependency-name: "Microsoft.Windows.SDK.BuildTools"
         # SDK tools updates need careful consideration
-      - dependency-name: "Microsoft.Windows.CsWinRT"
-        # CsWinRT tools require Windows-specific compilation
-      - dependency-name: "Microsoft.Graphics.Win2D"
-        # Win2D requires Windows-specific graphics APIs
-      - dependency-name: "Microsoft.UI.*"
-        # WinUI components require Windows-specific compilation

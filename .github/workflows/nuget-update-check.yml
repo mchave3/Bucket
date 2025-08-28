@@ -1,0 +1,77 @@
+name: NuGet Package Update Check
+
+on:
+  schedule:
+    # Exécute tous les jours à 9h00 UTC (10h00 CET / 11h00 CEST)
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Permet l'exécution manuelle
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-nuget-updates:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Install dotnet-outdated tool
+      run: dotnet tool install --global dotnet-outdated-tool
+
+    - name: Check for outdated packages and create summary
+      id: check-outdated
+      shell: pwsh
+      run: .\.github\scripts\check-nuget-updates.ps1
+
+    - name: Update packages if outdated
+      if: steps.check-outdated.outputs.has-updates == 'true'
+      run: dotnet outdated --upgrade
+
+    - name: Build solution to verify updates
+      if: steps.check-outdated.outputs.has-updates == 'true'
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests to verify updates
+      if: steps.check-outdated.outputs.has-updates == 'true'
+      run: dotnet test --configuration Release --no-build --verbosity normal
+
+    - name: Create Pull Request
+      if: steps.check-outdated.outputs.has-updates == 'true'
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: mise à jour des packages NuGet"
+        title: "🔄 Mise à jour automatique des packages NuGet"
+        body-path: updates-summary.md
+        branch: automated/nuget-updates
+        delete-branch: true
+        assignees: ${{ github.repository_owner }}
+        labels: |
+          dependencies
+          automated-pr
+          nuget
+
+    - name: Log success if no updates found
+      if: steps.check-outdated.outputs.has-updates == 'false'
+      run: Write-Host "✅ Tous les packages NuGet sont à jour !"
+
+    - name: Upload updates summary as artifact
+      if: steps.check-outdated.outputs.has-updates == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-updates-summary
+        path: updates-summary.md
+        retention-days: 30

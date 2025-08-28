@@ -1,0 +1,92 @@
+name: Test NuGet Update System
+
+on:
+  workflow_dispatch: # Permet l'exécution manuelle pour tester
+  pull_request:
+    paths:
+      - '.github/workflows/nuget-update-check.yml'
+      - '.github/workflows/manual-nuget-update.yml'
+      - '.github/scripts/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test-nuget-system:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Install dotnet-outdated tool
+      run: dotnet tool install --global dotnet-outdated-tool
+
+    - name: Test package listing script
+      shell: pwsh
+      run: |
+        Write-Host "Test du script de liste des packages..."
+        .\.github\scripts\list-packages.ps1
+
+    - name: Test outdated check script (dry run)
+      shell: pwsh
+      run: |
+        Write-Host "Test du script de vérification (mode simulation)..."
+        $originalOutputFile = "updates-summary.md"
+        $testOutputFile = "test-updates-summary.md"
+
+        # Créer une copie du script pour le test
+        $scriptContent = Get-Content .\.github\scripts\check-nuget-updates.ps1 -Raw
+        $testScript = $scriptContent -replace $originalOutputFile, $testOutputFile
+        $testScript | Out-File -FilePath "test-check-updates.ps1" -Encoding UTF8
+
+        # Exécuter le script de test
+        .\test-check-updates.ps1
+
+        # Vérifier si un fichier de résumé a été créé
+        if (Test-Path $testOutputFile) {
+          Write-Host "✅ Script de vérification fonctionne correctement"
+          Write-Host "Contenu du fichier de test:"
+          Get-Content $testOutputFile
+        } else {
+          Write-Host "ℹ️  Aucun fichier de résumé créé (pas de mises à jour disponibles)"
+        }
+
+    - name: Test manual summary script
+      shell: pwsh
+      run: |
+        Write-Host "Test du script de résumé manuel..."
+        .\.github\scripts\create-manual-summary.ps1 -Packages "TestPackage1,TestPackage2" -TargetVersions "1.0.0,2.0.0" -OutputFile "test-manual-summary.md"
+
+        if (Test-Path "test-manual-summary.md") {
+          Write-Host "✅ Script de résumé manuel fonctionne correctement"
+          Write-Host "Contenu du fichier de test:"
+          Get-Content "test-manual-summary.md"
+        } else {
+          Write-Host "❌ Le script de résumé manuel a échoué"
+          exit 1
+        }
+
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          test-*.md
+          *.md
+        retention-days: 7
