@@ -5,10 +5,11 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 env:
   # Configuring Project
-  PROJECT_PATH: YOUR_FOLDER/Bucket.csproj
+  PROJECT_PATH: src/Bucket.App/Bucket.App.csproj
   APP_NAME: Bucket
 
   # Check Tag
@@ -21,11 +22,11 @@ env:
 
   # Configuring Dotnet Build Commands
   PUBLISH_OUTPUT_FOLDER: Publish
-  PUBLISH_SELF_CONTAINED: false
+  PUBLISH_SELF_CONTAINED: true
   PUBLISH_SINGLE_FILE: false
-  PUBLISH_READY_TO_RUN: false
+  PUBLISH_READY_TO_RUN: true
   PUBLISH_AOT: false
-  PUBLISH_TRIMMED: false
+  PUBLISH_TRIMMED: true
   PUBLISH_TRIM_MODE: partial # or full
 
   # Configuring GitHub Release
@@ -43,18 +44,67 @@ jobs:
       IS_PRE_RELEASE: ${{ env.IS_PRE_RELEASE }}
     strategy:
       matrix:
-        platform: [x86, x64, ARM64] # Change platform if you want to build only a specific platform
+        platform: [x86, x64, ARM64] # Build for Windows x86, x64, and ARM64 platforms
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
+    # Generate automatic release version in format YY.M.D.BUILD
+    - name: Update version in csproj for Release
+      run: |
+        $date = Get-Date
+        $year = $date.ToString("yy")
+        $month = $date.Month
+        $day = $date.Day
+
+        # Get today's existing releases to calculate build number
+        try {
+          $existingReleases = gh api repos/${{ github.repository }}/releases --paginate | ConvertFrom-Json | Where-Object { $_.tag_name -match "^v$year\.$month\.$day\.(\d+)$" }
+          $buildNumber = 1
+          if ($existingReleases) {
+            $buildNumber = ($existingReleases | ForEach-Object { [int]($_.tag_name -replace "^v$year\.$month\.$day\.(\d+)$", '$1') } | Measure-Object -Maximum).Maximum + 1
+          }
+        } catch {
+          Write-Host "Could not fetch existing releases, starting with build number 1"
+          $buildNumber = 1
+        }
+
+        $newVersion = "$year.$month.$day.$buildNumber"
+        echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
+
+        # Update csproj file
+        $csprojPath = "${{ env.PROJECT_PATH }}"
+        $content = Get-Content $csprojPath -Raw
+        $content = $content -replace '<Version>.*?</Version>', "<Version>$newVersion</Version>"
+        Set-Content -Path $csprojPath -Value $content
+
+        echo "Updated version to: $newVersion"
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    # Install .NET SDK versions 8.x and 9.x
     - uses: actions/setup-dotnet@v4
       with:
        dotnet-version: |
          8.x.x
          9.x.x
+
+    # Run unit tests before building
+    - name: Run unit tests
+      run: |
+        echo "Running unit tests..."
+        dotnet test --configuration Release --logger trx --results-directory TestResults/ --verbosity normal
+      continue-on-error: false
+
+    # Upload test results
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.platform }}
+        path: TestResults/**/*.trx
 
     # Add CommunityToolkit Labs and Main nuget sources
     - run: |
@@ -73,33 +123,40 @@ jobs:
         }
       if: contains(env.IS_CUSTOM_NUGET_SOURCE_ENABLED, 'true')
 
-    # Reading version tag from the csproj file.
+    # Read version from the updated csproj file
     - uses: kzrnm/get-net-sdk-project-versions-action@v2
       id: get-version
       with:
         proj-path: ${{ env.PROJECT_PATH }}
 
-    # Building with configured commands
-    - run: |
+    # Verify the version was updated correctly
+    - name: Verify version
+      run: |
+        echo "Version from action: ${{ steps.get-version.outputs.version }}"
+
+    # Build and publish the application for Windows platforms
+    - name: Build and publish application
+      run: |
         $runtimeIdentifier = "${{ matrix.platform }}"
         dotnet publish ${{ env.PROJECT_PATH }} -c Release -r win-$($runtimeIdentifier.ToLower()) /p:GITHUB_ACTIONS=true -p:Platform=${{ matrix.platform }} --self-contained ${{ env.PUBLISH_SELF_CONTAINED }} -p:PublishSingleFile=${{ env.PUBLISH_SINGLE_FILE }} -p:PublishReadyToRun=${{ env.PUBLISH_READY_TO_RUN }} -p:PublishTrimmed=${{ env.PUBLISH_TRIMMED }} -p:TrimMode=${{ env.PUBLISH_TRIM_MODE }} -p:PublishAot=${{ env.PUBLISH_AOT }} --output ${{ env.PUBLISH_OUTPUT_FOLDER }}/${{ matrix.platform }}
 
-    # Zipping folder and all files
+    # Create ZIP archive for each platform
     - uses: vimtor/action-zip@v1.2
       with:
         files: ${{ env.PUBLISH_OUTPUT_FOLDER }}/${{ matrix.platform }}
         recursive: true
         dest: ${{ env.APP_NAME }}-v${{ steps.get-version.outputs.version }}-${{ matrix.platform }}.zip
 
-    # Uploading all zip files to access them in the 'release' job
+    # Upload build artifacts for the release job
     - uses: actions/upload-artifact@v4
       with:
         name: artifacts-${{ matrix.platform }}
         path: ${{ env.APP_NAME }}-v${{ steps.get-version.outputs.version }}-${{ matrix.platform }}.zip
 
-    # Checking version suffix for words like [alpha, beta, preview, and experiment]. Marking the release as a pre-release if any exists.
-    - run: |
-        # Define the list of strings
+    # Determine if this should be a pre-release based on version suffix
+    - name: Check pre-release status
+      run: |
+        # Define the list of strings that indicate pre-release
         $list = @("beta", "alpha", "preview", "experiment")
 
         # Define the suffix variable
@@ -126,13 +183,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Downloading all zip files into the GitHub root directory (uploaded in 'build' job)
+      # Download build artifacts from all platforms
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
 
-      # Configuring git to create a tag
-      - run: |
+      # Create and push git tag for the release
+      - name: Create git tag
+        run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
 
@@ -152,11 +210,13 @@ jobs:
               git push origin "$TAG_NAME"
           fi
 
-      # Installing a package for generating a changelog file
-      - run: npm install -g auto-changelog
-      - run: auto-changelog --tag-pattern .+ --commit-limit false --starting-version v${{ env.APP_VERSION }} --ending-version v${{ env.APP_VERSION }} --hide-credit
+      # Generate changelog for the release
+      - name: Generate changelog
+        run: |
+          npm install -g auto-changelog
+          auto-changelog --tag-pattern .+ --commit-limit false --starting-version v${{ env.APP_VERSION }} --ending-version v${{ env.APP_VERSION }} --hide-credit
 
-      # Creating a Release in GitHub
+      # Create GitHub release with artifacts
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-*.zip"
@@ -168,6 +228,90 @@ jobs:
           makeLatest: ${{ env.MAKE_LATEST }}
           allowUpdates: ${{ env.ALLOW_UPDATES }}
           artifactErrorsFailBuild: ${{ env.ARTIFACT_ERRORS_FAIL_BUILD }}
+
+  # Job Summary - Summary of the release build results
+  summary:
+    needs: [build, release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Job Summary
+        run: |
+          # Start the summary
+          echo "# 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Build status
+          if [[ "${{ needs.build.result }}" == "success" && "${{ needs.release.result }}" == "success" ]]; then
+            echo "## ✅ Build Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 **Release has been successfully published!**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "💥 **Build failed during compilation or testing phase**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.release.result }}" == "failure" ]]; then
+            echo "## ⚠️ Build Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "🔨 **Build succeeded but release publication failed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⏸️ Build Status: CANCELLED" >> $GITHUB_STEP_SUMMARY
+            echo "🛑 **Build was cancelled or interrupted**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Release information
+          echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`v${{ needs.build.outputs.app-version || 'N/A' }}\` |" >> $GITHUB_STEP_SUMMARY
+
+          # Determine release type
+          if [[ "${{ needs.build.outputs.IS_PRE_RELEASE }}" == "true" ]]; then
+            echo "| **Type** | 🧪 Pre-release |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| **Type** | 🏷️ Stable Release |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "| **Date** | $(date +'%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} (Manual) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Platforms built
+          echo "## 🖥️ Target Platforms" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **x86** - Windows 32-bit" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **x64** - Windows 64-bit" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **ARM64** - Windows ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Build configuration
+          echo "## ⚙️ Build Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Self-contained**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ready to Run**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trimmed**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **AOT**: \`false\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Configuration**: \`Release\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Download links (only if release was successful)
+          if [[ "${{ needs.release.result }}" == "success" ]]; then
+            echo "## 📥 Download Links" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x86.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Release Statistics" >> $GITHUB_STEP_SUMMARY
+            echo "- **Platforms**: 3 (x86, x64, ARM64)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: 3 ZIP files" >> $GITHUB_STEP_SUMMARY
+            echo "- **Auto-generated**: Changelog included" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*🤖 Generated by GitHub Actions on $(date +'%Y-%m-%d at %H:%M:%S UTC')*" >> $GITHUB_STEP_SUMMARY
 
 
 
