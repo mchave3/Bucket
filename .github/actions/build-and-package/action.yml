@@ -50,7 +50,7 @@ inputs:
 outputs:
   package-path:
     description: 'Path to the created package'
-    value: ${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip
+    value: ${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip
   package-size:
     description: 'Size of the created package in MB'
     value: ${{ steps.verify-package.outputs.package-size }}
@@ -146,7 +146,7 @@ runs:
 
         # Recalculate the output path (same as in build step)
         $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
-        $packageName = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+        $packageName = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
 
         Write-Host "  • Source Path: $outputPath"
         Write-Host "  • Package Name: $packageName"
@@ -179,7 +179,7 @@ runs:
         Write-Host "🔍 Verifying package integrity..."
 
         # Recalculate package name (same as in create-package step)
-        $packagePath = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+        $packagePath = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
 
         Write-Host "🔧 Looking for package: $packagePath"
 
@@ -205,7 +205,7 @@ runs:
       run: |
         # Recalculate values for display
         $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
-        $packageName = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+        $packageName = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
 
         Write-Host "📊 Build Summary:"
         Write-Host "  • Platform: ${{ inputs.platform }}"

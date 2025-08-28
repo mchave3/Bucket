@@ -42,7 +42,7 @@ outputs:
     value: ${{ steps.publish-release.outputs.html_url }}
   tag-name:
     description: 'Name of the created tag'
-    value: v${{ inputs.app-version }}
+    value: ${{ inputs.app-version }}
   release-id:
     description: 'ID of the created release'
     value: ${{ steps.publish-release.outputs.id }}
@@ -54,8 +54,8 @@ runs:
       id: tag-info
       shell: bash
       run: |
-        TAG_NAME="v${{ inputs.app-version }}"
-        RELEASE_TITLE="${{ inputs.release-name }} v${{ inputs.app-version }}"
+        TAG_NAME="${{ inputs.app-version }}"
+        RELEASE_TITLE="${{ inputs.release-name }} ${{ inputs.app-version }}"
 
         echo "🚀 Release Information:"
         echo "  • Tag Name: $TAG_NAME"
@@ -76,7 +76,7 @@ runs:
         git config --local user.name "GitHub Actions"
 
         # Recalculate tag name directly
-        TAG_NAME="v${{ inputs.app-version }}"
+        TAG_NAME="${{ inputs.app-version }}"
         echo "📌 Creating tag: $TAG_NAME"
 
         # Check if tag already exists locally
@@ -100,15 +100,14 @@ runs:
         npm install -g auto-changelog
 
         # Recalculate tag name directly
-        TAG_NAME="v${{ inputs.app-version }}"
+        TAG_NAME="${{ inputs.app-version }}"
 
         # Generate changelog for this specific version
         auto-changelog \
           --tag-pattern .+ \
           --commit-limit false \
           --starting-version $TAG_NAME \
-          --ending-version $TAG_NAME \
-          --hide-credit
+          --ending-version $TAG_NAME
 
         echo "📄 Changelog preview (first 20 lines):"
         head -20 CHANGELOG.md || echo "No changelog content generated"
@@ -135,8 +134,8 @@ runs:
       with:
         artifacts: ${{ inputs.artifacts-pattern }}
         bodyFile: "CHANGELOG.md"
-        name: ${{ inputs.release-name }} v${{ inputs.app-version }}
-        tag: v${{ inputs.app-version }}
+        name: ${{ inputs.release-name }} ${{ inputs.app-version }}
+        tag: ${{ inputs.app-version }}
         token: ${{ inputs.github-token }}
         prerelease: ${{ inputs.is-prerelease }}
         makeLatest: ${{ inputs.make-latest }}
@@ -148,8 +147,8 @@ runs:
       shell: bash
       run: |
         # Recalculate values for display
-        TAG_NAME="v${{ inputs.app-version }}"
-        RELEASE_TITLE="${{ inputs.release-name }} v${{ inputs.app-version }}"
+        TAG_NAME="${{ inputs.app-version }}"
+        RELEASE_TITLE="${{ inputs.release-name }} ${{ inputs.app-version }}"
 
         echo "✅ Release Management Summary:"
         echo "  • Tag: $TAG_NAME"

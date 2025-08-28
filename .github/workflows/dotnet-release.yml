@@ -70,12 +70,12 @@ jobs:
           try {
             $existingReleases = gh api repos/${{ github.repository }}/releases --paginate |
               ConvertFrom-Json |
-              Where-Object { $_.tag_name -match "^v$year\.$month\.$day\.(\d+)$" -and $_.prerelease -eq $false }
+              Where-Object { $_.tag_name -match "^$year\.$month\.$day\.(\d+)$" -and $_.prerelease -eq $false }
 
             $buildNumber = 1
             if ($existingReleases) {
               $buildNumber = ($existingReleases |
-                ForEach-Object { [int]($_.tag_name -replace "^v$year\.$month\.$day\.(\d+)$", '$1') } |
+                ForEach-Object { [int]($_.tag_name -replace "^$year\.$month\.$day\.(\d+)$", '$1') } |
                 Measure-Object -Maximum).Maximum + 1
             }
           } catch {
@@ -217,7 +217,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-package-${{ matrix.platform }}
-          path: ${{ env.APP_NAME }}-v${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip
+          path: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip
           retention-days: 90
 
   # ──────────────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ jobs:
           make-latest: ${{ needs.release-preparation.outputs.make-latest }}
           skip-if-exists: ${{ env.SKIP_IF_RELEASE_EXISTS }}
           allow-updates: ${{ env.ALLOW_UPDATES }}
-          artifacts-pattern: "${{ env.APP_NAME }}-v${{ needs.release-preparation.outputs.app-version }}-*.zip"
+          artifacts-pattern: "${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*.zip"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   # ──────────────────────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ jobs:
             echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
             echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
             echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| **Version** | \`v${{ needs.release-preparation.outputs.app-version }}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| **Version** | \`${{ needs.release-preparation.outputs.app-version }}\` |" >> $GITHUB_STEP_SUMMARY
 
             if [[ "${{ needs.release-preparation.outputs.is-pre-release }}" == "true" ]]; then
               echo "| **Type** | 🧪 Pre-release |" >> $GITHUB_STEP_SUMMARY
@@ -312,12 +312,12 @@ jobs:
 
             # Download Information
             echo "## 📥 Download Information" >> $GITHUB_STEP_SUMMARY
-            echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.release-preparation.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/${{ needs.release-preparation.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows x86 (32-bit)](https://github.com/${{ github.repository }}/releases/download/v${{ needs.release-preparation.outputs.app-version }}/Bucket-v${{ needs.release-preparation.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows x64 (64-bit)](https://github.com/${{ github.repository }}/releases/download/v${{ needs.release-preparation.outputs.app-version }}/Bucket-v${{ needs.release-preparation.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows ARM64](https://github.com/${{ github.repository }}/releases/download/v${{ needs.release-preparation.outputs.app-version }}/Bucket-v${{ needs.release-preparation.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Windows x86 (32-bit)](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Windows x64 (64-bit)](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Windows ARM64](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
