@@ -109,23 +109,22 @@ jobs:
 
           # Use default values instead of user inputs
           $isPreRelease = $false
-          $versionSuffix = "${{ steps.version.outputs.version-suffix }}"
 
-          # Check version suffix for pre-release indicators
-          $preReleaseKeywords = @("beta", "alpha", "preview", "experiment", "rc")
-          foreach ($keyword in $preReleaseKeywords) {
-            if ($versionSuffix.ToLower().Contains($keyword.ToLower())) {
-              $isPreRelease = $true
-              break
-            }
-          }
+          # Get version directly from the previous step's project reading
+          $versionSuffix = ""
+
+          # Since we're using auto-generated versions (YY.M.D.Build), they're always stable releases
+          # Only manually set versions with suffixes would be pre-releases
+
+          # For auto-generated versions, always set as stable release
+          $isPreRelease = $false
 
           # Determine if this should be marked as latest
           $makeLatest = -not $isPreRelease
 
           Write-Host "📋 Release Configuration:"
-          Write-Host "  • Version: ${{ steps.version.outputs.version }}"
-          Write-Host "  • Version Suffix: $versionSuffix"
+          Write-Host "  • Version: [Version will be read from project file]"
+          Write-Host "  • Version Suffix: (none - auto-generated)"
           Write-Host "  • Pre-release: $isPreRelease"
           Write-Host "  • Make Latest: $makeLatest"
           Write-Host "  • Mode: Automatic (no user inputs)"
@@ -237,7 +236,7 @@ jobs:
         with:
           name: release-package-${{ matrix.platform }}
           path: ${{ env.APP_NAME }}-v${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip
-          retention-days: 365
+          retention-days: 90
 
   # ──────────────────────────────────────────────────────────────────────────
   # 🚀 RELEASE PUBLICATION JOB (USING REUSABLE ACTION)
