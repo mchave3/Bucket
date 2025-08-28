@@ -1,0 +1,22 @@
+<Project>
+  <!-- Global properties for all projects -->
+
+  <!-- Fix for MSB4062 Windows App SDK packaging tasks in CI/CD environments -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <!-- Disable Windows App SDK packaging features that cause issues in GitHub Actions -->
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <GeneratePriFile>false</GeneratePriFile>
+    <EnableDefaultPriItems>false</EnableDefaultPriItems>
+    <EnableMsixTooling>true</EnableMsixTooling>
+  </PropertyGroup>
+
+  <!-- Specific fixes for test projects -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' OR $(MSBuildProjectName.Contains('Test'))">
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <GeneratePriFile>false</GeneratePriFile>
+    <EnableDefaultPriItems>false</EnableDefaultPriItems>
+    <UseWinUI>false</UseWinUI>
+  </PropertyGroup>
+</Project>
