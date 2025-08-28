@@ -11,3 +11,5 @@ global using Microsoft.UI.Xaml.Controls;
 global using Microsoft.UI.Xaml.Navigation;
 global using static Bucket.App.Common.AppHelper;
 global using static Bucket.App.Common.LoggerSetup;
+
+// Test
