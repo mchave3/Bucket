@@ -25,5 +25,8 @@
     <PublishTrimmed>false</PublishTrimmed>
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishAot>false</PublishAot>
+    <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 </Project>

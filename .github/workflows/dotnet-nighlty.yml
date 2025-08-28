@@ -164,6 +164,9 @@ jobs:
           "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
           "/p:PublishProfile="
           "/p:PublishTrimmed=false"
+          "/p:PublishReadyToRun=false"
+          "/p:PublishAot=false"
+          "/p:PublishSingleFile=false"
           "/p:EnableMsixTooling=true"
         )
 
@@ -196,6 +199,9 @@ jobs:
             "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
             "/p:PublishProfile="
             "/p:PublishTrimmed=false"
+            "/p:PublishReadyToRun=false"
+            "/p:PublishAot=false"
+            "/p:PublishSingleFile=false"
             "/p:EnableMsixTooling=true"
           )
 
