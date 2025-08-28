@@ -119,8 +119,8 @@ jobs:
           "/p:GeneratePriFile=false"
           "/p:EnableDefaultPriItems=false"
           "/p:UseWinUI=false"
-          "/p:EnableMsixTooling=false"
           "/p:WindowsAppSDKSelfContained=false"
+          "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
         )
 
         # Try running the tests with enhanced parameters
@@ -148,8 +148,8 @@ jobs:
             "/p:GeneratePriFile=false"
             "/p:EnableDefaultPriItems=false"
             "/p:UseWinUI=false"
-            "/p:EnableMsixTooling=false"
             "/p:WindowsAppSDKSelfContained=false"
+            "/p:AppxGeneratePrisForPortableLibrariesEnabled=false"
           )
 
           try {
