@@ -56,7 +56,7 @@ outputs:
     value: ${{ steps.verify-package.outputs.package-size }}
   build-output-path:
     description: 'Path to build output directory'
-    value: ${{ steps.build-info.outputs.output-path }}
+    value: ${{ inputs.output-folder }}/${{ inputs.platform }}
 
 runs:
   using: 'composite'
@@ -90,8 +90,12 @@ runs:
       run: |
         Write-Host "🏗️ Starting build and publish for ${{ inputs.platform }}..."
 
-        $runtimeIdentifier = "${{ steps.build-info.outputs.runtime-id }}"
-        $outputPath = "${{ steps.build-info.outputs.output-path }}"
+        # Recalculate the values directly (since outputs don't work reliably in composite actions)
+        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
+        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
+
+        Write-Host "🔧 Using Runtime ID: $runtimeIdentifier"
+        Write-Host "🔧 Using Output Path: $outputPath"
 
         # Execute the build
         dotnet publish ${{ inputs.project-path }} `
@@ -136,11 +140,37 @@ runs:
 
     - name: 📦 Create Distribution Package
       id: create-package
-      uses: vimtor/action-zip@v1.2
-      with:
-        files: ${{ steps.build-info.outputs.output-path }}
-        recursive: true
-        dest: ${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip
+      shell: pwsh
+      run: |
+        Write-Host "📦 Creating package for ${{ inputs.platform }}..."
+
+        # Recalculate the output path (same as in build step)
+        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
+        $packageName = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+
+        Write-Host "  • Source Path: $outputPath"
+        Write-Host "  • Package Name: $packageName"
+
+        # Verify source directory exists
+        if (-not (Test-Path $outputPath)) {
+          Write-Error "❌ Source directory not found: $outputPath"
+          exit 1
+        }
+
+        # Get absolute path
+        $absoluteOutputPath = Resolve-Path $outputPath
+        Write-Host "  • Absolute Path: $absoluteOutputPath"
+
+        # Create zip package using PowerShell
+        Compress-Archive -Path "$absoluteOutputPath\*" -DestinationPath $packageName -Force
+
+        if (Test-Path $packageName) {
+          Write-Host "✅ Package created successfully: $packageName"
+          echo "package-path=$packageName" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ Failed to create package: $packageName"
+          exit 1
+        }
 
     - name: 🔍 Verify Package Integrity
       id: verify-package
@@ -148,7 +178,7 @@ runs:
       run: |
         Write-Host "🔍 Verifying package integrity..."
 
-        $packagePath = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+        $packagePath = "${{ steps.create-package.outputs.package-path }}"
 
         if (Test-Path $packagePath) {
           $packageInfo = Get-Item $packagePath
@@ -162,7 +192,6 @@ runs:
 
           # Set outputs
           echo "package-size=$sizeMB" >> $GITHUB_OUTPUT
-          echo "package-path=$packagePath" >> $GITHUB_OUTPUT
         } else {
           Write-Error "❌ Package not found: $packagePath"
           exit 1
@@ -171,10 +200,13 @@ runs:
     - name: 📊 Build Summary
       shell: pwsh
       run: |
+        # Recalculate runtime ID for display
+        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
+
         Write-Host "📊 Build Summary:"
         Write-Host "  • Platform: ${{ inputs.platform }}"
         Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
-        Write-Host "  • Runtime: ${{ steps.build-info.outputs.runtime-id }}"
-        Write-Host "  • Package: ${{ steps.verify-package.outputs.package-path }}"
+        Write-Host "  • Runtime: $runtimeIdentifier"
+        Write-Host "  • Package: ${{ steps.create-package.outputs.package-path }}"
         Write-Host "  • Package Size: ${{ steps.verify-package.outputs.package-size }} MB"
         Write-Host "  • Status: ✅ Build and packaging completed successfully"
