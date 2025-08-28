@@ -105,21 +105,22 @@ jobs:
         }
         echo "✅ Core tests completed successfully"
 
-        # Test App library with Windows App SDK workarounds
-        echo "🧪 Testing Bucket.App library..."
+        # Test App library with specific platform architecture
+        echo "🧪 Testing Bucket.App library for platform ${{ matrix.platform }}..."
         $testParams = @(
           "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
           "--configuration", "Release"
           "--logger", "trx"
           "--results-directory", "TestResults/App/"
           "--verbosity", "normal"
+          "/p:Platform=${{ matrix.platform }}"
           "/p:GenerateAppxPackageOnBuild=false"
           "/p:AppxPackageSigningEnabled=false"
           "/p:GeneratePriFile=false"
           "/p:EnableDefaultPriItems=false"
           "/p:UseWinUI=false"
           "/p:EnableMsixTooling=false"
-          "/p:PublishProfile="
+          "/p:WindowsAppSDKSelfContained=false"
         )
 
         # Try running the tests with enhanced parameters
@@ -141,13 +142,14 @@ jobs:
             "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
             "--configuration", "Release"
             "--verbosity", "normal"
+            "/p:Platform=${{ matrix.platform }}"
             "/p:GenerateAppxPackageOnBuild=false"
             "/p:AppxPackageSigningEnabled=false"
             "/p:GeneratePriFile=false"
             "/p:EnableDefaultPriItems=false"
             "/p:UseWinUI=false"
             "/p:EnableMsixTooling=false"
-            "/p:PublishProfile="
+            "/p:WindowsAppSDKSelfContained=false"
           )
 
           try {
