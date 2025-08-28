@@ -48,8 +48,8 @@ jobs:
     runs-on: windows-latest
     outputs:
       app-version: ${{ steps.version.outputs.version }}
-      is-pre-release: ${{ steps.release-config.outputs.is-pre-release }}
-      make-latest: ${{ steps.release-config.outputs.make-latest }}
+      is-pre-release: 'false'
+      make-latest: 'true'
 
     steps:
       - name: 📥 Checkout Repository
@@ -107,30 +107,12 @@ jobs:
         run: |
           echo "⚙️ Configuring release settings..."
 
-          # Use default values instead of user inputs
-          $isPreRelease = $false
-
-          # Get version directly from the previous step's project reading
-          $versionSuffix = ""
-
-          # Since we're using auto-generated versions (YY.M.D.Build), they're always stable releases
-          # Only manually set versions with suffixes would be pre-releases
-
-          # For auto-generated versions, always set as stable release
-          $isPreRelease = $false
-
-          # Determine if this should be marked as latest
-          $makeLatest = -not $isPreRelease
-
           Write-Host "📋 Release Configuration:"
           Write-Host "  • Version: [Version will be read from project file]"
           Write-Host "  • Version Suffix: (none - auto-generated)"
-          Write-Host "  • Pre-release: $isPreRelease"
-          Write-Host "  • Make Latest: $makeLatest"
+          Write-Host "  • Pre-release: false (stable release)"
+          Write-Host "  • Make Latest: true"
           Write-Host "  • Mode: Automatic (no user inputs)"
-
-          echo "is-pre-release=$($isPreRelease.ToString().ToLower())" >> $GITHUB_OUTPUT
-          echo "make-latest=$($makeLatest.ToString().ToLower())" >> $GITHUB_OUTPUT
 
       - name: 🔗 Upload Release Configuration
         uses: actions/upload-artifact@v4
