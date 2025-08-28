@@ -92,7 +92,18 @@ jobs:
           $content = $content -replace '<Version>.*?</Version>', "<Version>$newVersion</Version>"
           Set-Content -Path $csprojPath -Value $content
 
-          Write-Host "✅ Updated project version to: $newVersion"
+          # Verify the version was updated correctly
+          $updatedContent = Get-Content $csprojPath -Raw
+          if ($updatedContent -match '<Version>(.*?)</Version>') {
+            $actualVersion = $matches[1]
+            if ($actualVersion -eq $newVersion) {
+              Write-Host "✅ Project version successfully updated to: $actualVersion"
+            } else {
+              Write-Host "⚠️ Version mismatch! Expected: $newVersion, Found: $actualVersion"
+            }
+          } else {
+            Write-Host "❌ Could not find Version element in project file"
+          }
         env:
           GH_TOKEN: ${{ github.token }}
 
