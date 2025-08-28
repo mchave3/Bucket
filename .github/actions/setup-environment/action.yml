@@ -1,0 +1,68 @@
+name: '🔧 Setup Environment'
+description: 'Setup .NET SDK and configure NuGet sources for Bucket project builds'
+
+inputs:
+  dotnet-versions:
+    description: 'Multi-line string of .NET versions to install'
+    required: false
+    default: |
+      8.x.x
+      9.x.x
+  enable-community-toolkit:
+    description: 'Enable Community Toolkit NuGet sources'
+    required: false
+    default: 'false'
+  enable-custom-nuget:
+    description: 'Enable custom NuGet sources'
+    required: false
+    default: 'false'
+  custom-nuget-sources:
+    description: 'Comma-separated list of custom NuGet sources'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔧 Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-versions }}
+
+    - name: 📦 Configure NuGet Sources
+      shell: pwsh
+      run: |
+        Write-Host "🔧 Configuring NuGet sources..."
+
+        # Community Toolkit sources
+        if ("${{ inputs.enable-community-toolkit }}" -eq "true") {
+          Write-Host "➕ Adding Community Toolkit sources"
+          nuget sources add -name CommunityToolkit-Labs `
+            -source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-Labs/nuget/v3/index.json
+          nuget sources add -name CommunityToolkit-Main `
+            -source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json
+        }
+
+        # Custom NuGet sources
+        if ("${{ inputs.enable-custom-nuget }}" -eq "true" -and "${{ inputs.custom-nuget-sources }}" -ne "") {
+          Write-Host "➕ Adding custom NuGet sources"
+          $sources = "${{ inputs.custom-nuget-sources }}" -split ','
+          $trimmedSources = $sources | ForEach-Object { $_.Trim() }
+          for ($i = 0; $i -lt $trimmedSources.Length; $i++) {
+            $sourceName = "CUSTOM_SOURCE_$($i + 1)"
+            nuget sources add -name $sourceName -source $trimmedSources[$i]
+            Write-Host "  • Added: $sourceName -> $($trimmedSources[$i])"
+          }
+        }
+
+        Write-Host "✅ NuGet sources configured successfully"
+
+    - name: 📋 Display Environment Information
+      shell: pwsh
+      run: |
+        Write-Host "🔍 Environment Information:"
+        Write-Host "  • .NET Version: $(dotnet --version)"
+        Write-Host "  • Community Toolkit: ${{ inputs.enable-community-toolkit }}"
+        Write-Host "  • Custom NuGet: ${{ inputs.enable-custom-nuget }}"
+        Write-Host "  • Runner OS: ${{ runner.os }}"
+        Write-Host "✅ Environment setup completed"

@@ -1,9 +1,7 @@
-name: GitHub Nightly Release Publisher
+name: GitHub Release Publisher
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # Runs every day at 02:00 UTC
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -32,53 +30,14 @@ env:
   PUBLISH_TRIM_MODE: partial # or full
 
   # Configuring GitHub Release
-  IS_PRE_RELEASE: true  # Always true for nightly
+  IS_PRE_RELEASE: false
   SKIP_IF_RELEASE_EXIST: true
-  MAKE_LATEST: false  # Don't mark nightly as latest
+  MAKE_LATEST: true
   ALLOW_UPDATES: false
   ARTIFACT_ERRORS_FAIL_BUILD: false
 
 jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      should-build: ${{ steps.check.outputs.should-build }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # Check if there are changes since last nightly release
-      - name: Check for changes since last nightly
-        id: check
-        run: |
-          # Get the latest nightly release
-          latest_nightly=$(gh api repos/${{ github.repository }}/releases --paginate | jq -r '.[] | select(.prerelease == true and (.tag_name | contains("Nightly"))) | .tag_name' | head -n 1)
-
-          if [ -z "$latest_nightly" ]; then
-            echo "No previous nightly release found. Building..."
-            echo "should-build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "Latest nightly release: $latest_nightly"
-
-          # Check if there are commits since the last nightly release
-          commits_since=$(git rev-list --count ${latest_nightly}..HEAD)
-
-          if [ "$commits_since" -gt 0 ]; then
-            echo "Found $commits_since commits since last nightly. Building..."
-            echo "should-build=true" >> $GITHUB_OUTPUT
-          else
-            echo "No changes since last nightly release. Skipping build."
-            echo "should-build=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   build:
-    needs: check-changes
-    if: needs.check-changes.outputs.should-build == 'true'
     runs-on: windows-latest
     outputs: # For accessing them from 'release' job
       app-version: ${{ steps.get-version.outputs.version }}
@@ -92,27 +51,27 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Generate automatic nightly version in format YY.M.D.BUILD-Nightly
-    - name: Update version in csproj for Nightly
+    # Generate automatic release version in format YY.M.D.BUILD
+    - name: Update version in csproj for Release
       run: |
         $date = Get-Date
         $year = $date.ToString("yy")
         $month = $date.Month
         $day = $date.Day
 
-        # Get today's existing nightly releases to calculate build number
+        # Get today's existing releases to calculate build number
         try {
-          $existingReleases = gh api repos/${{ github.repository }}/releases --paginate | ConvertFrom-Json | Where-Object { $_.tag_name -match "^v$year\.$month\.$day\.(\d+)-Nightly$" }
+          $existingReleases = gh api repos/${{ github.repository }}/releases --paginate | ConvertFrom-Json | Where-Object { $_.tag_name -match "^v$year\.$month\.$day\.(\d+)$" }
           $buildNumber = 1
           if ($existingReleases) {
-            $buildNumber = ($existingReleases | ForEach-Object { [int]($_.tag_name -replace "^v$year\.$month\.$day\.(\d+)-Nightly$", '$1') } | Measure-Object -Maximum).Maximum + 1
+            $buildNumber = ($existingReleases | ForEach-Object { [int]($_.tag_name -replace "^v$year\.$month\.$day\.(\d+)$", '$1') } | Measure-Object -Maximum).Maximum + 1
           }
         } catch {
           Write-Host "Could not fetch existing releases, starting with build number 1"
           $buildNumber = 1
         }
 
-        $newVersion = "$year.$month.$day.$buildNumber-Nightly"
+        $newVersion = "$year.$month.$day.$buildNumber"
         echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
 
         # Update csproj file
@@ -135,7 +94,7 @@ jobs:
     # Run unit tests before building
     - name: Run unit tests
       run: |
-        echo "Running unit tests for nightly build..."
+        echo "Running unit tests for release build..."
 
         # Test Core library (no Windows App SDK dependencies)
         echo "🧪 Testing Bucket.Core library..."
@@ -219,7 +178,7 @@ jobs:
           }
         }
 
-        echo "🎯 All tests completed successfully for nightly build"
+        echo "🎯 All tests completed successfully for release build"
       shell: pwsh
       continue-on-error: false
 
@@ -281,16 +240,26 @@ jobs:
         name: artifacts-${{ matrix.platform }}
         path: ${{ env.APP_NAME }}-v${{ steps.get-version.outputs.version }}-${{ matrix.platform }}.zip
 
-    # Set pre-release flag for nightly builds
-    - name: Mark as pre-release
+    # Determine if this should be a pre-release based on version suffix
+    - name: Check pre-release status
       run: |
-        # For nightly builds, always set as pre-release
-        echo "IS_PRE_RELEASE=true" >> $env:GITHUB_ENV
+        # Define the list of strings that indicate pre-release
+        $list = @("beta", "alpha", "preview", "experiment")
+
+        # Define the suffix variable
+        $suffix = "${{ steps.get-version.outputs.version-suffix }}"
+
+        foreach ($item in $list) {
+          # Convert both strings to lower case for case-insensitive comparison
+          if ($suffix.ToLower().StartsWith($item.ToLower())) {
+            echo "IS_PRE_RELEASE=true" >> $env:GITHUB_ENV
+            break
+          }
+        }
 
 
   release:
-    needs: [check-changes, build]
-    if: needs.check-changes.outputs.should-build == 'true'
+    needs: build
     runs-on: ubuntu-latest
     env:
       # Read some variables from the 'build' job
@@ -334,7 +303,7 @@ jobs:
           npm install -g auto-changelog
           auto-changelog --tag-pattern .+ --commit-limit false --starting-version v${{ env.APP_VERSION }} --ending-version v${{ env.APP_VERSION }} --hide-credit
 
-      # Create GitHub nightly release with artifacts
+      # Create GitHub release with artifacts
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-*.zip"
@@ -347,87 +316,94 @@ jobs:
           allowUpdates: ${{ env.ALLOW_UPDATES }}
           artifactErrorsFailBuild: ${{ env.ARTIFACT_ERRORS_FAIL_BUILD }}
 
-  # Job Summary - Summary of the nightly build results
+  # Job Summary - Summary of the release build results
   summary:
-    needs: [check-changes, build, release]
+    needs: [build, release]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Generate Job Summary
         run: |
           # Start the summary
-          echo "# 🌙 Nightly Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "# 🚀 Release Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Build status
-          if [[ "${{ needs.check-changes.outputs.should-build }}" == "true" ]]; then
-            if [[ "${{ needs.build.result }}" == "success" && "${{ needs.release.result }}" == "success" ]]; then
-              echo "## ✅ Build Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
-              echo "🎉 **Nightly release has been successfully published!**" >> $GITHUB_STEP_SUMMARY
-            elif [[ "${{ needs.build.result }}" == "failure" ]]; then
-              echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
-              echo "💥 **Build failed during compilation or testing phase**" >> $GITHUB_STEP_SUMMARY
-            elif [[ "${{ needs.release.result }}" == "failure" ]]; then
-              echo "## ⚠️ Build Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
-              echo "🔨 **Build succeeded but release publication failed**" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "## ⏸️ Build Status: CANCELLED" >> $GITHUB_STEP_SUMMARY
-              echo "🛑 **Build was cancelled or skipped**" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [[ "${{ needs.build.result }}" == "success" && "${{ needs.release.result }}" == "success" ]]; then
+            echo "## ✅ Build Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 **Release has been successfully published!**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "## ❌ Build Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "💥 **Build failed during compilation or testing phase**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.release.result }}" == "failure" ]]; then
+            echo "## ⚠️ Build Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "🔨 **Build succeeded but release publication failed**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "## ⏭️ Build Status: SKIPPED" >> $GITHUB_STEP_SUMMARY
-            echo "📝 **No changes detected since last nightly release**" >> $GITHUB_STEP_SUMMARY
+            echo "## ⏸️ Build Status: CANCELLED" >> $GITHUB_STEP_SUMMARY
+            echo "🛑 **Build was cancelled or interrupted**" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Release information (only if build was attempted)
-          if [[ "${{ needs.check-changes.outputs.should-build }}" == "true" ]]; then
-            echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
-            echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| **Version** | \`v${{ needs.build.outputs.app-version || 'N/A' }}\` |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Type** | 🌙 Nightly Pre-release |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Date** | $(date +'%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+          # Release information
+          echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`v${{ needs.build.outputs.app-version || 'N/A' }}\` |" >> $GITHUB_STEP_SUMMARY
 
-            # Platforms built
-            echo "## 🖥️ Target Platforms" >> $GITHUB_STEP_SUMMARY
-            echo "- 🏗️ **x86** - Windows 32-bit" >> $GITHUB_STEP_SUMMARY
-            echo "- 🏗️ **x64** - Windows 64-bit" >> $GITHUB_STEP_SUMMARY
-            echo "- 🏗️ **ARM64** - Windows ARM64" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+          # Determine release type
+          if [[ "${{ needs.build.outputs.IS_PRE_RELEASE }}" == "true" ]]; then
+            echo "| **Type** | 🧪 Pre-release |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| **Type** | 🏷️ Stable Release |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            # Build configuration
-            echo "## ⚙️ Build Configuration" >> $GITHUB_STEP_SUMMARY
-            echo "- **Self-contained**: \`true\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Ready to Run**: \`true\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Trimmed**: \`true\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **AOT**: \`false\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| **Date** | $(date +'%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} (Manual) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-            # Test results section
-            echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-            if [[ "${{ needs.build.result }}" == "success" ]]; then
-              echo "✅ **Core Library Tests**: Passed" >> $GITHUB_STEP_SUMMARY
-              echo "✅ **App Library Tests**: Passed (with Windows App SDK workarounds)" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "❌ **Tests**: Failed - see build logs for details" >> $GITHUB_STEP_SUMMARY
-            fi
-            echo "" >> $GITHUB_STEP_SUMMARY
+          # Platforms built
+          echo "## 🖥️ Target Platforms" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **x86** - Windows 32-bit" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **x64** - Windows 64-bit" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **ARM64** - Windows ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-            # Download links (only if release was successful)
-            if [[ "${{ needs.release.result }}" == "success" ]]; then
-              echo "## 📥 Download Links" >> $GITHUB_STEP_SUMMARY
-              echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
-              echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x86.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
-              echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
-              echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
-            fi
+          # Build configuration
+          echo "## ⚙️ Build Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Self-contained**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ready to Run**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trimmed**: \`true\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **AOT**: \`false\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Configuration**: \`Release\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Test results section
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "✅ **Core Library Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **App Library Tests**: Passed (with Windows App SDK workarounds)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Tests**: Failed - see build logs for details" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Download links (only if release was successful)
+          if [[ "${{ needs.release.result }}" == "success" ]]; then
+            echo "## 📥 Download Links" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x86.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Release Statistics" >> $GITHUB_STEP_SUMMARY
+            echo "- **Platforms**: 3 (x86, x64, ARM64)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: 3 ZIP files" >> $GITHUB_STEP_SUMMARY
+            echo "- **Auto-generated**: Changelog included" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY

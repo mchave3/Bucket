@@ -1,0 +1,180 @@
+name: '🏗️ Build and Package'
+description: 'Build, publish and package the application for specified platform'
+
+inputs:
+  project-path:
+    description: 'Path to the project file'
+    required: true
+  platform:
+    description: 'Target platform (x86, x64, ARM64)'
+    required: true
+  app-name:
+    description: 'Application name for packaging'
+    required: true
+  app-version:
+    description: 'Application version'
+    required: true
+  build-configuration:
+    description: 'Build configuration (Debug/Release)'
+    required: false
+    default: 'Release'
+  output-folder:
+    description: 'Output folder for build artifacts'
+    required: false
+    default: 'Publish'
+  self-contained:
+    description: 'Create self-contained deployment'
+    required: false
+    default: 'true'
+  single-file:
+    description: 'Publish as single file'
+    required: false
+    default: 'false'
+  ready-to-run:
+    description: 'Enable Ready to Run compilation'
+    required: false
+    default: 'true'
+  aot:
+    description: 'Enable AOT compilation'
+    required: false
+    default: 'false'
+  trimmed:
+    description: 'Enable trimming'
+    required: false
+    default: 'true'
+  trim-mode:
+    description: 'Trimming mode (partial/full)'
+    required: false
+    default: 'partial'
+
+outputs:
+  package-path:
+    description: 'Path to the created package'
+    value: ${{ steps.create-package.outputs.package-path }}
+  package-size:
+    description: 'Size of the created package in MB'
+    value: ${{ steps.verify-package.outputs.package-size }}
+  build-output-path:
+    description: 'Path to build output directory'
+    value: ${{ steps.build-info.outputs.output-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 📋 Build Information
+      id: build-info
+      shell: pwsh
+      run: |
+        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
+        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
+
+        Write-Host "📋 Build Configuration:"
+        Write-Host "  • Project: ${{ inputs.project-path }}"
+        Write-Host "  • Version: ${{ inputs.app-version }}"
+        Write-Host "  • Platform: ${{ inputs.platform }}"
+        Write-Host "  • Runtime ID: $runtimeIdentifier"
+        Write-Host "  • Output Path: $outputPath"
+        Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
+        Write-Host "  • Self-contained: ${{ inputs.self-contained }}"
+        Write-Host "  • Single File: ${{ inputs.single-file }}"
+        Write-Host "  • Ready to Run: ${{ inputs.ready-to-run }}"
+        Write-Host "  • AOT Compilation: ${{ inputs.aot }}"
+        Write-Host "  • Trimmed: ${{ inputs.trimmed }}"
+        Write-Host "  • Trim Mode: ${{ inputs.trim-mode }}"
+
+        echo "runtime-id=$runtimeIdentifier" >> $GITHUB_OUTPUT
+        echo "output-path=$outputPath" >> $GITHUB_OUTPUT
+
+    - name: 🏗️ Execute Build and Publish
+      shell: pwsh
+      run: |
+        Write-Host "🏗️ Starting build and publish for ${{ inputs.platform }}..."
+
+        $runtimeIdentifier = "${{ steps.build-info.outputs.runtime-id }}"
+        $outputPath = "${{ steps.build-info.outputs.output-path }}"
+
+        # Execute the build
+        dotnet publish ${{ inputs.project-path }} `
+          --configuration ${{ inputs.build-configuration }} `
+          --runtime $runtimeIdentifier `
+          --output $outputPath `
+          --self-contained ${{ inputs.self-contained }} `
+          -p:PublishSingleFile=${{ inputs.single-file }} `
+          -p:PublishReadyToRun=${{ inputs.ready-to-run }} `
+          -p:PublishAot=${{ inputs.aot }} `
+          -p:PublishTrimmed=${{ inputs.trimmed }} `
+          -p:TrimMode=${{ inputs.trim-mode }} `
+          -p:Platform=${{ inputs.platform }} `
+          -p:GITHUB_ACTIONS=true `
+          -p:ContinuousIntegrationBuild=true `
+          --verbosity normal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "❌ Build failed for platform ${{ inputs.platform }}"
+          exit 1
+        }
+
+        # Verify build output
+        if (Test-Path $outputPath) {
+          $buildFiles = Get-ChildItem -Path $outputPath -Recurse
+          Write-Host "✅ Build completed successfully"
+          Write-Host "📊 Build output contains $($buildFiles.Count) files"
+
+          # Display key files
+          $executableFiles = $buildFiles | Where-Object { $_.Extension -in @('.exe', '.dll') } | Select-Object -First 5
+          if ($executableFiles) {
+            Write-Host "🔍 Key executable files:"
+            foreach ($file in $executableFiles) {
+              $sizeKB = [math]::Round($file.Length / 1KB, 1)
+              Write-Host "  • $($file.Name) ($sizeKB KB)"
+            }
+          }
+        } else {
+          Write-Error "❌ Build output directory not found: $outputPath"
+          exit 1
+        }
+
+    - name: 📦 Create Distribution Package
+      id: create-package
+      uses: vimtor/action-zip@v1.2
+      with:
+        files: ${{ steps.build-info.outputs.output-path }}
+        recursive: true
+        dest: ${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip
+
+    - name: 🔍 Verify Package Integrity
+      id: verify-package
+      shell: pwsh
+      run: |
+        Write-Host "🔍 Verifying package integrity..."
+
+        $packagePath = "${{ inputs.app-name }}-v${{ inputs.app-version }}-${{ inputs.platform }}.zip"
+
+        if (Test-Path $packagePath) {
+          $packageInfo = Get-Item $packagePath
+          $sizeMB = [math]::Round($packageInfo.Length / 1MB, 2)
+
+          Write-Host "✅ Package created successfully:"
+          Write-Host "  • File: $($packageInfo.Name)"
+          Write-Host "  • Size: $sizeMB MB"
+          Write-Host "  • Platform: ${{ inputs.platform }}"
+          Write-Host "  • Created: $($packageInfo.CreationTime)"
+
+          # Set outputs
+          echo "package-size=$sizeMB" >> $GITHUB_OUTPUT
+          echo "package-path=$packagePath" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ Package not found: $packagePath"
+          exit 1
+        }
+
+    - name: 📊 Build Summary
+      shell: pwsh
+      run: |
+        Write-Host "📊 Build Summary:"
+        Write-Host "  • Platform: ${{ inputs.platform }}"
+        Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
+        Write-Host "  • Runtime: ${{ steps.build-info.outputs.runtime-id }}"
+        Write-Host "  • Package: ${{ steps.verify-package.outputs.package-path }}"
+        Write-Host "  • Package Size: ${{ steps.verify-package.outputs.package-size }} MB"
+        Write-Host "  • Status: ✅ Build and packaging completed successfully"

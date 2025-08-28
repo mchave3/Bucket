@@ -1,0 +1,153 @@
+name: '🚀 Release Management'
+description: 'Create git tags, generate changelog and publish GitHub release'
+
+inputs:
+  app-name:
+    description: 'Application name'
+    required: true
+  app-version:
+    description: 'Application version'
+    required: true
+  release-name:
+    description: 'Release name (will be prefixed to version)'
+    required: false
+    default: 'Release'
+  is-prerelease:
+    description: 'Mark as pre-release'
+    required: false
+    default: 'false'
+  make-latest:
+    description: 'Mark as latest release'
+    required: false
+    default: 'true'
+  skip-if-exists:
+    description: 'Skip if release already exists'
+    required: false
+    default: 'true'
+  allow-updates:
+    description: 'Allow updates to existing release'
+    required: false
+    default: 'false'
+  artifacts-pattern:
+    description: 'Pattern for artifacts to include'
+    required: false
+    default: '*.zip'
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+
+outputs:
+  release-url:
+    description: 'URL of the created release'
+    value: ${{ steps.publish-release.outputs.html_url }}
+  tag-name:
+    description: 'Name of the created tag'
+    value: ${{ steps.tag-info.outputs.tag-name }}
+  release-id:
+    description: 'ID of the created release'
+    value: ${{ steps.publish-release.outputs.id }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 📋 Release Information
+      id: tag-info
+      shell: bash
+      run: |
+        TAG_NAME="v${{ inputs.app-version }}"
+        RELEASE_TITLE="${{ inputs.release-name }} v${{ inputs.app-version }}"
+
+        echo "🚀 Release Information:"
+        echo "  • Tag Name: $TAG_NAME"
+        echo "  • Release Title: $RELEASE_TITLE"
+        echo "  • Pre-release: ${{ inputs.is-prerelease }}"
+        echo "  • Make Latest: ${{ inputs.make-latest }}"
+        echo "  • Skip if exists: ${{ inputs.skip-if-exists }}"
+
+        echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "release-title=$RELEASE_TITLE" >> $GITHUB_OUTPUT
+
+    - name: 🏷️ Create and Push Git Tag
+      shell: bash
+      run: |
+        echo "🏷️ Creating git tag for release..."
+
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+
+        TAG_NAME="${{ steps.tag-info.outputs.tag-name }}"
+        echo "📌 Creating tag: $TAG_NAME"
+
+        # Check if tag already exists locally
+        if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
+          echo "⚠️ Tag $TAG_NAME already exists locally"
+        else
+          git tag "$TAG_NAME"
+          echo "✅ Tag created locally"
+        fi
+
+        # Push tag to remote
+        git push origin "$TAG_NAME" || echo "⚠️ Tag may already exist on remote"
+        echo "✅ Tag operation completed"
+
+    - name: 📝 Generate Release Changelog
+      shell: bash
+      run: |
+        echo "📝 Generating comprehensive changelog..."
+
+        # Install auto-changelog
+        npm install -g auto-changelog
+
+        # Generate changelog for this specific version
+        auto-changelog \
+          --tag-pattern .+ \
+          --commit-limit false \
+          --starting-version ${{ steps.tag-info.outputs.tag-name }} \
+          --ending-version ${{ steps.tag-info.outputs.tag-name }} \
+          --hide-credit
+
+        echo "📄 Changelog preview (first 20 lines):"
+        head -20 CHANGELOG.md || echo "No changelog content generated"
+        echo "✅ Changelog generated successfully"
+
+    - name: 📦 List Available Artifacts
+      shell: bash
+      run: |
+        echo "📦 Available artifacts matching pattern '${{ inputs.artifacts-pattern }}':"
+        ls -la ${{ inputs.artifacts-pattern }} 2>/dev/null || echo "No artifacts found matching pattern"
+
+        echo ""
+        echo "📊 Artifact Summary:"
+        for file in ${{ inputs.artifacts-pattern }}; do
+          if [ -f "$file" ]; then
+            size=$(du -h "$file" | cut -f1)
+            echo "  • $file ($size)"
+          fi
+        done
+
+    - name: 🚀 Publish GitHub Release
+      id: publish-release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: ${{ inputs.artifacts-pattern }}
+        bodyFile: "CHANGELOG.md"
+        name: ${{ steps.tag-info.outputs.release-title }}
+        tag: ${{ steps.tag-info.outputs.tag-name }}
+        token: ${{ inputs.github-token }}
+        prerelease: ${{ inputs.is-prerelease }}
+        makeLatest: ${{ inputs.make-latest }}
+        skipIfReleaseExists: ${{ inputs.skip-if-exists }}
+        allowUpdates: ${{ inputs.allow-updates }}
+        artifactErrorsFailBuild: false
+
+    - name: ✅ Release Summary
+      shell: bash
+      run: |
+        echo "✅ Release Management Summary:"
+        echo "  • Tag: ${{ steps.tag-info.outputs.tag-name }}"
+        echo "  • Release Title: ${{ steps.tag-info.outputs.release-title }}"
+        echo "  • Release URL: ${{ steps.publish-release.outputs.html_url }}"
+        echo "  • Release ID: ${{ steps.publish-release.outputs.id }}"
+        echo "  • Pre-release: ${{ inputs.is-prerelease }}"
+        echo "  • Make Latest: ${{ inputs.make-latest }}"
+        echo "🎉 Release published successfully!"

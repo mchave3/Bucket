@@ -1,0 +1,391 @@
+name: 🌙 Nightly Release
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 02:00 UTC
+  workflow_dispatch:      # Manual trigger
+
+permissions:
+  contents: write
+  actions: read
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+env:
+  # Project Configuration
+  PROJECT_PATH: src/Bucket.App/Bucket.App.csproj
+  APP_NAME: Bucket
+
+  # Build Configuration
+  PUBLISH_OUTPUT_FOLDER: Publish
+  BUILD_CONFIGURATION: Release
+
+  # .NET Publish Settings
+  PUBLISH_SELF_CONTAINED: true
+  PUBLISH_SINGLE_FILE: false
+  PUBLISH_READY_TO_RUN: true
+  PUBLISH_AOT: false
+  PUBLISH_TRIMMED: true
+  PUBLISH_TRIM_MODE: partial
+
+  # Release Configuration
+  IS_PRE_RELEASE: true
+  SKIP_IF_RELEASE_EXISTS: true
+  MAKE_LATEST: false
+  ALLOW_UPDATES: false
+
+  # NuGet Sources (disabled by default)
+  IS_COMMUNITY_TOOLKIT_ENABLED: false
+  IS_CUSTOM_NUGET_ENABLED: false
+  CUSTOM_NUGET_SOURCES: ''
+
+# ============================================================================
+# JOBS PIPELINE
+# ============================================================================
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # 🔍 CHANGE DETECTION JOB
+  # ──────────────────────────────────────────────────────────────────────────
+  change-detection:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      should-build: ${{ steps.analyze.outputs.should-build }}
+      commits-count: ${{ steps.analyze.outputs.commits-count }}
+      changed-files: ${{ steps.analyze.outputs.changed-files }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Analyze Changes Since Last Nightly
+        id: analyze
+        run: |
+          echo "🔎 Checking for changes since last nightly release..."
+
+          # Get latest nightly release
+          latest_nightly=$(gh api repos/${{ github.repository }}/releases --paginate | \
+            jq -r '.[] | select(.prerelease == true and (.tag_name | contains("Nightly"))) | .tag_name' | \
+            head -n 1)
+
+          if [ -z "$latest_nightly" ]; then
+            echo "📦 No previous nightly release found - building first nightly"
+            echo "should-build=true" >> $GITHUB_OUTPUT
+            echo "commits-count=initial" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "📌 Latest nightly release: $latest_nightly"
+
+          # Count commits since last nightly
+          commits_since=$(git rev-list --count ${latest_nightly}..HEAD)
+          echo "commits-count=$commits_since" >> $GITHUB_OUTPUT
+
+          if [ "$commits_since" -eq 0 ]; then
+            echo "⏭️  No commits since last nightly - skipping build"
+            echo "should-build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "📊 Found $commits_since commits since last nightly"
+
+          # Analyze changed files
+          changed_files=$(git diff --name-only ${latest_nightly}..HEAD)
+          echo "📝 Changed files:"
+          echo "$changed_files"
+
+          # Check for relevant changes (src/ or tests/ directories)
+          relevant_changes=$(echo "$changed_files" | grep -E '^(src/|tests/)' | wc -l)
+
+          if [ "$relevant_changes" -gt 0 ]; then
+            echo "✅ Found $relevant_changes relevant changes in source/test directories"
+            echo "🏗️  Building nightly release..."
+            echo "should-build=true" >> $GITHUB_OUTPUT
+            echo "changed-files=$relevant_changes files" >> $GITHUB_OUTPUT
+          else
+            echo "⏭️  No relevant source changes detected - skipping build"
+            echo "📄 Changes were only in documentation or configuration files"
+            echo "should-build=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 🏷️ VERSION GENERATION JOB
+  # ──────────────────────────────────────────────────────────────────────────
+  version-generation:
+    name: 🏷️ Generate Version
+    runs-on: windows-latest
+    needs: change-detection
+    if: needs.change-detection.outputs.should-build == 'true'
+    outputs:
+      app-version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Generate Nightly Version
+        run: |
+          $date = Get-Date
+          $year = $date.ToString("yy")
+          $month = $date.Month
+          $day = $date.Day
+
+          Write-Host "🗓️ Generating version for date: $year.$month.$day"
+
+          # Calculate build number for today
+          try {
+            $existingReleases = gh api repos/${{ github.repository }}/releases --paginate |
+              ConvertFrom-Json |
+              Where-Object { $_.tag_name -match "^v$year\.$month\.$day\.(\d+)-Nightly$" }
+
+            $buildNumber = 1
+            if ($existingReleases) {
+              $buildNumber = ($existingReleases |
+                ForEach-Object { [int]($_.tag_name -replace "^v$year\.$month\.$day\.(\d+)-Nightly$", '$1') } |
+                Measure-Object -Maximum).Maximum + 1
+            }
+          } catch {
+            Write-Host "⚠️ Could not fetch existing releases, using build number 1"
+            $buildNumber = 1
+          }
+
+          $newVersion = "$year.$month.$day.$buildNumber-Nightly"
+          Write-Host "🏷️ Generated version: $newVersion"
+
+          # Update project file
+          $csprojPath = "${{ env.PROJECT_PATH }}"
+          $content = Get-Content $csprojPath -Raw
+          $content = $content -replace '<Version>.*?</Version>', "<Version>$newVersion</Version>"
+          Set-Content -Path $csprojPath -Value $content
+
+          Write-Host "✅ Updated project version to: $newVersion"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 📖 Read Project Version
+        uses: kzrnm/get-net-sdk-project-versions-action@v2
+        id: version
+        with:
+          proj-path: ${{ env.PROJECT_PATH }}
+
+      - name: 🔗 Upload Version Configuration
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-config
+          path: ${{ env.PROJECT_PATH }}
+          retention-days: 1
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 🧪 TESTING MATRIX JOB (USING REUSABLE ACTION)
+  # ──────────────────────────────────────────────────────────────────────────
+  testing:
+    name: 🧪 Test (${{ matrix.platform }})
+    runs-on: windows-latest
+    needs: [change-detection, version-generation]
+    if: needs.change-detection.outputs.should-build == 'true'
+
+    strategy:
+      matrix:
+        platform: [x86, x64, ARM64]
+      fail-fast: false
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔗 Download Version Configuration
+        uses: actions/download-artifact@v4
+        with:
+          name: version-config
+          path: .
+
+      - name: 🔧 Setup Environment
+        uses: ./.github/actions/setup-environment
+        with:
+          enable-community-toolkit: ${{ env.IS_COMMUNITY_TOOLKIT_ENABLED }}
+          enable-custom-nuget: ${{ env.IS_CUSTOM_NUGET_ENABLED }}
+          custom-nuget-sources: ${{ env.CUSTOM_NUGET_SOURCES }}
+
+      - name: 🧪 Run Tests
+        uses: ./.github/actions/run-tests
+        with:
+          platform: ${{ matrix.platform }}
+          build-configuration: ${{ env.BUILD_CONFIGURATION }}
+          collect-coverage: false
+          test-verbosity: normal
+
+      - name: 📤 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.platform }}
+          path: TestResults
+          retention-days: 30
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 🏗️ BUILD MATRIX JOB (USING REUSABLE ACTION)
+  # ──────────────────────────────────────────────────────────────────────────
+  build:
+    name: 🏗️ Build (${{ matrix.platform }})
+    runs-on: windows-latest
+    needs: [change-detection, version-generation, testing]
+    if: needs.change-detection.outputs.should-build == 'true'
+
+    strategy:
+      matrix:
+        platform: [x86, x64, ARM64]
+      fail-fast: false
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔗 Download Version Configuration
+        uses: actions/download-artifact@v4
+        with:
+          name: version-config
+          path: .
+
+      - name: 🔧 Setup Environment
+        uses: ./.github/actions/setup-environment
+        with:
+          enable-community-toolkit: ${{ env.IS_COMMUNITY_TOOLKIT_ENABLED }}
+          enable-custom-nuget: ${{ env.IS_CUSTOM_NUGET_ENABLED }}
+          custom-nuget-sources: ${{ env.CUSTOM_NUGET_SOURCES }}
+
+      - name: 🏗️ Build and Package
+        uses: ./.github/actions/build-and-package
+        with:
+          project-path: ${{ env.PROJECT_PATH }}
+          platform: ${{ matrix.platform }}
+          app-name: ${{ env.APP_NAME }}
+          app-version: ${{ needs.version-generation.outputs.app-version }}
+          build-configuration: ${{ env.BUILD_CONFIGURATION }}
+          output-folder: ${{ env.PUBLISH_OUTPUT_FOLDER }}
+          self-contained: ${{ env.PUBLISH_SELF_CONTAINED }}
+          single-file: ${{ env.PUBLISH_SINGLE_FILE }}
+          ready-to-run: ${{ env.PUBLISH_READY_TO_RUN }}
+          aot: ${{ env.PUBLISH_AOT }}
+          trimmed: ${{ env.PUBLISH_TRIMMED }}
+          trim-mode: ${{ env.PUBLISH_TRIM_MODE }}
+
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-package-${{ matrix.platform }}
+          path: ${{ env.APP_NAME }}-v${{ needs.version-generation.outputs.app-version }}-${{ matrix.platform }}.zip
+          retention-days: 90
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 🚀 RELEASE JOB (USING REUSABLE ACTION)
+  # ──────────────────────────────────────────────────────────────────────────
+  release:
+    name: 🚀 Publish Nightly Release
+    runs-on: ubuntu-latest
+    needs: [change-detection, version-generation, testing, build]
+    if: needs.change-detection.outputs.should-build == 'true'
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nightly-package-*
+          merge-multiple: true
+
+      - name: 🚀 Manage Release
+        uses: ./.github/actions/release-management
+        with:
+          app-name: ${{ env.APP_NAME }}
+          app-version: ${{ needs.version-generation.outputs.app-version }}
+          release-name: 🌙 Nightly
+          is-prerelease: ${{ env.IS_PRE_RELEASE }}
+          make-latest: ${{ env.MAKE_LATEST }}
+          skip-if-exists: ${{ env.SKIP_IF_RELEASE_EXISTS }}
+          allow-updates: ${{ env.ALLOW_UPDATES }}
+          artifacts-pattern: "${{ env.APP_NAME }}-v${{ needs.version-generation.outputs.app-version }}-*.zip"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 📊 WORKFLOW SUMMARY JOB
+  # ──────────────────────────────────────────────────────────────────────────
+  workflow-summary:
+    name: 📊 Generate Summary
+    runs-on: ubuntu-latest
+    needs: [change-detection, version-generation, testing, build, release]
+    if: always()
+
+    steps:
+      - name: 📊 Generate Workflow Summary
+        run: |
+          echo "# 🌙 Nightly Build Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*Generated on $(date +'%Y-%m-%d at %H:%M:%S UTC')*" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Change Detection Results
+          echo "## 🔍 Change Detection" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.change-detection.outputs.should-build }}" == "true" ]]; then
+            echo "✅ **Changes detected** - Build triggered" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commits since last nightly**: ${{ needs.change-detection.outputs.commits-count }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Files changed**: ${{ needs.change-detection.outputs.changed-files }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **No relevant changes** - Build skipped" >> $GITHUB_STEP_SUMMARY
+            echo "- **Reason**: No changes in src/ or tests/ directories" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Pipeline Status (only if build was triggered)
+          if [[ "${{ needs.change-detection.outputs.should-build }}" == "true" ]]; then
+            echo "## 🔄 Pipeline Status" >> $GITHUB_STEP_SUMMARY
+            echo "| Stage | Status | Reusable Action |" >> $GITHUB_STEP_SUMMARY
+            echo "|-------|--------|-----------------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🏷️ Version Gen | ${{ needs.version-generation.result == 'success' && '✅ Success' || '❌ Failed' }} | Built-in |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🧪 Testing | ${{ needs.testing.result == 'success' && '✅ Success' || '❌ Failed' }} | \`run-tests\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🏗️ Build | ${{ needs.build.result == 'success' && '✅ Success' || '❌ Failed' }} | \`build-and-package\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🚀 Release | ${{ needs.release.result == 'success' && '✅ Success' || '❌ Failed' }} | \`release-management\` |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Overall Status
+            if [[ "${{ needs.version-generation.result }}" == "success" && "${{ needs.testing.result }}" == "success" && "${{ needs.build.result }}" == "success" && "${{ needs.release.result }}" == "success" ]]; then
+              echo "## ✅ **NIGHTLY BUILD SUCCESSFUL**" >> $GITHUB_STEP_SUMMARY
+              echo "🎉 All pipeline stages completed successfully!" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ **NIGHTLY BUILD FAILED**" >> $GITHUB_STEP_SUMMARY
+              echo "💥 One or more pipeline stages failed - check individual job logs" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Release Information
+            if [[ "${{ needs.release.result }}" == "success" ]]; then
+              echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
+              echo "- **Version**: \`v${{ needs.version-generation.outputs.app-version }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "- **Type**: 🌙 Nightly Pre-release" >> $GITHUB_STEP_SUMMARY
+              echo "- **Platforms**: x86, x64, ARM64" >> $GITHUB_STEP_SUMMARY
+              echo "- **Download**: [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.version-generation.outputs.app-version }})" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            # Architecture Benefits
+            echo "## 🏗️ Architecture Benefits" >> $GITHUB_STEP_SUMMARY
+            echo "- **🔧 Setup Environment**: Reusable .NET + NuGet configuration" >> $GITHUB_STEP_SUMMARY
+            echo "- **🧪 Run Tests**: Comprehensive testing with Windows App SDK support" >> $GITHUB_STEP_SUMMARY
+            echo "- **📦 Build & Package**: Cross-platform build and packaging" >> $GITHUB_STEP_SUMMARY
+            echo "- **🚀 Release Management**: Automated tagging, changelog, and publishing" >> $GITHUB_STEP_SUMMARY
+            echo "- **♻️ Reusability**: Actions shared between nightly and release workflows" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*🤖 Automated Nightly Build Pipeline - Modular & Maintainable*" >> $GITHUB_STEP_SUMMARY
