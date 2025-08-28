@@ -3,6 +3,8 @@
 
   <!-- Fix for MSB4062 Windows App SDK packaging tasks in CI/CD environments -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <!-- Enable Windows targeting on non-Windows CI/CD environments -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <!-- Disable Windows App SDK packaging features that cause issues in GitHub Actions -->
     <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
