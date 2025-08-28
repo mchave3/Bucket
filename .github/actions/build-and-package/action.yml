@@ -110,7 +110,6 @@ runs:
           -p:TrimMode=${{ inputs.trim-mode }} `
           -p:Platform=${{ inputs.platform }} `
           -p:Version=${{ inputs.app-version }} `
-          -p:AssemblyVersion=${{ inputs.app-version }} `
           -p:FileVersion=${{ inputs.app-version }} `
           -p:InformationalVersion=${{ inputs.app-version }} `
           -p:GITHUB_ACTIONS=true `
