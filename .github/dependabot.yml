@@ -1,11 +1,45 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# Dependabot configuration for the Bucket project
+# This configuration monitors NuGet packages for security and version updates
+# Documentation: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Monitor NuGet packages for the entire solution
+  - package-ecosystem: "nuget"
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 10
+    assignees:
+      - "mchave3"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "nuget"
+    # Group related updates together to reduce noise
+    groups:
+      microsoft-packages:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      devwinui-packages:
+        patterns:
+          - "DevWinUI*"
+      serilog-packages:
+        patterns:
+          - "Serilog*"
+      communitytoolkit-packages:
+        patterns:
+          - "CommunityToolkit.*"
+    # Ignore certain packages that should be updated manually
+    ignore:
+      - dependency-name: "Microsoft.WindowsAppSDK"
+        # WindowsAppSDK updates often require testing
+      - dependency-name: "Microsoft.Windows.SDK.BuildTools"
+        # SDK tools updates need careful consideration
