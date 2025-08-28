@@ -113,13 +113,13 @@ jobs:
           "--logger", "trx"
           "--results-directory", "TestResults/App/"
           "--verbosity", "normal"
-          "/p:Platform=${{ matrix.platform }}"
           "/p:GenerateAppxPackageOnBuild=false"
           "/p:AppxPackageSigningEnabled=false"
           "/p:GeneratePriFile=false"
           "/p:EnableDefaultPriItems=false"
           "/p:UseWinUI=false"
-          "/p:EnableMsixTooling=true"
+          "/p:EnableMsixTooling=false"
+          "/p:PublishProfile="
         )
 
         # Try running the tests with enhanced parameters
@@ -141,12 +141,13 @@ jobs:
             "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
             "--configuration", "Release"
             "--verbosity", "normal"
-            "/p:Platform=${{ matrix.platform }}"
             "/p:GenerateAppxPackageOnBuild=false"
             "/p:AppxPackageSigningEnabled=false"
             "/p:GeneratePriFile=false"
             "/p:EnableDefaultPriItems=false"
             "/p:UseWinUI=false"
+            "/p:EnableMsixTooling=false"
+            "/p:PublishProfile="
           )
 
           try {
@@ -210,7 +211,7 @@ jobs:
     - name: Build and publish application
       run: |
         $runtimeIdentifier = "${{ matrix.platform }}"
-        dotnet publish ${{ env.PROJECT_PATH }} -c Release -r win-$($runtimeIdentifier.ToLower()) /p:GITHUB_ACTIONS=true -p:Platform=${{ matrix.platform }} --self-contained ${{ env.PUBLISH_SELF_CONTAINED }} -p:PublishSingleFile=${{ env.PUBLISH_SINGLE_FILE }} -p:PublishReadyToRun=${{ env.PUBLISH_READY_TO_RUN }} -p:PublishTrimmed=${{ env.PUBLISH_TRIMMED }} -p:TrimMode=${{ env.PUBLISH_TRIM_MODE }} -p:PublishAot=${{ env.PUBLISH_AOT }} --output ${{ env.PUBLISH_OUTPUT_FOLDER }}/${{ matrix.platform }}
+        dotnet publish ${{ env.PROJECT_PATH }} -c Release -r win-$($runtimeIdentifier.ToLower()) /p:GITHUB_ACTIONS=true -p:Platform=${{ matrix.platform }} --self-contained ${{ env.PUBLISH_SELF_CONTAINED }} -p:PublishSingleFile=${{ env.PUBLISH_SINGLE_FILE }} -p:PublishReadyToRun=${{ env.PUBLISH_READY_TO_RUN }} -p:PublishAot=${{ env.PUBLISH_AOT }} --output ${{ env.PUBLISH_OUTPUT_FOLDER }}/${{ matrix.platform }}
 
     # Create ZIP archive for each platform
     - uses: vimtor/action-zip@v1.2
