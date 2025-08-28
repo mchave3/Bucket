@@ -107,7 +107,8 @@ runs:
           --tag-pattern .+ \
           --commit-limit false \
           --starting-version $TAG_NAME \
-          --ending-version $TAG_NAME
+          --ending-version $TAG_NAME \
+          --hide-credit
 
         echo "📄 Changelog preview (first 20 lines):"
         head -20 CHANGELOG.md || echo "No changelog content generated"
