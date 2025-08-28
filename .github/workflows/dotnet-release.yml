@@ -44,7 +44,7 @@ jobs:
       IS_PRE_RELEASE: ${{ env.IS_PRE_RELEASE }}
     strategy:
       matrix:
-        platform: [x86, x64] # Build for Windows x86 and x64 platforms
+        platform: [x86, x64, ARM64] # Build for Windows x86, x64, and ARM64 platforms
 
     steps:
     - uses: actions/checkout@v4
@@ -351,6 +351,7 @@ jobs:
           echo "## 🖥️ Target Platforms" >> $GITHUB_STEP_SUMMARY
           echo "- 🏗️ **x86** - Windows 32-bit" >> $GITHUB_STEP_SUMMARY
           echo "- 🏗️ **x64** - Windows 64-bit" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ **ARM64** - Windows ARM64" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Build configuration
@@ -380,10 +381,11 @@ jobs:
             echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
             echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x86.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
             echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-x64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
+            echo "- 📁 [Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip](https://github.com/${{ github.repository }}/releases/download/v${{ needs.build.outputs.app-version }}/Bucket-v${{ needs.build.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 📊 Release Statistics" >> $GITHUB_STEP_SUMMARY
-            echo "- **Platforms**: 2 (x86, x64)" >> $GITHUB_STEP_SUMMARY
-            echo "- **Artifacts**: 2 ZIP files" >> $GITHUB_STEP_SUMMARY
+            echo "- **Platforms**: 3 (x86, x64, ARM64)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifacts**: 3 ZIP files" >> $GITHUB_STEP_SUMMARY
             echo "- **Auto-generated**: Changelog included" >> $GITHUB_STEP_SUMMARY
           fi
 
