@@ -16,12 +16,9 @@ updates:
     assignees:
       - "mchave3"
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
+      prefix: "update"
+      prefix-development: "update-dev"
       include: "scope"
-    labels:
-      - "dependencies"
-      - "nuget"
     # Group related updates together to reduce noise
     groups:
       microsoft-packages:
@@ -37,6 +34,16 @@ updates:
       communitytoolkit-packages:
         patterns:
           - "CommunityToolkit.*"
+      nucs-packages:
+        patterns:
+          - "nucs.*"
+      testing-packages:
+        patterns:
+          - "xunit*"
+          - "coverlet.*"
+      htmlagilitypack-packages:
+        patterns:
+          - "HtmlAgilityPack*"
     # Ignore certain packages that should be updated manually
     ignore:
       - dependency-name: "Microsoft.WindowsAppSDK"
