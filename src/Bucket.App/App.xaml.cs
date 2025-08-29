@@ -1,4 +1,5 @@
-﻿using WinUI3Localizer;
+﻿using Windows.Storage;
+using WinUI3Localizer;
 
 namespace Bucket.App
 {
@@ -95,8 +96,9 @@ namespace Bucket.App
         {
             // Initialize a "Strings" folder in the executables folder.
             string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, "Strings");
+            StorageFolder stringsFolder = await StorageFolder.GetFolderFromPathAsync(stringsFolderPath);
 
-            ILocalizer localizer = new LocalizerBuilder()
+            ILocalizer localizer = await new LocalizerBuilder()
                 .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
                 .SetOptions(options =>
                 {

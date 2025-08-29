@@ -105,7 +105,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="WinUI3Localizer" Version="3.0.0-alpha" />
+    <PackageReference Include="WinUI3Localizer" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bucket.Core\Bucket.Core.csproj" />
