@@ -4,9 +4,6 @@ on:
   schedule:
     - cron: '0 2 * * *'  # Daily at 02:00 UTC
   workflow_dispatch:      # Manual trigger
-  push:
-    branches:
-      - dev
 
 permissions:
   contents: write
@@ -62,12 +59,25 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: dev  # Checkout dev branch specifically
           fetch-depth: 0
 
-      - name: 🔍 Analyze Changes Since Last Nightly
+      - name: 🔍 Verify Branch and Analyze Changes Since Last Nightly
         id: analyze
         run: |
-          echo "🔎 Checking for changes since last nightly release..."
+          echo "🔎 Verifying we're on the dev branch..."
+
+          # Verify we're on the dev branch
+          current_branch=$(git branch --show-current)
+          if [ "$current_branch" != "dev" ]; then
+            echo "⚠️ Not on dev branch (currently on: $current_branch) - skipping nightly build"
+            echo "should-build=false" >> $GITHUB_OUTPUT
+            echo "commits-count=wrong-branch" >> $GITHUB_OUTPUT
+            echo "changed-files=not on dev branch" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "✅ Confirmed on dev branch - checking for changes since last nightly release..."
 
           # Get latest nightly release
           latest_nightly=$(gh api repos/${{ github.repository }}/releases --paginate | \
