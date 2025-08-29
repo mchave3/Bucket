@@ -1,16 +1,20 @@
 ﻿using WinUI3Localizer;
+using Bucket.App.Services;
+using Bucket.Core.Models;
 
 namespace Bucket.App.Views
 {
-    public record LanguageItem(string Code, string DisplayName);
+    // Removed local definition - using Bucket.Core.Models.LanguageItem
 
     public sealed partial class GeneralSettingPage : Page
     {
         public GeneralSettingViewModel ViewModel { get; }
+        private readonly WinUI3LocalizationService _localizationService;
 
         public GeneralSettingPage()
         {
             ViewModel = App.GetService<GeneralSettingViewModel>();
+            _localizationService = App.GetService<WinUI3LocalizationService>();
             this.InitializeComponent();
             this.Loaded += GeneralSettingPage_Loaded;
         }
@@ -22,16 +26,13 @@ namespace Bucket.App.Views
 
         private void LoadAvailableLanguages()
         {
-            var availableLanguages = new List<LanguageItem>
-            {
-                new("en-US", "English"),
-                new("fr-FR", "Français")
-            };
+            // Use centralized language list from Bucket.Core
+            var availableLanguages = SupportedLanguages.All.ToList();
 
             LanguageComboBox.ItemsSource = availableLanguages;
 
             // Select the current language from configuration
-            string currentLanguage = Settings.SelectedLanguage;
+            string currentLanguage = _localizationService.CurrentLanguage;
             var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
             if (currentItem != null)
             {
@@ -40,7 +41,7 @@ namespace Bucket.App.Views
             else
             {
                 // Fallback to default language if not found
-                var defaultItem = availableLanguages.FirstOrDefault(x => x.Code == "en-US");
+                var defaultItem = availableLanguages.FirstOrDefault(x => x.Code == SupportedLanguages.DefaultLanguage);
                 LanguageComboBox.SelectedItem = defaultItem;
             }
         }
@@ -51,10 +52,13 @@ namespace Bucket.App.Views
             {
                 try
                 {
-                    await Localizer.Get().SetLanguage(selectedLanguage.Code);
+                    bool success = await _localizationService.SetLanguageAsync(selectedLanguage.Code);
 
-                    // Save the selected language in configuration
-                    Settings.SelectedLanguage = selectedLanguage.Code;
+                    if (success)
+                    {
+                        // Save the selected language in configuration
+                        Settings.SelectedLanguage = selectedLanguage.Code;
+                    }
                 }
                 catch (Exception ex)
                 {

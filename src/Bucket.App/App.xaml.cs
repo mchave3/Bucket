@@ -1,5 +1,6 @@
 ﻿using Windows.Storage;
 using WinUI3Localizer;
+using Bucket.App.Services;
 
 namespace Bucket.App
 {
@@ -37,6 +38,7 @@ namespace Bucket.App
             var services = new ServiceCollection();
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
+            services.AddSingleton<WinUI3LocalizationService>();
 
             services.AddTransient<MainViewModel>();
             services.AddSingleton<ContextMenuService>();
@@ -60,7 +62,7 @@ namespace Bucket.App
 
             InitializeApp();
 
-            _ = InitializeLocalizer(); // Fire and forget - don't block startup
+            _ = InitializeLocalizationService(); // Initialize localization service
         }
 
         private async void InitializeApp()
@@ -92,35 +94,11 @@ namespace Bucket.App
             UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
         }
 
-        private async Task InitializeLocalizer()
+        private async Task InitializeLocalizationService()
         {
-            // Initialize a "Strings" folder in the executables folder.
-            string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, "Strings");
-            StorageFolder stringsFolder = await StorageFolder.GetFolderFromPathAsync(stringsFolderPath);
-
-            ILocalizer localizer = await new LocalizerBuilder()
-                .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
-                .SetOptions(options =>
-                {
-                    options.DefaultLanguage = "en-US";
-                })
-                .Build();
-
-            // Set the saved language from config
+            var localizationService = GetService<WinUI3LocalizationService>();
             string savedLanguage = Settings.SelectedLanguage;
-            if (!string.IsNullOrEmpty(savedLanguage))
-            {
-                try
-                {
-                    await localizer.SetLanguage(savedLanguage);
-                }
-                catch (Exception ex)
-                {
-                    Logger?.Warning(ex, "Failed to set saved language {Language}, falling back to default", savedLanguage);
-                    // Fallback to default if saved language fails
-                    Settings.SelectedLanguage = "en-US";
-                }
-            }
+            await localizationService.InitializeAsync(savedLanguage);
         }
     }
 
