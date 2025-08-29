@@ -41,9 +41,12 @@
                 <dev:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xF2B7;" />
                 </dev:SettingsCard.HeaderIcon>
-                <ComboBox SelectedIndex="0">
-                    <ComboBoxItem l:Uids.Uid="/Settings/General_Language_English" />
-                    <ComboBoxItem l:Uids.Uid="/Settings/General_Language_French" />
+                <ComboBox x:Name="LanguageComboBox" SelectionChanged="LanguageComboBox_SelectionChanged">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
             </dev:SettingsCard>
         </StackPanel>

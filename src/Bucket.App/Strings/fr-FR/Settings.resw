@@ -135,12 +135,6 @@
   <data name="General_Language_Card.Description" xml:space="preserve">
     <value>Sélectionnez votre langue préférée pour l'application</value>
   </data>
-  <data name="General_Language_English.Content" xml:space="preserve">
-    <value>Anglais</value>
-  </data>
-  <data name="General_Language_French.Content" xml:space="preserve">
-    <value>Français</value>
-  </data>
   <data name="General_DiagnosticsFeedback_Card.Header" xml:space="preserve">
     <value>Diagnostics et commentaires (Redémarrage requis)</value>
   </data>
