@@ -60,10 +60,11 @@ namespace Bucket.Core.Models
                 return DefaultLanguage;
             }
 
-            // Direct match first
-            if (IsSupported(osLanguageCode))
+            // Direct match first - return the normalized code from our supported languages
+            var directMatch = GetByCode(osLanguageCode);
+            if (directMatch != null)
             {
-                return osLanguageCode;
+                return directMatch.Code;
             }
 
             // Try to match by language family (e.g., "fr-CA" -> "fr-FR", "en-GB" -> "en-US")
