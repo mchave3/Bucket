@@ -56,11 +56,11 @@ namespace Bucket.App
 
             ThemeService.AutoInitialize(MainWindow);
 
-            InitializeLocalizer();
-
             MainWindow.Activate();
 
             InitializeApp();
+
+            InitializeLocalizer();
         }
 
         private async void InitializeApp()
