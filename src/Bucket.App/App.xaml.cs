@@ -1,4 +1,6 @@
-﻿namespace Bucket.App
+﻿using WinUI3Localizer;
+
+namespace Bucket.App
 {
     public partial class App : Application
     {
@@ -53,6 +55,8 @@
 
             ThemeService.AutoInitialize(MainWindow);
 
+            InitializeLocalizer();
+
             MainWindow.Activate();
 
             InitializeApp();
@@ -85,6 +89,20 @@
             }
 
             UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
+        }
+
+        private async Task InitializeLocalizer()
+        {
+            // Initialize a "Strings" folder in the executables folder.
+            string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, "Strings");
+
+            ILocalizer localizer = new LocalizerBuilder()
+                .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
+                .SetOptions(options =>
+                {
+                    options.DefaultLanguage = "en-US";
+                })
+                .Build();
         }
     }
 

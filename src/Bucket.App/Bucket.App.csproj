@@ -105,6 +105,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="WinUI3Localizer" Version="3.0.0-alpha" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bucket.Core\Bucket.Core.csproj" />
@@ -125,4 +126,11 @@
     <!-- Check if TextTransform.exe exists before running -->
     <Exec Command="if exist &quot;$(DevEnvDir)TextTransform.exe&quot; &quot;$(DevEnvDir)TextTransform.exe&quot; &quot;%(T4Template.FullPath)&quot;" Condition="Exists('$(DevEnvDir)TextTransform.exe')" />
   </Target>
+
+  <!-- Copy all "Resources.resw" files in the "Strings" folder to the output folder. -->
+  <ItemGroup>
+    <Content Include="Strings\**\*.resw">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
