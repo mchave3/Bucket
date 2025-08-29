@@ -1,21 +1,44 @@
 using WinUI3Localizer;
 using Windows.Storage;
 using Bucket.Core.Models;
+using Bucket.Core.Services;
 
 namespace Bucket.App.Services
 {
     /// <summary>
-    /// WinUI3 implementation of the localization service
-    /// Now using centralized SupportedLanguages constants
+    /// WinUI3 implementation of the localization service with automatic OS language detection
     /// </summary>
-    public class WinUI3LocalizationService
+    public class WinUI3LocalizationService : ILocalizationService
     {
+        private readonly ISystemLanguageDetectionService _systemLanguageDetection;
+        private readonly Action<string> _saveLanguageToConfig;
         private ILocalizer _localizer;
-        private string _currentLanguage = SupportedLanguages.DefaultLanguage;
+        private string _currentLanguage = Core.Models.SupportedLanguages.DefaultLanguage;
 
         public string CurrentLanguage => _currentLanguage;
+        public IReadOnlyList<LanguageItem> SupportedLanguages => Core.Models.SupportedLanguages.All;
+
+        public event EventHandler<Core.Services.LanguageChangedEventArgs> LanguageChanged;
+
+        public WinUI3LocalizationService(
+            ISystemLanguageDetectionService systemLanguageDetection,
+            Action<string> saveLanguageToConfig)
+        {
+            _systemLanguageDetection = systemLanguageDetection;
+            _saveLanguageToConfig = saveLanguageToConfig;
+        }
 
         public async Task InitializeAsync(string savedLanguageCode = null)
+        {
+            await InitializeInternalAsync(savedLanguageCode, false);
+        }
+
+        public async Task InitializeWithAutoDetectionAsync(string savedLanguageCode = null, bool isFirstStartup = false)
+        {
+            await InitializeInternalAsync(savedLanguageCode, isFirstStartup);
+        }
+
+        private async Task InitializeInternalAsync(string savedLanguageCode, bool isFirstStartup)
         {
             try
             {
@@ -27,19 +50,34 @@ namespace Bucket.App.Services
                     .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
                     .SetOptions(options =>
                     {
-                        options.DefaultLanguage = SupportedLanguages.DefaultLanguage;
+                        options.DefaultLanguage = Core.Models.SupportedLanguages.DefaultLanguage;
                     })
                     .Build();
 
-                // Set the saved language or default
-                string languageToSet = string.IsNullOrWhiteSpace(savedLanguageCode) ? SupportedLanguages.DefaultLanguage : savedLanguageCode;
+                // Determine which language to use
+                string languageToSet;
+
+                if (isFirstStartup && string.IsNullOrWhiteSpace(savedLanguageCode))
+                {
+                    // First startup - detect OS language
+                    languageToSet = _systemLanguageDetection.GetBestMatchingLanguage();
+
+                    // Save the detected language to config
+                    _saveLanguageToConfig(languageToSet);
+                }
+                else
+                {
+                    // Use saved language or default
+                    languageToSet = string.IsNullOrWhiteSpace(savedLanguageCode) ? Core.Models.SupportedLanguages.DefaultLanguage : savedLanguageCode;
+                }
+
                 await SetLanguageInternalAsync(languageToSet);
             }
             catch (Exception ex)
             {
                 // Log error if logger is available
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize localization: {ex.Message}");
-                _currentLanguage = SupportedLanguages.DefaultLanguage;
+                _currentLanguage = Core.Models.SupportedLanguages.DefaultLanguage;
             }
         }
 
@@ -55,7 +93,34 @@ namespace Bucket.App.Services
                 return true; // No change needed
             }
 
-            return await SetLanguageInternalAsync(languageCode);
+            var oldLanguage = _currentLanguage;
+            bool success = await SetLanguageInternalAsync(languageCode);
+
+            if (success)
+            {
+                // Save the new language to config
+                _saveLanguageToConfig(languageCode);
+
+                // Notify language change
+                LanguageChanged?.Invoke(this, new Core.Services.LanguageChangedEventArgs(oldLanguage, languageCode));
+            }
+
+            return success;
+        }
+
+        public string GetString(string key)
+        {
+            if (_localizer == null)
+                return key;
+
+            try
+            {
+                return _localizer.GetLocalizedString(key);
+            }
+            catch (Exception)
+            {
+                return key; // Return key if localization fails
+            }
         }
 
         private async Task<bool> SetLanguageInternalAsync(string languageCode)

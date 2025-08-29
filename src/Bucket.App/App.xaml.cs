@@ -1,6 +1,7 @@
 ﻿using Windows.Storage;
 using WinUI3Localizer;
 using Bucket.App.Services;
+using Bucket.Core.Services;
 
 namespace Bucket.App
 {
@@ -38,7 +39,23 @@ namespace Bucket.App
             var services = new ServiceCollection();
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
-            services.AddSingleton<WinUI3LocalizationService>();
+
+            // Register language detection service
+            services.AddSingleton<ISystemLanguageDetectionService, WindowsSystemLanguageDetectionService>();
+
+            // Register localization service with factory pattern
+            services.AddSingleton<ILocalizationService>(provider =>
+            {
+                var systemLanguageDetection = provider.GetRequiredService<ISystemLanguageDetectionService>();
+                return new WinUI3LocalizationService(
+                    systemLanguageDetection,
+                    language => Settings.SelectedLanguage = language
+                );
+            });
+
+            // Keep backward compatibility
+            services.AddSingleton<WinUI3LocalizationService>(provider =>
+                (WinUI3LocalizationService)provider.GetRequiredService<ILocalizationService>());
 
             services.AddTransient<MainViewModel>();
             services.AddSingleton<ContextMenuService>();
@@ -96,9 +113,20 @@ namespace Bucket.App
 
         private async Task InitializeLocalizationService()
         {
-            var localizationService = GetService<WinUI3LocalizationService>();
+            var localizationService = GetService<ILocalizationService>();
+
+            // Check if this is the first startup
+            bool isFirstStartup = !Settings.HasBeenStartedBefore;
             string savedLanguage = Settings.SelectedLanguage;
-            await localizationService.InitializeAsync(savedLanguage);
+
+            // Initialize with auto-detection for first startup
+            await localizationService.InitializeWithAutoDetectionAsync(savedLanguage, isFirstStartup);
+
+            // Mark as started if it was the first time
+            if (isFirstStartup)
+            {
+                Settings.HasBeenStartedBefore = true;
+            }
         }
     }
 

@@ -47,5 +47,28 @@ namespace Bucket.Core.Models
         {
             return GetByCode(DefaultLanguage) ?? All.First();
         }
+
+        /// <summary>
+        /// Maps an OS language code to a supported language code
+        /// </summary>
+        /// <param name="osLanguageCode">OS language code (e.g., "en-US", "fr-FR", "fr-CA", "en-GB")</param>
+        /// <returns>Supported language code or default if not supported</returns>
+        public static string MapOSLanguageToSupported(string osLanguageCode)
+        {
+            if (string.IsNullOrWhiteSpace(osLanguageCode))
+                return DefaultLanguage;
+
+            // Direct match first
+            if (IsSupported(osLanguageCode))
+                return osLanguageCode;
+
+            // Try to match by language family (e.g., "fr-CA" -> "fr-FR", "en-GB" -> "en-US")
+            var languageFamily = osLanguageCode.Split('-')[0].ToLowerInvariant();
+
+            var matchingLanguage = All.FirstOrDefault(lang =>
+                lang.Code.Split('-')[0].Equals(languageFamily, StringComparison.OrdinalIgnoreCase));
+
+            return matchingLanguage?.Code ?? DefaultLanguage;
+        }
     }
 }

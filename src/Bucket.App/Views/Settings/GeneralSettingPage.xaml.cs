@@ -1,6 +1,7 @@
 ﻿using WinUI3Localizer;
 using Bucket.App.Services;
 using Bucket.Core.Models;
+using Bucket.Core.Services;
 
 namespace Bucket.App.Views
 {
@@ -9,12 +10,12 @@ namespace Bucket.App.Views
     public sealed partial class GeneralSettingPage : Page
     {
         public GeneralSettingViewModel ViewModel { get; }
-        private readonly WinUI3LocalizationService _localizationService;
+        private readonly ILocalizationService _localizationService;
 
         public GeneralSettingPage()
         {
             ViewModel = App.GetService<GeneralSettingViewModel>();
-            _localizationService = App.GetService<WinUI3LocalizationService>();
+            _localizationService = App.GetService<ILocalizationService>();
             this.InitializeComponent();
             this.Loaded += GeneralSettingPage_Loaded;
         }
@@ -26,12 +27,12 @@ namespace Bucket.App.Views
 
         private void LoadAvailableLanguages()
         {
-            // Use centralized language list from Bucket.Core
-            var availableLanguages = SupportedLanguages.All.ToList();
+            // Use centralized language list from the localization service
+            var availableLanguages = _localizationService.SupportedLanguages.ToList();
 
             LanguageComboBox.ItemsSource = availableLanguages;
 
-            // Select the current language from configuration
+            // Select the current language from the localization service
             string currentLanguage = _localizationService.CurrentLanguage;
             var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
             if (currentItem != null)
@@ -41,7 +42,7 @@ namespace Bucket.App.Views
             else
             {
                 // Fallback to default language if not found
-                var defaultItem = availableLanguages.FirstOrDefault(x => x.Code == SupportedLanguages.DefaultLanguage);
+                var defaultItem = availableLanguages.FirstOrDefault();
                 LanguageComboBox.SelectedItem = defaultItem;
             }
         }

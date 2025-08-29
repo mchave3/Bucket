@@ -22,6 +22,9 @@ namespace Bucket.App.Common
         // Selected language for the application
         private string selectedLanguage { get; set; } = "en-US";
 
+        // Whether this is the first time the application has been started
+        private bool hasBeenStartedBefore { get; set; } = false;
+
         // Docs: https://github.com/Nucs/JsonSettings
     }
 }

@@ -37,6 +37,14 @@ namespace Bucket.Core.Services
         Task InitializeAsync(string? savedLanguageCode = null);
 
         /// <summary>
+        /// Initializes the localization service with automatic language detection for first startup
+        /// </summary>
+        /// <param name="savedLanguageCode">Previously saved language code</param>
+        /// <param name="isFirstStartup">Whether this is the first startup of the application</param>
+        /// <returns>Task representing the operation</returns>
+        Task InitializeWithAutoDetectionAsync(string? savedLanguageCode = null, bool isFirstStartup = false);
+
+        /// <summary>
         /// Gets a localized string by key
         /// </summary>
         /// <param name="key">Resource key</param>
