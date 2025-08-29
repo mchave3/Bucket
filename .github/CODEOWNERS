@@ -1,0 +1,46 @@
+# Code Owners for Bucket Repository
+# This file defines who must review and approve changes to specific parts of the codebase.
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback - Repository owner reviews everything by default
+* @mchave3
+
+# Core application files - Require architecture review
+/src/Bucket.App/App.xaml @mchave3
+/src/Bucket.App/App.xaml.cs @mchave3
+/src/Bucket.App/MainWindow.xaml @mchave3
+/src/Bucket.App/MainWindow.xaml.cs @mchave3
+
+# Project configuration files - Require admin approval
+*.csproj @mchave3
+*.sln @mchave3
+Directory.Build.props @mchave3
+/src/Bucket.App/Package.appxmanifest @mchave3
+
+# Security and configuration - Admin only
+/.github/ @mchave3
+/src/Bucket.App/app.manifest @mchave3
+/src/Bucket.App/Properties/ @mchave3
+
+# Core library - Require careful review
+/src/Bucket.Core/ @mchave3
+
+# ViewModels - Business logic review
+/src/Bucket.App/ViewModels/ @mchave3
+
+# Views - UI review (can be delegated to UI team later)
+/src/Bucket.App/Views/ @mchave3
+
+# Tests - Can be more permissive but still require review
+/tests/ @mchave3
+
+# Documentation - Less restrictive
+README.md @mchave3
+*.md @mchave3
+
+# Dependencies and package management
+/src/Bucket.App/packages.config @mchave3
+/src/Bucket.Core/packages.config @mchave3
+
+# CI/CD and build configuration (when added)
+/.github/workflows/ @mchave3
