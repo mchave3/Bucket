@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Bucket.Core.Models;
 using Bucket.Core.Services;
 using Windows.System.UserProfile;
@@ -19,18 +20,29 @@ namespace Bucket.App.Services
             {
                 // Get the primary language from Windows user profile
                 var languages = GlobalizationPreferences.Languages;
+                Debug.WriteLine($"[SystemLanguageDetection] Available system languages: {string.Join(", ", languages)}");
+                Debug.WriteLine($"[SystemLanguageDetection] Total languages count: {languages?.Count ?? 0}");
+
                 if (languages?.Count > 0)
                 {
-                    return languages[0];
+                    var primaryLanguage = languages[0];
+                    Debug.WriteLine($"[SystemLanguageDetection] Primary system language: {primaryLanguage}");
+                    return primaryLanguage;
                 }
+
+                Debug.WriteLine("[SystemLanguageDetection] No languages found in GlobalizationPreferences");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[SystemLanguageDetection] Exception accessing GlobalizationPreferences: {ex.Message}");
                 // Fallback to current culture if Windows API fails
-                return System.Globalization.CultureInfo.CurrentUICulture.Name;
+                var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
+                Debug.WriteLine($"[SystemLanguageDetection] Fallback to CurrentUICulture: {fallbackLanguage}");
+                return fallbackLanguage;
             }
 
             // Final fallback
+            Debug.WriteLine($"[SystemLanguageDetection] Using final fallback: {SupportedLanguages.DefaultLanguage}");
             return SupportedLanguages.DefaultLanguage;
         }
 
@@ -41,7 +53,13 @@ namespace Bucket.App.Services
         public string GetBestMatchingLanguage()
         {
             var systemLanguage = GetSystemLanguageCode();
-            return SupportedLanguages.MapOSLanguageToSupported(systemLanguage);
+            Debug.WriteLine($"[SystemLanguageDetection] System language code: {systemLanguage}");
+
+            var mappedLanguage = SupportedLanguages.MapOSLanguageToSupported(systemLanguage);
+            Debug.WriteLine($"[SystemLanguageDetection] Mapped to supported language: {mappedLanguage}");
+            Debug.WriteLine($"[SystemLanguageDetection] Mapping successful: {systemLanguage} -> {mappedLanguage}");
+
+            return mappedLanguage;
         }
     }
 }

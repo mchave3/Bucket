@@ -55,20 +55,36 @@ namespace Bucket.Core.Models
         /// <returns>Supported language code or default if not supported</returns>
         public static string MapOSLanguageToSupported(string osLanguageCode)
         {
+            System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] Mapping OS language: '{osLanguageCode}'");
+
             if (string.IsNullOrWhiteSpace(osLanguageCode))
+            {
+                System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] Empty OS language, returning default: {DefaultLanguage}");
                 return DefaultLanguage;
+            }
 
             // Direct match first
             if (IsSupported(osLanguageCode))
+            {
+                System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] Direct match found: {osLanguageCode}");
                 return osLanguageCode;
+            }
 
             // Try to match by language family (e.g., "fr-CA" -> "fr-FR", "en-GB" -> "en-US")
             var languageFamily = osLanguageCode.Split('-')[0].ToLowerInvariant();
+            System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] No direct match, trying language family: '{languageFamily}'");
 
             var matchingLanguage = All.FirstOrDefault(lang =>
                 lang.Code.Split('-')[0].Equals(languageFamily, StringComparison.OrdinalIgnoreCase));
 
-            return matchingLanguage?.Code ?? DefaultLanguage;
+            if (matchingLanguage != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] Language family match found: {osLanguageCode} -> {matchingLanguage.Code}");
+                return matchingLanguage.Code;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[SupportedLanguages] No match found, returning default: {DefaultLanguage}");
+            return DefaultLanguage;
         }
     }
 }
