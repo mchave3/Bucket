@@ -57,29 +57,20 @@ namespace Bucket.App.Services
                 // Determine which language to use
                 string languageToSet;
 
-                System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] InitializeInternalAsync called");
-                System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] savedLanguageCode: '{savedLanguageCode}'");
-                System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] isFirstStartup: {isFirstStartup}");
-
                 if (isFirstStartup)
                 {
-                    System.Diagnostics.Debug.WriteLine("[WinUI3LocalizationService] First startup detected - detecting OS language");
                     // First startup - detect OS language
                     languageToSet = _systemLanguageDetection.GetBestMatchingLanguage();
-                    System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] OS language detected: {languageToSet}");
 
                     // Save the detected language to config
-                    System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] Saving detected language to config: {languageToSet}");
                     _saveLanguageToConfig(languageToSet);
                 }
                 else
                 {
                     // Use saved language or default
                     languageToSet = string.IsNullOrWhiteSpace(savedLanguageCode) ? Core.Models.SupportedLanguages.DefaultLanguage : savedLanguageCode;
-                    System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] Using existing language: {languageToSet} (from saved: '{savedLanguageCode}')");
                 }
 
-                System.Diagnostics.Debug.WriteLine($"[WinUI3LocalizationService] Final language to set: {languageToSet}");
                 await SetLanguageInternalAsync(languageToSet);
             }
             catch (Exception ex)

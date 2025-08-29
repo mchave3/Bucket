@@ -113,31 +113,20 @@ namespace Bucket.App
 
         private async Task InitializeLocalizationService()
         {
-            System.Diagnostics.Debug.WriteLine("[App] Starting localization service initialization");
-
             var localizationService = GetService<ILocalizationService>();
 
             // Check if this is the first startup
             bool isFirstStartup = !Settings.HasBeenStartedBefore;
             string savedLanguage = Settings.SelectedLanguage;
 
-            System.Diagnostics.Debug.WriteLine($"[App] HasBeenStartedBefore: {Settings.HasBeenStartedBefore}");
-            System.Diagnostics.Debug.WriteLine($"[App] IsFirstStartup: {isFirstStartup}");
-            System.Diagnostics.Debug.WriteLine($"[App] SavedLanguage: '{savedLanguage}'");
-
             // Initialize with auto-detection for first startup
-            System.Diagnostics.Debug.WriteLine("[App] Calling InitializeWithAutoDetectionAsync");
             await localizationService.InitializeWithAutoDetectionAsync(savedLanguage, isFirstStartup);
 
             // Mark as started if it was the first time
             if (isFirstStartup)
             {
-                System.Diagnostics.Debug.WriteLine("[App] Marking as started for future launches");
                 Settings.HasBeenStartedBefore = true;
-                System.Diagnostics.Debug.WriteLine($"[App] HasBeenStartedBefore now set to: {Settings.HasBeenStartedBefore}");
             }
-
-            System.Diagnostics.Debug.WriteLine("[App] Localization service initialization completed");
         }
     }
 
