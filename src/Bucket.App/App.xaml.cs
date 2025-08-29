@@ -60,7 +60,7 @@ namespace Bucket.App
 
             InitializeApp();
 
-            InitializeLocalizer();
+            _ = InitializeLocalizer(); // Fire and forget - don't block startup
         }
 
         private async void InitializeApp()
@@ -105,6 +105,22 @@ namespace Bucket.App
                     options.DefaultLanguage = "en-US";
                 })
                 .Build();
+
+            // Set the saved language from config
+            string savedLanguage = Settings.SelectedLanguage;
+            if (!string.IsNullOrEmpty(savedLanguage))
+            {
+                try
+                {
+                    await localizer.SetLanguage(savedLanguage);
+                }
+                catch (Exception ex)
+                {
+                    Logger?.Warning(ex, "Failed to set saved language {Language}, falling back to default", savedLanguage);
+                    // Fallback to default if saved language fails
+                    Settings.SelectedLanguage = "en-US";
+                }
+            }
         }
     }
 

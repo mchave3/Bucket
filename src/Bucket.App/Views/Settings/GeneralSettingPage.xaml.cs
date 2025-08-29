@@ -30,12 +30,18 @@ namespace Bucket.App.Views
 
             LanguageComboBox.ItemsSource = availableLanguages;
 
-            // Sélectionner la langue actuelle
-            string currentLanguage = Localizer.Get().GetCurrentLanguage();
+            // Select the current language from configuration
+            string currentLanguage = Settings.SelectedLanguage;
             var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
             if (currentItem != null)
             {
                 LanguageComboBox.SelectedItem = currentItem;
+            }
+            else
+            {
+                // Fallback to default language if not found
+                var defaultItem = availableLanguages.FirstOrDefault(x => x.Code == "en-US");
+                LanguageComboBox.SelectedItem = defaultItem;
             }
         }
 
@@ -46,11 +52,14 @@ namespace Bucket.App.Views
                 try
                 {
                     await Localizer.Get().SetLanguage(selectedLanguage.Code);
+
+                    // Save the selected language in configuration
+                    Settings.SelectedLanguage = selectedLanguage.Code;
                 }
                 catch (Exception ex)
                 {
-                    // Log l'erreur si nécessaire
-                    System.Diagnostics.Debug.WriteLine($"Erreur lors du changement de langue: {ex.Message}");
+                    // Log the error if necessary
+                    System.Diagnostics.Debug.WriteLine($"Error while changing language: {ex.Message}");
                 }
             }
         }
