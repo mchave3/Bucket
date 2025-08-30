@@ -1,5 +1,9 @@
 name: 🌙 Nightly Release
 
+# This workflow builds nightly releases from the configured TARGET_BRANCH
+# - Triggered: Daily at 02:00 UTC or manually
+# - Source branch: Defined by env.TARGET_BRANCH (currently 'dev')
+# - Release type: Pre-release with "Nightly" suffix
 on:
   schedule:
     - cron: '0 2 * * *'  # Daily at 02:00 UTC
@@ -13,6 +17,9 @@ permissions:
 # ENVIRONMENT CONFIGURATION
 # ============================================================================
 env:
+  # Branch Configuration
+  TARGET_BRANCH: dev  # Source branch for nightly builds
+
   # Project Configuration
   PROJECT_PATH: src/Bucket.App/Bucket.App.csproj
   APP_NAME: Bucket
@@ -59,25 +66,26 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: dev  # Checkout dev branch specifically
+          ref: ${{ env.TARGET_BRANCH }}  # Checkout target branch specifically
           fetch-depth: 0
 
       - name: 🔍 Verify Branch and Analyze Changes Since Last Nightly
         id: analyze
         run: |
-          echo "🔎 Verifying we're on the dev branch..."
+          echo "🔎 Verifying we're on the target branch..."
 
-          # Verify we're on the dev branch
+          # Verify we're on the target branch
+          target_branch="${{ env.TARGET_BRANCH }}"
           current_branch=$(git branch --show-current)
-          if [ "$current_branch" != "dev" ]; then
-            echo "⚠️ Not on dev branch (currently on: $current_branch) - skipping nightly build"
+          if [ "$current_branch" != "$target_branch" ]; then
+            echo "⚠️ Not on $target_branch branch (currently on: $current_branch) - skipping nightly build"
             echo "should-build=false" >> $GITHUB_OUTPUT
             echo "commits-count=wrong-branch" >> $GITHUB_OUTPUT
-            echo "changed-files=not on dev branch" >> $GITHUB_OUTPUT
+            echo "changed-files=not on $target_branch branch" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          echo "✅ Confirmed on dev branch - checking for changes since last nightly release..."
+          echo "✅ Confirmed on $target_branch branch - checking for changes since last nightly release..."
 
           # Get latest nightly release
           latest_nightly=$(gh api repos/${{ github.repository }}/releases --paginate | \
@@ -144,6 +152,7 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for nightly builds
           fetch-depth: 0
 
       - name: 🏷️ Generate Nightly Version
@@ -226,6 +235,8 @@ jobs:
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for nightly builds
 
       - name: 🔗 Download Version Configuration
         uses: actions/download-artifact@v4
@@ -273,6 +284,8 @@ jobs:
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for nightly builds
 
       - name: 🔗 Download Version Configuration
         uses: actions/download-artifact@v4
@@ -323,6 +336,7 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for nightly builds
           fetch-depth: 0
 
       - name: 📦 Download All Build Artifacts
