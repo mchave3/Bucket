@@ -18,19 +18,35 @@ namespace Bucket.App.Services
         {
             try
             {
-                // Get the primary language from Windows user profile
-                var languages = GlobalizationPreferences.Languages;
-                if (languages?.Count > 0)
+                // Use Task.Run with timeout to prevent indefinite blocking of WinRT APIs
+                var task = Task.Run(() =>
                 {
-                    var primaryLanguage = languages[0];
-                    return primaryLanguage;
+                    var languages = GlobalizationPreferences.Languages;
+                    if (languages?.Count > 0)
+                    {
+                        return languages[0];
+                    }
+                    return null;
+                });
+
+                // Wait with timeout to avoid infinite blocking
+                if (task.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    var result = task.Result;
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        return result;
+                    }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Fallback to current culture if Windows API fails
                 var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
-                return fallbackLanguage;
+                if (!string.IsNullOrEmpty(fallbackLanguage))
+                {
+                    return fallbackLanguage;
+                }
             }
 
             // Final fallback
