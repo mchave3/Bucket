@@ -92,7 +92,7 @@ runs:
           "/p:PublishAot=false"
           "/p:PublishSingleFile=false"
           "/p:EnableMsixTooling=true"
-          "--timeout", "300000"  # 5 minute timeout per test to prevent hanging
+          "--timeout", "5m"  # 5 minute timeout per test to prevent hanging
         )
 
         # Add coverage collection if enabled
