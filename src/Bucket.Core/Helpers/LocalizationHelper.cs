@@ -38,10 +38,13 @@ namespace Bucket.Core.Helpers
         /// <param name="currentLanguage">Current language code</param>
         /// <param name="newLanguage">New language code</param>
         /// <returns>True if change is needed, false otherwise</returns>
-        public static bool ShouldChangeLanguage(string currentLanguage, string newLanguage)
+        public static bool ShouldChangeLanguage(string? currentLanguage, string? newLanguage)
         {
             if (string.IsNullOrWhiteSpace(newLanguage))
                 return false;
+
+            if (string.IsNullOrWhiteSpace(currentLanguage))
+                return true;
 
             return !currentLanguage.Equals(newLanguage, StringComparison.OrdinalIgnoreCase);
         }
