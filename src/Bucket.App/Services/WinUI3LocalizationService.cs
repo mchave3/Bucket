@@ -24,8 +24,8 @@ namespace Bucket.App.Services
             ISystemLanguageDetectionService systemLanguageDetection,
             Action<string> saveLanguageToConfig)
         {
-            _systemLanguageDetection = systemLanguageDetection;
-            _saveLanguageToConfig = saveLanguageToConfig;
+            _systemLanguageDetection = systemLanguageDetection ?? throw new ArgumentNullException(nameof(systemLanguageDetection));
+            _saveLanguageToConfig = saveLanguageToConfig ?? throw new ArgumentNullException(nameof(saveLanguageToConfig));
         }
 
         public async Task InitializeAsync(string savedLanguageCode = null)

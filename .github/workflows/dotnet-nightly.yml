@@ -215,6 +215,7 @@ jobs:
   testing:
     name: 🧪 Test (${{ matrix.platform }})
     runs-on: windows-latest
+    timeout-minutes: 30  # Prevent indefinite hanging - allows 30 minutes total per platform
     needs: [change-detection, version-generation]
     if: needs.change-detection.outputs.should-build == 'true'
 
