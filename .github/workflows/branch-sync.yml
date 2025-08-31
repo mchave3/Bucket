@@ -3,11 +3,17 @@ name: 🔄 Branch Synchronization
 # This workflow manages reverse synchronization between branches:
 # - main -> dev -> feature branches
 # - dev -> feature branches (when changes are made on dev)
+# - Triggered by pull requests targeting dev branch
 on:
   push:
     branches:
       - main
       - dev
+  pull_request:
+    branches:
+      - dev
+    types:
+      - closed
   workflow_dispatch:
     inputs:
       source_branch:
@@ -80,10 +86,36 @@ jobs:
         run: |
           echo "🔍 Analyzing branch synchronization requirements..."
 
-          # Determine source branch
+          # Determine source branch based on event type
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             SOURCE_BRANCH="${{ github.event.inputs.source_branch }}"
             echo "📌 Manual trigger: Using source branch '$SOURCE_BRANCH'"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For pull requests, we sync from the head branch to feature branches
+            SOURCE_BRANCH="${{ github.head_ref }}"
+            echo "📌 Pull request trigger: Using head branch '$SOURCE_BRANCH'"
+
+            # Only process if PR is targeting dev and has been merged
+            if [[ "${{ github.base_ref }}" != "dev" ]]; then
+              echo "⏭️ Pull request not targeting dev branch, skipping sync"
+              echo "source-branch=" >> $GITHUB_OUTPUT
+              echo "sync-strategy=none" >> $GITHUB_OUTPUT
+              echo "target-branches=" >> $GITHUB_OUTPUT
+              echo "changes-detected=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            # Only sync when PR is actually merged
+            if [[ "${{ github.event.pull_request.merged }}" != "true" ]]; then
+              echo "⏭️ Pull request was closed but not merged, skipping sync"
+              echo "source-branch=" >> $GITHUB_OUTPUT
+              echo "sync-strategy=none" >> $GITHUB_OUTPUT
+              echo "target-branches=" >> $GITHUB_OUTPUT
+              echo "changes-detected=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            echo "✅ Pull request was merged, proceeding with synchronization"
           else
             SOURCE_BRANCH="${{ github.ref_name }}"
             echo "📌 Push trigger: Using pushed branch '$SOURCE_BRANCH'"
@@ -91,7 +123,7 @@ jobs:
 
           echo "source-branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
 
-          # Determine sync strategy based on source branch
+          # Determine sync strategy based on source branch and event type
           case "$SOURCE_BRANCH" in
             "main")
               SYNC_STRATEGY="main-to-all"
@@ -102,12 +134,18 @@ jobs:
               echo "🎯 Strategy: dev -> feature branches only"
               ;;
             *)
-              SYNC_STRATEGY="none"
-              echo "⏭️  No sync strategy for branch '$SOURCE_BRANCH'"
-              echo "sync-strategy=$SYNC_STRATEGY" >> $GITHUB_OUTPUT
-              echo "target-branches=" >> $GITHUB_OUTPUT
-              echo "changes-detected=false" >> $GITHUB_OUTPUT
-              exit 0
+              # For pull requests or feature branches, sync to other feature branches
+              if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.base_ref }}" == "dev" ]]; then
+                SYNC_STRATEGY="feature-to-features"
+                echo "🎯 Strategy: feature branch -> other feature branches (PR to dev)"
+              else
+                SYNC_STRATEGY="none"
+                echo "⏭️  No sync strategy for branch '$SOURCE_BRANCH'"
+                echo "sync-strategy=$SYNC_STRATEGY" >> $GITHUB_OUTPUT
+                echo "target-branches=" >> $GITHUB_OUTPUT
+                echo "changes-detected=false" >> $GITHUB_OUTPUT
+                exit 0
+              fi
               ;;
           esac
 
@@ -146,6 +184,10 @@ jobs:
               "dev-to-features")
                 # dev -> feature branches only
                 TARGET_BRANCHES=$(echo "$ALL_BRANCHES" | grep -vE "^($(echo $PROTECTED_BRANCHES | tr ',' '|'))$" | grep -vE "$(echo $EXCLUDE_PATTERNS | tr ',' '|')")
+                ;;
+              "feature-to-features")
+                # feature branch -> other feature branches (excluding source branch)
+                TARGET_BRANCHES=$(echo "$ALL_BRANCHES" | grep -vE "^($(echo $PROTECTED_BRANCHES | tr ',' '|')|$SOURCE_BRANCH)$" | grep -vE "$(echo $EXCLUDE_PATTERNS | tr ',' '|')")
                 ;;
             esac
           fi
@@ -469,6 +511,7 @@ jobs:
           echo "### Automatic Triggers" >> $GITHUB_STEP_SUMMARY
           echo "- **Push to \`main\`**: Syncs to \`dev\` and all feature branches" >> $GITHUB_STEP_SUMMARY
           echo "- **Push to \`dev\`**: Syncs to all feature branches only" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pull Request to \`dev\`**: Syncs from PR head branch to other feature branches" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Manual Control" >> $GITHUB_STEP_SUMMARY
           echo "- Use \`workflow_dispatch\` for custom source/target combinations" >> $GITHUB_STEP_SUMMARY
