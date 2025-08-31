@@ -21,16 +21,28 @@ namespace Bucket.App.Services
                 // Use Task.Run with timeout to prevent indefinite blocking of WinRT APIs
                 var task = Task.Run(() =>
                 {
-                    var languages = GlobalizationPreferences.Languages;
-                    if (languages?.Count > 0)
+                    try
                     {
-                        return languages[0];
+                        var languages = GlobalizationPreferences.Languages;
+                        if (languages?.Count > 0)
+                        {
+                            return languages[0];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the exception for debugging but don't throw
+                        System.Diagnostics.Debug.WriteLine($"WinRT API call failed: {ex.Message}");
                     }
                     return null;
                 });
 
-                // Wait with timeout to avoid infinite blocking
-                if (task.Wait(TimeSpan.FromSeconds(5)))
+                // Wait with timeout to avoid infinite blocking - reduced timeout for CI
+                var timeout = System.Diagnostics.Debugger.IsAttached ?
+                    TimeSpan.FromSeconds(10) :  // Longer timeout when debugging
+                    TimeSpan.FromSeconds(2);    // Shorter timeout for CI/production
+
+                if (task.Wait(timeout))
                 {
                     var result = task.Result;
                     if (!string.IsNullOrEmpty(result))
@@ -38,15 +50,30 @@ namespace Bucket.App.Services
                         return result;
                     }
                 }
+                else
+                {
+                    // Task timed out - likely in CI environment or Windows API unavailable
+                    System.Diagnostics.Debug.WriteLine("GlobalizationPreferences.Languages call timed out - using fallback");
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Fallback to current culture if Windows API fails
+                // Log exception and continue to fallback
+                System.Diagnostics.Debug.WriteLine($"Failed to get system language: {ex.Message}");
+            }
+
+            // Fallback to current culture if Windows API fails or times out
+            try
+            {
                 var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
                 if (!string.IsNullOrEmpty(fallbackLanguage))
                 {
                     return fallbackLanguage;
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Fallback culture detection failed: {ex.Message}");
             }
 
             // Final fallback
