@@ -135,7 +135,7 @@ public class LocalizationHelperTests
         const string currentLanguage = "en-US";
 
         // Act
-        var result = LocalizationHelper.ShouldChangeLanguage(currentLanguage, newLanguage!);
+        var result = LocalizationHelper.ShouldChangeLanguage(currentLanguage, newLanguage);
 
         // Assert
         Assert.False(result);
