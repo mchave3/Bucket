@@ -40,7 +40,6 @@ env:
   IS_PRE_RELEASE: true
   SKIP_IF_RELEASE_EXISTS: true
   MAKE_LATEST: false
-  ALLOW_UPDATES: false
 
   # NuGet Sources (disabled by default)
   IS_COMMUNITY_TOOLKIT_ENABLED: false
@@ -354,8 +353,8 @@ jobs:
           is-prerelease: ${{ env.IS_PRE_RELEASE }}
           make-latest: ${{ env.MAKE_LATEST }}
           skip-if-exists: ${{ env.SKIP_IF_RELEASE_EXISTS }}
-          allow-updates: ${{ env.ALLOW_UPDATES }}
           artifacts-pattern: "${{ env.APP_NAME }}-${{ needs.version-generation.outputs.app-version }}-*.zip"
+          generate-release-notes: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   # ──────────────────────────────────────────────────────────────────────────

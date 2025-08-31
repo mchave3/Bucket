@@ -24,10 +24,6 @@ inputs:
     description: 'Skip if release already exists'
     required: false
     default: 'true'
-  allow-updates:
-    description: 'Allow updates to existing release'
-    required: false
-    default: 'false'
   artifacts-pattern:
     description: 'Pattern for artifacts to include'
     required: false
@@ -35,23 +31,37 @@ inputs:
   github-token:
     description: 'GitHub token for API access'
     required: true
+  generate-release-notes:
+    description: 'Auto-generate release notes from commits'
+    required: false
+    default: 'true'
+  target-commitish:
+    description: 'Commitish value for tag creation (defaults to current branch)'
+    required: false
+    default: ''
 
 outputs:
   release-url:
     description: 'URL of the created release'
-    value: ${{ steps.publish-release.outputs.html_url }}
+    value: ${{ steps.publish-release.outputs.url }}
   tag-name:
     description: 'Name of the created tag'
     value: ${{ inputs.app-version }}
   release-id:
     description: 'ID of the created release'
     value: ${{ steps.publish-release.outputs.id }}
+  upload-url:
+    description: 'URL for uploading additional assets'
+    value: ${{ steps.publish-release.outputs.upload_url }}
+  assets:
+    description: 'JSON array of uploaded assets information'
+    value: ${{ steps.publish-release.outputs.assets }}
 
 runs:
   using: 'composite'
   steps:
     - name: 📋 Release Information
-      id: tag-info
+      id: release-info
       shell: bash
       run: |
         TAG_NAME="${{ inputs.app-version }}"
@@ -63,11 +73,30 @@ runs:
         echo "  • Pre-release: ${{ inputs.is-prerelease }}"
         echo "  • Make Latest: ${{ inputs.make-latest }}"
         echo "  • Skip if exists: ${{ inputs.skip-if-exists }}"
+        echo "  • Auto-generate notes: ${{ inputs.generate-release-notes }}"
 
         echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
         echo "release-title=$RELEASE_TITLE" >> $GITHUB_OUTPUT
 
-    - name: 🏷️ Create and Push Git Tag
+    - name: 🔍 Check if Release Already Exists
+      id: check-release
+      if: inputs.skip-if-exists == 'true'
+      shell: bash
+      run: |
+        echo "🔍 Checking if release ${{ inputs.app-version }} already exists..."
+
+        if gh release view "${{ inputs.app-version }}" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+          echo "⏭️ Release ${{ inputs.app-version }} already exists - skipping creation"
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Release ${{ inputs.app-version }} does not exist - proceeding with creation"
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+
+    - name: 🏷️ Create Git Tag
+      if: steps.check-release.outputs.exists != 'true'
       shell: bash
       run: |
         echo "🏷️ Creating git tag for release..."
@@ -75,87 +104,124 @@ runs:
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
 
-        # Recalculate tag name directly
         TAG_NAME="${{ inputs.app-version }}"
         echo "📌 Creating tag: $TAG_NAME"
 
-        # Check if tag already exists locally
-        if git tag -l "$TAG_NAME" | grep -q "$TAG_NAME"; then
+        # Check if tag already exists locally or remotely
+        if git tag -l "$TAG_NAME" | grep -q "^$TAG_NAME$"; then
           echo "⚠️ Tag $TAG_NAME already exists locally"
+        elif git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME$"; then
+          echo "⚠️ Tag $TAG_NAME already exists on remote"
         else
-          git tag "$TAG_NAME"
-          echo "✅ Tag created locally"
+          # Create and push the tag
+          if [ -n "${{ inputs.target-commitish }}" ]; then
+            git tag "$TAG_NAME" "${{ inputs.target-commitish }}"
+            echo "✅ Tag $TAG_NAME created at commit ${{ inputs.target-commitish }}"
+          else
+            git tag "$TAG_NAME"
+            echo "✅ Tag $TAG_NAME created at current HEAD"
+          fi
+
+          if git push origin "$TAG_NAME"; then
+            echo "✅ Tag $TAG_NAME pushed successfully to remote"
+          else
+            echo "❌ Failed to push tag $TAG_NAME"
+            exit 1
+          fi
         fi
 
-        # Push tag to remote
-        git push origin "$TAG_NAME" || echo "⚠️ Tag may already exist on remote"
-        echo "✅ Tag operation completed"
-
-    - name: 📝 Generate Release Changelog
+    - name: � Validate Available Artifacts
+      id: validate-artifacts
+      if: steps.check-release.outputs.exists != 'true'
       shell: bash
       run: |
-        echo "📝 Generating comprehensive changelog..."
+        echo "� Validating artifacts matching pattern '${{ inputs.artifacts-pattern }}'..."
 
-        # Install auto-changelog
-        npm install -g auto-changelog
+        # Create array to store artifact files
+        artifacts=()
 
-        # Recalculate tag name directly
-        TAG_NAME="${{ inputs.app-version }}"
-
-        # Generate changelog for this specific version
-        auto-changelog \
-          --tag-pattern .+ \
-          --commit-limit false \
-          --starting-version $TAG_NAME \
-          --ending-version $TAG_NAME \
-          --hide-credit
-
-        echo "📄 Changelog preview (first 20 lines):"
-        head -20 CHANGELOG.md || echo "No changelog content generated"
-        echo "✅ Changelog generated successfully"
-
-    - name: 📦 List Available Artifacts
-      shell: bash
-      run: |
-        echo "📦 Available artifacts matching pattern '${{ inputs.artifacts-pattern }}':"
-        ls -la ${{ inputs.artifacts-pattern }} 2>/dev/null || echo "No artifacts found matching pattern"
-
-        echo ""
-        echo "📊 Artifact Summary:"
+        # Find all matching files
         for file in ${{ inputs.artifacts-pattern }}; do
           if [ -f "$file" ]; then
-            size=$(du -h "$file" | cut -f1)
-            echo "  • $file ($size)"
+            artifacts+=("$file")
           fi
         done
 
+        # Check if we found any artifacts
+        if [ ${#artifacts[@]} -eq 0 ]; then
+          echo "⚠️ No artifacts found matching pattern '${{ inputs.artifacts-pattern }}'"
+          echo "files=" >> $GITHUB_OUTPUT
+          echo "count=0" >> $GITHUB_OUTPUT
+        else
+          echo "✅ Found ${#artifacts[@]} artifact(s):"
+
+          total_size=0
+          for file in "${artifacts[@]}"; do
+            size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "0")
+            size_mb=$((size / 1048576))
+            echo "  • $file ($(du -h "$file" | cut -f1))"
+
+            # Validate file integrity for ZIP files
+            if [[ "$file" == *.zip ]]; then
+              if ! unzip -t "$file" > /dev/null 2>&1; then
+                echo "❌ Artifact $file is corrupted (ZIP integrity check failed)"
+                exit 1
+              fi
+            fi
+
+            total_size=$((total_size + size))
+          done
+
+          total_size_mb=$((total_size / 1048576))
+          echo "📊 Total artifacts size: ${total_size_mb}MB"
+
+          # Convert array to newline-separated string for action-gh-release
+          printf -v files_list '%s\n' "${artifacts[@]}"
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$files_list" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "count=${#artifacts[@]}" >> $GITHUB_OUTPUT
+        fi
+
     - name: 🚀 Publish GitHub Release
       id: publish-release
-      uses: ncipollo/release-action@v1
+      if: steps.check-release.outputs.exists != 'true'
+      uses: softprops/action-gh-release@v2
       with:
-        artifacts: ${{ inputs.artifacts-pattern }}
-        bodyFile: "CHANGELOG.md"
-        name: ${{ inputs.release-name }} ${{ inputs.app-version }}
-        tag: ${{ inputs.app-version }}
-        token: ${{ inputs.github-token }}
+        tag_name: ${{ inputs.app-version }}
+        name: ${{ steps.release-info.outputs.release-title }}
+        files: ${{ steps.validate-artifacts.outputs.files }}
         prerelease: ${{ inputs.is-prerelease }}
-        makeLatest: ${{ inputs.make-latest }}
-        skipIfReleaseExists: ${{ inputs.skip-if-exists }}
-        allowUpdates: ${{ inputs.allow-updates }}
-        artifactErrorsFailBuild: false
+        make_latest: ${{ inputs.make-latest }}
+        generate_release_notes: ${{ inputs.generate-release-notes }}
+        target_commitish: ${{ inputs.target-commitish }}
+        fail_on_unmatched_files: true
+        token: ${{ inputs.github-token }}
 
     - name: ✅ Release Summary
+      if: always()
       shell: bash
       run: |
-        # Recalculate values for display
         TAG_NAME="${{ inputs.app-version }}"
-        RELEASE_TITLE="${{ inputs.release-name }} ${{ inputs.app-version }}"
+        RELEASE_TITLE="${{ steps.release-info.outputs.release-title }}"
 
         echo "✅ Release Management Summary:"
         echo "  • Tag: $TAG_NAME"
         echo "  • Release Title: $RELEASE_TITLE"
-        echo "  • Release URL: ${{ steps.publish-release.outputs.html_url }}"
-        echo "  • Release ID: ${{ steps.publish-release.outputs.id }}"
-        echo "  • Pre-release: ${{ inputs.is-prerelease }}"
-        echo "  • Make Latest: ${{ inputs.make-latest }}"
-        echo "🎉 Release published successfully!"
+
+        if [ "${{ steps.check-release.outputs.exists }}" = "true" ]; then
+          echo "  • Status: ⏭️ Skipped (release already exists)"
+          echo "  • Existing Release URL: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
+        elif [ "${{ steps.publish-release.outcome }}" = "success" ]; then
+          echo "  • Status: ✅ Successfully published"
+          echo "  • Release URL: ${{ steps.publish-release.outputs.url }}"
+          echo "  • Release ID: ${{ steps.publish-release.outputs.id }}"
+          echo "  • Upload URL: ${{ steps.publish-release.outputs.upload_url }}"
+          echo "  • Assets uploaded: ${{ steps.validate-artifacts.outputs.count }}"
+          echo "  • Pre-release: ${{ inputs.is-prerelease }}"
+          echo "  • Make Latest: ${{ inputs.make-latest }}"
+          echo "🎉 Release published successfully!"
+        else
+          echo "  • Status: ❌ Failed"
+          echo "💥 Release publication failed - check previous steps for errors"
+        fi
