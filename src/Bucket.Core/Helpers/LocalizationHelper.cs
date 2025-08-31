@@ -17,9 +17,8 @@ namespace Bucket.Core.Helpers
             if (string.IsNullOrWhiteSpace(languageCode))
                 return SupportedLanguages.DefaultLanguage;
 
-            return SupportedLanguages.IsSupported(languageCode)
-                ? languageCode
-                : SupportedLanguages.DefaultLanguage;
+            var supportedLanguage = SupportedLanguages.GetByCode(languageCode);
+            return supportedLanguage?.Code ?? SupportedLanguages.DefaultLanguage;
         }
 
         /// <summary>
