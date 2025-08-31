@@ -1,6 +1,29 @@
 <Project>
   <!-- Global properties for all projects -->
 
+  <!-- Code Analysis Configuration -->
+  <PropertyGroup>
+    <!-- Enable .NET analyzers for all projects -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+
+    <!-- Enforce nullable reference types -->
+    <Nullable>enable</Nullable>
+
+    <!-- Code style and formatting -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Missing XML comment for publicly visible type or member -->
+
+    <!-- Treat warnings as errors in Release builds -->
+    <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
   <!-- Fix for MSB4062 Windows App SDK packaging tasks in CI/CD environments -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <!-- Enable Windows targeting on non-Windows CI/CD environments -->
