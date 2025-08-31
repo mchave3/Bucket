@@ -47,7 +47,7 @@ Try the latest features with our [nightly builds](https://github.com/mchave3/Buc
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) with WinUI 3 workload
-- Windows 10 SDK (version 10.0.26100.0 or later)
+- Windows 11 SDK (version 10.0.26100.0 or later)
 
 ### Building
 
