@@ -24,9 +24,6 @@
     <Version>1.0.0.0</Version>
     <!--Remove git hash from assembly informational version in .NET >= 8, Example: false = 1.0.0, true = 1.0.0+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-
-    <!-- App-specific analyzer suppressions -->
-    <NoWarn>$(NoWarn);CA1515;CA2211;CA1805;CA1051;MVVMTK0045;CA1305;CA2007;CA1822;CA1859;CA1031;CA1724;CA1708;CA5392</NoWarn>
   </PropertyGroup>
   <!-- Publish Properties -->
   <PropertyGroup>
