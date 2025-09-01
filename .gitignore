@@ -416,3 +416,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Setup directories
+setup/**/Bucket.Setup_x64-cache/
+setup/**/Bucket.Setup_x64-SetupFiles/
