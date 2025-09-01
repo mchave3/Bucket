@@ -8,7 +8,7 @@ namespace Bucket.Core.Helpers
         {
             assembly ??= Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
 
-            var infoVersion = assembly
+            string? infoVersion = assembly
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion;
 
