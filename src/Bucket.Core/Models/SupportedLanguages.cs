@@ -45,7 +45,7 @@ namespace Bucket.Core.Models
         /// <returns>Default language item</returns>
         public static LanguageItem GetDefault()
         {
-            return GetByCode(DefaultLanguage) ?? All[0];
+            return GetByCode(DefaultLanguage) ?? All.First();
         }
 
         /// <summary>
@@ -61,21 +61,21 @@ namespace Bucket.Core.Models
             }
 
             // Direct match first - return the normalized code from our supported languages
-            LanguageItem? directMatch = GetByCode(osLanguageCode);
+            var directMatch = GetByCode(osLanguageCode);
             if (directMatch != null)
             {
                 return directMatch.Code;
             }
 
             // Try to match by language family (e.g., "fr-CA" -> "fr-FR", "en-GB" -> "en-US")
-            string languageFamily = osLanguageCode.Split('-')[0].ToLowerInvariant();
+            var languageFamily = osLanguageCode.Split('-')[0].ToLowerInvariant();
 
-            for (int i = 0; i < All.Count; i++)
+            var matchingLanguage = All.FirstOrDefault(lang =>
+                lang.Code.Split('-')[0].Equals(languageFamily, StringComparison.OrdinalIgnoreCase));
+
+            if (matchingLanguage != null)
             {
-                if (All[i].Code.Split('-')[0].Equals(languageFamily, StringComparison.OrdinalIgnoreCase))
-                {
-                    return All[i].Code;
-                }
+                return matchingLanguage.Code;
             }
 
             return DefaultLanguage;
