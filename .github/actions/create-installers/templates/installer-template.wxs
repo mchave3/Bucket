@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="{{APP_NAME}}"
+           Version="{{APP_VERSION}}"
+           Manufacturer="{{COMPANY_NAME}}"
+           UpgradeCode="12345678-1234-1234-1234-123456789012"
+           Language="1033"
+           Codepage="1252"
+           InstallerVersion="500">
+
+    <SummaryInformation Description="{{PRODUCT_DESCRIPTION}}"
+                        Comments="Installer for {{APP_NAME}} {{APP_VERSION}}"
+                        Manufacturer="{{COMPANY_NAME}}" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of {{APP_NAME}} is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="{{APP_NAME}}" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <Icon Id="AppIcon" SourceFile="{{BUILD_OUTPUT_PATH}}\Assets\AppIcon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/mchave3/Bucket" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="{{PROGRAM_FILES_FOLDER}}">
+        <Directory Id="INSTALLFOLDER" Name="{{APP_NAME}}" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="{{APP_NAME}}" />
+      </Directory>
+      <Directory Id="DesktopFolder" />
+    </Directory>
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main executable file -->
+      <Component Id="MainExecutable" Guid="*">
+        <File Id="{{APP_NAME}}Exe"
+              Source="{{BUILD_OUTPUT_PATH}}\{{APP_NAME}}.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Support files (DLLs, configs, etc.) -->
+      <Component Id="SupportFiles" Guid="*">
+        <File Id="SupportFile1" Source="{{BUILD_OUTPUT_PATH}}\*.dll" />
+        <File Id="SupportFile2" Source="{{BUILD_OUTPUT_PATH}}\*.config" />
+        <File Id="SupportFile3" Source="{{BUILD_OUTPUT_PATH}}\*.json" />
+      </Component>
+
+      <!-- Assets directory -->
+      <Component Id="AssetsFiles" Guid="*">
+        <File Id="AssetsFile1" Source="{{BUILD_OUTPUT_PATH}}\Assets\*" />
+      </Component>
+    </ComponentGroup>
+
+    <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="*">
+      <Shortcut Id="ApplicationStartMenuShortcut"
+                Name="{{APP_NAME}}"
+                Description="{{PRODUCT_DESCRIPTION}}"
+                Target="[INSTALLFOLDER]{{APP_NAME}}.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\{{COMPANY_NAME}}\{{APP_NAME}}"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="*">
+      <Shortcut Id="ApplicationDesktopShortcut"
+                Name="{{APP_NAME}}"
+                Description="{{PRODUCT_DESCRIPTION}}"
+                Target="[INSTALLFOLDER]{{APP_NAME}}.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\{{COMPANY_NAME}}\{{APP_NAME}}"
+                     Name="desktop_shortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+  </Package>
+</Wix>

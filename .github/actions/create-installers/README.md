@@ -120,6 +120,20 @@ To sign your installers, configure the following parameters:
 - **[Inno Setup 6](https://jrsoftware.org/isinfo.php)**: EXE installer creation
 - **[SignTool](https://docs.microsoft.com/en-us/windows/win32/seccrypto/signtool)**: Digital signing (optional)
 
+## 📁 Action Structure
+
+```text
+.github/actions/create-installers/
+├── action.yml                        # GitHub Actions definition
+├── README.md                         # This documentation
+├── scripts/
+│   ├── generate-wix-template.ps1     # WiX MSI generation script
+│   └── generate-inno-template.ps1    # Inno Setup EXE generation script
+└── templates/
+    ├── installer-template.wxs        # WiX XML template
+    └── installer-template.iss        # Inno Setup script template
+```
+
 ## 📊 Example Output
 
 ```
@@ -142,12 +156,51 @@ Tools are automatically downloaded and installed on each execution to ensure the
 - WiX Toolset: Installed via `dotnet tool install --global wix`
 - Inno Setup: Downloaded from the official site
 
+### Template Architecture
+
+This action uses a template-based approach for generating installer configurations:
+
+**Template Files:**
+
+- `templates/installer-template.wxs`: WiX XML template for MSI generation
+- `templates/installer-template.iss`: Inno Setup script template for EXE generation
+
+**Placeholder System:**
+
+Templates use `{{PLACEHOLDER}}` syntax for dynamic content replacement:
+
+```xml
+<!-- WiX Template Example -->
+<Package Name="{{APP_NAME}}"
+         Version="{{APP_VERSION}}"
+         Manufacturer="{{COMPANY_NAME}}" />
+```
+
+```ini
+; Inno Setup Template Example
+AppName={{APP_NAME}}
+AppVersion={{APP_VERSION}}
+AppPublisher={{COMPANY_NAME}}
+```
+
+**Available Placeholders:**
+
+- `{{APP_NAME}}`: Application name
+- `{{APP_VERSION}}`: Application version
+- `{{COMPANY_NAME}}`: Company name
+- `{{PRODUCT_DESCRIPTION}}`: Product description
+- `{{BUILD_OUTPUT_PATH}}`: Build output directory path
+- `{{PROGRAM_FILES_FOLDER}}`: Platform-specific Program Files folder
+
 ### Customization
 
-To customize installation templates, modify the scripts:
+To customize installation behavior:
 
-- `scripts/generate-wix-template.ps1`: WiX template
-- `scripts/generate-inno-template.ps1`: Inno Setup template
+1. **Modify Templates**: Edit `templates/installer-template.wxs` or `templates/installer-template.iss`
+2. **Update Scripts**: Modify placeholder replacement logic in:
+   - `scripts/generate-wix-template.ps1`: WiX processing
+   - `scripts/generate-inno-template.ps1`: Inno Setup processing
+3. **Add Placeholders**: Extend the placeholder system by updating both templates and scripts
 
 ## 🚨 Troubleshooting
 
