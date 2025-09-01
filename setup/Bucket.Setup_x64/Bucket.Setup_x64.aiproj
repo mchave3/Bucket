@@ -22,6 +22,14 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bucket.App\Bucket.App.csproj">
+      <Name>Bucket.App</Name>
+      <Project>{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}</Project>
+      <Private>True</Private>
+      <OutputsToImport>PublishOutput#win-x64#bin\\\win-x64\publish\###FileSystem##win-x64#true#False##</OutputsToImport>
+    </ProjectReference>
+  </ItemGroup>
   <Target Name="Build">
     <Error Text="This project requires Advanced Installer tool. Please download it from https://www.advancedinstaller.com/download.html" />
   </Target>
