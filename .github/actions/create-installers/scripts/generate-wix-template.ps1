@@ -36,8 +36,7 @@ $wxsContent = @"
            UpgradeCode="12345678-1234-1234-1234-123456789012"
            Language="1033"
            Codepage="1252"
-           InstallerVersion="500"
-           Platform="$WixArch">
+           InstallerVersion="500">
 
     <SummaryInformation Description="$ProductDescription"
                         Comments="Installer for $AppName $AppVersion"
