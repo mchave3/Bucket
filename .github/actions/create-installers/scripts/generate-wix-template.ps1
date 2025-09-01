@@ -67,15 +67,9 @@ $wxsContent = @"
     </Directory>
 
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <Component Id="MainExecutable">
-        <File Id="BucketExe"
-              Source="$BuildOutputPath\$AppName.exe"
-              KeyPath="yes" />
-      </Component>
-
-      <Component Id="AppFiles">
-        <File Id="AllFiles" Source="$BuildOutputPath\*" />
-      </Component>
+      <!-- Modern approach: Using Files element for better file harvesting -->
+      <Files Include="$BuildOutputPath\**"
+             Exclude="$BuildOutputPath\*.pdb;$BuildOutputPath\*.xml" />
     </ComponentGroup>
 
     <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="*">
