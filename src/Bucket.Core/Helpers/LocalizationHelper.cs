@@ -15,11 +15,9 @@ namespace Bucket.Core.Helpers
         public static string ValidateLanguageCode(string? languageCode)
         {
             if (string.IsNullOrWhiteSpace(languageCode))
-            {
                 return SupportedLanguages.DefaultLanguage;
-            }
 
-            LanguageItem? supportedLanguage = SupportedLanguages.GetByCode(languageCode);
+            var supportedLanguage = SupportedLanguages.GetByCode(languageCode);
             return supportedLanguage?.Code ?? SupportedLanguages.DefaultLanguage;
         }
 
@@ -30,7 +28,7 @@ namespace Bucket.Core.Helpers
         /// <returns>LanguageItem (falls back to default if not found)</returns>
         public static LanguageItem GetLanguageItem(string? languageCode)
         {
-            string validCode = ValidateLanguageCode(languageCode);
+            var validCode = ValidateLanguageCode(languageCode);
             return SupportedLanguages.GetByCode(validCode) ?? SupportedLanguages.GetDefault();
         }
 
@@ -43,14 +41,10 @@ namespace Bucket.Core.Helpers
         public static bool ShouldChangeLanguage(string? currentLanguage, string? newLanguage)
         {
             if (string.IsNullOrWhiteSpace(newLanguage))
-            {
                 return false;
-            }
 
             if (string.IsNullOrWhiteSpace(currentLanguage))
-            {
                 return true;
-            }
 
             return !currentLanguage.Equals(newLanguage, StringComparison.OrdinalIgnoreCase);
         }
