@@ -192,4 +192,22 @@
   <data name="About_ReleaseNotes.Content" xml:space="preserve">
     <value>Release Notes</value>
   </data>
+  <data name="Update_CurrentVersion_Card.Description" xml:space="preserve">
+    <value>Current application version and update status</value>
+  </data>
+  <data name="Update_LastUpdateCheck.Text" xml:space="preserve">
+    <value>Last Update Check</value>
+  </data>
+  <data name="Update_CheckButton.Content" xml:space="preserve">
+    <value>Check for New Version</value>
+  </data>
+  <data name="Update_Status_Card.Description" xml:space="preserve">
+    <value>Update availability and download options</value>
+  </data>
+  <data name="Update_ReleaseNotes.Content" xml:space="preserve">
+    <value>Release Note</value>
+  </data>
+  <data name="Update_DownloadButton.Content" xml:space="preserve">
+    <value>Download Update</value>
+  </data>
 </root>
