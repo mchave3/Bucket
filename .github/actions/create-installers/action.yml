@@ -1,0 +1,305 @@
+name: '📦 Create Installers'
+description: 'Create MSI and EXE installers for the application using WiX Toolset and Inno Setup'
+
+inputs:
+  app-name:
+    description: 'Application name for installer creation'
+    required: true
+  app-version:
+    description: 'Application version'
+    required: true
+  platform:
+    description: 'Target platform (x86, x64, ARM64)'
+    required: true
+  build-output-path:
+    description: 'Path to the build output directory'
+    required: true
+  company-name:
+    description: 'Company name for installer metadata'
+    required: false
+    default: 'Mickaël CHAVE'
+  product-description:
+    description: 'Product description for installer'
+    required: false
+    default: 'Bucket - Modern File Management Application'
+  sign-installers:
+    description: 'Whether to sign the installers (requires signing certificate)'
+    required: false
+    default: 'false'
+  certificate-path:
+    description: 'Path to the code signing certificate (PFX file)'
+    required: false
+  certificate-password:
+    description: 'Password for the code signing certificate'
+    required: false
+
+outputs:
+  msi-installer-path:
+    description: 'Path to the created MSI installer'
+    value: ${{ steps.create-msi.outputs.installer-path }}
+  exe-installer-path:
+    description: 'Path to the created EXE installer'
+    value: ${{ steps.create-exe.outputs.installer-path }}
+  msi-installer-size:
+    description: 'Size of the MSI installer in MB'
+    value: ${{ steps.verify-msi.outputs.installer-size }}
+  exe-installer-size:
+    description: 'Size of the EXE installer in MB'
+    value: ${{ steps.verify-exe.outputs.installer-size }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 📋 Installer Configuration
+      id: config
+      shell: pwsh
+      run: |
+        Write-Host "📋 Installer Configuration:"
+        Write-Host "  • Application: ${{ inputs.app-name }}"
+        Write-Host "  • Version: ${{ inputs.app-version }}"
+        Write-Host "  • Platform: ${{ inputs.platform }}"
+        Write-Host "  • Build Output: ${{ inputs.build-output-path }}"
+        Write-Host "  • Company: ${{ inputs.company-name }}"
+        Write-Host "  • Sign Installers: ${{ inputs.sign-installers }}"
+
+        # Set architecture-specific variables
+        $platform = "${{ inputs.platform }}"
+        switch ($platform) {
+          "x86" {
+            $programFilesFolder = "ProgramFilesFolder"
+            $archSuffix = "x86"
+            $wixArch = "x86"
+          }
+          "x64" {
+            $programFilesFolder = "ProgramFiles64Folder"
+            $archSuffix = "x64"
+            $wixArch = "x64"
+          }
+          "ARM64" {
+            $programFilesFolder = "ProgramFiles64Folder"
+            $archSuffix = "ARM64"
+            $wixArch = "arm64"
+          }
+        }
+
+        # Set output variables
+        echo "program-files-folder=$programFilesFolder" >> $GITHUB_OUTPUT
+        echo "arch-suffix=$archSuffix" >> $GITHUB_OUTPUT
+        echo "wix-arch=$wixArch" >> $GITHUB_OUTPUT
+        echo "msi-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix.msi" >> $GITHUB_OUTPUT
+        echo "exe-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix-Setup.exe" >> $GITHUB_OUTPUT
+
+        Write-Host "  • MSI Installer: ${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix.msi"
+        Write-Host "  • EXE Installer: ${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix-Setup.exe"
+
+    - name: 🔧 Setup WiX Toolset
+      shell: pwsh
+      run: |
+        Write-Host "🔧 Installing WiX Toolset v4..."
+
+        # Install WiX as a global tool
+        dotnet tool install --global wix --version 4.0.5
+
+        # Verify installation
+        wix --version
+
+        Write-Host "✅ WiX Toolset installed successfully"
+
+    - name: 🔧 Setup Inno Setup
+      shell: pwsh
+      run: |
+        Write-Host "🔧 Installing Inno Setup..."
+
+        # Download and install Inno Setup
+        $innoSetupUrl = "https://jrsoftware.org/download.php/is.exe"
+        $innoSetupInstaller = "innosetup-installer.exe"
+
+        Invoke-WebRequest -Uri "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" -OutFile $innoSetupInstaller
+        Start-Process -FilePath $innoSetupInstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+
+        # Add to PATH for this session
+        $innoSetupPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+        $env:PATH = "$innoSetupPath;$env:PATH"
+
+        # Verify installation
+        & "$innoSetupPath\ISCC.exe" | Select-Object -First 3
+
+        Write-Host "✅ Inno Setup installed successfully"
+
+    - name: 📝 Generate WiX Source File
+      id: generate-wix
+      shell: pwsh
+      run: |
+        Write-Host "📝 Generating WiX source file..."
+
+        # Use the template script to generate WiX file
+        & "${{ github.action_path }}/scripts/generate-wix-template.ps1" `
+          -AppName "${{ inputs.app-name }}" `
+          -AppVersion "${{ inputs.app-version }}" `
+          -CompanyName "${{ inputs.company-name }}" `
+          -ProductDescription "${{ inputs.product-description }}" `
+          -BuildOutputPath "${{ inputs.build-output-path }}" `
+          -ProgramFilesFolder "${{ steps.config.outputs.program-files-folder }}" `
+          -WixArch "${{ steps.config.outputs.wix-arch }}"
+
+        $wxsFile = "bucket-installer.wxs"
+        Write-Host "✅ WiX source file generated: $wxsFile"
+        echo "wxs-file=$wxsFile" >> $GITHUB_OUTPUT
+
+    - name: 📝 Generate Inno Setup Script
+      id: generate-inno
+      shell: pwsh
+      run: |
+        Write-Host "📝 Generating Inno Setup script..."
+
+        # Use the template script to generate Inno Setup file
+        & "${{ github.action_path }}/scripts/generate-inno-template.ps1" `
+          -AppName "${{ inputs.app-name }}" `
+          -AppVersion "${{ inputs.app-version }}" `
+          -CompanyName "${{ inputs.company-name }}" `
+          -ProductDescription "${{ inputs.product-description }}" `
+          -BuildOutputPath "${{ inputs.build-output-path }}" `
+          -Platform "${{ inputs.platform }}" `
+          -ExeName "${{ steps.config.outputs.exe-name }}"
+
+        $issFile = "bucket-setup.iss"
+        Write-Host "✅ Inno Setup script generated: $issFile"
+        echo "iss-file=$issFile" >> $GITHUB_OUTPUT
+
+    - name: 🏗️ Build MSI Installer
+      id: create-msi
+      shell: pwsh
+      run: |
+        Write-Host "🏗️ Building MSI installer with WiX..."
+
+        $wxsFile = "${{ steps.generate-wix.outputs.wxs-file }}"
+        $msiFile = "${{ steps.config.outputs.msi-name }}"
+
+        # Verify build output exists
+        if (-not (Test-Path "${{ inputs.build-output-path }}")) {
+          Write-Error "❌ Build output directory not found: ${{ inputs.build-output-path }}"
+          exit 1
+        }
+
+        Write-Host "🔨 Compiling WiX source to MSI..."
+        wix build $wxsFile -out $msiFile -arch ${{ steps.config.outputs.wix-arch }}
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "❌ WiX compilation failed"
+          exit 1
+        }
+
+        if (Test-Path $msiFile) {
+          Write-Host "✅ MSI installer created successfully: $msiFile"
+          echo "installer-path=$msiFile" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ MSI installer not found after compilation"
+          exit 1
+        }
+
+    - name: 🏗️ Build EXE Installer
+      id: create-exe
+      shell: pwsh
+      run: |
+        Write-Host "🏗️ Building EXE installer with Inno Setup..."
+
+        $issFile = "${{ steps.generate-inno.outputs.iss-file }}"
+        $exeFile = "${{ steps.config.outputs.exe-name }}"
+        $innoSetupPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+
+        Write-Host "🔨 Compiling Inno Setup script to EXE..."
+        & "$innoSetupPath\ISCC.exe" $issFile
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "❌ Inno Setup compilation failed"
+          exit 1
+        }
+
+        if (Test-Path $exeFile) {
+          Write-Host "✅ EXE installer created successfully: $exeFile"
+          echo "installer-path=$exeFile" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ EXE installer not found after compilation"
+          exit 1
+        }
+
+    - name: 🔍 Verify MSI Installer
+      id: verify-msi
+      shell: pwsh
+      run: |
+        Write-Host "🔍 Verifying MSI installer..."
+
+        $msiFile = "${{ steps.create-msi.outputs.installer-path }}"
+
+        if (Test-Path $msiFile) {
+          $fileInfo = Get-Item $msiFile
+          $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+
+          Write-Host "✅ MSI Installer Verified:"
+          Write-Host "  • File: $($fileInfo.Name)"
+          Write-Host "  • Size: $sizeMB MB"
+          Write-Host "  • Platform: ${{ inputs.platform }}"
+          Write-Host "  • Created: $($fileInfo.CreationTime)"
+
+          echo "installer-size=$sizeMB" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ MSI installer verification failed"
+          exit 1
+        }
+
+    - name: 🔍 Verify EXE Installer
+      id: verify-exe
+      shell: pwsh
+      run: |
+        Write-Host "🔍 Verifying EXE installer..."
+
+        $exeFile = "${{ steps.create-exe.outputs.installer-path }}"
+
+        if (Test-Path $exeFile) {
+          $fileInfo = Get-Item $exeFile
+          $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+
+          Write-Host "✅ EXE Installer Verified:"
+          Write-Host "  • File: $($fileInfo.Name)"
+          Write-Host "  • Size: $sizeMB MB"
+          Write-Host "  • Platform: ${{ inputs.platform }}"
+          Write-Host "  • Created: $($fileInfo.CreationTime)"
+
+          echo "installer-size=$sizeMB" >> $GITHUB_OUTPUT
+        } else {
+          Write-Error "❌ EXE installer verification failed"
+          exit 1
+        }
+
+    - name: 🔐 Sign Installers (Optional)
+      if: inputs.sign-installers == 'true' && inputs.certificate-path != '' && inputs.certificate-password != ''
+      shell: pwsh
+      run: |
+        Write-Host "🔐 Signing installers..."
+
+        $msiFile = "${{ steps.create-msi.outputs.installer-path }}"
+        $exeFile = "${{ steps.create-exe.outputs.installer-path }}"
+        $certPath = "${{ inputs.certificate-path }}"
+        $certPassword = "${{ inputs.certificate-password }}"
+
+        # Sign MSI
+        Write-Host "🔐 Signing MSI installer..."
+        signtool sign /f $certPath /p $certPassword /tr http://timestamp.digicert.com /td sha256 /fd sha256 $msiFile
+
+        # Sign EXE
+        Write-Host "🔐 Signing EXE installer..."
+        signtool sign /f $certPath /p $certPassword /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exeFile
+
+        Write-Host "✅ Installers signed successfully"
+
+    - name: 📊 Installer Creation Summary
+      shell: pwsh
+      run: |
+        Write-Host "📊 Installer Creation Summary:"
+        Write-Host "  • Platform: ${{ inputs.platform }}"
+        Write-Host "  • Application: ${{ inputs.app-name }} v${{ inputs.app-version }}"
+        Write-Host "  • MSI Installer: ${{ steps.create-msi.outputs.installer-path }} (${{ steps.verify-msi.outputs.installer-size }} MB)"
+        Write-Host "  • EXE Installer: ${{ steps.create-exe.outputs.installer-path }} (${{ steps.verify-exe.outputs.installer-size }} MB)"
+        Write-Host "  • Company: ${{ inputs.company-name }}"
+        Write-Host "  • Signed: ${{ inputs.sign-installers }}"
+        Write-Host "  • Status: ✅ Installers created successfully"
