@@ -145,7 +145,7 @@
     <value>General</value>
   </data>
   <data name="Navigation_General.Description" xml:space="preserve">
-    <value>Change your app Settings</value>
+    <value>Change your app Settings.</value>
   </data>
   <data name="Navigation_Theme.Header" xml:space="preserve">
     <value>Appearance &amp; behavior</value>
@@ -157,13 +157,13 @@
     <value>Update App</value>
   </data>
   <data name="Navigation_Update.Description" xml:space="preserve">
-    <value>Check for Updates</value>
+    <value>Check for Updates.</value>
   </data>
   <data name="Navigation_About.Header" xml:space="preserve">
     <value>About us</value>
   </data>
   <data name="Navigation_About.Description" xml:space="preserve">
-    <value>About Bucket.App and Developer</value>
+    <value>About Bucket and Developer.</value>
   </data>
   <data name="Theme_AppTheme_Card.Header" xml:space="preserve">
     <value>App theme</value>
