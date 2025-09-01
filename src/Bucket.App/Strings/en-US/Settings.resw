@@ -177,4 +177,19 @@
   <data name="Theme_Dark" xml:space="preserve">
     <value>Dark</value>
   </data>
+  <data name="About_Expander.Header" xml:space="preserve">
+    <value>Bucket</value>
+  </data>
+  <data name="About_Expander.Description" xml:space="preserve">
+    <value>Application details</value>
+  </data>
+  <data name="About_RelatedLinks.Text" xml:space="preserve">
+    <value>Related Links</value>
+  </data>
+  <data name="About_SourceCode.Content" xml:space="preserve">
+    <value>Source Code</value>
+  </data>
+  <data name="About_ReleaseNotes.Content" xml:space="preserve">
+    <value>Release Notes</value>
+  </data>
 </root>
