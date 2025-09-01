@@ -155,8 +155,36 @@ jobs:
         run: |
           echo "🔍 Running static code analysis..."
 
-          # Build with analysis enabled
-          dotnet build Bucket.sln \
+          # Build Core project first (no platform required)
+          echo "🔧 Building Core library..."
+          dotnet build src/Bucket.Core/Bucket.Core.csproj \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            -p:RunAnalyzersDuringBuild=true \
+            -p:EnableNETAnalyzers=true \
+            -p:AnalysisLevel=latest \
+            -p:TreatWarningsAsErrors=${{ env.TREAT_WARNINGS_AS_ERRORS }} \
+            -p:WarningsAsErrors="" \
+            -p:WarningsNotAsErrors="CS1591"
+
+          # Build App project with platform specification
+          echo "🔧 Building App project..."
+          dotnet build src/Bucket.App/Bucket.App.csproj \
+            --configuration Release \
+            --no-restore \
+            --verbosity normal \
+            -p:Platform=x64 \
+            -p:RunAnalyzersDuringBuild=true \
+            -p:EnableNETAnalyzers=true \
+            -p:AnalysisLevel=latest \
+            -p:TreatWarningsAsErrors=${{ env.TREAT_WARNINGS_AS_ERRORS }} \
+            -p:WarningsAsErrors="" \
+            -p:WarningsNotAsErrors="CS1591"
+
+          # Build tests
+          echo "🔧 Building tests..."
+          dotnet build tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj \
             --configuration Release \
             --no-restore \
             --verbosity normal \
@@ -246,7 +274,21 @@ jobs:
 
       - name: 🏗️ Build for Security Analysis
         run: |
-          dotnet build Bucket.sln \
+          # Build Core project
+          dotnet build src/Bucket.Core/Bucket.Core.csproj \
+            --configuration Release \
+            --no-restore \
+            --verbosity minimal
+
+          # Build App project with platform
+          dotnet build src/Bucket.App/Bucket.App.csproj \
+            --configuration Release \
+            --no-restore \
+            --verbosity minimal \
+            -p:Platform=x64
+
+          # Build tests
+          dotnet build tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj \
             --configuration Release \
             --no-restore \
             --verbosity minimal
