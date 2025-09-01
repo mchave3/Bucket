@@ -191,10 +191,10 @@ public class SupportedLanguagesTests
         var result = SupportedLanguages.MapOSLanguageToSupported(osLanguageCode);
 
         // Assert
-        var expected = osLanguageCode.ToLowerInvariant() switch
+        var expected = osLanguageCode.ToUpperInvariant() switch
         {
-            "en" => "en-US",
-            "fr" => "fr-FR",
+            "EN" => "en-US",
+            "FR" => "fr-FR",
             _ => SupportedLanguages.DefaultLanguage
         };
         Assert.Equal(expected, result);

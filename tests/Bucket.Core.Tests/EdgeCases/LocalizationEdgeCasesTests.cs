@@ -9,6 +9,7 @@ namespace Bucket.Core.Tests.EdgeCases;
 /// </summary>
 public class LocalizationEdgeCasesTests
 {
+    private static readonly string[] s_testCodes = new[] { "en-US", "fr-FR", "invalid", "", "EN-US", "fr-fr" };
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -40,11 +41,11 @@ public class LocalizationEdgeCasesTests
         var result = LocalizationHelper.ValidateLanguageCode(languageCode);
 
         // Assert
-        var normalizedInput = languageCode.ToLowerInvariant();
+        var normalizedInput = languageCode.ToUpperInvariant();
         var expected = normalizedInput switch
         {
-            "en-us" => "en-US",
-            "fr-fr" => "fr-FR",
+            "EN-US" => "en-US",
+            "FR-FR" => "fr-FR",
             _ => SupportedLanguages.DefaultLanguage
         };
         Assert.Equal(expected, result);
@@ -76,10 +77,10 @@ public class LocalizationEdgeCasesTests
         var result = SupportedLanguages.MapOSLanguageToSupported(languageFamily);
 
         // Assert
-        var expected = languageFamily.ToLowerInvariant() switch
+        var expected = languageFamily.ToUpperInvariant() switch
         {
-            "en" => "en-US",
-            "fr" => "fr-FR",
+            "EN" => "en-US",
+            "FR" => "fr-FR",
             _ => SupportedLanguages.DefaultLanguage
         };
         Assert.Equal(expected, result);
@@ -97,11 +98,11 @@ public class LocalizationEdgeCasesTests
         var result = SupportedLanguages.MapOSLanguageToSupported(complexLanguageCode);
 
         // Assert
-        var languageFamily = complexLanguageCode.Split('-')[0].ToLowerInvariant();
+        var languageFamily = complexLanguageCode.Split('-')[0].ToUpperInvariant();
         var expected = languageFamily switch
         {
-            "en" => "en-US",
-            "fr" => "fr-FR",
+            "EN" => "en-US",
+            "FR" => "fr-FR",
             _ => SupportedLanguages.DefaultLanguage
         };
         Assert.Equal(expected, result);
@@ -235,8 +236,7 @@ public class LocalizationEdgeCasesTests
             {
                 for (int j = 0; j < 100; j++)
                 {
-                    var testCodes = new[] { "en-US", "fr-FR", "invalid", "", "EN-US", "fr-fr" };
-                    var testCode = testCodes[random.Next(testCodes.Length)];
+                    var testCode = s_testCodes[j % s_testCodes.Length];
 
                     var result1 = SupportedLanguages.GetByCode(testCode);
                     var result2 = SupportedLanguages.IsSupported(testCode);
@@ -251,7 +251,7 @@ public class LocalizationEdgeCasesTests
         await Task.WhenAll(tasks);
 
         // Assert - No exceptions should be thrown and operations should complete
-        Assert.True(results.Count > 0);
+        Assert.False(results.IsEmpty);
         Assert.DoesNotContain(results, r => r?.Code == null && r?.DisplayName != null);
     }
 
