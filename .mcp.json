@@ -1,0 +1,16 @@
+{
+  "inputs": [],
+  "servers": {
+    "fetch": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/fetch"
+      ],
+      "env": {}
+    }
+  }
+}
