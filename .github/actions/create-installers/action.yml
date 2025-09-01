@@ -83,14 +83,15 @@ runs:
         }
 
         # Set output variables
-        echo "program-files-folder=$programFilesFolder" >> $GITHUB_OUTPUT
-        echo "arch-suffix=$archSuffix" >> $GITHUB_OUTPUT
-        echo "wix-arch=$wixArch" >> $GITHUB_OUTPUT
-        echo "msi-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix.msi" >> $GITHUB_OUTPUT
-        echo "exe-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix-Setup.exe" >> $GITHUB_OUTPUT
+        echo "program-files-folder=$programFilesFolder" >> $env:GITHUB_OUTPUT
+        echo "arch-suffix=$archSuffix" >> $env:GITHUB_OUTPUT
+        echo "wix-arch=$wixArch" >> $env:GITHUB_OUTPUT
+        echo "msi-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix.msi" >> $env:GITHUB_OUTPUT
+        echo "exe-name=${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix-Setup.exe" >> $env:GITHUB_OUTPUT
 
         Write-Host "  • MSI Installer: ${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix.msi"
         Write-Host "  • EXE Installer: ${{ inputs.app-name }}-${{ inputs.app-version }}-$archSuffix-Setup.exe"
+        Write-Host "  • Program Files Folder: $programFilesFolder"
 
     - name: 🔧 Setup WiX Toolset
       shell: pwsh
@@ -132,6 +133,18 @@ runs:
       run: |
         Write-Host "📝 Generating WiX source file..."
 
+        # Debug: Show what we're passing
+        Write-Host "Debug - Parameters being passed:"
+        Write-Host "  • ProgramFilesFolder: '${{ steps.config.outputs.program-files-folder }}'"
+        Write-Host "  • WixArch: '${{ steps.config.outputs.wix-arch }}'"
+
+        # Verify the parameter is not empty
+        $programFilesFolder = "${{ steps.config.outputs.program-files-folder }}"
+        if ([string]::IsNullOrEmpty($programFilesFolder)) {
+          Write-Error "❌ ProgramFilesFolder is empty. This should not happen."
+          exit 1
+        }
+
         # Use the template script to generate WiX file
         & "${{ github.action_path }}/scripts/generate-wix-template.ps1" `
           -AppName "${{ inputs.app-name }}" `
@@ -144,7 +157,7 @@ runs:
 
         $wxsFile = "bucket-installer.wxs"
         Write-Host "✅ WiX source file generated: $wxsFile"
-        echo "wxs-file=$wxsFile" >> $GITHUB_OUTPUT
+        echo "wxs-file=$wxsFile" >> $env:GITHUB_OUTPUT
 
     - name: 📝 Generate Inno Setup Script
       id: generate-inno
@@ -164,7 +177,7 @@ runs:
 
         $issFile = "bucket-setup.iss"
         Write-Host "✅ Inno Setup script generated: $issFile"
-        echo "iss-file=$issFile" >> $GITHUB_OUTPUT
+        echo "iss-file=$issFile" >> $env:GITHUB_OUTPUT
 
     - name: 🏗️ Build MSI Installer
       id: create-msi
@@ -191,7 +204,7 @@ runs:
 
         if (Test-Path $msiFile) {
           Write-Host "✅ MSI installer created successfully: $msiFile"
-          echo "installer-path=$msiFile" >> $GITHUB_OUTPUT
+          echo "installer-path=$msiFile" >> $env:GITHUB_OUTPUT
         } else {
           Write-Error "❌ MSI installer not found after compilation"
           exit 1
@@ -217,7 +230,7 @@ runs:
 
         if (Test-Path $exeFile) {
           Write-Host "✅ EXE installer created successfully: $exeFile"
-          echo "installer-path=$exeFile" >> $GITHUB_OUTPUT
+          echo "installer-path=$exeFile" >> $env:GITHUB_OUTPUT
         } else {
           Write-Error "❌ EXE installer not found after compilation"
           exit 1
@@ -241,7 +254,7 @@ runs:
           Write-Host "  • Platform: ${{ inputs.platform }}"
           Write-Host "  • Created: $($fileInfo.CreationTime)"
 
-          echo "installer-size=$sizeMB" >> $GITHUB_OUTPUT
+          echo "installer-size=$sizeMB" >> $env:GITHUB_OUTPUT
         } else {
           Write-Error "❌ MSI installer verification failed"
           exit 1
@@ -265,7 +278,7 @@ runs:
           Write-Host "  • Platform: ${{ inputs.platform }}"
           Write-Host "  • Created: $($fileInfo.CreationTime)"
 
-          echo "installer-size=$sizeMB" >> $GITHUB_OUTPUT
+          echo "installer-size=$sizeMB" >> $env:GITHUB_OUTPUT
         } else {
           Write-Error "❌ EXE installer verification failed"
           exit 1
