@@ -28,101 +28,28 @@ Write-Host "  CompanyName: $CompanyName"
 Write-Host "  Platform: $Platform"
 Write-Host "  ExeName: $ExeName"
 
-# Determine architecture settings
-$archAllowed = switch ($Platform) {
-    "x86" { "x86" }
-    "x64" { "x64" }
-    "ARM64" { "arm64" }
+# Get the template file path
+$templatePath = Join-Path $PSScriptRoot "..\templates\installer-template.iss"
+
+if (-not (Test-Path $templatePath)) {
+    Write-Error "❌ Template file not found: $templatePath"
+    exit 1
 }
 
-$archInstallIn64Bit = if ($Platform -ne "x86") { "x64 arm64" } else { "" }
+# Read the template content
+$templateContent = Get-Content -Path $templatePath -Raw -Encoding UTF8
 
-$issContent = @"
-[Setup]
-AppId={{12345678-1234-1234-1234-123456789012}
-AppName=$AppName
-AppVersion=$AppVersion
-AppPublisher=$CompanyName
-AppPublisherURL=https://github.com/mchave3/Bucket
-AppSupportURL=https://github.com/mchave3/Bucket/issues
-AppUpdatesURL=https://github.com/mchave3/Bucket/releases
-DefaultDirName={autopf}\$AppName
-DefaultGroupName=$AppName
-AllowNoIcons=yes
-LicenseFile=..\..\..\..\LICENSE
-OutputDir=.
-OutputBaseFilename=$($ExeName -replace '\.exe$', '')
-SetupIconFile=$BuildOutputPath\Assets\AppIcon.ico
-Compression=lzma
-SolidCompression=yes
-WizardStyle=modern
-ArchitecturesAllowed=$archAllowed
-ArchitecturesInstallIn64BitMode=$archInstallIn64Bit
+# Determine architecture settings
+$archMode = if ($Platform -ne "x86") { "x64 arm64" } else { "" }
 
-[Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "french"; MessagesFile: "compiler:Languages\French.isl"
-
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-
-[Files]
-Source: "$BuildOutputPath\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-[Icons]
-Name: "{group}\$AppName"; Filename: "{app}\$AppName.exe"
-Name: "{group}\{cm:UninstallProgram,$AppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\$AppName"; Filename: "{app}\$AppName.exe"; Tasks: desktopicon
-
-[Run]
-Filename: "{app}\$AppName.exe"; Description: "{cm:LaunchProgram,$AppName}"; Flags: nowait postinstall skipifsilent
-
-[Code]
-function GetUninstallString(): String;
-var
-  sUnInstPath: String;
-  sUnInstallString: String;
-begin
-  sUnInstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#StringChange(AppId, "{{", "").Replace("}", "")}}_is1');
-  sUnInstallString := '';
-  if not RegQueryStringValue(HKLM, sUnInstPath, 'UninstallString', sUnInstallString) then
-    RegQueryStringValue(HKCU, sUnInstPath, 'UninstallString', sUnInstallString);
-  Result := sUnInstallString;
-end;
-
-function IsUpgrade(): Boolean;
-begin
-  Result := (GetUninstallString() <> '');
-end;
-
-function UnInstallOldVersion(): Integer;
-var
-  sUnInstallString: String;
-  iResultCode: Integer;
-begin
-  Result := 0;
-  sUnInstallString := GetUninstallString();
-  if sUnInstallString <> '' then begin
-    sUnInstallString := RemoveQuotes(sUnInstallString);
-    if Exec(sUnInstallString, '/SILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
-      Result := 3
-    else
-      Result := 2;
-  end else
-    Result := 1;
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if (CurStep=ssInstall) then
-  begin
-    if (IsUpgrade()) then
-    begin
-      UnInstallOldVersion();
-    end;
-  end;
-end;
-"@
+# Replace placeholders with actual values
+$issContent = $templateContent -replace '{{APP_NAME}}', $AppName `
+                                -replace '{{APP_VERSION}}', $AppVersion `
+                                -replace '{{COMPANY_NAME}}', $CompanyName `
+                                -replace '{{PRODUCT_DESCRIPTION}}', $ProductDescription `
+                                -replace '{{BUILD_OUTPUT_PATH}}', $BuildOutputPath `
+                                -replace '{{EXE_NAME}}', ($ExeName -replace '\.exe$', '') `
+                                -replace '{{ARCH_MODE}}', $archMode
 
 $issFile = "bucket-setup.iss"
 Set-Content -Path $issFile -Value $issContent -Encoding UTF8
