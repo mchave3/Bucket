@@ -36,8 +36,7 @@ $wxsContent = @"
            UpgradeCode="12345678-1234-1234-1234-123456789012"
            Language="1033"
            Codepage="1252"
-           InstallerVersion="500"
-           Platform="$WixArch">
+           InstallerVersion="500">
 
     <SummaryInformation Description="$ProductDescription"
                         Comments="Installer for $AppName $AppVersion"
@@ -68,15 +67,9 @@ $wxsContent = @"
     </Directory>
 
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <Component Id="MainExecutable">
-        <File Id="BucketExe"
-              Source="$BuildOutputPath\$AppName.exe"
-              KeyPath="yes" />
-      </Component>
-
-      <Component Id="AppFiles">
-        <File Id="AllFiles" Source="$BuildOutputPath\*" />
-      </Component>
+      <!-- Modern approach: Using Files element for better file harvesting -->
+      <Files Include="$BuildOutputPath\**"
+             Exclude="$BuildOutputPath\*.pdb;$BuildOutputPath\*.xml" />
     </ComponentGroup>
 
     <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="*">
