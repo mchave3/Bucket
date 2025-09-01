@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-
-    <!-- Test-specific analyzer suppressions -->
-    <NoWarn>$(NoWarn);CA1707;CA1515;CA1062;CA1024;CA1508;CA1849;CA2007;CA1859</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
