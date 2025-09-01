@@ -130,8 +130,8 @@ public class LanguageItemTests
         var result = item.ToString();
 
         // Assert
-        Assert.Contains("en-US", result);
-        Assert.Contains("English", result);
+        Assert.Contains("en-US", result, StringComparison.Ordinal);
+        Assert.Contains("English", result, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class LanguageItemTests
     }
 
     [Theory]
-    [MemberData(nameof(GetLanguageItemTestData))]
+    [MemberData(nameof(LanguageItemTestData))]
     public void LanguageItem_WithMemberData_CreatesCorrectInstances(string code, string displayName)
     {
         // Act
@@ -160,13 +160,16 @@ public class LanguageItemTests
         Assert.Equal(displayName, item.DisplayName);
     }
 
-    public static IEnumerable<object[]> GetLanguageItemTestData()
+    public static IEnumerable<object[]> LanguageItemTestData
     {
-        yield return new object[] { "en-US", "English" };
-        yield return new object[] { "fr-FR", "Français" };
-        yield return new object[] { "es-ES", "Español" };
-        yield return new object[] { "de-DE", "Deutsch" };
-        yield return new object[] { "it-IT", "Italiano" };
+        get
+        {
+            yield return new object[] { "en-US", "English" };
+            yield return new object[] { "fr-FR", "Français" };
+            yield return new object[] { "es-ES", "Español" };
+            yield return new object[] { "de-DE", "Deutsch" };
+            yield return new object[] { "it-IT", "Italiano" };
+        }
     }
 
     [Fact]
