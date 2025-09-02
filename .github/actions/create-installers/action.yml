@@ -89,9 +89,9 @@ runs:
             Remove-Item -Path $setupFilesDir -Recurse -Force
           }
 
-          # Build the installer
+          # Build the installer using DefaultBuild configuration
           msbuild $setupProject `
-            /p:Configuration=${{ inputs.configuration }} `
+            /p:Configuration=DefaultBuild `
             /p:Platform=x64 `
             /t:Rebuild `
             /v:minimal
@@ -134,9 +134,9 @@ runs:
             Remove-Item -Path $setupFilesDir -Recurse -Force
           }
 
-          # Build the installer
+          # Build the installer using DefaultBuild configuration
           msbuild $setupProject `
-            /p:Configuration=${{ inputs.configuration }} `
+            /p:Configuration=DefaultBuild `
             /p:Platform=x86 `
             /t:Rebuild `
             /v:minimal
@@ -179,9 +179,9 @@ runs:
             Remove-Item -Path $setupFilesDir -Recurse -Force
           }
 
-          # Build the installer
+          # Build the installer using DefaultBuild configuration
           msbuild $setupProject `
-            /p:Configuration=${{ inputs.configuration }} `
+            /p:Configuration=DefaultBuild `
             /p:Platform=ARM64 `
             /t:Rebuild `
             /v:minimal
