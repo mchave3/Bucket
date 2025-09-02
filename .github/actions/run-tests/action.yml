@@ -117,7 +117,7 @@ runs:
 
             # For Windows-specific projects with platforms, we need to specify the Platform property
             Write-Host "Running tests for Windows-specific project with platform: $platform" -ForegroundColor Cyan
-            
+
             $testArgs = @(
               "test",
               $appTestProject,

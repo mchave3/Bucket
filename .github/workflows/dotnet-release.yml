@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: false
+      skip-tests:
+        description: 'Skip running tests'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   validate-and-build:
@@ -85,6 +90,7 @@ jobs:
           advanced-installer-license: ${{ secrets.ADVANCED_INSTALLER_LICENSE }}
 
       - name: Run tests
+        if: github.event.inputs.skip-tests != 'true'
         uses: ./.github/actions/run-tests
         with:
           configuration: 'Release'
@@ -120,7 +126,7 @@ jobs:
             ${{ github.event.inputs.release-notes }}
 
             ### Quality Assurance
-            - ✅ All unit tests passed
+            ${{ github.event.inputs.skip-tests == 'true' && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed' }}
             - ✅ Code review completed
             - ✅ Solution built successfully for all architectures
             - ✅ Installers validated
