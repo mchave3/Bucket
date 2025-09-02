@@ -420,3 +420,7 @@ FodyWeavers.xsd
 # Setup directories
 setup/**/Bucket.Setup_x64-cache/
 setup/**/Bucket.Setup_x64-SetupFiles/
+setup/**/Bucket.Setup_x86-cache/
+setup/**/Bucket.Setup_x86-SetupFiles/
+setup/**/Bucket.Setup_arm64-cache/
+setup/**/Bucket.Setup_arm64-SetupFiles/
