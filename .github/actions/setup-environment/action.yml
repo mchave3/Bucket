@@ -12,7 +12,7 @@ inputs:
   advanced-installer-version:
     description: 'Advanced Installer version'
     required: false
-    default: 'latest'
+    default: '23.0'
   advanced-installer-license:
     description: 'Advanced Installer license key'
     required: false
@@ -31,10 +31,12 @@ runs:
         msbuild-architecture: ${{ inputs.msbuild-architecture }}
 
     - name: Setup Advanced Installer
+      if: inputs.advanced-installer-license != ''
       uses: caphyon/advinst-github-action@main
       with:
         advinst-version: ${{ inputs.advanced-installer-version }}
         advinst-license: ${{ inputs.advanced-installer-license }}
+        advinst-enable-automation: 'true'
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
