@@ -1,68 +1,60 @@
-name: '🔧 Setup Environment'
-description: 'Setup .NET SDK and configure NuGet sources for Bucket project builds'
-
+name: 'Setup Environment'
+description: 'Setup build environment with .NET 9 SDK, MSBuild and Advanced Installer'
 inputs:
-  dotnet-versions:
-    description: 'Multi-line string of .NET versions to install'
+  dotnet-version:
+    description: '.NET SDK version to use'
     required: false
-    default: |
-      8.x.x
-      9.x.x
-  enable-community-toolkit:
-    description: 'Enable Community Toolkit NuGet sources'
+    default: '9.0.x'
+  msbuild-architecture:
+    description: 'MSBuild architecture'
     required: false
-    default: 'false'
-  enable-custom-nuget:
-    description: 'Enable custom NuGet sources'
+    default: 'x64'
+  advanced-installer-version:
+    description: 'Advanced Installer version'
     required: false
-    default: 'false'
-  custom-nuget-sources:
-    description: 'Comma-separated list of custom NuGet sources'
+    default: 'latest'
+  advanced-installer-license:
+    description: 'Advanced Installer license key'
     required: false
-    default: ''
 
 runs:
   using: 'composite'
   steps:
-    - name: 🔧 Setup .NET SDK
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ inputs.dotnet-versions }}
+        dotnet-version: ${{ inputs.dotnet-version }}
 
-    - name: 📦 Configure NuGet Sources
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: ${{ inputs.msbuild-architecture }}
+
+    - name: Setup Advanced Installer
+      uses: caphyon/advinst-github-action@main
+      with:
+        advinst-version: ${{ inputs.advanced-installer-version }}
+        advinst-license: ${{ inputs.advanced-installer-license }}
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Display environment info
       shell: pwsh
       run: |
-        Write-Host "🔧 Configuring NuGet sources..."
+        Write-Host "=== Environment Information ===" -ForegroundColor Cyan
+        Write-Host "OS: $env:OS"
+        Write-Host "Runner OS: $env:RUNNER_OS"
+        Write-Host ""
 
-        # Community Toolkit sources
-        if ("${{ inputs.enable-community-toolkit }}" -eq "true") {
-          Write-Host "➕ Adding Community Toolkit sources"
-          nuget sources add -name CommunityToolkit-Labs `
-            -source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-Labs/nuget/v3/index.json
-          nuget sources add -name CommunityToolkit-Main `
-            -source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json
-        }
+        Write-Host "=== .NET SDK Information ===" -ForegroundColor Green
+        dotnet --list-sdks
+        dotnet --version
+        Write-Host ""
 
-        # Custom NuGet sources
-        if ("${{ inputs.enable-custom-nuget }}" -eq "true" -and "${{ inputs.custom-nuget-sources }}" -ne "") {
-          Write-Host "➕ Adding custom NuGet sources"
-          $sources = "${{ inputs.custom-nuget-sources }}" -split ','
-          $trimmedSources = $sources | ForEach-Object { $_.Trim() }
-          for ($i = 0; $i -lt $trimmedSources.Length; $i++) {
-            $sourceName = "CUSTOM_SOURCE_$($i + 1)"
-            nuget sources add -name $sourceName -source $trimmedSources[$i]
-            Write-Host "  • Added: $sourceName -> $($trimmedSources[$i])"
-          }
-        }
+        Write-Host "=== MSBuild Information ===" -ForegroundColor Green
+        msbuild -version
+        Write-Host ""
 
-        Write-Host "✅ NuGet sources configured successfully"
-
-    - name: 📋 Display Environment Information
-      shell: pwsh
-      run: |
-        Write-Host "🔍 Environment Information:"
-        Write-Host "  • .NET Version: $(dotnet --version)"
-        Write-Host "  • Community Toolkit: ${{ inputs.enable-community-toolkit }}"
-        Write-Host "  • Custom NuGet: ${{ inputs.enable-custom-nuget }}"
-        Write-Host "  • Runner OS: ${{ runner.os }}"
-        Write-Host "✅ Environment setup completed"
+        Write-Host "=== NuGet Information ===" -ForegroundColor Green
+        nuget help | Select-Object -First 1

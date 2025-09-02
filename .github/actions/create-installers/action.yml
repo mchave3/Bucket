@@ -1,271 +1,214 @@
-name: '📦 Create Installers'
-description: 'Create MSI installers using Advanced Installer for all platforms'
-
+name: 'Create Installers'
+description: 'Generate MSI installers using Advanced Installer for all architectures'
 inputs:
-  app-name:
-    description: 'Application name for packaging'
+  version:
+    description: 'Version for the installers'
     required: true
-  app-version:
-    description: 'Application version'
-    required: true
-  advinst-license:
-    description: 'Advanced Installer license key (optional - required only for non-simple projects)'
+  configuration:
+    description: 'Build configuration'
     required: false
-  workflow-type:
-    description: 'Type of workflow (nightly or release)'
-    required: false
-    default: 'nightly'
-  artifacts-path:
-    description: 'Path to build artifacts'
-    required: false
-    default: '.'
+    default: 'Release'
 
 outputs:
-  x86-installer:
-    description: 'Path to x86 MSI installer'
-    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
-  x64-installer:
-    description: 'Path to x64 MSI installer'
-    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
-  arm64-installer:
-    description: 'Path to ARM64 MSI installer'
-    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
+  installers-path:
+    description: 'Path to generated installers'
+    value: ${{ steps.paths.outputs.installers }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: 📥 Download Build Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: "${{ inputs.app-name }}-${{ inputs.app-version }}-*"
-        merge-multiple: true
-        path: ${{ inputs.artifacts-path }}/artifacts
-
-    - name: 📂 Display Downloaded Artifacts Structure
+    - name: Setup paths
+      id: paths
       shell: pwsh
       run: |
-        Write-Host "🔍 Examining downloaded artifacts..."
-        Get-ChildItem -Path "${{ inputs.artifacts-path }}/artifacts" -Recurse | ForEach-Object {
-          $relativePath = $_.FullName.Replace("${{ inputs.artifacts-path }}/artifacts", "")
-          Write-Host "  $relativePath"
+        $installersPath = "artifacts/installers"
+        New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
+        echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
+
+    - name: Update version in Advanced Installer projects
+      shell: pwsh
+      run: |
+        Write-Host "Updating version in Advanced Installer projects to ${{ inputs.version }}..." -ForegroundColor Cyan
+
+        # Extract clean version (remove pre-release suffix)
+        $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
+        Write-Host "Base version: $versionBase"
+
+        # Update each .aip file
+        $aipFiles = @(
+          "setup/Bucket.Setup_x64/Bucket.Setup_x64.aip",
+          "setup/Bucket.Setup_x86/Bucket.Setup_x86.aip",
+          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aip"
+        )
+
+        foreach ($aipFile in $aipFiles) {
+          if (Test-Path $aipFile) {
+            Write-Host "Updating $aipFile..."
+
+            # Use Advanced Installer COM to update version
+            $aiPath = $aipFile
+            $aiCom = New-Object -ComObject AdvancedInstaller.AdvancedInstallerCOM
+            $project = $aiCom.OpenProject($aiPath)
+            $project.ProductDetails.Version = $versionBase
+            $project.Save()
+            $project.Close()
+
+            Write-Host "Updated version in $aipFile" -ForegroundColor Green
+          } else {
+            Write-Warning "AIP file not found: $aipFile"
+          }
         }
 
-    - name: 📦 Prepare Publish Directories
+    - name: Build x64 Installer
       shell: pwsh
       run: |
-        Write-Host "🔧 Setting up publish directories for Advanced Installer..."
+        Write-Host "=== Building x64 Installer ===" -ForegroundColor Green
 
-        # Create the expected directory structure for Advanced Installer
-        $publishBase = "src/Bucket.App/bin"
-        New-Item -ItemType Directory -Path "$publishBase/win-x86/publish" -Force
-        New-Item -ItemType Directory -Path "$publishBase/win-x64/publish" -Force
-        New-Item -ItemType Directory -Path "$publishBase/win-arm64/publish" -Force
+        $setupProject = "setup/Bucket.Setup_x64/Bucket.Setup_x64.aiproj"
 
-        # Look for ZIP files in the artifacts directory (they should be at the root level after merge-multiple: true)
-        $artifactsPath = "${{ inputs.artifacts-path }}/artifacts"
-        Write-Host "🔍 Looking for artifacts in: $artifactsPath"
+        if (Test-Path $setupProject) {
+          # First, clean any existing cache and output
+          $cacheDir = "setup/Bucket.Setup_x64/Bucket.Setup_x64-cache"
+          $setupFilesDir = "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles"
 
-        if (Test-Path $artifactsPath) {
-          Write-Host "� Contents of artifacts directory:"
-          Get-ChildItem -Path $artifactsPath | ForEach-Object {
-            Write-Host "  - $($_.Name) ($($_.GetType().Name))"
+          if (Test-Path $cacheDir) {
+            Remove-Item -Path $cacheDir -Recurse -Force
+          }
+          if (Test-Path $setupFilesDir) {
+            Remove-Item -Path $setupFilesDir -Recurse -Force
+          }
+
+          # Build the installer
+          msbuild $setupProject `
+            /p:Configuration=${{ inputs.configuration }} `
+            /p:Platform=x64 `
+            /t:Rebuild `
+            /v:minimal
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "x64 installer build failed!"
+            exit 1
+          }
+
+          # Copy MSI to artifacts
+          $msiSource = "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles/Bucket.Setup_x64.msi"
+          if (Test-Path $msiSource) {
+            $version = "${{ inputs.version }}"
+            $msiDest = "artifacts/installers/Bucket-$version-x64.msi"
+            Copy-Item -Path $msiSource -Destination $msiDest -Force
+            Write-Host "Created: $msiDest" -ForegroundColor Green
+          } else {
+            Write-Warning "MSI not found: $msiSource"
           }
         } else {
-          Write-Host "⚠️ Artifacts directory not found, checking current directory..."
-          Write-Host "📂 Contents of current directory:"
-          Get-ChildItem -Path "." | ForEach-Object {
-            Write-Host "  - $($_.Name) ($($_.GetType().Name))"
+          Write-Warning "Setup project not found: $setupProject"
+        }
+
+    - name: Build x86 Installer
+      shell: pwsh
+      run: |
+        Write-Host "=== Building x86 Installer ===" -ForegroundColor Green
+
+        $setupProject = "setup/Bucket.Setup_x86/Bucket.Setup_x86.aiproj"
+
+        if (Test-Path $setupProject) {
+          # First, clean any existing cache and output
+          $cacheDir = "setup/Bucket.Setup_x86/Bucket.Setup_x86-cache"
+          $setupFilesDir = "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles"
+
+          if (Test-Path $cacheDir) {
+            Remove-Item -Path $cacheDir -Recurse -Force
           }
-          $artifactsPath = "."
-        }
+          if (Test-Path $setupFilesDir) {
+            Remove-Item -Path $setupFilesDir -Recurse -Force
+          }
 
-        # Extract and copy artifacts to expected locations
-        $x86ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x86.zip"
-        $x64ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x64.zip"
-        $arm64ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.zip"
+          # Build the installer
+          msbuild $setupProject `
+            /p:Configuration=${{ inputs.configuration }} `
+            /p:Platform=x86 `
+            /t:Rebuild `
+            /v:minimal
 
-        if (Test-Path $x86ZipPath) {
-          Write-Host "📁 Extracting and copying x86 artifacts..."
-          Expand-Archive -Path $x86ZipPath -DestinationPath "$publishBase/win-x86/publish/" -Force
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "x86 installer build failed!"
+            exit 1
+          }
+
+          # Copy MSI to artifacts
+          $msiSource = "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles/Bucket.Setup_x86.msi"
+          if (Test-Path $msiSource) {
+            $version = "${{ inputs.version }}"
+            $msiDest = "artifacts/installers/Bucket-$version-x86.msi"
+            Copy-Item -Path $msiSource -Destination $msiDest -Force
+            Write-Host "Created: $msiDest" -ForegroundColor Green
+          } else {
+            Write-Warning "MSI not found: $msiSource"
+          }
         } else {
-          Write-Host "⚠️ x86 artifact not found: $x86ZipPath"
+          Write-Warning "Setup project not found: $setupProject"
         }
 
-        if (Test-Path $x64ZipPath) {
-          Write-Host "📁 Extracting and copying x64 artifacts..."
-          Expand-Archive -Path $x64ZipPath -DestinationPath "$publishBase/win-x64/publish/" -Force
-        } else {
-          Write-Host "⚠️ x64 artifact not found: $x64ZipPath"
-        }
-
-        if (Test-Path $arm64ZipPath) {
-          Write-Host "📁 Extracting and copying ARM64 artifacts..."
-          Expand-Archive -Path $arm64ZipPath -DestinationPath "$publishBase/win-arm64/publish/" -Force
-        } else {
-          Write-Host "⚠️ ARM64 artifact not found: $arm64ZipPath"
-        }
-
-        # Verify the extracted content
-        Write-Host "🔍 Verifying extracted content..."
-        if (Test-Path "$publishBase/win-x86/publish") {
-          Write-Host "x86 files:"
-          Get-ChildItem -Path "$publishBase/win-x86/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
-        }
-        if (Test-Path "$publishBase/win-x64/publish") {
-          Write-Host "x64 files:"
-          Get-ChildItem -Path "$publishBase/win-x64/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
-        }
-        if (Test-Path "$publishBase/win-arm64/publish") {
-          Write-Host "ARM64 files:"
-          Get-ChildItem -Path "$publishBase/win-arm64/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
-        }
-
-    - name: 🔍 Check License Availability
+    - name: Build ARM64 Installer
       shell: pwsh
       run: |
-        $license = "${{ inputs.advinst-license }}"
-        if ([string]::IsNullOrEmpty($license)) {
-          Write-Host "⚠️ No Advanced Installer license provided - will attempt to build with simple project only"
-          echo "HAS_LICENSE=false" >> $env:GITHUB_ENV
+        Write-Host "=== Building ARM64 Installer ===" -ForegroundColor Green
+
+        $setupProject = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aiproj"
+
+        if (Test-Path $setupProject) {
+          # First, clean any existing cache and output
+          $cacheDir = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-cache"
+          $setupFilesDir = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles"
+
+          if (Test-Path $cacheDir) {
+            Remove-Item -Path $cacheDir -Recurse -Force
+          }
+          if (Test-Path $setupFilesDir) {
+            Remove-Item -Path $setupFilesDir -Recurse -Force
+          }
+
+          # Build the installer
+          msbuild $setupProject `
+            /p:Configuration=${{ inputs.configuration }} `
+            /p:Platform=ARM64 `
+            /t:Rebuild `
+            /v:minimal
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "ARM64 installer build failed!"
+            exit 1
+          }
+
+          # Copy MSI to artifacts
+          $msiSource = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles/Bucket.Setup_arm64.msi"
+          if (Test-Path $msiSource) {
+            $version = "${{ inputs.version }}"
+            $msiDest = "artifacts/installers/Bucket-$version-arm64.msi"
+            Copy-Item -Path $msiSource -Destination $msiDest -Force
+            Write-Host "Created: $msiDest" -ForegroundColor Green
+          } else {
+            Write-Warning "MSI not found: $msiSource"
+          }
         } else {
-          Write-Host "✅ Advanced Installer license provided"
-          echo "HAS_LICENSE=true" >> $env:GITHUB_ENV
+          Write-Warning "Setup project not found: $setupProject"
         }
 
-    - name: 📁 Create Output Directory
+    - name: List generated installers
       shell: pwsh
       run: |
-        Write-Host "🏗️ Creating output directory for installers..."
-        $outputDir = "${{ github.workspace }}\setup\output"
-        New-Item -ItemType Directory -Path $outputDir -Force
-        Write-Host "✅ Output directory created: $outputDir"
+        Write-Host "=== Generated Installers ===" -ForegroundColor Cyan
+        $installersPath = "artifacts/installers"
 
-        # Verify the directory was created and is accessible
-        if (Test-Path $outputDir) {
-          Write-Host "✅ Directory exists and is accessible"
-          $absolutePath = Resolve-Path $outputDir
-          Write-Host "📍 Absolute path: $absolutePath"
-        } else {
-          Write-Host "❌ Directory creation failed"
-          exit 1
+        if (Test-Path $installersPath) {
+          Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
+            Write-Host "  - $($_.Name) ($('{0:N2} MB' -f ($_.Length / 1MB)))" -ForegroundColor Green
+          }
         }
 
-    - name: 🏗️ Build x86 Installer with Advanced Installer (With License)
-      if: env.HAS_LICENSE == 'true'
-      id: build-x86-licensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-license: ${{ inputs.advinst-license }}
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x86\Bucket.Setup_x86.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
-
-    - name: 🏗️ Build x86 Installer with Advanced Installer (No License)
-      if: env.HAS_LICENSE == 'false'
-      id: build-x86-unlicensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x86\Bucket.Setup_x86.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
-
-    - name: 🏗️ Build x64 Installer with Advanced Installer (With License)
-      if: env.HAS_LICENSE == 'true'
-      id: build-x64-licensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-license: ${{ inputs.advinst-license }}
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x64\Bucket.Setup_x64.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
-
-    - name: 🏗️ Build x64 Installer with Advanced Installer (No License)
-      if: env.HAS_LICENSE == 'false'
-      id: build-x64-unlicensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x64\Bucket.Setup_x64.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
-
-    - name: 🏗️ Build ARM64 Installer with Advanced Installer (With License)
-      if: env.HAS_LICENSE == 'true'
-      id: build-arm64-licensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-license: ${{ inputs.advinst-license }}
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
-
-    - name: 🏗️ Build ARM64 Installer with Advanced Installer (No License)
-      if: env.HAS_LICENSE == 'false'
-      id: build-arm64-unlicensed
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aip
-        aip-build-name: 'DefaultBuild'
-        aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi'
-        aip-output-dir: ${{ github.workspace }}\setup\output
-        aip-commands: |
-          SetVersion ${{ inputs.app-version }}
-          SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
-
-    - name: 📦 Upload Installer Artifacts
+    - name: Upload installer artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: '${{ inputs.workflow-type }}-installer-all-platforms'
-        path: |
-          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
-          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
-          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
-        retention-days: 90
-
-    - name: 📊 Display Installer Information
-      shell: pwsh
-      run: |
-        Write-Host "🎉 Advanced Installer build completed successfully!"
-        Write-Host ""
-        Write-Host "📦 Generated Installers:"
-
-        $outputDir = "${{ github.workspace }}\setup\output"
-        if (Test-Path $outputDir) {
-          Get-ChildItem -Path $outputDir -Filter "*.msi" | ForEach-Object {
-            $sizeKB = [math]::Round($_.Length / 1KB, 2)
-            Write-Host "  📄 $($_.Name) ($sizeKB KB)"
-          }
-        } else {
-          Write-Host "⚠️ Output directory not found: $outputDir"
-        }
+        name: installer-artifacts
+        path: artifacts/installers/
+        retention-days: 7
