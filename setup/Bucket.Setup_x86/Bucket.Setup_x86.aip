@@ -1100,10 +1100,13 @@
     <ROW Directory="Assets_Dir" Directory_Parent="Bucket.App_Dir" DefaultDir="Assets" DirectoryOptions="3"/>
     <ROW Directory="Bucket.App_Dir" Directory_Parent="APPDIR" DefaultDir="Bucket.App" DirectoryOptions="3"/>
     <ROW Directory="Cover_Dir" Directory_Parent="Assets_Dir" DefaultDir="Cover" DirectoryOptions="3"/>
+    <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
     <ROW Directory="Fluent_Dir" Directory_Parent="Assets_Dir" DefaultDir="Fluent" DirectoryOptions="3"/>
     <ROW Directory="Microsoft.UI.Xaml_Dir" Directory_Parent="Bucket.App_Dir" DefaultDir="MICROS~1.XAM|Microsoft.UI.Xaml" DirectoryOptions="3"/>
     <ROW Directory="NavViewMenu_Dir" Directory_Parent="Assets_Dir" DefaultDir="NAVVIE~1|NavViewMenu" DirectoryOptions="3"/>
     <ROW Directory="NpuDetect_Dir" Directory_Parent="Bucket.App_Dir" DefaultDir="NPUDET~1|NpuDetect" DirectoryOptions="3"/>
+    <ROW Directory="SHORTCUTDIR" Directory_Parent="TARGETDIR" DefaultDir="SHORTC~1|SHORTCUTDIR" IsPseudoRoot="1"/>
+    <ROW Directory="StartMenuFolder" Directory_Parent="TARGETDIR" DefaultDir="STARTM~1|StartMenuFolder" IsPseudoRoot="1"/>
     <ROW Directory="Store_Dir" Directory_Parent="Assets_Dir" DefaultDir="Store" DirectoryOptions="3"/>
     <ROW Directory="Strings_Dir" Directory_Parent="Bucket.App_Dir" DefaultDir="Strings" DirectoryOptions="3"/>
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
@@ -1201,6 +1204,7 @@
     <ROW Component="ProductInformation" Value="{B5C72538-DC43-43F5-B0BE-549C156670FA}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
+    <ROW Component="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" ComponentId="{7A7818F5-39E7-459A-9590-BF1BD4CCBA5B}" Directory_="Bucket.App_Dir" Attributes="0" KeyPath="Bucket.exe"/>
     <ROW Component="APPDIR" ComponentId="{C06F424F-73AE-4081-A1CB-F45F24C551B6}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="Bucket.App_PrimaryOutput" ComponentId="{B6FF85E2-AFC2-429D-9474-047E54D30360}" Directory_="Bucket.App_Dir" Attributes="0" KeyPath="Bucket.dll"/>
     <ROW Component="Bucket.App_PublishOutput" ComponentId="{21DF7CBD-3BE9-4E72-8C62-9C3FC285352B}" Directory_="Bucket.App_Dir" Attributes="0" KeyPath="wuceffectsi.dll"/>
@@ -1300,6 +1304,7 @@
     <ROW Component="Bucket.App_PublishOutput_zhCN" ComponentId="{23851511-9EAA-448C-A075-0A1625AEC908}" Directory_="zhCN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_84" Type="0"/>
     <ROW Component="Bucket.App_PublishOutput_zhTW" ComponentId="{53008840-8E38-459E-BD45-3AF2A9958FDA}" Directory_="zhTW_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_85" Type="0"/>
     <ROW Component="ProductInformation" ComponentId="{B5C72538-DC43-43F5-B0BE-549C156670FA}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{ABB38F6F-01E5-4807-9524-9453D913173D}" Directory_="SHORTCUTDIR" Attributes="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
@@ -1310,7 +1315,7 @@
     <ROW File="Bucket.Core.dll" Component_="Bucket.App_PublishOutput" FileName="BUCKET~2.DLL|[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.Core.dll]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.Core.dll&gt;" SelfReg="false"/>
     <ROW File="Bucket.Core.xml" Component_="Bucket.App_PublishOutput" FileName="BUCKET~2.XML|[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.Core.xml]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.Core.xml&gt;" SelfReg="false"/>
     <ROW File="Bucket.deps.json" Component_="Bucket.App_PublishOutput" FileName="BUCKET~2.JSO|[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.deps.json]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.deps.json&gt;" SelfReg="false"/>
-    <ROW File="Bucket.exe" Component_="Bucket.App_PublishOutput" FileName="[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.exe&gt;" SelfReg="false" DigSign="true"/>
+    <ROW File="Bucket.exe" Component_="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" FileName="[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.exe&gt;" SelfReg="false" DigSign="true"/>
     <ROW File="Bucket.runtimeconfig.json" Component_="Bucket.App_PublishOutput" FileName="BUCKET~3.JSO|[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.runtimeconfig.json]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.runtimeconfig.json&gt;" SelfReg="false"/>
     <ROW File="Bucket.xml" Component_="Bucket.App_PublishOutput" FileName="[|AI_PROPPATH_FILENAME_PERBUILD_Bucket.xml]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Bucket.xml&gt;" SelfReg="false"/>
     <ROW File="clretwrc.dll" Component_="Bucket.App_PublishOutput" FileName="[|AI_PROPPATH_FILENAME_PERBUILD_clretwrc.dll]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_clretwrc.dll&gt;" SelfReg="false"/>
@@ -2422,6 +2427,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCreateFolderComponent">
     <ROW Directory_="APPDIR" Component_="APPDIR" ManualDelete="true"/>
+    <ROW Directory_="SHORTCUTDIR" Component_="SHORTCUTDIR" ManualDelete="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCustActComponent">
     <ROW Action="AI_DOWNGRADE" Type="19" Target="4010"/>
@@ -2538,6 +2544,8 @@
     <ROW Feature_="MainFeature" Component_="Bucket.App_PublishOutput_Microsoft.UI.Xaml_Assets"/>
     <ROW Feature_="MainFeature" Component_="Bucket.App_PublishOutput_Strings_enUS"/>
     <ROW Feature_="MainFeature" Component_="Bucket.App_PublishOutput_Strings_frFR"/>
+    <ROW Feature_="MainFeature" Component_="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe"/>
+    <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="AppIcon.exe" SourcePath="..\..\src\Bucket.App\Assets\AppIcon.ico" Index="0"/>
@@ -2572,6 +2580,11 @@
     <ROW Registry="ProductName" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="\"/>
     <ROW Registry="Software" Root="-1" Key="Software" Name="\"/>
     <ROW Registry="Version" Root="-1" Key="Software\[Manufacturer]\[ProductName]" Name="Version" Value="[ProductVersion]" Component_="ProductInformation"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
+    <ROW Shortcut="Bucket" Directory_="SHORTCUTDIR" Name="Bucket" Component_="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" Target="[#Bucket.exe]" Hotkey="0" Icon_="AppIcon.exe" IconIndex="0" ShowCmd="1" WkDir="Bucket.App_Dir"/>
+    <ROW Shortcut="Bucket_1" Directory_="DesktopFolder" Name="Bucket" Component_="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" Target="[#Bucket.exe]" Hotkey="0" Icon_="AppIcon.exe" IconIndex="0" ShowCmd="1" WkDir="Bucket.App_Dir"/>
+    <ROW Shortcut="Bucket_2" Directory_="StartMenuFolder" Name="Bucket" Component_="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" Target="[#Bucket.exe]" Hotkey="0" Icon_="AppIcon.exe" IconIndex="0" ShowCmd="1" WkDir="Bucket.App_Dir"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
     <ATTRIBUTE name="UsedTheme" value="classic"/>
