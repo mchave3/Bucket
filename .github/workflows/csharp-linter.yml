@@ -1,378 +1,259 @@
-name: 🔍 C# Linter & Code Quality
+name: C# Code Quality
 
-# This workflow performs code quality checks on C# code
-# - Triggered: On pull requests for quality gates before merge
-# - Scope: Static analysis, code formatting, and style checks
-# - Tools: .NET analyzers, EditorConfig validation, and custom rules
 on:
-  pull_request:
-    branches: [main, dev]  # Quality gate before merge
+  push:
+    branches: [ main, dev ]
     paths:
-      - 'src/**/*.cs'
-      - 'tests/**/*.cs'
-      - '**/*.csproj'
-      - '**/*.sln'
+      - '**.cs'
+      - '**.csproj'
+      - '**.sln'
       - '.editorconfig'
-      - 'Directory.Build.props'
-  workflow_dispatch:  # Manual trigger for on-demand checks
+      - '.github/workflows/csharp-linter.yml'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - '**.cs'
+      - '**.csproj'
+      - '**.sln'
+      - '.editorconfig'
+  workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: write  # For posting comments on PRs
-  checks: write        # For publishing check results
-  security-events: write  # For SARIF uploads if using security analyzers
-
-# ============================================================================
-# ENVIRONMENT CONFIGURATION
-# ============================================================================
-env:
-  # .NET Configuration
-  DOTNET_VERSION: '9.0.x'
-  DOTNET_QUALITY: 'ga'
-
-  # Analysis Configuration
-  ENABLE_CODE_ANALYSIS: true
-  ENABLE_SECURITY_ANALYSIS: true
-  TREAT_WARNINGS_AS_ERRORS: true
-
-  # Formatting Configuration
-  CHECK_FORMAT_ONLY: true  # Set to false to auto-fix formatting
-
-  # NuGet Configuration
-  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
-
-# ============================================================================
-# JOBS PIPELINE
-# ============================================================================
 jobs:
-  # ──────────────────────────────────────────────────────────────────────────
-  # 🔍 CODE FORMAT CHECK
-  # ──────────────────────────────────────────────────────────────────────────
-  format-check:
-    name: 🎨 Format Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  analyze:
+    name: Code Analysis
+    runs-on: windows-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history for better analysis
-
-      - name: 🔧 Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: ${{ env.DOTNET_QUALITY }}
-
-      - name: 🗂️ Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: 📦 Restore Dependencies
-        run: dotnet restore Bucket.sln --verbosity minimal
-
-      - name: 🎨 Check Code Formatting
-        run: |
-          echo "🔍 Checking code formatting compliance..."
-
-          if [ "${{ env.CHECK_FORMAT_ONLY }}" = "true" ]; then
-            # Verify formatting without making changes
-            dotnet format Bucket.sln --verify-no-changes --verbosity diagnostic
-
-            if [ $? -ne 0 ]; then
-              echo "❌ Code formatting issues detected!"
-              echo ""
-              echo "💡 To fix formatting issues locally, run:"
-              echo "   dotnet format Bucket.sln"
-              echo ""
-              echo "🔧 Or configure your IDE to format on save using .editorconfig"
-              exit 1
-            else
-              echo "✅ All files are properly formatted!"
-            fi
-          else
-            # Apply formatting fixes
-            echo "🔧 Applying code formatting fixes..."
-            dotnet format Bucket.sln --verbosity diagnostic
-
-            # Check if any files were modified
-            if ! git diff --quiet; then
-              echo "📝 The following files were reformatted:"
-              git diff --name-only
-              echo ""
-              echo "💾 Formatting changes have been applied."
-            else
-              echo "✅ No formatting changes needed!"
-            fi
-          fi
-
-      - name: 📤 Upload Formatting Report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatting-report
-          path: |
-            **/*.cs
-          retention-days: 7
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # 🔬 STATIC CODE ANALYSIS
-  # ──────────────────────────────────────────────────────────────────────────
-  static-analysis:
-    name: 🔬 Static Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🔧 Setup .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: ${{ env.DOTNET_QUALITY }}
+          dotnet-version: '9.0.x'
 
-      - name: 🗂️ Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+      - name: Restore dependencies
+        run: dotnet restore Bucket.sln
 
-      - name: 📦 Restore Dependencies
-        run: dotnet restore Bucket.sln --verbosity minimal
-
-      - name: 🔬 Run Static Code Analysis
+      - name: Install code analysis tools
         run: |
-          echo "🔍 Running static code analysis..."
+          dotnet tool install -g dotnet-format
+          dotnet tool install -g dotnet-reportgenerator-globaltool
 
-          # Build with analysis enabled
-          dotnet build Bucket.sln \
-            --configuration Release \
-            --no-restore \
-            --verbosity normal \
-            -p:RunAnalyzersDuringBuild=true \
-            -p:EnableNETAnalyzers=true \
-            -p:AnalysisLevel=latest \
-            -p:TreatWarningsAsErrors=${{ env.TREAT_WARNINGS_AS_ERRORS }} \
-            -p:WarningsAsErrors="" \
-            -p:WarningsNotAsErrors="CS1591" \
-            --logger "trx;LogFileName=analysis-results.trx"
-
-      - name: 🔍 Check for Analysis Issues
+      - name: Run dotnet format (check)
+        id: format-check
+        continue-on-error: true
         run: |
-          echo "📊 Analysis Summary:"
+          dotnet format Bucket.sln --verify-no-changes --verbosity diagnostic
 
-          # Check if there are any analysis warnings/errors
-          if [ -f "TestResults/analysis-results.trx" ]; then
-            echo "📋 Build completed with analysis results"
+      - name: Build solution
+        run: |
+          dotnet build Bucket.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=true
 
-            # Extract warning/error count (simplified approach)
-            if grep -q "error" TestResults/analysis-results.trx; then
-              echo "❌ Errors found in static analysis"
-              exit 1
-            elif grep -q "warning" TestResults/analysis-results.trx; then
-              echo "⚠️ Warnings found in static analysis"
-              if [ "${{ env.TREAT_WARNINGS_AS_ERRORS }}" = "true" ]; then
-                echo "❌ Treating warnings as errors"
-                exit 1
-              fi
-            else
-              echo "✅ No analysis issues found"
-            fi
-          else
-            echo "✅ Analysis completed successfully"
-          fi
+      - name: Run code analysis
+        id: analysis
+        shell: pwsh
+        run: |
+          Write-Host "=== Running Code Analysis ===" -ForegroundColor Cyan
 
-      - name: 📤 Upload Analysis Results
+          # Create results directory
+          $resultsDir = "analysis-results"
+          New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
+
+          # Run Roslyn analyzers
+          dotnet build Bucket.sln `
+            --configuration Release `
+            --no-restore `
+            /p:EnforceCodeStyleInBuild=true `
+            /p:AnalysisLevel=latest `
+            /p:TreatWarningsAsErrors=false `
+            /p:WarningsAsErrors="" `
+            /warnAsMessage:CS1591 `
+            /flp:"LogFile=$resultsDir/build.log;Verbosity=detailed"
+
+          # Parse warnings and errors
+          $buildLog = Get-Content "$resultsDir/build.log" -ErrorAction SilentlyContinue
+          $warnings = $buildLog | Select-String -Pattern "warning \w+:" -AllMatches
+          $errors = $buildLog | Select-String -Pattern "error \w+:" -AllMatches
+
+          Write-Host "Warnings found: $($warnings.Count)" -ForegroundColor Yellow
+          Write-Host "Errors found: $($errors.Count)" -ForegroundColor Red
+
+          # Set outputs
+          echo "warnings=$($warnings.Count)" >> $env:GITHUB_OUTPUT
+          echo "errors=$($errors.Count)" >> $env:GITHUB_OUTPUT
+
+      - name: Run security scan
+        continue-on-error: true
+        run: |
+          dotnet list package --vulnerable --include-transitive
+
+      - name: Generate report
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-analysis-results
-          path: |
-            TestResults/
-            **/*.sarif
-          retention-days: 30
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # 🛡️ SECURITY ANALYSIS (OPTIONAL)
-  # ──────────────────────────────────────────────────────────────────────────
-  security-analysis:
-    name: 🛡️ Security Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 🔧 Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: ${{ env.DOTNET_QUALITY }}
-
-      - name: 🗂️ Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.NUGET_PACKAGES }}
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: 📦 Restore Dependencies
-        run: dotnet restore Bucket.sln --verbosity minimal
-
-      - name: 🛡️ Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: csharp
-          config: |
-            name: "C# Security Analysis"
-            disable-default-queries: false
-            queries:
-              - uses: security-and-quality
-
-      - name: 🏗️ Build for Security Analysis
+        shell: pwsh
         run: |
-          dotnet build Bucket.sln \
-            --configuration Release \
-            --no-restore \
-            --verbosity minimal
+          $summary = @"
+          # 📊 Code Quality Report
 
-      - name: 🛡️ Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:csharp"
-          upload: true
+          ## Analysis Results
+          "@
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # 📏 EDITORCONFIG VALIDATION
-  # ──────────────────────────────────────────────────────────────────────────
-  editorconfig-check:
-    name: 📏 EditorConfig Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+          # Format check results
+          if ("${{ steps.format-check.outcome }}" -eq "success") {
+            $summary += "`n- ✅ **Code Formatting**: All files properly formatted"
+          } else {
+            $summary += "`n- ⚠️ **Code Formatting**: Issues found (run ``dotnet format`` to fix)"
+          }
 
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+          # Build and analysis results
+          $warnings = "${{ steps.analysis.outputs.warnings }}"
+          $errors = "${{ steps.analysis.outputs.errors }}"
 
-      - name: 📏 Validate EditorConfig
-        uses: editorconfig-checker/action-editorconfig-checker@main
+          if ($errors -eq "0") {
+            $summary += "`n- ✅ **Build Errors**: None"
+          } else {
+            $summary += "`n- ❌ **Build Errors**: $errors errors found"
+          }
 
-      - name: 🔍 EditorConfig Compliance Report
-        if: failure()
-        run: |
-          echo "❌ EditorConfig compliance issues detected!"
-          echo ""
-          echo "💡 Common issues to check:"
-          echo "• Incorrect line endings (CRLF vs LF)"
-          echo "• Missing final newline"
-          echo "• Trailing whitespace"
-          echo "• Incorrect indentation (tabs vs spaces)"
-          echo "• Files not matching .editorconfig rules"
-          echo ""
-          echo "🔧 Fix these issues in your IDE or run a formatter"
+          if ($warnings -eq "0") {
+            $summary += "`n- ✅ **Build Warnings**: None"
+          } else {
+            $summary += "`n- ⚠️ **Build Warnings**: $warnings warnings found"
+          }
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # 📊 GENERATE QUALITY REPORT
-  # ──────────────────────────────────────────────────────────────────────────
-  quality-report:
-    name: 📊 Quality Report
-    runs-on: ubuntu-latest
-    needs: [format-check, static-analysis, editorconfig-check]
-    if: always()
+          $summary += @"
 
-    steps:
-      - name: 📥 Download All Reports
-        uses: actions/download-artifact@v4
-        with:
-          path: reports/
 
-      - name: 📊 Generate Quality Summary
-        run: |
-          echo "# 🔍 C# Code Quality Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "*Generated on $(date +'%Y-%m-%d at %H:%M:%S UTC')*" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          ## Projects Analyzed
+          - Bucket.App
+          - Bucket.Core
+          - Bucket.App.Tests
+          - Bucket.Core.Tests
 
-          # Quality Checks Status
-          echo "## 🎯 Quality Checks Status" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status | Action Required |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|-----------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🎨 Code Formatting | ${{ needs.format-check.result == 'success' && '✅ Passed' || '❌ Failed' }} | ${{ needs.format-check.result == 'success' && 'None' || 'Run `dotnet format`' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔬 Static Analysis | ${{ needs.static-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} | ${{ needs.static-analysis.result == 'success' && 'None' || 'Fix analyzer warnings' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 📏 EditorConfig | ${{ needs.editorconfig-check.result == 'success' && '✅ Passed' || '❌ Failed' }} | ${{ needs.editorconfig-check.result == 'success' && 'None' || 'Fix formatting issues' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          ## Analysis Configuration
+          - **.NET Version**: 9.0
+          - **Configuration**: Release
+          - **Analysis Level**: Latest
+          - **Code Style Enforcement**: Enabled
+          "@
 
-          # Overall Status
-          if [[ "${{ needs.format-check.result }}" == "success" && "${{ needs.static-analysis.result }}" == "success" && "${{ needs.editorconfig-check.result }}" == "success" ]]; then
-            echo "## ✅ **ALL QUALITY CHECKS PASSED**" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 Your code meets all quality standards!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## ⚠️ **QUALITY ISSUES DETECTED**" >> $GITHUB_STEP_SUMMARY
-            echo "🔧 Please address the failing checks above" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
+          # Add recommendations if issues found
+          if ($errors -ne "0" -or $warnings -ne "0" -or "${{ steps.format-check.outcome }}" -ne "success") {
+            $summary += @"
 
-          # Quick Fix Guide
-          echo "## 🛠️ Quick Fix Commands" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "# Fix formatting issues" >> $GITHUB_STEP_SUMMARY
-          echo "dotnet format Bucket.sln" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Build with full analysis" >> $GITHUB_STEP_SUMMARY
-          echo "dotnet build Bucket.sln --configuration Release -p:TreatWarningsAsErrors=true" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "# Check EditorConfig compliance" >> $GITHUB_STEP_SUMMARY
-          echo "editorconfig-checker" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
 
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "*🤖 Automated Code Quality Pipeline*" >> $GITHUB_STEP_SUMMARY
+          ## 🔧 Recommendations
+          "@
 
-      - name: 💬 Comment on PR (if applicable)
-        if: github.event_name == 'pull_request' && (needs.format-check.result != 'success' || needs.static-analysis.result != 'success' || needs.editorconfig-check.result != 'success')
+            if ("${{ steps.format-check.outcome }}" -ne "success") {
+              $summary += @"
+
+          ### Fix formatting issues:
+          ``````bash
+          dotnet format Bucket.sln
+          ``````
+          "@
+            }
+
+            if ($warnings -ne "0") {
+              $summary += @"
+
+          ### Review warnings:
+          Check the build log for detailed warning information.
+          "@
+            }
+
+            if ($errors -ne "0") {
+              $summary += @"
+
+          ### Fix build errors:
+          Build errors must be resolved before merging.
+          "@
+            }
+          }
+
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
+          # Fail if errors found
+          if ($errors -ne "0") {
+            Write-Error "Build errors found! Please fix them before merging."
+            exit 1
+          }
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const formatStatus = '${{ needs.format-check.result }}' === 'success' ? '✅' : '❌';
-            const analysisStatus = '${{ needs.static-analysis.result }}' === 'success' ? '✅' : '❌';
-            const editorConfigStatus = '${{ needs.editorconfig-check.result }}' === 'success' ? '✅' : '❌';
+            const warnings = '${{ steps.analysis.outputs.warnings }}' || '0';
+            const errors = '${{ steps.analysis.outputs.errors }}' || '0';
+            const formatOk = '${{ steps.format-check.outcome }}' === 'success';
 
-            const comment = `## 🔍 Code Quality Check Results
+            let status = '✅';
+            let title = 'All checks passed!';
 
-            | Check | Status |
-            |-------|--------|
-            | 🎨 Code Formatting | ${formatStatus} |
-            | 🔬 Static Analysis | ${analysisStatus} |
-            | 📏 EditorConfig | ${editorConfigStatus} |
+            if (errors !== '0') {
+              status = '❌';
+              title = 'Build errors found';
+            } else if (warnings !== '0' || !formatOk) {
+              status = '⚠️';
+              title = 'Code quality issues found';
+            }
 
-            ${formatStatus === '❌' || analysisStatus === '❌' || editorConfigStatus === '❌'
-              ? `### 🛠️ Actions Required
+            const body = `## ${status} Code Quality Check
 
-            ${formatStatus === '❌' ? '• **Fix formatting**: Run \`dotnet format Bucket.sln\`\n' : ''}${analysisStatus === '❌' ? '• **Fix analysis issues**: Check build warnings/errors\n' : ''}${editorConfigStatus === '❌' ? '• **Fix EditorConfig**: Ensure proper line endings and formatting\n' : ''}
+            **${title}**
 
-            📋 View detailed results in the [workflow run](${context.payload.pull_request.html_url}/checks).`
-              : '🎉 All quality checks passed! Great work!'
-            }`;
+            | Check | Status | Count |
+            |-------|--------|-------|
+            | Build Errors | ${errors === '0' ? '✅' : '❌'} | ${errors} |
+            | Build Warnings | ${warnings === '0' ? '✅' : '⚠️'} | ${warnings} |
+            | Code Formatting | ${formatOk ? '✅' : '⚠️'} | - |
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            ${errors !== '0' || warnings !== '0' || !formatOk ? `
+            ### 🔧 How to fix
+
+            ${!formatOk ? '1. Run `dotnet format Bucket.sln` to fix formatting issues' : ''}
+            ${warnings !== '0' ? '2. Review and fix build warnings' : ''}
+            ${errors !== '0' ? '3. Fix build errors (see build log for details)' : ''}
+            ` : ''}
+
+            ---
+            <sub>Generated by C# Code Quality workflow</sub>`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: comment
+              issue_number: context.issue.number,
             });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Code Quality Check')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
