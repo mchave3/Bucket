@@ -17,8 +17,6 @@ Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Bucket.Setup_x86", "setup\B
 EndProject
 Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Bucket.Setup_arm64", "setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aiproj", "{A1ABCE01-821C-445C-B951-B93952908D8D}"
 EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Bucket.msi", "setup\Bucket.msi\Bucket.msi.wixproj", "{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -137,24 +135,6 @@ Global
 		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|ARM64.ActiveCfg = DefaultBuild
 		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x64.ActiveCfg = DefaultBuild
 		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x86.ActiveCfg = DefaultBuild
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|ARM64.Build.0 = Debug|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|x64.ActiveCfg = Debug|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|x64.Build.0 = Debug|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|x86.ActiveCfg = Debug|x86
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Debug|x86.Build.0 = Debug|x86
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|ARM64.ActiveCfg = Release|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|ARM64.Build.0 = Release|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|x64.ActiveCfg = Release|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|x64.Build.0 = Release|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|x86.ActiveCfg = Release|x86
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.DefaultBuild|x86.Build.0 = Release|x86
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|ARM64.ActiveCfg = Release|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|ARM64.Build.0 = Release|ARM64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|x64.ActiveCfg = Release|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|x64.Build.0 = Release|x64
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|x86.ActiveCfg = Release|x86
-		{9F2977E9-F69D-4E7A-9A41-28877B9A52D1}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
