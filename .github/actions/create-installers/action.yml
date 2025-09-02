@@ -29,12 +29,91 @@ runs:
         New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
         echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
 
-    - name: Install Advanced Installer
+    - name: Download and Install Advanced Installer MSI
+      shell: pwsh
+      run: |
+        Write-Host "=== Downloading Advanced Installer MSI ===" -ForegroundColor Cyan
+
+        # Download Advanced Installer MSI
+        $downloadUrl = "https://www.advancedinstaller.com/downloads/advinst.msi"
+        $msiPath = "$env:TEMP\advinst.msi"
+
+        Write-Host "Downloading from: $downloadUrl"
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $msiPath -UseBasicParsing
+
+        Write-Host "Downloaded to: $msiPath"
+        Write-Host "File size: $((Get-Item $msiPath).Length / 1MB) MB"
+
+        Write-Host "=== Installing Advanced Installer MSI ===" -ForegroundColor Cyan
+
+        # Install Advanced Installer silently
+        $installArgs = @(
+          "/i", $msiPath,
+          "/quiet",
+          "/norestart"
+        )
+
+        if ("${{ inputs.advinst-license }}" -ne "") {
+          Write-Host "Installing with license key..."
+          $installArgs += "AI_LICENSE_KEY=${{ inputs.advinst-license }}"
+        } else {
+          Write-Host "Installing without license (free version)..."
+        }
+
+        Write-Host "Running: msiexec $($installArgs -join ' ')"
+        $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $installArgs -Wait -PassThru
+
+        if ($process.ExitCode -eq 0) {
+          Write-Host "✅ Advanced Installer MSI installed successfully" -ForegroundColor Green
+        } else {
+          Write-Error "❌ Advanced Installer MSI installation failed with exit code: $($process.ExitCode)"
+          exit 1
+        }
+
+        # Clean up downloaded MSI
+        Remove-Item -Path $msiPath -Force -ErrorAction SilentlyContinue
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build Setup Projects with MSBuild
+      shell: pwsh
+      run: |
+        Write-Host "=== Building Setup Projects with MSBuild ===" -ForegroundColor Cyan
+
+        $setupProjects = @(
+          "setup/Bucket.Setup_x64/Bucket.Setup_x64.aiproj",
+          "setup/Bucket.Setup_x86/Bucket.Setup_x86.aiproj",
+          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aiproj"
+        )
+
+        foreach ($project in $setupProjects) {
+          if (Test-Path $project) {
+            Write-Host "Building: $project" -ForegroundColor Yellow
+
+            # Build the setup project with MSBuild
+            msbuild $project `
+              /p:Configuration=DefaultBuild `
+              /t:Build `
+              /v:minimal
+
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✅ Successfully built: $project" -ForegroundColor Green
+            } else {
+              Write-Error "❌ Failed to build: $project"
+              exit 1
+            }
+          } else {
+            Write-Warning "Setup project not found: $project"
+          }
+        }
+
+    - name: Deploy Advanced Installer Tool (Caphyon Action)
       uses: caphyon/advinst-github-action@main
       with:
-        advinst-version: '23.0'  # You can specify a specific version or use latest
+        advinst-version: '23.0'
         advinst-license: ${{ inputs.advinst-license }}
-        advinst-enable-automation: 'false'  # We don't need automation for MSBuild projects
+        advinst-enable-automation: 'false'
 
     - name: Update version in Advanced Installer projects
       shell: pwsh
@@ -52,157 +131,66 @@ runs:
           "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aip"
         )
 
-        foreach ($aipFile in $aipFiles) {
-          if (Test-Path $aipFile) {
-            Write-Host "Updating version in $aipFile..."
+        # Find Advanced Installer executable
+        $aiPaths = @(
+          "${env:ProgramFiles(x86)}\Caphyon\Advanced Installer 23.0\bin\x86\AdvancedInstaller.com",
+          "${env:ProgramFiles}\Caphyon\Advanced Installer 23.0\bin\x86\AdvancedInstaller.com"
+        )
 
-            # Use Advanced Installer command line to update version
-            $fullPath = Resolve-Path $aipFile
-            & AdvancedInstaller.com /edit "$fullPath" /SetVersion $versionBase
+        $aiExe = $null
+        foreach ($path in $aiPaths) {
+          if (Test-Path $path) {
+            $aiExe = $path
+            break
+          }
+        }
 
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "✅ Updated version in $aipFile" -ForegroundColor Green
+        if (-not $aiExe) {
+          Write-Warning "Advanced Installer executable not found. Skipping version update."
+        } else {
+          Write-Host "Using Advanced Installer at: $aiExe"
+
+          foreach ($aipFile in $aipFiles) {
+            if (Test-Path $aipFile) {
+              Write-Host "Updating version in $aipFile..."
+
+              # Use Advanced Installer command line to update version
+              $fullPath = Resolve-Path $aipFile
+              & "$aiExe" /edit "$fullPath" /SetVersion $versionBase
+
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "✅ Updated version in $aipFile" -ForegroundColor Green
+              } else {
+                Write-Warning "Failed to update version in $aipFile"
+              }
             } else {
-              Write-Warning "Failed to update version in $aipFile"
+              Write-Warning "AIP file not found: $aipFile"
             }
-          } else {
-            Write-Warning "AIP file not found: $aipFile"
           }
         }
 
-    - name: Build x64 Installer
+    - name: Copy generated MSI files to artifacts
       shell: pwsh
       run: |
-        Write-Host "=== Building x64 Installer ===" -ForegroundColor Green
+        Write-Host "=== Copying Generated MSI Files ===" -ForegroundColor Cyan
 
-        $setupProject = "setup/Bucket.Setup_x64/Bucket.Setup_x64.aiproj"
-
-        if (Test-Path $setupProject) {
-          # First, clean any existing cache and output
-          $cacheDir = "setup/Bucket.Setup_x64/Bucket.Setup_x64-cache"
-          $setupFilesDir = "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles"
-
-          if (Test-Path $cacheDir) {
-            Remove-Item -Path $cacheDir -Recurse -Force
-          }
-          if (Test-Path $setupFilesDir) {
-            Remove-Item -Path $setupFilesDir -Recurse -Force
-          }
-
-          # Build the installer using DefaultBuild configuration
-          msbuild $setupProject `
-            /p:Configuration=DefaultBuild `
-            /p:Platform=x64 `
-            /t:Rebuild `
-            /v:minimal
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "x64 installer build failed!"
-            exit 1
-          }
-
-          # Copy MSI to artifacts
-          $msiSource = "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles/Bucket.Setup_x64.msi"
-          if (Test-Path $msiSource) {
-            $version = "${{ inputs.version }}"
-            $msiDest = "artifacts/installers/Bucket-$version-x64.msi"
-            Copy-Item -Path $msiSource -Destination $msiDest -Force
-            Write-Host "Created: $msiDest" -ForegroundColor Green
-          } else {
-            Write-Warning "MSI not found: $msiSource"
-          }
-        } else {
-          Write-Warning "Setup project not found: $setupProject"
+        $msiMappings = @{
+          "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles/Bucket.Setup_x64.msi" = "Bucket-${{ inputs.version }}-x64.msi"
+          "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles/Bucket.Setup_x86.msi" = "Bucket-${{ inputs.version }}-x86.msi"
+          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles/Bucket.Setup_arm64.msi" = "Bucket-${{ inputs.version }}-arm64.msi"
         }
 
-    - name: Build x86 Installer
-      shell: pwsh
-      run: |
-        Write-Host "=== Building x86 Installer ===" -ForegroundColor Green
+        foreach ($mapping in $msiMappings.GetEnumerator()) {
+          $source = $mapping.Key
+          $destination = "artifacts/installers/$($mapping.Value)"
 
-        $setupProject = "setup/Bucket.Setup_x86/Bucket.Setup_x86.aiproj"
-
-        if (Test-Path $setupProject) {
-          # First, clean any existing cache and output
-          $cacheDir = "setup/Bucket.Setup_x86/Bucket.Setup_x86-cache"
-          $setupFilesDir = "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles"
-
-          if (Test-Path $cacheDir) {
-            Remove-Item -Path $cacheDir -Recurse -Force
-          }
-          if (Test-Path $setupFilesDir) {
-            Remove-Item -Path $setupFilesDir -Recurse -Force
-          }
-
-          # Build the installer using DefaultBuild configuration
-          msbuild $setupProject `
-            /p:Configuration=DefaultBuild `
-            /p:Platform=x86 `
-            /t:Rebuild `
-            /v:minimal
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "x86 installer build failed!"
-            exit 1
-          }
-
-          # Copy MSI to artifacts
-          $msiSource = "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles/Bucket.Setup_x86.msi"
-          if (Test-Path $msiSource) {
-            $version = "${{ inputs.version }}"
-            $msiDest = "artifacts/installers/Bucket-$version-x86.msi"
-            Copy-Item -Path $msiSource -Destination $msiDest -Force
-            Write-Host "Created: $msiDest" -ForegroundColor Green
+          if (Test-Path $source) {
+            Copy-Item -Path $source -Destination $destination -Force
+            $fileSize = (Get-Item $destination).Length / 1MB
+            Write-Host "✅ Copied: $($mapping.Value) ($("{0:N2}" -f $fileSize) MB)" -ForegroundColor Green
           } else {
-            Write-Warning "MSI not found: $msiSource"
+            Write-Warning "⚠️ MSI not found: $source"
           }
-        } else {
-          Write-Warning "Setup project not found: $setupProject"
-        }
-
-    - name: Build ARM64 Installer
-      shell: pwsh
-      run: |
-        Write-Host "=== Building ARM64 Installer ===" -ForegroundColor Green
-
-        $setupProject = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aiproj"
-
-        if (Test-Path $setupProject) {
-          # First, clean any existing cache and output
-          $cacheDir = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-cache"
-          $setupFilesDir = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles"
-
-          if (Test-Path $cacheDir) {
-            Remove-Item -Path $cacheDir -Recurse -Force
-          }
-          if (Test-Path $setupFilesDir) {
-            Remove-Item -Path $setupFilesDir -Recurse -Force
-          }
-
-          # Build the installer using DefaultBuild configuration
-          msbuild $setupProject `
-            /p:Configuration=DefaultBuild `
-            /p:Platform=ARM64 `
-            /t:Rebuild `
-            /v:minimal
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "ARM64 installer build failed!"
-            exit 1
-          }
-
-          # Copy MSI to artifacts
-          $msiSource = "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles/Bucket.Setup_arm64.msi"
-          if (Test-Path $msiSource) {
-            $version = "${{ inputs.version }}"
-            $msiDest = "artifacts/installers/Bucket-$version-arm64.msi"
-            Copy-Item -Path $msiSource -Destination $msiDest -Force
-            Write-Host "Created: $msiDest" -ForegroundColor Green
-          } else {
-            Write-Warning "MSI not found: $msiSource"
-          }
-        } else {
-          Write-Warning "Setup project not found: $setupProject"
         }
 
     - name: List generated installers
