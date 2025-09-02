@@ -14,6 +14,9 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>disable</Nullable>
     <TrimMode>partial</TrimMode>
+    <!-- Suppress trimming warnings for known incompatible libraries -->
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
     <ImplicitUsings>true</ImplicitUsings>
     <LangVersion>Latest</LangVersion>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
@@ -29,9 +32,11 @@
   <PropertyGroup>
     <PublishAot>False</PublishAot>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug' AND '$(GITHUB_ACTIONS)' != 'true'">True</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(GITHUB_ACTIONS)' == 'true'">False</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <PublishTrimmed Condition="'$(Configuration)' != 'Debug' AND '$(GITHUB_ACTIONS)' != 'true'">True</PublishTrimmed>
+    <PublishTrimmed Condition="'$(GITHUB_ACTIONS)' == 'true'">False</PublishTrimmed>
     <Company>Mickaël CHAVE</Company>
     <AssemblyName>Bucket</AssemblyName>
     <PackageProjectUrl>https://github.com/mchave3/Bucket</PackageProjectUrl>
