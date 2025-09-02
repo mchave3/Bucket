@@ -161,22 +161,23 @@ jobs:
 
       - name: Summary
         if: always()
+        shell: pwsh
         run: |
-          echo "# 🌙 Nightly Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ needs.check-changes.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: dev" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          Write-Host "# 🌙 Nightly Build Summary" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Build Information" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Branch**: dev" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Status**: ${{ job.status }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
 
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ **Nightly build completed successfully!**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-changes.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ **Nightly build failed!**" >> $GITHUB_STEP_SUMMARY
-          fi
+          if ("${{ job.status }}" -eq "success") {
+            Write-Host "✅ **Nightly build completed successfully!**" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-changes.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
+          } else {
+            Write-Host "❌ **Nightly build failed!**" >> $env:GITHUB_STEP_SUMMARY
+          }
 
   notify-skip:
     name: Notify Skip

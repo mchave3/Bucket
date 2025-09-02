@@ -35,13 +35,14 @@ jobs:
 
     steps:
       - name: Validate branch
+        shell: pwsh
         run: |
-          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
-            echo "❌ This workflow can only be run from the main branch!" >> $GITHUB_STEP_SUMMARY
-            echo "Current branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+          if ("${{ github.ref }}" -ne "refs/heads/main") {
+            Write-Host "❌ This workflow can only be run from the main branch!" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host "Current branch: ${{ github.ref }}" >> $env:GITHUB_STEP_SUMMARY
             exit 1
-          fi
-          echo "✅ Running from main branch" >> $GITHUB_STEP_SUMMARY
+          }
+          Write-Host "✅ Running from main branch" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -191,19 +192,20 @@ jobs:
 
       - name: Post-release summary
         if: github.event.inputs.dry-run == 'false'
+        shell: pwsh
         run: |
-          echo "# 🚀 Release Published Successfully!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Release Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: \`${{ steps.validate-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Type**: Stable Release" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: main" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📦 Published Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- 3 MSI installers (x64, x86, ARM64)" >> $GITHUB_STEP_SUMMARY
-          echo "- 3 ZIP packages (x64, x86, ARM64)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.validate-version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          Write-Host "# 🚀 Release Published Successfully!" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Release Information" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Version**: ``${{ steps.validate-version.outputs.version }}``" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Type**: Stable Release" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Branch**: main" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## 📦 Published Artifacts" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- 3 MSI installers (x64, x86, ARM64)" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- 3 ZIP packages (x64, x86, ARM64)" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.validate-version.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
 
   guard-branch:
     name: Branch Protection
