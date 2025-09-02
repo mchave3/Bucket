@@ -8,6 +8,10 @@ inputs:
     description: 'Build configuration'
     required: false
     default: 'Release'
+  advinst-license:
+    description: 'Advanced Installer license key'
+    required: false
+    default: ''
 
 outputs:
   installers-path:
@@ -25,26 +29,14 @@ runs:
         New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
         echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
 
-    - name: Check Advanced Installer availability
-      id: check-advinst
-      shell: pwsh
-      run: |
-        try {
-          $aiPath = Get-Command "AdvancedInstaller.com" -ErrorAction SilentlyContinue
-          if ($aiPath) {
-            Write-Host "✅ Advanced Installer found at: $($aiPath.Source)" -ForegroundColor Green
-            echo "available=true" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Warning "⚠️ Advanced Installer not found. MSI generation will be skipped."
-            echo "available=false" >> $env:GITHUB_OUTPUT
-          }
-        } catch {
-          Write-Warning "⚠️ Error checking Advanced Installer: $($_.Exception.Message)"
-          echo "available=false" >> $env:GITHUB_OUTPUT
-        }
+    - name: Install Advanced Installer
+      uses: caphyon/advinst-github-action@main
+      with:
+        advinst-version: '23.0'  # You can specify a specific version or use latest
+        advinst-license: ${{ inputs.advinst-license }}
+        advinst-enable-automation: 'false'  # We don't need automation for MSBuild projects
 
     - name: Update version in Advanced Installer projects
-      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "Updating version in Advanced Installer projects to ${{ inputs.version }}..." -ForegroundColor Cyan
@@ -53,7 +45,7 @@ runs:
         $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
         Write-Host "Base version: $versionBase"
 
-        # Update each .aip file
+        # Update each .aip file using Advanced Installer command line
         $aipFiles = @(
           "setup/Bucket.Setup_x64/Bucket.Setup_x64.aip",
           "setup/Bucket.Setup_x86/Bucket.Setup_x86.aip",
@@ -62,24 +54,23 @@ runs:
 
         foreach ($aipFile in $aipFiles) {
           if (Test-Path $aipFile) {
-            Write-Host "Updating $aipFile..."
+            Write-Host "Updating version in $aipFile..."
 
-            # Use Advanced Installer COM to update version
-            $aiPath = $aipFile
-            $aiCom = New-Object -ComObject AdvancedInstaller.AdvancedInstallerCOM
-            $project = $aiCom.OpenProject($aiPath)
-            $project.ProductDetails.Version = $versionBase
-            $project.Save()
-            $project.Close()
+            # Use Advanced Installer command line to update version
+            $fullPath = Resolve-Path $aipFile
+            & AdvancedInstaller.com /edit "$fullPath" /SetVersion $versionBase
 
-            Write-Host "Updated version in $aipFile" -ForegroundColor Green
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✅ Updated version in $aipFile" -ForegroundColor Green
+            } else {
+              Write-Warning "Failed to update version in $aipFile"
+            }
           } else {
             Write-Warning "AIP file not found: $aipFile"
           }
         }
 
     - name: Build x64 Installer
-      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building x64 Installer ===" -ForegroundColor Green
@@ -125,7 +116,6 @@ runs:
         }
 
     - name: Build x86 Installer
-      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building x86 Installer ===" -ForegroundColor Green
@@ -171,7 +161,6 @@ runs:
         }
 
     - name: Build ARM64 Installer
-      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building ARM64 Installer ===" -ForegroundColor Green
@@ -233,22 +222,30 @@ runs:
           }
         }
 
-    - name: Create placeholder if no installers
-      if: steps.check-advinst.outputs.available == 'false'
+    - name: Verify installer generation
       shell: pwsh
       run: |
-        Write-Host "=== Creating Placeholder Files ===" -ForegroundColor Yellow
+        Write-Host "=== Verifying Installer Generation ===" -ForegroundColor Cyan
         $installersPath = "artifacts/installers"
+        $expectedFiles = @(
+          "Bucket-${{ inputs.version }}-x64.msi",
+          "Bucket-${{ inputs.version }}-x86.msi",
+          "Bucket-${{ inputs.version }}-arm64.msi"
+        )
 
-        # Create placeholder files to maintain workflow consistency
-        $version = "${{ inputs.version }}"
-        $architectures = @("x64", "x86", "arm64")
+        $missingFiles = @()
+        foreach ($file in $expectedFiles) {
+          $fullPath = Join-Path $installersPath $file
+          if (-not (Test-Path $fullPath)) {
+            $missingFiles += $file
+          }
+        }
 
-        foreach ($arch in $architectures) {
-          $placeholderFile = "$installersPath/Bucket-$version-$arch.msi.placeholder"
-          "This is a placeholder file. Advanced Installer was not available during build." |
-            Out-File -FilePath $placeholderFile -Encoding UTF8
-          Write-Host "Created placeholder: $placeholderFile" -ForegroundColor Yellow
+        if ($missingFiles.Count -gt 0) {
+          Write-Error "❌ Missing installer files: $($missingFiles -join ', ')"
+          exit 1
+        } else {
+          Write-Host "✅ All installer files generated successfully" -ForegroundColor Green
         }
 
     - name: Upload installer artifacts
