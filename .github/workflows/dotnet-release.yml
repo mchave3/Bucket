@@ -64,6 +64,12 @@ jobs:
           ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
           fetch-depth: 0
 
+      - name: 💾 Backup Original Project File
+        run: |
+          Write-Host "💾 Creating backup of original project file..."
+          Copy-Item "${{ env.PROJECT_PATH }}" "${{ env.PROJECT_PATH }}.backup"
+          Write-Host "✅ Backup created: ${{ env.PROJECT_PATH }}.backup"
+
       - name: 🏷️ Generate Release Version
         run: |
           echo "🏷️ Generating release version..."
@@ -138,6 +144,18 @@ jobs:
           name: release-config
           path: ${{ env.PROJECT_PATH }}
           retention-days: 1
+
+      - name: 🔄 Restore Original Project File
+        if: always()
+        run: |
+          Write-Host "🔄 Restoring original project file..."
+          if (Test-Path "${{ env.PROJECT_PATH }}.backup") {
+            Copy-Item "${{ env.PROJECT_PATH }}.backup" "${{ env.PROJECT_PATH }}"
+            Remove-Item "${{ env.PROJECT_PATH }}.backup"
+            Write-Host "✅ Original project file restored"
+          } else {
+            Write-Host "⚠️ Backup file not found"
+          }
 
   # ──────────────────────────────────────────────────────────────────────────
   # 🧪 COMPREHENSIVE TESTING JOB (USING REUSABLE ACTION)
@@ -239,7 +257,7 @@ jobs:
       - name: 📤 Upload Production Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-package-${{ matrix.platform }}
+          name: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}
           path: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip
           retention-days: 90
 
@@ -268,7 +286,7 @@ jobs:
         with:
           app-name: ${{ env.APP_NAME }}
           app-version: ${{ needs.release-preparation.outputs.app-version }}
-          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY || '' }}
+          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
           workflow-type: 'release'
           artifacts-path: ${{ github.workspace }}
 
@@ -290,7 +308,7 @@ jobs:
       - name: 📦 Download All Production Artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: release-package-*
+          pattern: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*
           merge-multiple: true
 
       - name: 📦 Download All Installer Artifacts
@@ -298,6 +316,7 @@ jobs:
         with:
           pattern: release-installer-all-platforms
           merge-multiple: true
+          path: installers
 
       - name: 🚀 Manage Release Publication
         uses: ./.github/actions/release-management
@@ -308,7 +327,7 @@ jobs:
           is-prerelease: ${{ needs.release-preparation.outputs.is-pre-release }}
           make-latest: ${{ needs.release-preparation.outputs.make-latest }}
           skip-if-exists: ${{ env.SKIP_IF_RELEASE_EXISTS }}
-          artifacts-pattern: "${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*"
+          artifacts-pattern: "${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*.zip installers/*.msi"
           generate-release-notes: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
