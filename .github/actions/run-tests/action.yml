@@ -112,34 +112,40 @@ runs:
               Write-Host "✅ Bucket.Core.Tests passed on $platform" -ForegroundColor Green
             }
 
-            # Run tests for Bucket.App.Tests
-            Write-Host "Running Bucket.App.Tests on $platform..." -ForegroundColor Yellow
+            # Check if Bucket.App.Tests has any test files
             $appTestProject = "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
+            $appTestFiles = Get-ChildItem -Path "tests/Bucket.App.Tests" -Filter "*.cs" -Recurse
 
-            $testArgs = @(
-              "test",
-              $appTestProject,
-              "--configuration", $configuration,
-              "--no-restore",
-              "--no-build",
-              "--verbosity", "normal",
-              "--logger", "trx;LogFileName=Bucket.App.Tests-$platform.trx",
-              "--results-directory", $testResultsPath
-            )
+            if ($appTestFiles.Count -gt 0) {
+              Write-Host "Running Bucket.App.Tests on $platform..." -ForegroundColor Yellow
 
-            if ($generateCoverage -eq "true") {
-              $testArgs += "--collect:""XPlat Code Coverage"""
-              $testArgs += "--"
-              $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
-            }
+              $testArgs = @(
+                "test",
+                $appTestProject,
+                "--configuration", $configuration,
+                "--no-restore",
+                "--no-build",
+                "--verbosity", "normal",
+                "--logger", "trx;LogFileName=Bucket.App.Tests-$platform.trx",
+                "--results-directory", $testResultsPath
+              )
 
-            & dotnet $testArgs
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Bucket.App.Tests failed on $platform!"
-              $failedPlatforms += "$platform (App.Tests)"
-              $totalErrors++
+              if ($generateCoverage -eq "true") {
+                $testArgs += "--collect:""XPlat Code Coverage"""
+                $testArgs += "--"
+                $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
+              }
+
+              & dotnet $testArgs
+              if ($LASTEXITCODE -ne 0) {
+                Write-Error "Bucket.App.Tests failed on $platform!"
+                $failedPlatforms += "$platform (App.Tests)"
+                $totalErrors++
+              } else {
+                Write-Host "✅ Bucket.App.Tests passed on $platform" -ForegroundColor Green
+              }
             } else {
-              Write-Host "✅ Bucket.App.Tests passed on $platform" -ForegroundColor Green
+              Write-Host "⚠️ Bucket.App.Tests has no test files - skipping test execution for $platform" -ForegroundColor Yellow
             }
 
             if ($platform -notin $failedPlatforms) {
