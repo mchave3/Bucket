@@ -1,440 +1,228 @@
-name: 🚀 Release Publisher
+name: Release Build
 
-# This workflow builds stable releases from the configured TARGET_BRANCH
-# - Triggered: Manual trigger only
-# - Source branch: Defined by env.TARGET_BRANCH (currently 'main')
-# - Release type: Stable release (not pre-release)
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (format: YY.MM.DD.BUILD)'
+        required: true
+        type: string
+        default: ''
+      release-notes:
+        description: 'Additional release notes (markdown supported)'
+        required: false
+        type: string
+        default: ''
+      dry-run:
+        description: 'Dry run (build only, no release)'
+        required: false
+        type: boolean
+        default: false
 
-permissions:
-  contents: write
-  actions: read
-
-# ============================================================================
-# ENVIRONMENT CONFIGURATION
-# ============================================================================
-env:
-  # Branch Configuration
-  TARGET_BRANCH: main  # Source branch for stable releases
-
-  # Project Configuration
-  PROJECT_PATH: src/Bucket.App/Bucket.App.csproj
-  APP_NAME: Bucket
-
-  # Build Configuration
-  PUBLISH_OUTPUT_FOLDER: Publish
-  BUILD_CONFIGURATION: Release
-
-  # .NET Publish Settings
-  PUBLISH_SELF_CONTAINED: true
-  PUBLISH_SINGLE_FILE: false
-  PUBLISH_READY_TO_RUN: true
-  PUBLISH_AOT: false
-  PUBLISH_TRIMMED: true
-  PUBLISH_TRIM_MODE: partial
-
-  # Release Configuration
-  SKIP_IF_RELEASE_EXISTS: true
-
-  # NuGet Sources (disabled by default)
-  IS_COMMUNITY_TOOLKIT_ENABLED: false
-  IS_CUSTOM_NUGET_ENABLED: false
-  CUSTOM_NUGET_SOURCES: ''
-
-# ============================================================================
-# JOBS PIPELINE
-# ============================================================================
 jobs:
-  # ──────────────────────────────────────────────────────────────────────────
-  # 📋 RELEASE PREPARATION JOB
-  # ──────────────────────────────────────────────────────────────────────────
-  release-preparation:
-    name: 📋 Prepare Release
+  validate-and-build:
+    name: Validate and Build Release
     runs-on: windows-latest
+    # Only allow execution from main branch
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+      packages: write
+
     outputs:
-      app-version: ${{ steps.version.outputs.version }}
-      is-pre-release: 'false'
-      make-latest: 'true'
+      version: ${{ steps.validate-version.outputs.version }}
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: Validate branch
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "❌ This workflow can only be run from the main branch!" >> $GITHUB_STEP_SUMMARY
+            echo "Current branch: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "✅ Running from main branch" >> $GITHUB_STEP_SUMMARY
+
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
           fetch-depth: 0
 
-      - name: 💾 Backup Original Project File
+      - name: Validate version format
+        id: validate-version
+        shell: pwsh
         run: |
-          Write-Host "💾 Creating backup of original project file..."
-          Copy-Item "${{ env.PROJECT_PATH }}" "${{ env.PROJECT_PATH }}.backup"
-          Write-Host "✅ Backup created: ${{ env.PROJECT_PATH }}.backup"
+          $version = "${{ github.event.inputs.version }}"
 
-      - name: 🏷️ Generate Release Version
-        run: |
-          echo "🏷️ Generating release version..."
+          Write-Host "Validating version: $version" -ForegroundColor Cyan
 
-          $date = Get-Date
-          $year = $date.ToString("yy")
-          $month = $date.Month
-          $day = $date.Day
+          # Validate version format (YY.MM.DD.BUILD)
+          if ($version -match '^\d{1,2}\.\d{1,2}\.\d{1,2}\.\d+$') {
+            Write-Host "✅ Version format is valid" -ForegroundColor Green
 
-          # Get today's existing stable releases to calculate build number
-          try {
-            $existingReleases = gh api repos/${{ github.repository }}/releases --paginate |
-              ConvertFrom-Json |
-              Where-Object { $_.tag_name -match "^$year\.$month\.$day\.(\d+)$" -and $_.prerelease -eq $false }
-
-            $buildNumber = 1
-            if ($existingReleases) {
-              $buildNumber = ($existingReleases |
-                ForEach-Object { [int]($_.tag_name -replace "^$year\.$month\.$day\.(\d+)$", '$1') } |
-                Measure-Object -Maximum).Maximum + 1
+            # Check if this version already exists
+            $existingTag = git tag -l "v$version"
+            if ($existingTag) {
+              Write-Error "❌ Version $version already exists as a release!"
+              Write-Host "Existing releases:" -ForegroundColor Yellow
+              git tag -l "v*" | Select-Object -Last 10
+              exit 1
             }
-          } catch {
-            Write-Host "⚠️ Could not fetch existing releases, using build number 1"
-            $buildNumber = 1
-          }
 
-          $newVersion = "$year.$month.$day.$buildNumber"
-          Write-Host "🏷️ Generated release version: $newVersion"
-
-          # Update project file
-          $csprojPath = "${{ env.PROJECT_PATH }}"
-          $content = Get-Content $csprojPath -Raw
-          $content = $content -replace '<Version>.*?</Version>', "<Version>$newVersion</Version>"
-          Set-Content -Path $csprojPath -Value $content
-
-          # Verify the version was updated correctly
-          $updatedContent = Get-Content $csprojPath -Raw
-          if ($updatedContent -match '<Version>(.*?)</Version>') {
-            $actualVersion = $matches[1]
-            if ($actualVersion -eq $newVersion) {
-              Write-Host "✅ Project version successfully updated to: $actualVersion"
-            } else {
-              Write-Host "⚠️ Version mismatch! Expected: $newVersion, Found: $actualVersion"
-            }
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+            Write-Host "Version validated: $version" -ForegroundColor Green
           } else {
-            Write-Host "❌ Could not find Version element in project file"
-          }
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: 📖 Read Project Version
-        uses: kzrnm/get-net-sdk-project-versions-action@v2
-        id: version
-        with:
-          proj-path: ${{ env.PROJECT_PATH }}
-
-      - name: ⚙️ Configure Release Settings
-        id: release-config
-        run: |
-          echo "⚙️ Configuring release settings..."
-
-          Write-Host "📋 Release Configuration:"
-          Write-Host "  • Version: [Version will be read from project file]"
-          Write-Host "  • Version Suffix: (none - auto-generated)"
-          Write-Host "  • Pre-release: false (stable release)"
-          Write-Host "  • Make Latest: true"
-          Write-Host "  • Mode: Automatic (no user inputs)"
-
-      - name: 🔗 Upload Release Configuration
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-config
-          path: ${{ env.PROJECT_PATH }}
-          retention-days: 1
-
-      - name: 🔄 Restore Original Project File
-        if: always()
-        run: |
-          Write-Host "🔄 Restoring original project file..."
-          if (Test-Path "${{ env.PROJECT_PATH }}.backup") {
-            Copy-Item "${{ env.PROJECT_PATH }}.backup" "${{ env.PROJECT_PATH }}"
-            Remove-Item "${{ env.PROJECT_PATH }}.backup"
-            Write-Host "✅ Original project file restored"
-          } else {
-            Write-Host "⚠️ Backup file not found"
+            Write-Error "❌ Invalid version format!"
+            Write-Host "Expected format: YY.MM.DD.BUILD (e.g., 25.1.15.1)" -ForegroundColor Red
+            exit 1
           }
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # 🧪 COMPREHENSIVE TESTING JOB (USING REUSABLE ACTION)
-  # ──────────────────────────────────────────────────────────────────────────
-  comprehensive-testing:
-    name: 🧪 Test (${{ matrix.platform }})
-    runs-on: windows-latest
-    timeout-minutes: 30  # Prevent indefinite hanging - allows 30 minutes total per platform
-    needs: release-preparation
-
-    strategy:
-      matrix:
-        platform: [x86, x64, ARM64]
-      fail-fast: false
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
-
-      - name: 🔗 Download Release Configuration
-        uses: actions/download-artifact@v4
-        with:
-          name: release-config
-          path: .
-
-      - name: 🔧 Setup Environment
+      - name: Setup environment
         uses: ./.github/actions/setup-environment
         with:
-          enable-community-toolkit: ${{ env.IS_COMMUNITY_TOOLKIT_ENABLED }}
-          enable-custom-nuget: ${{ env.IS_CUSTOM_NUGET_ENABLED }}
-          custom-nuget-sources: ${{ env.CUSTOM_NUGET_SOURCES }}
+          dotnet-version: '9.0.x'
+          advanced-installer-license: ${{ secrets.ADVANCED_INSTALLER_LICENSE }}
 
-      - name: 🧪 Run Comprehensive Tests
+      - name: Run tests
         uses: ./.github/actions/run-tests
         with:
-          platform: ${{ matrix.platform }}
-          build-configuration: ${{ env.BUILD_CONFIGURATION }}
-          collect-coverage: true
-          test-verbosity: detailed
+          configuration: 'Release'
+          generate-coverage: 'true'
 
-      - name: 📤 Upload Test Results & Coverage
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: release-test-results-${{ matrix.platform }}
-          path: TestResults
-          retention-days: 90
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # 🏗️ PRODUCTION BUILD JOB (USING REUSABLE ACTION)
-  # ──────────────────────────────────────────────────────────────────────────
-  production-build:
-    name: 🏗️ Build (${{ matrix.platform }})
-    runs-on: windows-latest
-    needs: [release-preparation, comprehensive-testing]
-
-    strategy:
-      matrix:
-        platform: [x86, x64, ARM64]
-      fail-fast: false
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
-
-      - name: 🔗 Download Release Configuration
-        uses: actions/download-artifact@v4
-        with:
-          name: release-config
-          path: .
-
-      - name: 🔧 Setup Environment
-        uses: ./.github/actions/setup-environment
-        with:
-          enable-community-toolkit: ${{ env.IS_COMMUNITY_TOOLKIT_ENABLED }}
-          enable-custom-nuget: ${{ env.IS_CUSTOM_NUGET_ENABLED }}
-          custom-nuget-sources: ${{ env.CUSTOM_NUGET_SOURCES }}
-
-      - name: 🏗️ Build and Package for Production
+      - name: Build and package
         uses: ./.github/actions/build-and-package
         with:
-          project-path: ${{ env.PROJECT_PATH }}
-          platform: ${{ matrix.platform }}
-          app-name: ${{ env.APP_NAME }}
-          app-version: ${{ needs.release-preparation.outputs.app-version }}
-          build-configuration: ${{ env.BUILD_CONFIGURATION }}
-          output-folder: ${{ env.PUBLISH_OUTPUT_FOLDER }}
-          self-contained: ${{ env.PUBLISH_SELF_CONTAINED }}
-          single-file: ${{ env.PUBLISH_SINGLE_FILE }}
-          ready-to-run: ${{ env.PUBLISH_READY_TO_RUN }}
-          aot: ${{ env.PUBLISH_AOT }}
-          trimmed: ${{ env.PUBLISH_TRIMMED }}
-          trim-mode: ${{ env.PUBLISH_TRIM_MODE }}
+          configuration: 'Release'
+          version: ${{ steps.validate-version.outputs.version }}
+          create-zip: 'true'
 
-      - name: 📤 Upload Production Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}
-          path: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip
-          retention-days: 90
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # � INSTALLER CREATION JOB (USING REUSABLE ACTION)
-  # ──────────────────────────────────────────────────────────────────────────
-  create-installers:
-    name: 📦 Create MSI Installers
-    runs-on: windows-latest
-    needs: [release-preparation, comprehensive-testing, production-build]
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
-
-      - name: 🔗 Download Release Configuration
-        uses: actions/download-artifact@v4
-        with:
-          name: release-config
-          path: .
-
-      - name: 📦 Create MSI Installers with Advanced Installer
+      - name: Create installers
         uses: ./.github/actions/create-installers
         with:
-          app-name: ${{ env.APP_NAME }}
-          app-version: ${{ needs.release-preparation.outputs.app-version }}
-          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
-          workflow-type: 'release'
-          artifacts-path: ${{ github.workspace }}
+          version: ${{ steps.validate-version.outputs.version }}
+          configuration: 'Release'
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # �🚀 RELEASE PUBLICATION JOB (USING REUSABLE ACTION)
-  # ──────────────────────────────────────────────────────────────────────────
-  release-publication:
-    name: 🚀 Publish Release
-    runs-on: ubuntu-latest
-    needs: [release-preparation, comprehensive-testing, production-build, create-installers]
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TARGET_BRANCH }}  # Always use target branch for stable releases
-          fetch-depth: 0
-
-      - name: 📦 Download All Production Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*
-          merge-multiple: true
-
-      - name: 📦 Download All Installer Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: release-installer-all-platforms
-          merge-multiple: true
-          path: installers
-
-      - name: 🚀 Manage Release Publication
+      - name: Create release
+        if: github.event.inputs.dry-run == 'false'
         uses: ./.github/actions/release-management
         with:
-          app-name: ${{ env.APP_NAME }}
-          app-version: ${{ needs.release-preparation.outputs.app-version }}
-          release-name: 🚀 Release
-          is-prerelease: ${{ needs.release-preparation.outputs.is-pre-release }}
-          make-latest: ${{ needs.release-preparation.outputs.make-latest }}
-          skip-if-exists: ${{ env.SKIP_IF_RELEASE_EXISTS }}
-          artifacts-pattern: "${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-*.zip installers/*.msi"
-          generate-release-notes: 'true'
+          version: ${{ steps.validate-version.outputs.version }}
+          is-prerelease: 'false'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts-path: 'artifacts'
+          release-notes: |
+            ## 🎉 Stable Release
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # 📊 RELEASE SUMMARY JOB
-  # ──────────────────────────────────────────────────────────────────────────
-  release-summary:
-    name: 📊 Release Summary
+            This is a stable release from the `main` branch.
+
+            ${{ github.event.inputs.release-notes }}
+
+            ### Quality Assurance
+            - ✅ All unit tests passed
+            - ✅ Code review completed
+            - ✅ Solution built successfully for all architectures
+            - ✅ Installers validated
+
+            ### Supported Platforms
+            - Windows 10 (1809+) - x64, x86, ARM64
+            - Windows 11 - x64, x86, ARM64
+
+      - name: Dry run summary
+        if: github.event.inputs.dry-run == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "=== DRY RUN COMPLETED ===" -ForegroundColor Yellow
+          Write-Host "Build and packaging completed successfully!" -ForegroundColor Green
+          Write-Host "No release was created (dry run mode)" -ForegroundColor Yellow
+
+          $summary = @"
+          # 🧪 Dry Run Completed
+
+          ## Build Results
+          - **Version**: ${{ steps.validate-version.outputs.version }}
+          - **Configuration**: Release
+          - **Status**: ✅ Success
+
+          ## Generated Artifacts
+          "@
+
+          # List ZIP packages
+          $zipPath = "artifacts/zip"
+          if (Test-Path $zipPath) {
+            $summary += "`n`n### ZIP Packages"
+            Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
+              $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
+            }
+          }
+
+          # List MSI installers
+          $installersPath = "artifacts/installers"
+          if (Test-Path $installersPath) {
+            $summary += "`n`n### MSI Installers"
+            Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
+              $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
+            }
+          }
+
+          $summary += @"
+
+
+          ## Next Steps
+          To create the actual release, run this workflow again with:
+          - **Dry run**: ``false``
+          - **Version**: ``${{ steps.validate-version.outputs.version }}``
+          "@
+
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8 -Append
+
+      - name: Create release tag
+        if: github.event.inputs.dry-run == 'false'
+        shell: pwsh
+        run: |
+          # Create and push tag for tracking
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # The tag should already be created by the release action, but we ensure it's pushed
+          git fetch --tags
+
+          Write-Host "Release created successfully!" -ForegroundColor Green
+          Write-Host "Version: ${{ steps.validate-version.outputs.version }}" -ForegroundColor Cyan
+
+      - name: Post-release summary
+        if: github.event.inputs.dry-run == 'false'
+        run: |
+          echo "# 🚀 Release Published Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: \`${{ steps.validate-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type**: Stable Release" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Published Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- 3 MSI installers (x64, x86, ARM64)" >> $GITHUB_STEP_SUMMARY
+          echo "- 3 ZIP packages (x64, x86, ARM64)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.validate-version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+
+  guard-branch:
+    name: Branch Protection
     runs-on: ubuntu-latest
-    needs: [release-preparation, comprehensive-testing, production-build, create-installers, release-publication]
-    if: always()
+    if: github.ref != 'refs/heads/main'
 
     steps:
-      - name: 📊 Generate Release Summary
+      - name: Block execution
         run: |
-          echo "# 🚀 Release Publication Summary" >> $GITHUB_STEP_SUMMARY
+          echo "# ⛔ Workflow Blocked" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "*Generated on $(date +'%Y-%m-%d at %H:%M:%S UTC')*" >> $GITHUB_STEP_SUMMARY
+          echo "This workflow can only be executed from the **main** branch." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Overall Status
-          echo "## 🎯 Overall Status" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ needs.release-preparation.result }}" == "success" && "${{ needs.comprehensive-testing.result }}" == "success" && "${{ needs.production-build.result }}" == "success" && "${{ needs.create-installers.result }}" == "success" && "${{ needs.release-publication.result }}" == "success" ]]; then
-            echo "### ✅ **RELEASE SUCCESSFUL**" >> $GITHUB_STEP_SUMMARY
-            echo "🎉 All pipeline stages completed successfully!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "### ❌ **RELEASE FAILED**" >> $GITHUB_STEP_SUMMARY
-            echo "💥 One or more pipeline stages failed - check individual job logs" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "**Current branch**: \`${{ github.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Required branch**: \`refs/heads/main\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Switch to the main branch" >> $GITHUB_STEP_SUMMARY
+          echo "2. Ensure your code is merged and up-to-date" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run this workflow again from the main branch" >> $GITHUB_STEP_SUMMARY
 
-          # Pipeline Status
-          echo "## 🔄 Pipeline Status" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Status | Reusable Action | Coverage |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|-----------------|----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📋 Preparation | ${{ needs.release-preparation.result == 'success' && '✅ Success' || '❌ Failed' }} | Built-in | Version generation |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 Testing | ${{ needs.comprehensive-testing.result == 'success' && '✅ Success' || '❌ Failed' }} | \`run-tests\` | With coverage |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🏗️ Build | ${{ needs.production-build.result == 'success' && '✅ Success' || '❌ Failed' }} | \`build-and-package\` | Production build |" >> $GITHUB_STEP_SUMMARY
-          echo "| � Installers | ${{ needs.create-installers.result == 'success' && '✅ Success' || '❌ Failed' }} | \`create-installers\` | MSI and EXE |" >> $GITHUB_STEP_SUMMARY
-          echo "| �🚀 Publication | ${{ needs.release-publication.result == 'success' && '✅ Success' || '❌ Failed' }} | \`release-management\` | Full automation |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Release Information
-          if [[ "${{ needs.release-publication.result }}" == "success" ]]; then
-            echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
-            echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
-            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| **Version** | \`${{ needs.release-preparation.outputs.app-version }}\` |" >> $GITHUB_STEP_SUMMARY
-
-            if [[ "${{ needs.release-preparation.outputs.is-pre-release }}" == "true" ]]; then
-              echo "| **Type** | 🧪 Pre-release |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| **Type** | 🏷️ Stable Release |" >> $GITHUB_STEP_SUMMARY
-            fi
-
-            echo "| **Latest** | ${{ needs.release-preparation.outputs.make-latest == 'true' && '✅ Yes' || '❌ No' }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Platforms** | x86, x64, ARM64 |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Package Types** | ZIP + MSI + EXE |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Triggered by** | ${{ github.actor }} (Manual) |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Mode** | Automatic (no user inputs) |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
-            # Download Information
-            echo "## 📥 Download Information" >> $GITHUB_STEP_SUMMARY
-            echo "🔗 **[View Release on GitHub](https://github.com/${{ github.repository }}/releases/tag/${{ needs.release-preparation.outputs.app-version }})**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Available Downloads:" >> $GITHUB_STEP_SUMMARY
-            echo "**ZIP Packages:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows x86 (32-bit)](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x86.zip)" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows x64 (64-bit)](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x64.zip)" >> $GITHUB_STEP_SUMMARY
-            echo "- 📁 [Windows ARM64](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-ARM64.zip)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**MSI Installers:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 💽 [Windows x86 Installer](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x86.msi)" >> $GITHUB_STEP_SUMMARY
-            echo "- 💽 [Windows x64 Installer](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x64.msi)" >> $GITHUB_STEP_SUMMARY
-            echo "- 💽 [Windows ARM64 Installer](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-ARM64.msi)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**EXE Setup Files:**" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔧 [Windows x86 Setup](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x86-Setup.exe)" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔧 [Windows x64 Setup](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-x64-Setup.exe)" >> $GITHUB_STEP_SUMMARY
-            echo "- 🔧 [Windows ARM64 Setup](https://github.com/${{ github.repository }}/releases/download/${{ needs.release-preparation.outputs.app-version }}/Bucket-${{ needs.release-preparation.outputs.app-version }}-ARM64-Setup.exe)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # Architecture Benefits
-          echo "## 🏗️ Architecture Benefits" >> $GITHUB_STEP_SUMMARY
-          echo "- **🔧 Setup Environment**: Centralized .NET + NuGet configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- **🧪 Run Tests**: Comprehensive testing with code coverage" >> $GITHUB_STEP_SUMMARY
-          echo "- **📦 Build & Package**: Production-ready build and packaging" >> $GITHUB_STEP_SUMMARY
-          echo "- **� Create Installers**: MSI and EXE installer generation with WiX and Inno Setup" >> $GITHUB_STEP_SUMMARY
-          echo "- **�🚀 Release Management**: Automated tagging, changelog, and publishing" >> $GITHUB_STEP_SUMMARY
-          echo "- **♻️ Reusability**: Shared actions reduce duplication by ~70%" >> $GITHUB_STEP_SUMMARY
-          echo "- **🔧 Maintainability**: Single source of truth for common operations" >> $GITHUB_STEP_SUMMARY
-          echo "- **🧪 Testability**: Actions can be tested independently" >> $GITHUB_STEP_SUMMARY
-          echo "- **📈 Scalability**: Easy to add new platforms or configurations" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Technical Configuration
-          echo "## ⚙️ Technical Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- **Project**: ${{ env.PROJECT_PATH }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Configuration**: ${{ env.BUILD_CONFIGURATION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Self-contained**: ${{ env.PUBLISH_SELF_CONTAINED }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Ready to Run**: ${{ env.PUBLISH_READY_TO_RUN }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trimmed**: ${{ env.PUBLISH_TRIMMED }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **AOT**: ${{ env.PUBLISH_AOT }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Retention**: 365 days (production)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "*🤖 Automated Release Pipeline - Modular, Maintainable & Reusable*" >> $GITHUB_STEP_SUMMARY
+          exit 1

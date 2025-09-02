@@ -218,6 +218,7 @@
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Widgets.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Widgets.winmd" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.Resources.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
+    <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.winmd" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
@@ -527,8 +528,11 @@
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_msquic.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_netstandard.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_resources.pri" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
+    <ROW Property="AI_PROPPATH_DIR_PERBUILD_workloads.365.json" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_workloads.json" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
+    <ROW Property="AI_PROPPATH_DIR_PERBUILD_workloads.lnl.json" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_workloads.qnn.json" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
+    <ROW Property="AI_PROPPATH_DIR_PERBUILD_workloads.stx.json" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_DIR_PERBUILD_wuceffectsi.dll" Value="..\..\src\Bucket.App\bin\win-arm64\publish"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_AppData.json" Value="AppData.json"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_AppIcon.ico" Value="AppIcon.ico"/>
@@ -746,6 +750,7 @@
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Widgets.dll" Value="Microsoft.Windows.Widgets.dll"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Widgets.winmd" Value="Microsoft.Windows.Widgets.winmd"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.Resources.dll" Value="Microsoft.Windows.Workloads.Resources.dll"/>
+    <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll" Value="Microsoft.Windows.Workloads.Resources_ec.dll"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.dll" Value="Microsoft.Windows.Workloads.dll"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.winmd" Value="Microsoft.Windows.Workloads.winmd"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Value="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll"/>
@@ -1055,8 +1060,11 @@
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_msquic.dll" Value="msquic.dll"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_netstandard.dll" Value="netstandard.dll"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_resources.pri" Value="resources.pri"/>
+    <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_workloads.365.json" Value="workloads.365.json"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_workloads.json" Value="workloads.json"/>
+    <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_workloads.lnl.json" Value="workloads.lnl.json"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_workloads.qnn.json" Value="workloads.qnn.json"/>
+    <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_workloads.stx.json" Value="workloads.stx.json"/>
     <ROW Property="AI_PROPPATH_FILENAME_PERBUILD_wuceffectsi.dll" Value="wuceffectsi.dll"/>
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
@@ -1201,7 +1209,7 @@
     <ROW Component="AI_PROPPATH_FILENAME_PERBUILD_Bucket.exe" ComponentId="{9A7D6A5A-88F7-419D-9662-60E0C55CDA9C}" Directory_="Bucket.App_Dir" Attributes="256" KeyPath="Bucket.exe"/>
     <ROW Component="APPDIR" ComponentId="{35854DEA-3FE8-40FA-AA13-F74F402C01B7}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="Bucket.App_PrimaryOutput" ComponentId="{833B7BB3-19A2-48A1-B97F-AACC44FA86FF}" Directory_="Bucket.App_Dir" Attributes="256" KeyPath="Bucket.dll"/>
-    <ROW Component="Bucket.App_PublishOutput" ComponentId="{7F847FAD-DB92-45D9-9A60-1220A7468CC5}" Directory_="Bucket.App_Dir" Attributes="256" KeyPath="wuceffectsi.dll"/>
+    <ROW Component="Bucket.App_PublishOutput" ComponentId="{7F847FAD-DB92-45D9-9A60-1220A7468CC5}" Directory_="Bucket.App_Dir" Attributes="256" KeyPath="Microsoft.Windows.Workloads.Resources_ec.dll"/>
     <ROW Component="Bucket.App_PublishOutput_Assets" ComponentId="{B5873171-71D7-48FA-AC1B-90A11D404022}" Directory_="Assets_Dir" Attributes="0" KeyPath="AppIcon.ico" Type="0"/>
     <ROW Component="Bucket.App_PublishOutput_Assets_Cover" ComponentId="{53E0C9C9-6F41-437B-AF05-01D7F152E6C8}" Directory_="Cover_Dir" Attributes="0" KeyPath="CoverDark.png" Type="0"/>
     <ROW Component="Bucket.App_PublishOutput_Assets_Fluent" ComponentId="{7F8E2D03-8390-43D9-A7D3-1E972769D4D6}" Directory_="Fluent_Dir" Attributes="0" KeyPath="Backdrop.png" Type="0"/>
@@ -1833,6 +1841,10 @@
     <ROW File="Settings.resw" Component_="Bucket.App_PublishOutput_Strings_enUS" FileName="SETTIN~2.RES|[|AI_PROPPATH_FILENAME_PERBUILD_Settings.resw]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Settings.resw&gt;" SelfReg="false"/>
     <ROW File="Resources.resw_1" Component_="Bucket.App_PublishOutput_Strings_frFR" FileName="RESOUR~2.RES|[|AI_PROPPATH_FILENAME_PERBUILD_Resources.resw_1]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Resources.resw_1&gt;" SelfReg="false"/>
     <ROW File="Settings.resw_1" Component_="Bucket.App_PublishOutput_Strings_frFR" FileName="SETTIN~2.RES|[|AI_PROPPATH_FILENAME_PERBUILD_Settings.resw_1]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Settings.resw_1&gt;" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Workloads.Resources_ec.dll" Component_="Bucket.App_PublishOutput" FileName="MICRO~68.DLL|[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll&gt;" SelfReg="false"/>
+    <ROW File="workloads.365.json" Component_="Bucket.App_PublishOutput" FileName="WORKLO~4.JSO|[|AI_PROPPATH_FILENAME_PERBUILD_workloads.365.json]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_workloads.365.json&gt;" SelfReg="false"/>
+    <ROW File="workloads.lnl.json" Component_="Bucket.App_PublishOutput" FileName="WORKLO~5.JSO|[|AI_PROPPATH_FILENAME_PERBUILD_workloads.lnl.json]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_workloads.lnl.json&gt;" SelfReg="false"/>
+    <ROW File="workloads.stx.json" Component_="Bucket.App_PublishOutput" FileName="WORKLO~6.JSO|[|AI_PROPPATH_FILENAME_PERBUILD_workloads.stx.json]" Version="65535.65535.65535.65535" Attributes="0" SourcePath="&lt;AI_APPPATH_PERBUILD_workloads.stx.json&gt;" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.AppPathsComponent">
     <ROW Name="AI_APPPATH_PERBUILD_AppData.json" Path="[|AI_PROPPATH_DIR_PERBUILD_AppData.json]\[|AI_PROPPATH_FILENAME_PERBUILD_AppData.json]" Type="2" Content="0"/>
@@ -2051,6 +2063,7 @@
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Widgets.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Widgets.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Widgets.dll]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Widgets.winmd" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Widgets.winmd]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Widgets.winmd]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Workloads.Resources.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.Resources.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.Resources.dll]" Type="2" Content="0"/>
+    <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.Resources_ec.dll]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Workloads.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.dll]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.Windows.Workloads.winmd" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.Windows.Workloads.winmd]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.Windows.Workloads.winmd]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_Microsoft.WindowsAppRuntime.Bootstrap.Net.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_Microsoft.WindowsAppRuntime.Bootstrap.Net.dll]" Type="2" Content="0"/>
@@ -2360,8 +2373,11 @@
     <ROW Name="AI_APPPATH_PERBUILD_msquic.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_msquic.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_msquic.dll]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_netstandard.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_netstandard.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_netstandard.dll]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_resources.pri" Path="[|AI_PROPPATH_DIR_PERBUILD_resources.pri]\[|AI_PROPPATH_FILENAME_PERBUILD_resources.pri]" Type="2" Content="0"/>
+    <ROW Name="AI_APPPATH_PERBUILD_workloads.365.json" Path="[|AI_PROPPATH_DIR_PERBUILD_workloads.365.json]\[|AI_PROPPATH_FILENAME_PERBUILD_workloads.365.json]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_workloads.json" Path="[|AI_PROPPATH_DIR_PERBUILD_workloads.json]\[|AI_PROPPATH_FILENAME_PERBUILD_workloads.json]" Type="2" Content="0"/>
+    <ROW Name="AI_APPPATH_PERBUILD_workloads.lnl.json" Path="[|AI_PROPPATH_DIR_PERBUILD_workloads.lnl.json]\[|AI_PROPPATH_FILENAME_PERBUILD_workloads.lnl.json]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_workloads.qnn.json" Path="[|AI_PROPPATH_DIR_PERBUILD_workloads.qnn.json]\[|AI_PROPPATH_FILENAME_PERBUILD_workloads.qnn.json]" Type="2" Content="0"/>
+    <ROW Name="AI_APPPATH_PERBUILD_workloads.stx.json" Path="[|AI_PROPPATH_DIR_PERBUILD_workloads.stx.json]\[|AI_PROPPATH_FILENAME_PERBUILD_workloads.stx.json]" Type="2" Content="0"/>
     <ROW Name="AI_APPPATH_PERBUILD_wuceffectsi.dll" Path="[|AI_PROPPATH_DIR_PERBUILD_wuceffectsi.dll]\[|AI_PROPPATH_FILENAME_PERBUILD_wuceffectsi.dll]" Type="2" Content="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
@@ -3110,5 +3126,9 @@
     <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="Settings.resw"/>
     <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="Resources.resw_1"/>
     <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="Settings.resw_1"/>
+    <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="Microsoft.Windows.Workloads.Resources_ec.dll"/>
+    <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="workloads.365.json"/>
+    <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="workloads.lnl.json"/>
+    <ROW ProjectId="{8e47b00a-4743-448f-ac7e-f04bf99d7cd9}" ProjectName="Bucket.App" OutputGroup="PublishOutput" OutputFile="workloads.stx.json"/>
   </COMPONENT>
 </DOCUMENT>

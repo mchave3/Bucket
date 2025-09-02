@@ -1,227 +1,211 @@
-name: '🚀 Release Management'
-description: 'Create git tags, generate changelog and publish GitHub release'
-
+name: 'Release Management'
+description: 'Create GitHub release with artifacts'
 inputs:
-  app-name:
-    description: 'Application name'
+  version:
+    description: 'Version for the release'
     required: true
-  app-version:
-    description: 'Application version'
-    required: true
-  release-name:
-    description: 'Release name (will be prefixed to version)'
-    required: false
-    default: 'Release'
   is-prerelease:
-    description: 'Mark as pre-release'
+    description: 'Whether this is a pre-release'
     required: false
     default: 'false'
-  make-latest:
-    description: 'Mark as latest release'
-    required: false
-    default: 'true'
-  skip-if-exists:
-    description: 'Skip if release already exists'
-    required: false
-    default: 'true'
-  artifacts-pattern:
-    description: 'Pattern for artifacts to include'
-    required: false
-    default: '*.zip'
-  github-token:
-    description: 'GitHub token for API access'
-    required: true
-  generate-release-notes:
-    description: 'Auto-generate release notes from commits'
-    required: false
-    default: 'true'
-  target-commitish:
-    description: 'Commitish value for tag creation (defaults to current branch)'
+  release-notes:
+    description: 'Release notes content'
     required: false
     default: ''
+  artifacts-path:
+    description: 'Path to artifacts to upload'
+    required: false
+    default: 'artifacts'
+  github-token:
+    description: 'GitHub token for creating release'
+    required: true
 
 outputs:
   release-url:
     description: 'URL of the created release'
-    value: ${{ steps.publish-release.outputs.url }}
-  tag-name:
-    description: 'Name of the created tag'
-    value: ${{ inputs.app-version }}
+    value: ${{ steps.create-release.outputs.upload_url }}
   release-id:
     description: 'ID of the created release'
-    value: ${{ steps.publish-release.outputs.id }}
-  upload-url:
-    description: 'URL for uploading additional assets'
-    value: ${{ steps.publish-release.outputs.upload_url }}
-  assets:
-    description: 'JSON array of uploaded assets information'
-    value: ${{ steps.publish-release.outputs.assets }}
+    value: ${{ steps.create-release.outputs.id }}
 
 runs:
   using: 'composite'
   steps:
-    - name: 📋 Release Information
-      id: release-info
-      shell: bash
+    - name: Generate release notes
+      id: release-notes
+      shell: pwsh
       run: |
-        TAG_NAME="${{ inputs.app-version }}"
-        RELEASE_TITLE="${{ inputs.release-name }} ${{ inputs.app-version }}"
+        Write-Host "=== Generating Release Notes ===" -ForegroundColor Cyan
 
-        echo "🚀 Release Information:"
-        echo "  • Tag Name: $TAG_NAME"
-        echo "  • Release Title: $RELEASE_TITLE"
-        echo "  • Pre-release: ${{ inputs.is-prerelease }}"
-        echo "  • Make Latest: ${{ inputs.make-latest }}"
-        echo "  • Skip if exists: ${{ inputs.skip-if-exists }}"
-        echo "  • Auto-generate notes: ${{ inputs.generate-release-notes }}"
+        $version = "${{ inputs.version }}"
+        $isPrerelease = "${{ inputs.is-prerelease }}"
+        $customNotes = @'
+        ${{ inputs.release-notes }}
+        '@
 
-        echo "tag-name=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "release-title=$RELEASE_TITLE" >> $GITHUB_OUTPUT
+        # Build release notes
+        $notes = @"
+        # Bucket $version
 
-    - name: 🔍 Check if Release Already Exists
-      id: check-release
-      if: inputs.skip-if-exists == 'true'
-      shell: bash
+        $(if ($isPrerelease -eq "true") { "**This is a pre-release build (Nightly)**" } else { "**This is a stable release**" })
+
+        ## 📦 Downloads
+
+        ### Installers (MSI)
+        - ``Bucket-$version-x64.msi`` - For 64-bit Windows systems
+        - ``Bucket-$version-x86.msi`` - For 32-bit Windows systems
+        - ``Bucket-$version-arm64.msi`` - For ARM64 Windows systems
+
+        ### Portable Archives (ZIP)
+        - ``Bucket-$version-x64.zip`` - Portable version for 64-bit Windows
+        - ``Bucket-$version-x86.zip`` - Portable version for 32-bit Windows
+        - ``Bucket-$version-arm64.zip`` - Portable version for ARM64 Windows
+
+        ## 📋 System Requirements
+        - Windows 10 version 1809 or higher
+        - Windows 11
+        - .NET 9 Runtime (included in installer)
+
+        ## 🚀 What's New
+        $customNotes
+
+        ## 📝 Installation Instructions
+
+        ### Using MSI Installer (Recommended)
+        1. Download the appropriate MSI file for your system architecture
+        2. Double-click the MSI file to start the installation
+        3. Follow the installation wizard
+
+        ### Using Portable Version
+        1. Download the appropriate ZIP file for your system architecture
+        2. Extract the ZIP file to your desired location
+        3. Run ``Bucket.App.exe``
+
+        ## 🔧 Verify Your System Architecture
+        To check your Windows architecture, run this in PowerShell:
+        ``[System.Environment]::Is64BitOperatingSystem``
+        - ``True`` = Use x64 version
+        - ``False`` = Use x86 version
+
+        For ARM devices, you'll know if you have an ARM-based system (Surface Pro X, etc.)
+
+        ---
+
+        **Full Changelog**: https://github.com/${{ github.repository }}/compare/$(if ($isPrerelease -eq "true") { "dev" } else { "main" })...v$version
+        "@
+
+        # Save to file for the release
+        $notes | Out-File -FilePath "release-notes.md" -Encoding UTF8
+        Write-Host "Release notes generated" -ForegroundColor Green
+
+    - name: Create GitHub Release
+      id: create-release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ inputs.version }}
+        name: Bucket ${{ inputs.version }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: ${{ inputs.is-prerelease }}
+        token: ${{ inputs.github-token }}
+        generate_release_notes: true
+
+    - name: Upload ZIP packages
+      shell: pwsh
       run: |
-        echo "🔍 Checking if release ${{ inputs.app-version }} already exists..."
+        Write-Host "=== Uploading ZIP packages ===" -ForegroundColor Cyan
 
-        if gh release view "${{ inputs.app-version }}" --repo "${{ github.repository }}" > /dev/null 2>&1; then
-          echo "⏭️ Release ${{ inputs.app-version }} already exists - skipping creation"
-          echo "exists=true" >> $GITHUB_OUTPUT
-        else
-          echo "✅ Release ${{ inputs.app-version }} does not exist - proceeding with creation"
-          echo "exists=false" >> $GITHUB_OUTPUT
-        fi
+        $zipPath = "${{ inputs.artifacts-path }}/zip"
+        if (Test-Path $zipPath) {
+          $zipFiles = Get-ChildItem -Path $zipPath -Filter "*.zip"
+
+          foreach ($zip in $zipFiles) {
+            Write-Host "Uploading $($zip.Name)..." -ForegroundColor Yellow
+
+            gh release upload "v${{ inputs.version }}" `
+              "$($zip.FullName)" `
+              --clobber
+
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "Uploaded: $($zip.Name)" -ForegroundColor Green
+            } else {
+              Write-Warning "Failed to upload: $($zip.Name)"
+            }
+          }
+        } else {
+          Write-Warning "No ZIP packages found at: $zipPath"
+        }
       env:
         GH_TOKEN: ${{ inputs.github-token }}
 
-    - name: 🏷️ Create Git Tag
-      if: steps.check-release.outputs.exists != 'true'
-      shell: bash
+    - name: Upload MSI installers
+      shell: pwsh
       run: |
-        echo "🏷️ Creating git tag for release..."
+        Write-Host "=== Uploading MSI installers ===" -ForegroundColor Cyan
 
-        git config --local user.email "actions@github.com"
-        git config --local user.name "GitHub Actions"
+        $installersPath = "${{ inputs.artifacts-path }}/installers"
+        if (Test-Path $installersPath) {
+          $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
 
-        TAG_NAME="${{ inputs.app-version }}"
-        echo "📌 Creating tag: $TAG_NAME"
+          foreach ($msi in $msiFiles) {
+            Write-Host "Uploading $($msi.Name)..." -ForegroundColor Yellow
 
-        # Check if tag already exists locally or remotely
-        if git tag -l "$TAG_NAME" | grep -q "^$TAG_NAME$"; then
-          echo "⚠️ Tag $TAG_NAME already exists locally"
-        elif git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME$"; then
-          echo "⚠️ Tag $TAG_NAME already exists on remote"
-        else
-          # Create and push the tag
-          if [ -n "${{ inputs.target-commitish }}" ]; then
-            git tag "$TAG_NAME" "${{ inputs.target-commitish }}"
-            echo "✅ Tag $TAG_NAME created at commit ${{ inputs.target-commitish }}"
-          else
-            git tag "$TAG_NAME"
-            echo "✅ Tag $TAG_NAME created at current HEAD"
-          fi
+            gh release upload "v${{ inputs.version }}" `
+              "$($msi.FullName)" `
+              --clobber
 
-          if git push origin "$TAG_NAME"; then
-            echo "✅ Tag $TAG_NAME pushed successfully to remote"
-          else
-            echo "❌ Failed to push tag $TAG_NAME"
-            exit 1
-          fi
-        fi
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "Uploaded: $($msi.Name)" -ForegroundColor Green
+            } else {
+              Write-Warning "Failed to upload: $($msi.Name)"
+            }
+          }
+        } else {
+          Write-Warning "No MSI installers found at: $installersPath"
+        }
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
 
-    - name: � Validate Available Artifacts
-      id: validate-artifacts
-      if: steps.check-release.outputs.exists != 'true'
-      shell: bash
+    - name: Generate job summary
+      shell: pwsh
       run: |
-        echo "� Validating artifacts matching pattern '${{ inputs.artifacts-pattern }}'..."
+        Write-Host "=== Generating Job Summary ===" -ForegroundColor Cyan
 
-        # Create array to store artifact files
-        artifacts=()
+        $summary = @"
+        # 🚀 Release Published: Bucket ${{ inputs.version }}
 
-        # Find all matching files
-        for file in ${{ inputs.artifacts-pattern }}; do
-          if [ -f "$file" ]; then
-            artifacts+=("$file")
-          fi
-        done
+        ## 📦 Release Information
+        - **Version**: ``${{ inputs.version }}``
+        - **Type**: $(if ("${{ inputs.is-prerelease }}" -eq "true") { "Pre-release (Nightly)" } else { "Stable Release" })
+        - **Release URL**: https://github.com/${{ github.repository }}/releases/tag/v${{ inputs.version }}
 
-        # Check if we found any artifacts
-        if [ ${#artifacts[@]} -eq 0 ]; then
-          echo "⚠️ No artifacts found matching pattern '${{ inputs.artifacts-pattern }}'"
-          echo "files=" >> $GITHUB_OUTPUT
-          echo "count=0" >> $GITHUB_OUTPUT
-        else
-          echo "✅ Found ${#artifacts[@]} artifact(s):"
+        ## 📋 Artifacts
 
-          total_size=0
-          for file in "${artifacts[@]}"; do
-            size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo "0")
-            size_mb=$((size / 1048576))
-            echo "  • $file ($(du -h "$file" | cut -f1))"
+        ### ZIP Packages
+        "@
 
-            # Validate file integrity for ZIP files
-            if [[ "$file" == *.zip ]]; then
-              if ! unzip -t "$file" > /dev/null 2>&1; then
-                echo "❌ Artifact $file is corrupted (ZIP integrity check failed)"
-                exit 1
-              fi
-            fi
+        $zipPath = "${{ inputs.artifacts-path }}/zip"
+        if (Test-Path $zipPath) {
+          Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
+            $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
+          }
+        }
 
-            total_size=$((total_size + size))
-          done
+        $summary += "`n`n### MSI Installers"
 
-          total_size_mb=$((total_size / 1048576))
-          echo "📊 Total artifacts size: ${total_size_mb}MB"
+        $installersPath = "${{ inputs.artifacts-path }}/installers"
+        if (Test-Path $installersPath) {
+          Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
+            $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
+          }
+        }
 
-          # Convert array to newline-separated string for action-gh-release
-          printf -v files_list '%s\n' "${artifacts[@]}"
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$files_list" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "count=${#artifacts[@]}" >> $GITHUB_OUTPUT
-        fi
+        $summary += @"
 
-    - name: 🚀 Publish GitHub Release
-      id: publish-release
-      if: steps.check-release.outputs.exists != 'true'
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ inputs.app-version }}
-        name: ${{ steps.release-info.outputs.release-title }}
-        files: ${{ steps.validate-artifacts.outputs.files }}
-        prerelease: ${{ inputs.is-prerelease }}
-        make_latest: ${{ inputs.make-latest }}
-        generate_release_notes: ${{ inputs.generate-release-notes }}
-        target_commitish: ${{ inputs.target-commitish }}
-        fail_on_unmatched_files: true
-        token: ${{ inputs.github-token }}
 
-    - name: ✅ Release Summary
-      if: always()
-      shell: bash
-      run: |
-        TAG_NAME="${{ inputs.app-version }}"
-        RELEASE_TITLE="${{ steps.release-info.outputs.release-title }}"
+        ## ✅ Release Complete
+        All artifacts have been successfully uploaded to the GitHub release.
+        "@
 
-        echo "✅ Release Management Summary:"
-        echo "  • Tag: $TAG_NAME"
-        echo "  • Release Title: $RELEASE_TITLE"
-
-        if [ "${{ steps.check-release.outputs.exists }}" = "true" ]; then
-          echo "  • Status: ⏭️ Skipped (release already exists)"
-          echo "  • Existing Release URL: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
-        elif [ "${{ steps.publish-release.outcome }}" = "success" ]; then
-          echo "  • Status: ✅ Successfully published"
-          echo "  • Release URL: ${{ steps.publish-release.outputs.url }}"
-          echo "  • Release ID: ${{ steps.publish-release.outputs.id }}"
-          echo "  • Upload URL: ${{ steps.publish-release.outputs.upload_url }}"
-          echo "  • Assets uploaded: ${{ steps.validate-artifacts.outputs.count }}"
-          echo "  • Pre-release: ${{ inputs.is-prerelease }}"
-          echo "  • Make Latest: ${{ inputs.make-latest }}"
-          echo "🎉 Release published successfully!"
-        else
-          echo "  • Status: ❌ Failed"
-          echo "💥 Release publication failed - check previous steps for errors"
-        fi
+        $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8 -Append
+        Write-Host "Job summary generated" -ForegroundColor Green
