@@ -23,13 +23,13 @@ inputs:
 outputs:
   x86-installer:
     description: 'Path to x86 MSI installer'
-    value: ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
+    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
   x64-installer:
     description: 'Path to x64 MSI installer'
-    value: ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
+    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
   arm64-installer:
     description: 'Path to ARM64 MSI installer'
-    value: ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
+    value: ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
 
 runs:
   using: "composite"
@@ -136,9 +136,19 @@ runs:
       shell: pwsh
       run: |
         Write-Host "🏗️ Creating output directory for installers..."
-        $outputDir = "${{ github.workspace }}/setup/output"
+        $outputDir = "${{ github.workspace }}\setup\output"
         New-Item -ItemType Directory -Path $outputDir -Force
         Write-Host "✅ Output directory created: $outputDir"
+
+        # Verify the directory was created and is accessible
+        if (Test-Path $outputDir) {
+          Write-Host "✅ Directory exists and is accessible"
+          $absolutePath = Resolve-Path $outputDir
+          Write-Host "📍 Absolute path: $absolutePath"
+        } else {
+          Write-Host "❌ Directory creation failed"
+          exit 1
+        }
 
     - name: 🏗️ Build x86 Installer with Advanced Installer (With License)
       if: env.HAS_LICENSE == 'true'
@@ -148,10 +158,10 @@ runs:
         advinst-version: '23.0'
         advinst-license: ${{ inputs.advinst-license }}
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_x86/Bucket.Setup_x86.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x86\Bucket.Setup_x86.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
@@ -163,10 +173,10 @@ runs:
       with:
         advinst-version: '23.0'
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_x86/Bucket.Setup_x86.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x86\Bucket.Setup_x86.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
@@ -179,10 +189,10 @@ runs:
         advinst-version: '23.0'
         advinst-license: ${{ inputs.advinst-license }}
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_x64/Bucket.Setup_x64.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x64\Bucket.Setup_x64.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
@@ -194,10 +204,10 @@ runs:
       with:
         advinst-version: '23.0'
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_x64/Bucket.Setup_x64.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_x64\Bucket.Setup_x64.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
@@ -210,10 +220,10 @@ runs:
         advinst-version: '23.0'
         advinst-license: ${{ inputs.advinst-license }}
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
@@ -225,10 +235,10 @@ runs:
       with:
         advinst-version: '23.0'
         advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}/setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aip
+        aip-path: ${{ github.workspace }}\setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aip
         aip-build-name: 'DefaultBuild'
         aip-package-name: '${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi'
-        aip-output-dir: ${{ github.workspace }}/setup/output
+        aip-output-dir: ${{ github.workspace }}\setup\output
         aip-commands: |
           SetVersion ${{ inputs.app-version }}
           SetPackageName ${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
@@ -238,9 +248,9 @@ runs:
       with:
         name: '${{ inputs.workflow-type }}-installer-all-platforms'
         path: |
-          ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
-          ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
-          ${{ github.workspace }}/setup/output/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
+          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x86.msi
+          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-x64.msi
+          ${{ github.workspace }}\setup\output\${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.msi
         retention-days: 90
 
     - name: 📊 Display Installer Information
@@ -250,7 +260,7 @@ runs:
         Write-Host ""
         Write-Host "📦 Generated Installers:"
 
-        $outputDir = "${{ github.workspace }}/setup/output"
+        $outputDir = "${{ github.workspace }}\setup\output"
         if (Test-Path $outputDir) {
           Get-ChildItem -Path $outputDir -Filter "*.msi" | ForEach-Object {
             $sizeKB = [math]::Round($_.Length / 1KB, 2)
