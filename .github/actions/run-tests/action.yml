@@ -63,15 +63,13 @@ runs:
           Write-Host "=====================================" -ForegroundColor Magenta
 
           try {
-            # Build solution for this platform
+            # Build solution for this platform using dotnet build for consistency
             Write-Host "Building solution for $platform..." -ForegroundColor Cyan
-            msbuild Bucket.sln `
-              /p:Configuration=$configuration `
-              /p:Platform=$platform `
-              /p:RestorePackages=false `
-              /t:Build `
-              /m `
-              /v:minimal
+            dotnet build Bucket.sln `
+              --configuration $configuration `
+              -p:Platform=$platform `
+              --no-restore `
+              --verbosity minimal
 
             if ($LASTEXITCODE -ne 0) {
               Write-Error "Build failed for platform $platform!"
@@ -92,6 +90,7 @@ runs:
               "--configuration", $configuration,
               "--no-restore",
               "--no-build",
+              "-p:Platform=$platform",
               "--verbosity", "normal",
               "--logger", "trx;LogFileName=Bucket.Core.Tests-$platform.trx",
               "--results-directory", $testResultsPath
@@ -116,12 +115,16 @@ runs:
             Write-Host "Running Bucket.App.Tests on $platform..." -ForegroundColor Yellow
             $appTestProject = "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
 
+            # For Windows-specific projects with platforms, we need to specify the Platform property
+            Write-Host "Running tests for Windows-specific project with platform: $platform" -ForegroundColor Cyan
+            
             $testArgs = @(
               "test",
               $appTestProject,
               "--configuration", $configuration,
               "--no-restore",
               "--no-build",
+              "-p:Platform=$platform",
               "--verbosity", "normal",
               "--logger", "trx;LogFileName=Bucket.App.Tests-$platform.trx",
               "--results-directory", $testResultsPath
@@ -132,6 +135,8 @@ runs:
               $testArgs += "--"
               $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
             }
+
+            Write-Host "Executing: dotnet $($testArgs -join ' ')" -ForegroundColor Gray
 
             & dotnet $testArgs
             if ($LASTEXITCODE -ne 0) {
