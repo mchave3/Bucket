@@ -113,7 +113,16 @@ runs:
           exit 1
         }
 
-        # Publish application
+        # Publish application (for Advanced Installer compatibility)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x64 `
+          --self-contained true `
+          --output "src/Bucket.App/bin/win-x64/publish" `
+          /p:Platform=x64 `
+          /p:PublishSingleFile=false
+
+        # Also publish to artifacts for ZIP creation
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x64 `
@@ -164,7 +173,16 @@ runs:
           exit 1
         }
 
-        # Publish application
+        # Publish application (for Advanced Installer compatibility)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x86 `
+          --self-contained true `
+          --output "src/Bucket.App/bin/win-x86/publish" `
+          /p:Platform=x86 `
+          /p:PublishSingleFile=false
+
+        # Also publish to artifacts for ZIP creation
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x86 `
@@ -215,7 +233,16 @@ runs:
           exit 1
         }
 
-        # Publish application
+        # Publish application (for Advanced Installer compatibility)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-arm64 `
+          --self-contained true `
+          --output "src/Bucket.App/bin/win-arm64/publish" `
+          /p:Platform=ARM64 `
+          /p:PublishSingleFile=false
+
+        # Also publish to artifacts for ZIP creation
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-arm64 `
