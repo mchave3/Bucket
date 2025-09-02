@@ -1,219 +1,197 @@
-name: '🏗️ Build and Package'
-description: 'Build, publish and package the application for specified platform'
-
+name: 'Build and Package'
+description: 'Build and publish the solution for all architectures (x64, x86, ARM64)'
 inputs:
-  project-path:
-    description: 'Path to the project file'
-    required: true
-  platform:
-    description: 'Target platform (x86, x64, ARM64)'
-    required: true
-  app-name:
-    description: 'Application name for packaging'
-    required: true
-  app-version:
-    description: 'Application version'
-    required: true
-  build-configuration:
-    description: 'Build configuration (Debug/Release)'
+  configuration:
+    description: 'Build configuration'
     required: false
     default: 'Release'
-  output-folder:
-    description: 'Output folder for build artifacts'
-    required: false
-    default: 'Publish'
-  self-contained:
-    description: 'Create self-contained deployment'
-    required: false
-    default: 'true'
-  single-file:
-    description: 'Publish as single file'
-    required: false
-    default: 'false'
-  ready-to-run:
-    description: 'Enable Ready to Run compilation'
+  version:
+    description: 'Version to apply to builds'
+    required: true
+  create-zip:
+    description: 'Create ZIP packages'
     required: false
     default: 'true'
-  aot:
-    description: 'Enable AOT compilation'
-    required: false
-    default: 'false'
-  trimmed:
-    description: 'Enable trimming'
-    required: false
-    default: 'true'
-  trim-mode:
-    description: 'Trimming mode (partial/full)'
-    required: false
-    default: 'partial'
 
 outputs:
-  package-path:
-    description: 'Path to the created package'
-    value: ${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip
-  package-size:
-    description: 'Size of the created package in MB'
-    value: ${{ steps.verify-package.outputs.package-size }}
-  build-output-path:
-    description: 'Path to build output directory'
-    value: ${{ inputs.output-folder }}/${{ inputs.platform }}
+  artifacts-path:
+    description: 'Path to build artifacts'
+    value: ${{ steps.paths.outputs.artifacts }}
 
 runs:
   using: 'composite'
   steps:
-    - name: 📋 Build Information
-      id: build-info
+    - name: Setup paths
+      id: paths
       shell: pwsh
       run: |
-        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
-        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
+        $artifactsPath = "artifacts"
+        New-Item -ItemType Directory -Force -Path $artifactsPath | Out-Null
+        echo "artifacts=$artifactsPath" >> $env:GITHUB_OUTPUT
 
-        Write-Host "📋 Build Configuration:"
-        Write-Host "  • Project: ${{ inputs.project-path }}"
-        Write-Host "  • Version: ${{ inputs.app-version }}"
-        Write-Host "  • Platform: ${{ inputs.platform }}"
-        Write-Host "  • Runtime ID: $runtimeIdentifier"
-        Write-Host "  • Output Path: $outputPath"
-        Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
-        Write-Host "  • Self-contained: ${{ inputs.self-contained }}"
-        Write-Host "  • Single File: ${{ inputs.single-file }}"
-        Write-Host "  • Ready to Run: ${{ inputs.ready-to-run }}"
-        Write-Host "  • AOT Compilation: ${{ inputs.aot }}"
-        Write-Host "  • Trimmed: ${{ inputs.trimmed }}"
-        Write-Host "  • Trim Mode: ${{ inputs.trim-mode }}"
-
-        echo "runtime-id=$runtimeIdentifier" >> $GITHUB_OUTPUT
-        echo "output-path=$outputPath" >> $GITHUB_OUTPUT
-
-    - name: 🏗️ Execute Build and Publish
+    - name: Update version in project files
       shell: pwsh
       run: |
-        Write-Host "🏗️ Starting build and publish for ${{ inputs.platform }}..."
+        Write-Host "Setting version to ${{ inputs.version }}..." -ForegroundColor Cyan
 
-        # Recalculate the values directly (since outputs don't work reliably in composite actions)
-        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
-        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
+        # Extract version numbers (remove any pre-release suffix like -Nightly)
+        $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
 
-        Write-Host "🔧 Using Runtime ID: $runtimeIdentifier"
-        Write-Host "🔧 Using Output Path: $outputPath"
+        # Ensure we have 4 version parts
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
 
-        # Execute the build
-        dotnet publish ${{ inputs.project-path }} `
-          --configuration ${{ inputs.build-configuration }} `
-          --runtime $runtimeIdentifier `
-          --output $outputPath `
-          --self-contained ${{ inputs.self-contained }} `
-          -p:PublishSingleFile=${{ inputs.single-file }} `
-          -p:PublishReadyToRun=${{ inputs.ready-to-run }} `
-          -p:PublishAot=${{ inputs.aot }} `
-          -p:PublishTrimmed=${{ inputs.trimmed }} `
-          -p:TrimMode=${{ inputs.trim-mode }} `
-          -p:Platform=${{ inputs.platform }} `
-          -p:Version=${{ inputs.app-version }} `
-          -p:FileVersion=${{ inputs.app-version }} `
-          -p:InformationalVersion=${{ inputs.app-version }} `
-          -p:GITHUB_ACTIONS=true `
-          -p:ContinuousIntegrationBuild=true `
-          --verbosity normal
+        $assemblyVersion = $versionParts -join '.'
+        $fileVersion = $assemblyVersion
+        $packageVersion = "${{ inputs.version }}"
+
+        Write-Host "Assembly Version: $assemblyVersion"
+        Write-Host "File Version: $fileVersion"
+        Write-Host "Package Version: $packageVersion"
+
+        # Update Directory.Build.props if it exists
+        $buildPropsPath = "Directory.Build.props"
+        if (Test-Path $buildPropsPath) {
+          $content = Get-Content $buildPropsPath -Raw
+          $content = $content -replace '<Version>.*?</Version>', "<Version>$packageVersion</Version>"
+          $content = $content -replace '<AssemblyVersion>.*?</AssemblyVersion>', "<AssemblyVersion>$assemblyVersion</AssemblyVersion>"
+          $content = $content -replace '<FileVersion>.*?</FileVersion>', "<FileVersion>$fileVersion</FileVersion>"
+          Set-Content -Path $buildPropsPath -Value $content
+        }
+
+    - name: Build for x64
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for x64 ===" -ForegroundColor Green
+
+        # Build solution
+        msbuild Bucket.sln `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
 
         if ($LASTEXITCODE -ne 0) {
-          Write-Error "❌ Build failed for platform ${{ inputs.platform }}"
+          Write-Error "x64 build failed!"
           exit 1
         }
 
-        # Verify build output
-        if (Test-Path $outputPath) {
-          $buildFiles = Get-ChildItem -Path $outputPath -Recurse
-          Write-Host "✅ Build completed successfully"
-          Write-Host "📊 Build output contains $($buildFiles.Count) files"
+        # Publish application
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x64 `
+          --self-contained true `
+          --output "artifacts/publish/x64" `
+          /p:Platform=x64 `
+          /p:PublishSingleFile=false `
+          /p:PublishReadyToRun=false
 
-          # Display key files
-          $executableFiles = $buildFiles | Where-Object { $_.Extension -in @('.exe', '.dll') } | Select-Object -First 5
-          if ($executableFiles) {
-            Write-Host "🔍 Key executable files:"
-            foreach ($file in $executableFiles) {
-              $sizeKB = [math]::Round($file.Length / 1KB, 1)
-              Write-Host "  • $($file.Name) ($sizeKB KB)"
-            }
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x64 publish failed!"
+          exit 1
+        }
+
+    - name: Build for x86
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for x86 ===" -ForegroundColor Green
+
+        # Build solution
+        msbuild Bucket.sln `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x86 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x86 build failed!"
+          exit 1
+        }
+
+        # Publish application
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x86 `
+          --self-contained true `
+          --output "artifacts/publish/x86" `
+          /p:Platform=x86 `
+          /p:PublishSingleFile=false `
+          /p:PublishReadyToRun=false
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x86 publish failed!"
+          exit 1
+        }
+
+    - name: Build for ARM64
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for ARM64 ===" -ForegroundColor Green
+
+        # Build solution
+        msbuild Bucket.sln `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=ARM64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "ARM64 build failed!"
+          exit 1
+        }
+
+        # Publish application
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-arm64 `
+          --self-contained true `
+          --output "artifacts/publish/arm64" `
+          /p:Platform=ARM64 `
+          /p:PublishSingleFile=false `
+          /p:PublishReadyToRun=false
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "ARM64 publish failed!"
+          exit 1
+        }
+
+    - name: Create ZIP packages
+      if: inputs.create-zip == 'true'
+      shell: pwsh
+      run: |
+        Write-Host "=== Creating ZIP packages ===" -ForegroundColor Cyan
+
+        $version = "${{ inputs.version }}"
+        $zipPath = "artifacts/zip"
+        New-Item -ItemType Directory -Force -Path $zipPath | Out-Null
+
+        # Create ZIP for each architecture
+        $architectures = @("x64", "x86", "arm64")
+        foreach ($arch in $architectures) {
+          $sourcePath = "artifacts/publish/$arch"
+          $zipFile = "$zipPath/Bucket-$version-$arch.zip"
+
+          Write-Host "Creating $zipFile..." -ForegroundColor Yellow
+
+          if (Test-Path $sourcePath) {
+            Compress-Archive -Path "$sourcePath/*" -DestinationPath $zipFile -Force
+            Write-Host "Created: $zipFile" -ForegroundColor Green
+          } else {
+            Write-Warning "Source path not found: $sourcePath"
           }
-        } else {
-          Write-Error "❌ Build output directory not found: $outputPath"
-          exit 1
         }
 
-    - name: 📦 Create Distribution Package
-      id: create-package
-      shell: pwsh
-      run: |
-        Write-Host "📦 Creating package for ${{ inputs.platform }}..."
-
-        # Recalculate the output path (same as in build step)
-        $outputPath = "${{ inputs.output-folder }}/${{ inputs.platform }}"
-        $packageName = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
-
-        Write-Host "  • Source Path: $outputPath"
-        Write-Host "  • Package Name: $packageName"
-
-        # Verify source directory exists
-        if (-not (Test-Path $outputPath)) {
-          Write-Error "❌ Source directory not found: $outputPath"
-          exit 1
-        }
-
-        # Get absolute path
-        $absoluteOutputPath = Resolve-Path $outputPath
-        Write-Host "  • Absolute Path: $absoluteOutputPath"
-
-        # Create zip package using PowerShell
-        Compress-Archive -Path "$absoluteOutputPath\*" -DestinationPath $packageName -Force
-
-        if (Test-Path $packageName) {
-          Write-Host "✅ Package created successfully: $packageName"
-          echo "package-path=$packageName" >> $GITHUB_OUTPUT
-        } else {
-          Write-Error "❌ Failed to create package: $packageName"
-          exit 1
-        }
-
-    - name: 🔍 Verify Package Integrity
-      id: verify-package
-      shell: pwsh
-      run: |
-        Write-Host "🔍 Verifying package integrity..."
-
-        # Recalculate package name (same as in create-package step)
-        $packagePath = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
-
-        Write-Host "🔧 Looking for package: $packagePath"
-
-        if (Test-Path $packagePath) {
-          $packageInfo = Get-Item $packagePath
-          $sizeMB = [math]::Round($packageInfo.Length / 1MB, 2)
-
-          Write-Host "✅ Package created successfully:"
-          Write-Host "  • File: $($packageInfo.Name)"
-          Write-Host "  • Size: $sizeMB MB"
-          Write-Host "  • Platform: ${{ inputs.platform }}"
-          Write-Host "  • Created: $($packageInfo.CreationTime)"
-
-          # Set outputs
-          echo "package-size=$sizeMB" >> $GITHUB_OUTPUT
-        } else {
-          Write-Error "❌ Package not found: $packagePath"
-          exit 1
-        }
-
-    - name: 📊 Build Summary
-      shell: pwsh
-      run: |
-        # Recalculate values for display
-        $runtimeIdentifier = "win-$("${{ inputs.platform }}".ToLower())"
-        $packageName = "${{ inputs.app-name }}-${{ inputs.app-version }}-${{ inputs.platform }}.zip"
-
-        Write-Host "📊 Build Summary:"
-        Write-Host "  • Platform: ${{ inputs.platform }}"
-        Write-Host "  • Configuration: ${{ inputs.build-configuration }}"
-        Write-Host "  • Runtime: $runtimeIdentifier"
-        Write-Host "  • Package: $packageName"
-        Write-Host "  • Package Size: ${{ steps.verify-package.outputs.package-size }} MB"
-        Write-Host "  • Status: ✅ Build and packaging completed successfully"
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: artifacts/
+        retention-days: 7
