@@ -5,6 +5,10 @@ inputs:
     description: 'Build configuration'
     required: false
     default: 'Release'
+  platforms:
+    description: 'Target platforms for tests (comma-separated: x64,x86,ARM64)'
+    required: false
+    default: 'x64,x86,ARM64'
   test-results-path:
     description: 'Path for test results'
     required: false
@@ -31,84 +35,189 @@ runs:
         Write-Host "Restoring NuGet packages..." -ForegroundColor Cyan
         dotnet restore Bucket.sln
 
-    - name: Run Bucket.Core.Tests
-      shell: pwsh
-      run: |
-        Write-Host "=== Running Bucket.Core.Tests ===" -ForegroundColor Green
-        $testProject = "tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj"
-
-        $testArgs = @(
-          "test",
-          $testProject,
-          "--configuration", "${{ inputs.configuration }}",
-          "--no-restore",
-          "--verbosity", "normal",
-          "--logger", "trx;LogFileName=Bucket.Core.Tests.trx",
-          "--results-directory", "${{ inputs.test-results-path }}"
-        )
-
-        if ("${{ inputs.generate-coverage }}" -eq "true") {
-          $testArgs += "--collect:""XPlat Code Coverage"""
-          $testArgs += "--"
-          $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
-        }
-
-        & dotnet $testArgs
         if ($LASTEXITCODE -ne 0) {
-          Write-Error "Bucket.Core.Tests failed!"
+          Write-Error "Package restore failed!"
           exit 1
         }
 
-    - name: Run Bucket.App.Tests
+    - name: Build and test all architectures
       shell: pwsh
       run: |
-        Write-Host "=== Running Bucket.App.Tests ===" -ForegroundColor Green
-        $testProject = "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
+        $platforms = "${{ inputs.platforms }}" -split ','
+        $configuration = "${{ inputs.configuration }}"
+        $testResultsPath = "${{ inputs.test-results-path }}"
+        $generateCoverage = "${{ inputs.generate-coverage }}"
 
-        $testArgs = @(
-          "test",
-          $testProject,
-          "--configuration", "${{ inputs.configuration }}",
-          "--no-restore",
-          "--verbosity", "normal",
-          "--logger", "trx;LogFileName=Bucket.App.Tests.trx",
-          "--results-directory", "${{ inputs.test-results-path }}"
-        )
+        # Create test results directory
+        New-Item -ItemType Directory -Force -Path $testResultsPath | Out-Null
 
-        if ("${{ inputs.generate-coverage }}" -eq "true") {
-          $testArgs += "--collect:""XPlat Code Coverage"""
-          $testArgs += "--"
-          $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
+        $totalErrors = 0
+        $totalWarnings = 0
+        $successfulPlatforms = @()
+        $failedPlatforms = @()
+
+        foreach ($platform in $platforms) {
+          $platform = $platform.Trim()
+          Write-Host "=====================================" -ForegroundColor Magenta
+          Write-Host "Processing Platform: $platform" -ForegroundColor Magenta
+          Write-Host "=====================================" -ForegroundColor Magenta
+
+          try {
+            # Build solution for this platform
+            Write-Host "Building solution for $platform..." -ForegroundColor Cyan
+            msbuild Bucket.sln `
+              /p:Configuration=$configuration `
+              /p:Platform=$platform `
+              /p:RestorePackages=false `
+              /t:Build `
+              /m `
+              /v:minimal
+
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Build failed for platform $platform!"
+              $failedPlatforms += $platform
+              $totalErrors++
+              continue
+            }
+
+            Write-Host "✅ Build successful for $platform" -ForegroundColor Green
+
+            # Run tests for Bucket.Core.Tests
+            Write-Host "Running Bucket.Core.Tests on $platform..." -ForegroundColor Yellow
+            $coreTestProject = "tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj"
+
+            $testArgs = @(
+              "test",
+              $coreTestProject,
+              "--configuration", $configuration,
+              "--no-restore",
+              "--no-build",
+              "--verbosity", "normal",
+              "--logger", "trx;LogFileName=Bucket.Core.Tests-$platform.trx",
+              "--results-directory", $testResultsPath
+            )
+
+            if ($generateCoverage -eq "true") {
+              $testArgs += "--collect:""XPlat Code Coverage"""
+              $testArgs += "--"
+              $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
+            }
+
+            & dotnet $testArgs
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Bucket.Core.Tests failed on $platform!"
+              $failedPlatforms += "$platform (Core.Tests)"
+              $totalErrors++
+            } else {
+              Write-Host "✅ Bucket.Core.Tests passed on $platform" -ForegroundColor Green
+            }
+
+            # Run tests for Bucket.App.Tests
+            Write-Host "Running Bucket.App.Tests on $platform..." -ForegroundColor Yellow
+            $appTestProject = "tests/Bucket.App.Tests/Bucket.App.Tests.csproj"
+
+            $testArgs = @(
+              "test",
+              $appTestProject,
+              "--configuration", $configuration,
+              "--no-restore",
+              "--no-build",
+              "--verbosity", "normal",
+              "--logger", "trx;LogFileName=Bucket.App.Tests-$platform.trx",
+              "--results-directory", $testResultsPath
+            )
+
+            if ($generateCoverage -eq "true") {
+              $testArgs += "--collect:""XPlat Code Coverage"""
+              $testArgs += "--"
+              $testArgs += "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura"
+            }
+
+            & dotnet $testArgs
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Bucket.App.Tests failed on $platform!"
+              $failedPlatforms += "$platform (App.Tests)"
+              $totalErrors++
+            } else {
+              Write-Host "✅ Bucket.App.Tests passed on $platform" -ForegroundColor Green
+            }
+
+            if ($platform -notin $failedPlatforms) {
+              $successfulPlatforms += $platform
+            }
+
+          } catch {
+            Write-Error "Unexpected error processing platform $platform`: $($_.Exception.Message)"
+            $failedPlatforms += "$platform (Exception)"
+            $totalErrors++
+          }
+
+          Write-Host "Completed platform: $platform" -ForegroundColor Cyan
+          Write-Host ""
         }
 
-        & dotnet $testArgs
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "Bucket.App.Tests failed!"
+        # Summary
+        Write-Host "=====================================" -ForegroundColor Magenta
+        Write-Host "MULTI-ARCHITECTURE TEST SUMMARY" -ForegroundColor Magenta
+        Write-Host "=====================================" -ForegroundColor Magenta
+
+        Write-Host "Successful platforms: $($successfulPlatforms -join ', ')" -ForegroundColor Green
+        if ($failedPlatforms.Count -gt 0) {
+          Write-Host "Failed platforms: $($failedPlatforms -join ', ')" -ForegroundColor Red
+        }
+
+        Write-Host "Total errors: $totalErrors" -ForegroundColor $(if ($totalErrors -eq 0) { "Green" } else { "Red" })
+
+        # Fail if any platform failed
+        if ($totalErrors -gt 0) {
+          Write-Error "One or more platforms failed testing!"
           exit 1
         }
+
+        Write-Host "🎉 All platforms passed testing!" -ForegroundColor Green
 
     - name: Test Summary
       id: test-results
       shell: pwsh
       run: |
-        Write-Host "=== Test Results Summary ===" -ForegroundColor Cyan
+        Write-Host "=== Multi-Architecture Test Results Summary ===" -ForegroundColor Cyan
 
         $testResultsPath = "${{ inputs.test-results-path }}"
+        $platforms = "${{ inputs.platforms }}" -split ','
+
         echo "path=$testResultsPath" >> $env:GITHUB_OUTPUT
 
         if (Test-Path $testResultsPath) {
           $trxFiles = Get-ChildItem -Path $testResultsPath -Filter "*.trx"
-          foreach ($trx in $trxFiles) {
-            Write-Host "Test Result: $($trx.Name)" -ForegroundColor Yellow
+
+          Write-Host "Test Result Files by Architecture:" -ForegroundColor Yellow
+          foreach ($platform in $platforms) {
+            $platform = $platform.Trim()
+            $platformTrxFiles = $trxFiles | Where-Object { $_.Name -like "*-$platform.trx" }
+
+            if ($platformTrxFiles.Count -gt 0) {
+              Write-Host "  📋 $platform architecture:" -ForegroundColor Green
+              foreach ($trx in $platformTrxFiles) {
+                Write-Host "    - $($trx.Name)" -ForegroundColor White
+              }
+            } else {
+              Write-Host "  ⚠️ $platform architecture: No test results found" -ForegroundColor Yellow
+            }
           }
+
+          Write-Host "Total test result files: $($trxFiles.Count)" -ForegroundColor Cyan
 
           if ("${{ inputs.generate-coverage }}" -eq "true") {
             $coverageFiles = Get-ChildItem -Path $testResultsPath -Recurse -Filter "coverage.cobertura.xml"
             if ($coverageFiles.Count -gt 0) {
               Write-Host "Code coverage reports generated: $($coverageFiles.Count)" -ForegroundColor Green
               echo "coverage=$testResultsPath" >> $env:GITHUB_OUTPUT
+            } else {
+              Write-Host "No code coverage reports found" -ForegroundColor Yellow
             }
           }
+        } else {
+          Write-Warning "Test results directory not found: $testResultsPath"
         }
 
     - name: Upload test results
