@@ -25,7 +25,26 @@ runs:
         New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
         echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
 
+    - name: Check Advanced Installer availability
+      id: check-advinst
+      shell: pwsh
+      run: |
+        try {
+          $aiPath = Get-Command "AdvancedInstaller.com" -ErrorAction SilentlyContinue
+          if ($aiPath) {
+            Write-Host "✅ Advanced Installer found at: $($aiPath.Source)" -ForegroundColor Green
+            echo "available=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Warning "⚠️ Advanced Installer not found. MSI generation will be skipped."
+            echo "available=false" >> $env:GITHUB_OUTPUT
+          }
+        } catch {
+          Write-Warning "⚠️ Error checking Advanced Installer: $($_.Exception.Message)"
+          echo "available=false" >> $env:GITHUB_OUTPUT
+        }
+
     - name: Update version in Advanced Installer projects
+      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "Updating version in Advanced Installer projects to ${{ inputs.version }}..." -ForegroundColor Cyan
@@ -60,6 +79,7 @@ runs:
         }
 
     - name: Build x64 Installer
+      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building x64 Installer ===" -ForegroundColor Green
@@ -105,6 +125,7 @@ runs:
         }
 
     - name: Build x86 Installer
+      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building x86 Installer ===" -ForegroundColor Green
@@ -150,6 +171,7 @@ runs:
         }
 
     - name: Build ARM64 Installer
+      if: steps.check-advinst.outputs.available == 'true'
       shell: pwsh
       run: |
         Write-Host "=== Building ARM64 Installer ===" -ForegroundColor Green
@@ -201,9 +223,32 @@ runs:
         $installersPath = "artifacts/installers"
 
         if (Test-Path $installersPath) {
-          Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
-            Write-Host "  - $($_.Name) ($('{0:N2} MB' -f ($_.Length / 1MB)))" -ForegroundColor Green
+          $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
+          if ($msiFiles.Count -gt 0) {
+            $msiFiles | ForEach-Object {
+              Write-Host "  - $($_.Name) ($('{0:N2} MB' -f ($_.Length / 1MB)))" -ForegroundColor Green
+            }
+          } else {
+            Write-Host "  No MSI files found" -ForegroundColor Yellow
           }
+        }
+
+    - name: Create placeholder if no installers
+      if: steps.check-advinst.outputs.available == 'false'
+      shell: pwsh
+      run: |
+        Write-Host "=== Creating Placeholder Files ===" -ForegroundColor Yellow
+        $installersPath = "artifacts/installers"
+
+        # Create placeholder files to maintain workflow consistency
+        $version = "${{ inputs.version }}"
+        $architectures = @("x64", "x86", "arm64")
+
+        foreach ($arch in $architectures) {
+          $placeholderFile = "$installersPath/Bucket-$version-$arch.msi.placeholder"
+          "This is a placeholder file. Advanced Installer was not available during build." |
+            Out-File -FilePath $placeholderFile -Encoding UTF8
+          Write-Host "Created placeholder: $placeholderFile" -ForegroundColor Yellow
         }
 
     - name: Upload installer artifacts
