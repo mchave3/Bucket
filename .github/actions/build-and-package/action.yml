@@ -87,8 +87,7 @@ runs:
           --self-contained true `
           --output "artifacts/publish/x64" `
           /p:Platform=x64 `
-          /p:PublishSingleFile=false `
-          /p:PublishReadyToRun=false
+          /p:PublishSingleFile=false
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x64 publish failed!"
@@ -121,8 +120,7 @@ runs:
           --self-contained true `
           --output "artifacts/publish/x86" `
           /p:Platform=x86 `
-          /p:PublishSingleFile=false `
-          /p:PublishReadyToRun=false
+          /p:PublishSingleFile=false
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x86 publish failed!"
@@ -155,8 +153,7 @@ runs:
           --self-contained true `
           --output "artifacts/publish/arm64" `
           /p:Platform=ARM64 `
-          /p:PublishSingleFile=false `
-          /p:PublishReadyToRun=false
+          /p:PublishSingleFile=false
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "ARM64 publish failed!"
