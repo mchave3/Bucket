@@ -116,6 +116,7 @@ jobs:
         with:
           version: ${{ needs.check-changes.outputs.version }}
           configuration: 'Release'
+          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
 
       - name: Create release
         uses: ./.github/actions/release-management
