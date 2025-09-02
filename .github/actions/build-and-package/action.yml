@@ -66,10 +66,32 @@ runs:
       run: |
         Write-Host "=== Building for x64 ===" -ForegroundColor Green
 
-        # Build solution
-        msbuild Bucket.sln `
+        # Build solution (exclude Advanced Installer projects)
+        msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild src/Bucket.Core/Bucket.Core.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
           /p:RestorePackages=true `
           /t:Rebuild `
           /m `
@@ -99,10 +121,32 @@ runs:
       run: |
         Write-Host "=== Building for x86 ===" -ForegroundColor Green
 
-        # Build solution
-        msbuild Bucket.sln `
+        # Build solution (exclude Advanced Installer projects)
+        msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x86 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild src/Bucket.Core/Bucket.Core.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x86 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
           /p:RestorePackages=true `
           /t:Rebuild `
           /m `
@@ -132,10 +176,32 @@ runs:
       run: |
         Write-Host "=== Building for ARM64 ===" -ForegroundColor Green
 
-        # Build solution
-        msbuild Bucket.sln `
+        # Build solution (exclude Advanced Installer projects)
+        msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=ARM64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild src/Bucket.Core/Bucket.Core.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=ARM64 `
+          /p:RestorePackages=true `
+          /t:Rebuild `
+          /m `
+          /v:minimal
+
+        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
           /p:RestorePackages=true `
           /t:Rebuild `
           /m `
