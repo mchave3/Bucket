@@ -38,7 +38,7 @@ runs:
       uses: actions/download-artifact@v4
       with:
         pattern: "${{ inputs.app-name }}-${{ inputs.app-version }}-*"
-        merge-multiple: false
+        merge-multiple: true
         path: ${{ inputs.artifacts-path }}/artifacts
 
     - name: 📂 Display Downloaded Artifacts Structure
@@ -61,22 +61,63 @@ runs:
         New-Item -ItemType Directory -Path "$publishBase/win-x64/publish" -Force
         New-Item -ItemType Directory -Path "$publishBase/win-arm64/publish" -Force
 
-        # Copy artifacts to expected locations
+        # Look for ZIP files in the artifacts directory (they should be at the root level after merge-multiple: true)
         $artifactsPath = "${{ inputs.artifacts-path }}/artifacts"
+        Write-Host "🔍 Looking for artifacts in: $artifactsPath"
 
-        if (Test-Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x86") {
-          Write-Host "📁 Copying x86 artifacts..."
-          Copy-Item -Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x86/*" -Destination "$publishBase/win-x86/publish/" -Recurse -Force
+        if (Test-Path $artifactsPath) {
+          Write-Host "� Contents of artifacts directory:"
+          Get-ChildItem -Path $artifactsPath | ForEach-Object {
+            Write-Host "  - $($_.Name) ($($_.GetType().Name))"
+          }
+        } else {
+          Write-Host "⚠️ Artifacts directory not found, checking current directory..."
+          Write-Host "📂 Contents of current directory:"
+          Get-ChildItem -Path "." | ForEach-Object {
+            Write-Host "  - $($_.Name) ($($_.GetType().Name))"
+          }
+          $artifactsPath = "."
         }
 
-        if (Test-Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x64") {
-          Write-Host "📁 Copying x64 artifacts..."
-          Copy-Item -Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x64/*" -Destination "$publishBase/win-x64/publish/" -Recurse -Force
+        # Extract and copy artifacts to expected locations
+        $x86ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x86.zip"
+        $x64ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-x64.zip"
+        $arm64ZipPath = "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64.zip"
+
+        if (Test-Path $x86ZipPath) {
+          Write-Host "📁 Extracting and copying x86 artifacts..."
+          Expand-Archive -Path $x86ZipPath -DestinationPath "$publishBase/win-x86/publish/" -Force
+        } else {
+          Write-Host "⚠️ x86 artifact not found: $x86ZipPath"
         }
 
-        if (Test-Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64") {
-          Write-Host "📁 Copying ARM64 artifacts..."
-          Copy-Item -Path "$artifactsPath/${{ inputs.app-name }}-${{ inputs.app-version }}-ARM64/*" -Destination "$publishBase/win-arm64/publish/" -Recurse -Force
+        if (Test-Path $x64ZipPath) {
+          Write-Host "📁 Extracting and copying x64 artifacts..."
+          Expand-Archive -Path $x64ZipPath -DestinationPath "$publishBase/win-x64/publish/" -Force
+        } else {
+          Write-Host "⚠️ x64 artifact not found: $x64ZipPath"
+        }
+
+        if (Test-Path $arm64ZipPath) {
+          Write-Host "📁 Extracting and copying ARM64 artifacts..."
+          Expand-Archive -Path $arm64ZipPath -DestinationPath "$publishBase/win-arm64/publish/" -Force
+        } else {
+          Write-Host "⚠️ ARM64 artifact not found: $arm64ZipPath"
+        }
+
+        # Verify the extracted content
+        Write-Host "🔍 Verifying extracted content..."
+        if (Test-Path "$publishBase/win-x86/publish") {
+          Write-Host "x86 files:"
+          Get-ChildItem -Path "$publishBase/win-x86/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
+        }
+        if (Test-Path "$publishBase/win-x64/publish") {
+          Write-Host "x64 files:"
+          Get-ChildItem -Path "$publishBase/win-x64/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
+        }
+        if (Test-Path "$publishBase/win-arm64/publish") {
+          Write-Host "ARM64 files:"
+          Get-ChildItem -Path "$publishBase/win-arm64/publish" | ForEach-Object { Write-Host "  - $($_.Name)" }
         }
 
     - name: 🔍 Check License Availability
@@ -90,6 +131,14 @@ runs:
           Write-Host "✅ Advanced Installer license provided"
           echo "HAS_LICENSE=true" >> $env:GITHUB_ENV
         }
+
+    - name: 📁 Create Output Directory
+      shell: pwsh
+      run: |
+        Write-Host "🏗️ Creating output directory for installers..."
+        $outputDir = "${{ github.workspace }}/setup/output"
+        New-Item -ItemType Directory -Path $outputDir -Force
+        Write-Host "✅ Output directory created: $outputDir"
 
     - name: 🏗️ Build x86 Installer with Advanced Installer (With License)
       if: env.HAS_LICENSE == 'true'
