@@ -247,14 +247,9 @@ jobs:
   # � INSTALLER CREATION JOB (USING REUSABLE ACTION)
   # ──────────────────────────────────────────────────────────────────────────
   create-installers:
-    name: 📦 Create Installers (${{ matrix.platform }})
+    name: 📦 Create MSI Installers
     runs-on: windows-latest
     needs: [release-preparation, comprehensive-testing, production-build]
-
-    strategy:
-      matrix:
-        platform: [x86, x64, ARM64]
-      fail-fast: false
 
     steps:
       - name: 📥 Checkout Repository
@@ -268,56 +263,14 @@ jobs:
           name: release-config
           path: .
 
-      - name: 📦 Download Build Package
-        uses: actions/download-artifact@v4
-        with:
-          name: release-package-${{ matrix.platform }}
-
-      - name: 📂 Extract Build Package
-        shell: pwsh
-        run: |
-          Write-Host "📂 Extracting build package for installer creation..."
-
-          $packageFile = "${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.zip"
-          $extractPath = "BuildOutput"
-
-          if (Test-Path $packageFile) {
-            Expand-Archive -Path $packageFile -DestinationPath $extractPath -Force
-            Write-Host "✅ Package extracted to: $extractPath"
-
-            # List contents for verification
-            Get-ChildItem -Path $extractPath -Recurse | Select-Object -First 10 | ForEach-Object {
-              Write-Host "  • $($_.FullName)"
-            }
-          } else {
-            Write-Error "❌ Package file not found: $packageFile"
-            exit 1
-          }
-
-      - name: 📦 Create Production Installers
+      - name: 📦 Create MSI Installers with Advanced Installer
         uses: ./.github/actions/create-installers
         with:
           app-name: ${{ env.APP_NAME }}
           app-version: ${{ needs.release-preparation.outputs.app-version }}
-          platform: ${{ matrix.platform }}
-          build-output-path: BuildOutput
-          company-name: "Mickaël CHAVE"
-          product-description: "Bucket - Modern File Management Application"
-          sign-installers: false
-
-      - name: 📤 Upload MSI Installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-installer-msi-${{ matrix.platform }}
-          path: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}.msi
-          retention-days: 365
-
-      - name: 📤 Upload EXE Installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-installer-exe-${{ matrix.platform }}
-          path: ${{ env.APP_NAME }}-${{ needs.release-preparation.outputs.app-version }}-${{ matrix.platform }}-Setup.exe
-          retention-days: 365
+          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY || '' }}
+          workflow-type: 'release'
+          artifacts-path: ${{ github.workspace }}
 
   # ──────────────────────────────────────────────────────────────────────────
   # �🚀 RELEASE PUBLICATION JOB (USING REUSABLE ACTION)
@@ -343,7 +296,7 @@ jobs:
       - name: 📦 Download All Installer Artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: release-installer-*
+          pattern: release-installer-all-platforms
           merge-multiple: true
 
       - name: 🚀 Manage Release Publication
