@@ -53,8 +53,22 @@ jobs:
           dotnet format Bucket.sln --verify-no-changes --verbosity diagnostic
 
       - name: Build solution
+        shell: pwsh
         run: |
-          dotnet build Bucket.sln --configuration Release --no-restore /p:TreatWarningsAsErrors=true
+          Write-Host "Building solution for x64 platform..." -ForegroundColor Cyan
+          msbuild Bucket.sln `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:RestorePackages=false `
+            /p:TreatWarningsAsErrors=true `
+            /t:Build `
+            /m `
+            /v:minimal
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Build failed!"
+            exit 1
+          }
 
       - name: Run code analysis
         id: analysis
@@ -67,15 +81,17 @@ jobs:
           New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
 
           # Run Roslyn analyzers
-          dotnet build Bucket.sln `
-            --configuration Release `
-            --no-restore `
+          msbuild Bucket.sln `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:RestorePackages=false `
             /p:EnforceCodeStyleInBuild=true `
             /p:AnalysisLevel=latest `
             /p:TreatWarningsAsErrors=false `
             /p:WarningsAsErrors="" `
             /warnAsMessage:CS1591 `
-            /flp:"LogFile=$resultsDir/build.log;Verbosity=detailed"
+            /flp:"LogFile=$resultsDir/build.log;Verbosity=detailed" `
+            /t:Build
 
           # Parse warnings and errors
           $buildLog = Get-Content "$resultsDir/build.log" -ErrorAction SilentlyContinue
