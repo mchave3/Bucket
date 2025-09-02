@@ -41,6 +41,13 @@ runs:
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
 
+    - name: Clear NuGet cache
+      shell: pwsh
+      run: |
+        Write-Host "=== Clearing NuGet cache ===" -ForegroundColor Yellow
+        dotnet nuget locals all --clear
+        Write-Host "✅ NuGet cache cleared" -ForegroundColor Green
+
     - name: Display environment info
       shell: pwsh
       run: |
