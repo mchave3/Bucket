@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket.Core.Tests", "tests\
 EndProject
 Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Bucket.Setup_x64", "setup\Bucket.Setup_x64\Bucket.Setup_x64.aiproj", "{333192C5-3489-47C1-A24B-677CD4AAD016}"
 EndProject
+Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Bucket.Setup_x86", "setup\Bucket.Setup_x86\Bucket.Setup_x86.aiproj", "{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}"
+EndProject
+Project("{840C416C-B8F3-42BC-B0DD-F6BB14C9F8CB}") = "Bucket.Setup_arm64", "setup\Bucket.Setup_arm64\Bucket.Setup_arm64.aiproj", "{A1ABCE01-821C-445C-B951-B93952908D8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -122,6 +126,42 @@ Global
 		{333192C5-3489-47C1-A24B-677CD4AAD016}.Release|x64.Build.0 = DefaultBuild
 		{333192C5-3489-47C1-A24B-677CD4AAD016}.Release|x86.ActiveCfg = DefaultBuild
 		{333192C5-3489-47C1-A24B-677CD4AAD016}.Release|x86.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|ARM64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|ARM64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|x64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|x64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|x86.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Debug|x86.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|ARM64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|ARM64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|x64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|x64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|x86.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.DefaultBuild|x86.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|ARM64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|ARM64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|x64.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|x64.Build.0 = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|x86.ActiveCfg = DefaultBuild
+		{2D98FFF5-92B2-452B-A2C5-EAA26CACD64F}.Release|x86.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|ARM64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|ARM64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|x64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|x64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|x86.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Debug|x86.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|ARM64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|ARM64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|x64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|x64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|x86.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.DefaultBuild|x86.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|ARM64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|ARM64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x64.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x64.Build.0 = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x86.ActiveCfg = DefaultBuild
+		{A1ABCE01-821C-445C-B951-B93952908D8D}.Release|x86.Build.0 = DefaultBuild
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
