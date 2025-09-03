@@ -75,6 +75,8 @@
   <!-- Pass the publish path to WiX preprocessor -->
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);PublishOutputPath=$(PublishOutputPath)</DefineConstants>
+    <!-- Suppress ICE03 validation for invalid language IDs -->
+    <SuppressIces>ICE03</SuppressIces>
   </PropertyGroup>
 
   <!-- Auto-harvest files using heat.exe -->
