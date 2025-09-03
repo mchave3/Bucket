@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket.App.Tests", "tests\B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket.Core.Tests", "tests\Bucket.Core.Tests\Bucket.Core.Tests.csproj", "{BCFF443B-1F9E-4CEF-B274-32F3539DB79E}"
 EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Bucket.Setup_x64", "setup\Bucket.Setup_x64\Bucket.Setup_x64.wixproj", "{6AF23EF8-24BE-4AEB-B2D5-F1D0B8468C3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bucket.Setup", "setup\Bucket.Setup\Bucket.Setup.wixproj", "{6AF23EF8-24BE-4AEB-B2D5-F1D0B8468C3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

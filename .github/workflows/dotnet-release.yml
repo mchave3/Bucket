@@ -87,7 +87,6 @@ jobs:
         uses: ./.github/actions/setup-environment
         with:
           dotnet-version: '9.0.x'
-          advanced-installer-license: ${{ secrets.ADVANCED_INSTALLER_LICENSE }}
 
       - name: Run tests
         if: github.event.inputs.skip-tests != 'true'
@@ -109,7 +108,6 @@ jobs:
         with:
           version: ${{ steps.validate-version.outputs.version }}
           configuration: 'Release'
-          advinst-license: ${{ secrets.ADVINST_LICENSE_KEY }}
 
       - name: Create release
         if: github.event.inputs.dry-run == 'false'

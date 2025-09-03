@@ -1,5 +1,0 @@
-﻿<Project Sdk="WixToolset.Sdk/6.0.2">
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Bucket.App\Bucket.App.csproj" />
-  </ItemGroup>
-</Project>
