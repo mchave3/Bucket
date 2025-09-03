@@ -1,0 +1,86 @@
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <OutputName>Bucket-$(Version)-$(Platform)</OutputName>
+    <OutputPath>..\..\artifacts\installers\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <!-- Import version and metadata from main app project -->
+  <PropertyGroup>
+    <AppProject>..\..\src\Bucket.App\Bucket.App.csproj</AppProject>
+  </PropertyGroup>
+
+  <!-- Read app project file to extract properties -->
+  <Target Name="GetAppProperties" BeforeTargets="BeforeBuild">
+    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/Version/text()">
+      <Output TaskParameter="Result" PropertyName="AppVersion" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/Company/text()">
+      <Output TaskParameter="Result" PropertyName="AppCompany" />
+    </XmlPeek>
+    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/AssemblyName/text()">
+      <Output TaskParameter="Result" PropertyName="AppName" />
+    </XmlPeek>
+    
+    <!-- Set version if not already set -->
+    <PropertyGroup Condition="'$(Version)' == ''">
+      <Version>$(AppVersion)</Version>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(ProductName)' == ''">
+      <ProductName>$(AppName)</ProductName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Manufacturer)' == ''">
+      <Manufacturer>$(AppCompany)</Manufacturer>
+    </PropertyGroup>
+    
+    <!-- Set platform-specific properties -->
+    <PropertyGroup Condition="'$(Platform)' == 'x64'">
+      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-x64\publish</AppBinariesPath>
+      <ProgramFilesFolder>ProgramFiles64Folder</ProgramFilesFolder>
+      <PackageArch>x64</PackageArch>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)' == 'x86'">
+      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-x86\publish</AppBinariesPath>
+      <ProgramFilesFolder>ProgramFilesFolder</ProgramFilesFolder>
+      <PackageArch>x86</PackageArch>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
+      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-arm64\publish</AppBinariesPath>
+      <ProgramFilesFolder>ProgramFiles64Folder</ProgramFilesFolder>
+      <PackageArch>arm64</PackageArch>
+    </PropertyGroup>
+
+    <!-- Define unique GUIDs per platform -->
+    <PropertyGroup Condition="'$(Platform)' == 'x64'">
+      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7C64}</ProductGuid>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)' == 'x86'">
+      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7C86}</ProductGuid>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
+      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7CA4}</ProductGuid>
+    </PropertyGroup>
+
+    <Message Text="Building for $(Platform) - Version: $(Version)" Importance="high" />
+    <Message Text="Binaries path: $(AppBinariesPath)" Importance="high" />
+    <Message Text="Product GUID: $(ProductGuid)" Importance="high" />
+  </Target>
+
+  <!-- Ensure output directory exists -->
+  <Target Name="EnsureOutputDirectory" BeforeTargets="BeforeBuild">
+    <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+  </Target>
+
+  <!-- Project references -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bucket.App\Bucket.App.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Platform>$(Platform)</Platform>
+      <Configuration>Release</Configuration>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
