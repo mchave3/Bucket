@@ -118,7 +118,7 @@ runs:
           --configuration ${{ inputs.configuration }} `
           --runtime win-x64 `
           --self-contained true `
-          --output "src/Bucket.App/bin/win-x64/publish" `
+          --output "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64/publish" `
           /p:Platform=x64 `
           /p:PublishSingleFile=false
 
@@ -178,7 +178,7 @@ runs:
           --configuration ${{ inputs.configuration }} `
           --runtime win-x86 `
           --self-contained true `
-          --output "src/Bucket.App/bin/win-x86/publish" `
+          --output "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86/publish" `
           /p:Platform=x86 `
           /p:PublishSingleFile=false
 
@@ -238,7 +238,7 @@ runs:
           --configuration ${{ inputs.configuration }} `
           --runtime win-arm64 `
           --self-contained true `
-          --output "src/Bucket.App/bin/win-arm64/publish" `
+          --output "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64/publish" `
           /p:Platform=ARM64 `
           /p:PublishSingleFile=false
 
