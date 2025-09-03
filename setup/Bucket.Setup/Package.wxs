@@ -46,8 +46,8 @@
 
         <!-- Features -->
     <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1">
-      <!-- 🚀 AUTOMATIC COLLECTION - All files from publish -->
-      <ComponentGroupRef Id="AutoHarvestedFiles" />
+      <!-- 🚀 MANUAL FILE INCLUSION - All files from publish directory -->
+      <ComponentGroupRef Id="ApplicationFiles" />
 
       <!-- 📋 MANUAL COMPONENTS - Only what cannot be harvested -->
       <ComponentGroupRef Id="RegistryEntries" />
@@ -67,6 +67,11 @@
     </StandardDirectory>
 
     <StandardDirectory Id="DesktopFolder" />
+
+    <!-- Manual file inclusion -->
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishOutputPath)*" />
+    </ComponentGroup>
 
   </Package>
 </Wix>

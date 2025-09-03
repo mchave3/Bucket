@@ -61,14 +61,14 @@
     </ProjectReference>
   </ItemGroup>
 
-  <!-- Override TargetDir to point to publish output for harvesting -->
+  <!-- Define publish output path for manual file inclusion -->
   <PropertyGroup>
     <!-- Define RID mapping for different platforms -->
     <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
 
-    <!-- Override TargetDir to point to the publish output -->
+    <!-- Path to the publish output for manual file inclusion -->
     <PublishOutputPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\$(RuntimeIdentifier)\publish\</PublishOutputPath>
   </PropertyGroup>
 
@@ -79,22 +79,8 @@
     <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
 
-  <!-- Auto-harvest files using heat.exe -->
-  <ItemGroup>
-    <HarvestDirectory Include="$(PublishOutputPath)">
-      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
-      <ComponentGroupName>AutoHarvestedFiles</ComponentGroupName>
-      <SuppressRootDirectory>true</SuppressRootDirectory>
-      <SuppressRegistry>true</SuppressRegistry>
-      <SuppressCom>true</SuppressCom>
-      <SuppressUniqueIds>false</SuppressUniqueIds>
-      <PreprocessorVariable>var.PublishOutputPath</PreprocessorVariable>
-      <Transforms>$(MSBuildThisFileDirectory)HarvestTransform.xslt</Transforms>
-    </HarvestDirectory>
-  </ItemGroup>
-
   <!-- Ensure publish happens before any WiX processing -->
-  <Target Name="PublishApp" BeforeTargets="BeforeBuild;HarvestDirectories">
+  <Target Name="PublishApp" BeforeTargets="BeforeBuild">
     <Message Text="Publishing application to: $(PublishOutputPath)" Importance="high" />
 
     <!-- Create publish directory if it doesn't exist -->
