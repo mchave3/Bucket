@@ -1,5 +1,5 @@
 name: 'Create Installers'
-description: 'Generate MSI installers using WiX Toolset for all architectures'
+description: 'Generate MSI installers using WiX Toolset with manual file inclusion for all architectures'
 inputs:
   version:
     description: 'Version for the installers'
@@ -74,7 +74,7 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Verifying Published Applications for All Platforms ===" -ForegroundColor Cyan
-        Write-Host "🔍 Checking that applications were already published by build-and-package action" -ForegroundColor Green
+        Write-Host "🔍 Checking that applications were already published by build-and-package action (for manual file inclusion)" -ForegroundColor Green
 
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64" },
@@ -106,11 +106,11 @@ runs:
           }
         }
 
-    - name: Build WiX Setup Projects for each platform (with platform-specific harvest)
+    - name: Build WiX Setup Projects for each platform (manual file inclusion)
       shell: pwsh
       run: |
-        Write-Host "=== Building WiX Setup Projects with Platform-Specific Harvest ===" -ForegroundColor Cyan
-        Write-Host "🚀 Generating AutoHarvestFiles.wxs and building MSI for each architecture" -ForegroundColor Green
+        Write-Host "=== Building WiX Setup Projects with Manual File Inclusion ===" -ForegroundColor Cyan
+        Write-Host "🚀 Building MSI installers using manual file definitions (no auto-harvest)" -ForegroundColor Green
 
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64"; ProgramFiles = "ProgramFiles64Folder" },
@@ -119,38 +119,7 @@ runs:
         )
 
         foreach ($platform in $platforms) {
-          Write-Host "`n🏗️ Processing $($platform.Name) architecture..." -ForegroundColor Yellow
-
-          # Step 1: Generate platform-specific AutoHarvestFiles.wxs
-          Write-Host "  📋 Step 1: Generating AutoHarvestFiles.wxs for $($platform.Name)..." -ForegroundColor Cyan
-
-          Push-Location "setup/Bucket.Setup"
-          try {
-            $publishPath = "..\..\src\Bucket.App\bin\$($platform.Name)\${{ inputs.configuration }}\net9.0-windows10.0.26100\$($platform.RID)\publish"
-            Write-Host "    🔍 Using publish path: $publishPath" -ForegroundColor Gray
-
-            .\Generate-AutoHarvestFiles.ps1 -PublishPath $publishPath
-
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "    ✅ AutoHarvestFiles.wxs generated successfully for $($platform.Name)" -ForegroundColor Green
-
-              # Show statistics for this platform's harvest file
-              if (Test-Path "AutoHarvestFiles.wxs") {
-                $content = Get-Content "AutoHarvestFiles.wxs" -Raw
-                $componentCount = ($content | Select-String '<Component ' -AllMatches).Matches.Count
-                $fileCount = ($content | Select-String '<File ' -AllMatches).Matches.Count
-                Write-Host "    📊 Generated $componentCount components with $fileCount files" -ForegroundColor Cyan
-              }
-            } else {
-              Write-Error "❌ Failed to generate AutoHarvestFiles.wxs for $($platform.Name)"
-              exit 1
-            }
-          } finally {
-            Pop-Location
-          }
-
-          # Step 2: Build MSI for this platform using the fresh AutoHarvestFiles.wxs
-          Write-Host "  🔨 Step 2: Building MSI for $($platform.Name)..." -ForegroundColor Cyan
+          Write-Host "`n🏗️ Building MSI for $($platform.Name) architecture..." -ForegroundColor Yellow
 
           $buildArgs = @(
             "build",
@@ -163,7 +132,7 @@ runs:
             "--verbosity", "normal"
           )
 
-          Write-Host "    📋 Build command: dotnet $($buildArgs -join ' ')" -ForegroundColor Gray
+          Write-Host "  📋 Build command: dotnet $($buildArgs -join ' ')" -ForegroundColor Gray
 
           dotnet @buildArgs
 
@@ -173,21 +142,21 @@ runs:
             if (Test-Path $expectedMsi) {
               $fileInfo = Get-Item $expectedMsi
               $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
-              Write-Host "    ✅ Successfully built MSI for $($platform.Name): $fileSizeMB MB" -ForegroundColor Green
+              Write-Host "  ✅ Successfully built MSI for $($platform.Name): $fileSizeMB MB" -ForegroundColor Green
 
               # Show publish directory contents for verification
               $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
               if (Test-Path $publishPath) {
                 $files = Get-ChildItem -Path $publishPath -Recurse -File
-                Write-Host "    📊 Harvested $($files.Count) files from publish directory" -ForegroundColor Cyan
+                Write-Host "  📊 Including $($files.Count) files from publish directory" -ForegroundColor Cyan
 
                 # Show key files
                 $keyFiles = $files | Where-Object { $_.Extension -in @('.exe', '.dll', '.json') } | Select-Object -First 5
                 $keyFiles | ForEach-Object {
-                  Write-Host "        🔸 $($_.Name)" -ForegroundColor Gray
+                  Write-Host "      🔸 $($_.Name)" -ForegroundColor Gray
                 }
                 if ($files.Count -gt 5) {
-                  Write-Host "        ... and $($files.Count - 5) more files" -ForegroundColor Gray
+                  Write-Host "      ... and $($files.Count - 5) more files" -ForegroundColor Gray
                 }
               }
             } else {
