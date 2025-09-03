@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
   <!--
-    VARIABLES AUTOMATIQUES - Ces valeurs sont automatiquement extraites du .csproj
-    et passées via DefineConstants dans le .wixproj
+    AUTOMATIC VARIABLES - These values are automatically extracted from .csproj
+    and passed via DefineConstants in the .wixproj
 
-    Les valeurs ci-dessous sont des fallbacks si l'extraction automatique échoue
+    The values below are fallbacks if automatic extraction fails
   -->
 
   <!-- Product information - Auto-extracted from Bucket.App.csproj -->
