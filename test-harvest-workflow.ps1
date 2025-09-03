@@ -1,5 +1,5 @@
-# Script de test pour valider le workflow de génération de harvest
-Write-Host "=== Test du Workflow de Génération de Harvest ===" -ForegroundColor Cyan
+# Test script to validate the harvest generation workflow
+Write-Host "=== Test of Harvest Generation Workflow ===" -ForegroundColor Cyan
 
 # Configuration
 $configuration = "Release"
@@ -8,8 +8,8 @@ $platforms = @(
     @{ Name = "x64"; RID = "win-x64" }
 )
 
-# Étape 1: Publier l'application
-Write-Host "`n🚀 Étape 1: Publication de l'application" -ForegroundColor Green
+# Step 1: Publish the application
+Write-Host "`n🚀 Step 1: Publishing the application" -ForegroundColor Green
 foreach ($platform in $platforms) {
     Write-Host "Publishing for $($platform.Name)..." -ForegroundColor Yellow
 
@@ -41,8 +41,8 @@ foreach ($platform in $platforms) {
     }
 }
 
-# Étape 2: Générer le fichier harvest
-Write-Host "`n🔄 Étape 2: Génération du fichier AutoHarvestFiles.wxs" -ForegroundColor Green
+# Step 2: Generate the harvest file
+Write-Host "`n🔄 Step 2: Generating AutoHarvestFiles.wxs file" -ForegroundColor Green
 Push-Location "setup/Bucket.Setup"
 try {
     $publishPath = "..\..\src\Bucket.App\bin\x64\$configuration\net9.0-windows10.0.26100\win-x64\publish"
@@ -66,8 +66,8 @@ try {
     Pop-Location
 }
 
-# Étape 3: Construire le MSI
-Write-Host "`n🏗️ Étape 3: Construction du MSI" -ForegroundColor Green
+# Step 3: Build the MSI
+Write-Host "`n🏗️ Step 3: Building the MSI" -ForegroundColor Green
 $buildArgs = @(
     "build",
     "setup/Bucket.Setup/Bucket.Setup.wixproj",
@@ -99,4 +99,4 @@ if ($LASTEXITCODE -eq 0) {
     exit 1
 }
 
-Write-Host "`n🎉 Test du workflow terminé avec succès!" -ForegroundColor Green
+Write-Host "`n🎉 Workflow test completed successfully!" -ForegroundColor Green
