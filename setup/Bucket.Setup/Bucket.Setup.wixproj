@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+﻿<Project Sdk="WixToolset.Sdk/6.0.2">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -8,66 +8,39 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
 
-  <!-- Import version and metadata from main app project -->
+  <!-- Auto-extract variables from referenced projects -->
   <PropertyGroup>
-    <AppProject>..\..\src\Bucket.App\Bucket.App.csproj</AppProject>
+    <!-- Extract properties from Bucket.App.csproj automatically -->
+    <Version Condition="'$(Version)' == ''">$(Bucket_App_Version)</Version>
+    <Version Condition="'$(Version)' == '' OR '$(Bucket_App_Version)' == ''">1.0.0.0</Version>
+
+    <ProductName Condition="'$(ProductName)' == ''">$(Bucket_App_AssemblyName)</ProductName>
+    <ProductName Condition="'$(ProductName)' == '' OR '$(Bucket_App_AssemblyName)' == ''">Bucket</ProductName>
+
+    <Manufacturer Condition="'$(Manufacturer)' == ''">$(Bucket_App_Company)</Manufacturer>
+    <Manufacturer Condition="'$(Manufacturer)' == '' OR '$(Bucket_App_Company)' == ''">Mickaël CHAVE</Manufacturer>
+
+    <!-- Platform-specific directories -->
+    <ProgramFilesFolder Condition="'$(Platform)' == 'x64'">ProgramFiles64Folder</ProgramFilesFolder>
+    <ProgramFilesFolder Condition="'$(Platform)' == 'x86'">ProgramFilesFolder</ProgramFilesFolder>
+    <ProgramFilesFolder Condition="'$(Platform)' == 'ARM64'">ProgramFiles64Folder</ProgramFilesFolder>
+
+    <!-- Platform-specific GUIDs -->
+    <ProductGuid Condition="'$(Platform)' == 'x64'">{8E47B00A-4743-448F-AC7E-F04BF99D7C64}</ProductGuid>
+    <ProductGuid Condition="'$(Platform)' == 'x86'">{8E47B00A-4743-448F-AC7E-F04BF99D7C86}</ProductGuid>
+    <ProductGuid Condition="'$(Platform)' == 'ARM64'">{8E47B00A-4743-448F-AC7E-F04BF99D7CA4}</ProductGuid>
   </PropertyGroup>
 
-  <!-- Read app project file to extract properties -->
-  <Target Name="GetAppProperties" BeforeTargets="BeforeBuild">
-    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/Version/text()">
-      <Output TaskParameter="Result" PropertyName="AppVersion" />
-    </XmlPeek>
-    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/Company/text()">
-      <Output TaskParameter="Result" PropertyName="AppCompany" />
-    </XmlPeek>
-    <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/AssemblyName/text()">
-      <Output TaskParameter="Result" PropertyName="AppName" />
-    </XmlPeek>
-    
-    <!-- Set version if not already set -->
-    <PropertyGroup Condition="'$(Version)' == ''">
-      <Version>$(AppVersion)</Version>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(ProductName)' == ''">
-      <ProductName>$(AppName)</ProductName>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Manufacturer)' == ''">
-      <Manufacturer>$(AppCompany)</Manufacturer>
-    </PropertyGroup>
-    
-    <!-- Set platform-specific properties -->
-    <PropertyGroup Condition="'$(Platform)' == 'x64'">
-      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-x64\publish</AppBinariesPath>
-      <ProgramFilesFolder>ProgramFiles64Folder</ProgramFilesFolder>
-      <PackageArch>x64</PackageArch>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Platform)' == 'x86'">
-      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-x86\publish</AppBinariesPath>
-      <ProgramFilesFolder>ProgramFilesFolder</ProgramFilesFolder>
-      <PackageArch>x86</PackageArch>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
-      <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-arm64\publish</AppBinariesPath>
-      <ProgramFilesFolder>ProgramFiles64Folder</ProgramFilesFolder>
-      <PackageArch>arm64</PackageArch>
-    </PropertyGroup>
-
-    <!-- Define unique GUIDs per platform -->
-    <PropertyGroup Condition="'$(Platform)' == 'x64'">
-      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7C64}</ProductGuid>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Platform)' == 'x86'">
-      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7C86}</ProductGuid>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
-      <ProductGuid>{8E47B00A-4743-448F-AC7E-F04BF99D7CA4}</ProductGuid>
-    </PropertyGroup>
-
-    <Message Text="Building for $(Platform) - Version: $(Version)" Importance="high" />
-    <Message Text="Binaries path: $(AppBinariesPath)" Importance="high" />
-    <Message Text="Product GUID: $(ProductGuid)" Importance="high" />
-  </Target>
+  <!-- Pass variables to WiX preprocessor using DefineConstants for WiX 5 -->
+  <PropertyGroup>
+    <DefineConstants>
+      Version=$(Version);
+      ProductName=$(ProductName);
+      Manufacturer=$(Manufacturer);
+      ProductGuid=$(ProductGuid);
+      ProgramFilesFolder=$(ProgramFilesFolder)
+    </DefineConstants>
+  </PropertyGroup>
 
   <!-- Ensure output directory exists -->
   <Target Name="EnsureOutputDirectory" BeforeTargets="BeforeBuild">
@@ -81,6 +54,64 @@
       <Platform>$(Platform)</Platform>
       <Configuration>Release</Configuration>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Bucket.Core\Bucket.Core.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Platform>$(Platform)</Platform>
+      <Configuration>Release</Configuration>
+    </ProjectReference>
   </ItemGroup>
+
+  <!-- Override TargetDir to point to publish output for harvesting -->
+  <PropertyGroup>
+    <!-- Define RID mapping for different platforms -->
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+
+    <!-- Override TargetDir to point to the publish output -->
+    <PublishOutputPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\$(RuntimeIdentifier)\publish\</PublishOutputPath>
+  </PropertyGroup>
+
+  <!-- Pass the publish path to WiX preprocessor -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);PublishOutputPath=$(PublishOutputPath)</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Auto-harvest files using heat.exe -->
+  <ItemGroup>
+    <HarvestDirectory Include="$(PublishOutputPath)">
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <ComponentGroupName>AutoHarvestedFiles</ComponentGroupName>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressRegistry>true</SuppressRegistry>
+      <SuppressCom>true</SuppressCom>
+      <SuppressUniqueIds>false</SuppressUniqueIds>
+      <PreprocessorVariable>var.PublishOutputPath</PreprocessorVariable>
+      <Transforms>$(MSBuildThisFileDirectory)HarvestTransform.xslt</Transforms>
+    </HarvestDirectory>
+  </ItemGroup>
+
+  <!-- Ensure publish happens before any WiX processing -->
+  <Target Name="PublishApp" BeforeTargets="BeforeBuild;HarvestDirectories">
+    <Message Text="Publishing application to: $(PublishOutputPath)" Importance="high" />
+
+    <!-- Create publish directory if it doesn't exist -->
+    <MakeDir Directories="$(PublishOutputPath)" Condition="!Exists('$(PublishOutputPath)')" />
+
+    <!-- Publish the application -->
+    <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false" />
+
+    <!-- Verify publish succeeded -->
+    <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish"
+           Condition="!Exists('$(PublishOutputPath)')" />
+
+    <ItemGroup>
+      <PublishedFiles Include="$(PublishOutputPath)**\*" />
+    </ItemGroup>
+
+    <Message Text="Published @(PublishedFiles->Count()) files to $(PublishOutputPath)" Importance="high" />
+  </Target>
 
 </Project>

@@ -1,0 +1,3355 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Variables.wxi ?>
+  <Fragment>
+    <!-- Directory Structure -->
+    <DirectoryRef Id="INSTALLFOLDER">    <Directory Id="Dir_af_ZA" Name="af-ZA">
+    </Directory>
+    <Directory Id="Dir_am_ET" Name="am-ET">
+    </Directory>
+    <Directory Id="Dir_ar_SA" Name="ar-SA">
+    </Directory>
+    <Directory Id="Dir_as_IN" Name="as-IN">
+    </Directory>
+    <Directory Id="Dir_Assets" Name="Assets">
+      <Directory Id="Dir_Assets_Cover" Name="Cover">
+      </Directory>
+      <Directory Id="Dir_Assets_Fluent" Name="Fluent">
+      </Directory>
+      <Directory Id="Dir_Assets_NavViewMenu" Name="NavViewMenu">
+      </Directory>
+      <Directory Id="Dir_Assets_Store" Name="Store">
+      </Directory>
+    </Directory>
+    <Directory Id="Dir_az_Latn_AZ" Name="az-Latn-AZ">
+    </Directory>
+    <Directory Id="Dir_bg_BG" Name="bg-BG">
+    </Directory>
+    <Directory Id="Dir_bn_IN" Name="bn-IN">
+    </Directory>
+    <Directory Id="Dir_bs_Latn_BA" Name="bs-Latn-BA">
+    </Directory>
+    <Directory Id="Dir_ca_ES" Name="ca-ES">
+    </Directory>
+    <Directory Id="Dir_ca_Es_VALENCIA" Name="ca-Es-VALENCIA">
+    </Directory>
+    <Directory Id="Dir_cs_CZ" Name="cs-CZ">
+    </Directory>
+    <Directory Id="Dir_cy_GB" Name="cy-GB">
+    </Directory>
+    <Directory Id="Dir_da_DK" Name="da-DK">
+    </Directory>
+    <Directory Id="Dir_de_DE" Name="de-DE">
+    </Directory>
+    <Directory Id="Dir_el_GR" Name="el-GR">
+    </Directory>
+    <Directory Id="Dir_en_GB" Name="en-GB">
+    </Directory>
+    <Directory Id="Dir_en_us" Name="en-us">
+    </Directory>
+    <Directory Id="Dir_es_ES" Name="es-ES">
+    </Directory>
+    <Directory Id="Dir_es_MX" Name="es-MX">
+    </Directory>
+    <Directory Id="Dir_et_EE" Name="et-EE">
+    </Directory>
+    <Directory Id="Dir_eu_ES" Name="eu-ES">
+    </Directory>
+    <Directory Id="Dir_fa_IR" Name="fa-IR">
+    </Directory>
+    <Directory Id="Dir_fi_FI" Name="fi-FI">
+    </Directory>
+    <Directory Id="Dir_fil_PH" Name="fil-PH">
+    </Directory>
+    <Directory Id="Dir_fr_CA" Name="fr-CA">
+    </Directory>
+    <Directory Id="Dir_fr_FR" Name="fr-FR">
+    </Directory>
+    <Directory Id="Dir_ga_IE" Name="ga-IE">
+    </Directory>
+    <Directory Id="Dir_gd_gb" Name="gd-gb">
+    </Directory>
+    <Directory Id="Dir_gl_ES" Name="gl-ES">
+    </Directory>
+    <Directory Id="Dir_gu_IN" Name="gu-IN">
+    </Directory>
+    <Directory Id="Dir_he_IL" Name="he-IL">
+    </Directory>
+    <Directory Id="Dir_hi_IN" Name="hi-IN">
+    </Directory>
+    <Directory Id="Dir_hr_HR" Name="hr-HR">
+    </Directory>
+    <Directory Id="Dir_hu_HU" Name="hu-HU">
+    </Directory>
+    <Directory Id="Dir_hy_AM" Name="hy-AM">
+    </Directory>
+    <Directory Id="Dir_id_ID" Name="id-ID">
+    </Directory>
+    <Directory Id="Dir_is_IS" Name="is-IS">
+    </Directory>
+    <Directory Id="Dir_it_IT" Name="it-IT">
+    </Directory>
+    <Directory Id="Dir_ja_JP" Name="ja-JP">
+    </Directory>
+    <Directory Id="Dir_ka_GE" Name="ka-GE">
+    </Directory>
+    <Directory Id="Dir_kk_KZ" Name="kk-KZ">
+    </Directory>
+    <Directory Id="Dir_km_KH" Name="km-KH">
+    </Directory>
+    <Directory Id="Dir_kn_IN" Name="kn-IN">
+    </Directory>
+    <Directory Id="Dir_ko_KR" Name="ko-KR">
+    </Directory>
+    <Directory Id="Dir_kok_IN" Name="kok-IN">
+    </Directory>
+    <Directory Id="Dir_lb_LU" Name="lb-LU">
+    </Directory>
+    <Directory Id="Dir_lo_LA" Name="lo-LA">
+    </Directory>
+    <Directory Id="Dir_lt_LT" Name="lt-LT">
+    </Directory>
+    <Directory Id="Dir_lv_LV" Name="lv-LV">
+    </Directory>
+    <Directory Id="Dir_mi_NZ" Name="mi-NZ">
+    </Directory>
+    <Directory Id="Dir_Microsoft_UI_Xaml" Name="Microsoft.UI.Xaml">
+      <Directory Id="Dir_Microsoft_UI_Xaml_Assets" Name="Assets">
+      </Directory>
+    </Directory>
+    <Directory Id="Dir_mk_MK" Name="mk-MK">
+    </Directory>
+    <Directory Id="Dir_ml_IN" Name="ml-IN">
+    </Directory>
+    <Directory Id="Dir_mr_IN" Name="mr-IN">
+    </Directory>
+    <Directory Id="Dir_ms_MY" Name="ms-MY">
+    </Directory>
+    <Directory Id="Dir_mt_MT" Name="mt-MT">
+    </Directory>
+    <Directory Id="Dir_nb_NO" Name="nb-NO">
+    </Directory>
+    <Directory Id="Dir_ne_NP" Name="ne-NP">
+    </Directory>
+    <Directory Id="Dir_nl_NL" Name="nl-NL">
+    </Directory>
+    <Directory Id="Dir_nn_NO" Name="nn-NO">
+    </Directory>
+    <Directory Id="Dir_NpuDetect" Name="NpuDetect">
+    </Directory>
+    <Directory Id="Dir_or_IN" Name="or-IN">
+    </Directory>
+    <Directory Id="Dir_pa_IN" Name="pa-IN">
+    </Directory>
+    <Directory Id="Dir_pl_PL" Name="pl-PL">
+    </Directory>
+    <Directory Id="Dir_pt_BR" Name="pt-BR">
+    </Directory>
+    <Directory Id="Dir_pt_PT" Name="pt-PT">
+    </Directory>
+    <Directory Id="Dir_quz_PE" Name="quz-PE">
+    </Directory>
+    <Directory Id="Dir_ro_RO" Name="ro-RO">
+    </Directory>
+    <Directory Id="Dir_ru_RU" Name="ru-RU">
+    </Directory>
+    <Directory Id="Dir_sk_SK" Name="sk-SK">
+    </Directory>
+    <Directory Id="Dir_sl_SI" Name="sl-SI">
+    </Directory>
+    <Directory Id="Dir_sq_AL" Name="sq-AL">
+    </Directory>
+    <Directory Id="Dir_sr_Cyrl_BA" Name="sr-Cyrl-BA">
+    </Directory>
+    <Directory Id="Dir_sr_Cyrl_RS" Name="sr-Cyrl-RS">
+    </Directory>
+    <Directory Id="Dir_sr_Latn_RS" Name="sr-Latn-RS">
+    </Directory>
+    <Directory Id="Dir_Strings" Name="Strings">
+      <Directory Id="Dir_Strings_en_US" Name="en-US">
+      </Directory>
+      <Directory Id="Dir_Strings_fr_FR" Name="fr-FR">
+      </Directory>
+    </Directory>
+    <Directory Id="Dir_sv_SE" Name="sv-SE">
+    </Directory>
+    <Directory Id="Dir_ta_IN" Name="ta-IN">
+    </Directory>
+    <Directory Id="Dir_te_IN" Name="te-IN">
+    </Directory>
+    <Directory Id="Dir_th_TH" Name="th-TH">
+    </Directory>
+    <Directory Id="Dir_tr_TR" Name="tr-TR">
+    </Directory>
+    <Directory Id="Dir_tt_RU" Name="tt-RU">
+    </Directory>
+    <Directory Id="Dir_ug_CN" Name="ug-CN">
+    </Directory>
+    <Directory Id="Dir_uk_UA" Name="uk-UA">
+    </Directory>
+    <Directory Id="Dir_ur_PK" Name="ur-PK">
+    </Directory>
+    <Directory Id="Dir_uz_Latn_UZ" Name="uz-Latn-UZ">
+    </Directory>
+    <Directory Id="Dir_vi_VN" Name="vi-VN">
+    </Directory>
+    <Directory Id="Dir_zh_CN" Name="zh-CN">
+    </Directory>
+    <Directory Id="Dir_zh_TW" Name="zh-TW">
+    </Directory>
+    </DirectoryRef>
+
+    <!-- Auto-generated components by directory -->    <!-- Components for directory: Root -->
+    <ComponentGroup Id="Files_Root_Group" Directory="INSTALLFOLDER">
+      <!-- File: Bucket.Core.dll -->
+      <Component Id="File_Bucket_Core_dll_1" Guid="{C597642F-17D3-48C4-B6A5-C042FFFA3608}">
+        <File Id="File_Bucket_Core_dll_1" Source="$(var.PublishOutputPath)Bucket.Core.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.Core.pdb -->
+      <Component Id="File_Bucket_Core_pdb_2" Guid="{37B5B5F6-8CB6-4F36-A287-73BAAB011F4D}">
+        <File Id="File_Bucket_Core_pdb_2" Source="$(var.PublishOutputPath)Bucket.Core.pdb" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.Core.xml -->
+      <Component Id="File_Bucket_Core_xml_3" Guid="{CF38720B-A897-4FF9-AF01-44443C0E3AEE}">
+        <File Id="File_Bucket_Core_xml_3" Source="$(var.PublishOutputPath)Bucket.Core.xml" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.deps.json -->
+      <Component Id="File_Bucket_deps_json_4" Guid="{5DDC7B5D-A4C3-4190-8F14-EFB5AF068D19}">
+        <File Id="File_Bucket_deps_json_4" Source="$(var.PublishOutputPath)Bucket.deps.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.dll -->
+      <Component Id="File_Bucket_dll_5" Guid="{4FA55908-BFB3-4175-9982-4C29DB96FC6E}">
+        <File Id="File_Bucket_dll_5" Source="$(var.PublishOutputPath)Bucket.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.exe -->
+      <Component Id="File_Bucket_exe_6" Guid="{F1FC162A-CF38-442E-AC68-0C8653334110}">
+        <File Id="File_Bucket_exe_6" Source="$(var.PublishOutputPath)Bucket.exe" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.pdb -->
+      <Component Id="File_Bucket_pdb_7" Guid="{3051E5CF-1FF5-4CE7-ACE8-C7F9C60723AF}">
+        <File Id="File_Bucket_pdb_7" Source="$(var.PublishOutputPath)Bucket.pdb" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.runtimeconfig.json -->
+      <Component Id="File_Bucket_runtimeconfig_json_8" Guid="{46F6BABB-1896-41FE-B446-87FED7A30014}">
+        <File Id="File_Bucket_runtimeconfig_json_8" Source="$(var.PublishOutputPath)Bucket.runtimeconfig.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Bucket.xml -->
+      <Component Id="File_Bucket_xml_9" Guid="{6FF353BE-18A8-4D56-97BC-8676432F4E73}">
+        <File Id="File_Bucket_xml_9" Source="$(var.PublishOutputPath)Bucket.xml" KeyPath="yes" />
+      </Component>
+
+      <!-- File: clretwrc.dll -->
+      <Component Id="File_clretwrc_dll_10" Guid="{014044AE-D260-4052-8A34-6FDC6DDAF642}">
+        <File Id="File_clretwrc_dll_10" Source="$(var.PublishOutputPath)clretwrc.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: clrgc.dll -->
+      <Component Id="File_clrgc_dll_11" Guid="{7A63D131-01FA-4EFE-99E3-8A1529ECBD69}">
+        <File Id="File_clrgc_dll_11" Source="$(var.PublishOutputPath)clrgc.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: clrgcexp.dll -->
+      <Component Id="File_clrgcexp_dll_12" Guid="{265580CA-4C8B-4C4A-9BC3-F3077729072A}">
+        <File Id="File_clrgcexp_dll_12" Source="$(var.PublishOutputPath)clrgcexp.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: clrjit.dll -->
+      <Component Id="File_clrjit_dll_13" Guid="{C6175D34-FED3-4AB4-B87A-CDB33FDB1BCE}">
+        <File Id="File_clrjit_dll_13" Source="$(var.PublishOutputPath)clrjit.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: CommunityToolkit.Mvvm.dll -->
+      <Component Id="File_CommunityToolkit_Mvvm_dll_14" Guid="{A369F67D-B501-4A44-9E72-E6CBA77B4AAB}">
+        <File Id="File_CommunityToolkit_Mvvm_dll_14" Source="$(var.PublishOutputPath)CommunityToolkit.Mvvm.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: coreclr.dll -->
+      <Component Id="File_coreclr_dll_15" Guid="{D1CE940D-C36C-41CB-8B53-1118E9B113ED}">
+        <File Id="File_coreclr_dll_15" Source="$(var.PublishOutputPath)coreclr.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: CoreMessagingXP.dll -->
+      <Component Id="File_CoreMessagingXP_dll_16" Guid="{3A377979-DCDB-4045-9AF2-B667E5529AD1}">
+        <File Id="File_CoreMessagingXP_dll_16" Source="$(var.PublishOutputPath)CoreMessagingXP.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: createdump.exe -->
+      <Component Id="File_createdump_exe_17" Guid="{E5925DCE-4EFE-4270-881A-122832F1DF42}">
+        <File Id="File_createdump_exe_17" Source="$(var.PublishOutputPath)createdump.exe" KeyPath="yes" />
+      </Component>
+
+      <!-- File: dcompi.dll -->
+      <Component Id="File_dcompi_dll_18" Guid="{D7F22602-DFBF-4836-83EE-99C791B9B0EF}">
+        <File Id="File_dcompi_dll_18" Source="$(var.PublishOutputPath)dcompi.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DevWinUI.ContextMenu.dll -->
+      <Component Id="File_DevWinUI_ContextMenu_dll_19" Guid="{09014DB1-69D0-49A8-9F9D-490AE93267FF}">
+        <File Id="File_DevWinUI_ContextMenu_dll_19" Source="$(var.PublishOutputPath)DevWinUI.ContextMenu.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DevWinUI.Controls.dll -->
+      <Component Id="File_DevWinUI_Controls_dll_20" Guid="{C57ECEAC-DDB7-401D-9544-242B1B3EA1C0}">
+        <File Id="File_DevWinUI_Controls_dll_20" Source="$(var.PublishOutputPath)DevWinUI.Controls.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DevWinUI.dll -->
+      <Component Id="File_DevWinUI_dll_21" Guid="{AA4CF832-65F2-4B55-B42F-212FD238BE9D}">
+        <File Id="File_DevWinUI_dll_21" Source="$(var.PublishOutputPath)DevWinUI.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: dwmcorei.dll -->
+      <Component Id="File_dwmcorei_dll_22" Guid="{D31D4F5A-C295-4BE0-ADDD-16A043EFA326}">
+        <File Id="File_dwmcorei_dll_22" Source="$(var.PublishOutputPath)dwmcorei.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DwmSceneI.dll -->
+      <Component Id="File_DwmSceneI_dll_23" Guid="{73350385-F714-4386-9B37-DE9765130D9A}">
+        <File Id="File_DwmSceneI_dll_23" Source="$(var.PublishOutputPath)DwmSceneI.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DWriteCore.dll -->
+      <Component Id="File_DWriteCore_dll_24" Guid="{EE4F8CE6-9EF5-465B-A1D3-B6EBCA31B804}">
+        <File Id="File_DWriteCore_dll_24" Source="$(var.PublishOutputPath)DWriteCore.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: hostfxr.dll -->
+      <Component Id="File_hostfxr_dll_25" Guid="{5679B5F3-631C-47AF-BA59-F2CE38C3E60E}">
+        <File Id="File_hostfxr_dll_25" Source="$(var.PublishOutputPath)hostfxr.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: hostpolicy.dll -->
+      <Component Id="File_hostpolicy_dll_26" Guid="{5F60BE6E-C701-4EE9-858D-1BF9D7F20957}">
+        <File Id="File_hostpolicy_dll_26" Source="$(var.PublishOutputPath)hostpolicy.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: HtmlAgilityPack.dll -->
+      <Component Id="File_HtmlAgilityPack_dll_27" Guid="{C07633DD-223D-479A-914F-183E3BF44DEA}">
+        <File Id="File_HtmlAgilityPack_dll_27" Source="$(var.PublishOutputPath)HtmlAgilityPack.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: JsonSettings.dll -->
+      <Component Id="File_JsonSettings_dll_28" Guid="{19A61F00-5B3A-4132-BF90-3F4B9D83FD8C}">
+        <File Id="File_JsonSettings_dll_28" Source="$(var.PublishOutputPath)JsonSettings.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: marshal.dll -->
+      <Component Id="File_marshal_dll_29" Guid="{D0877333-2902-4C53-8F9F-01422735777F}">
+        <File Id="File_marshal_dll_29" Source="$(var.PublishOutputPath)marshal.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.CSharp.dll -->
+      <Component Id="File_Microsoft_CSharp_dll_30" Guid="{A2F3D4EB-1004-4C76-B237-B97F561F4473}">
+        <File Id="File_Microsoft_CSharp_dll_30" Source="$(var.PublishOutputPath)Microsoft.CSharp.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.DiaSymReader.Native.amd64.dll -->
+      <Component Id="File_Microsoft_DiaSymReader_Native_amd64_dll_31" Guid="{8FE08DB8-30CD-4F7D-BD5F-97FA6EFFF700}">
+        <File Id="File_Microsoft_DiaSymReader_Native_amd64_dll_31" Source="$(var.PublishOutputPath)Microsoft.DiaSymReader.Native.amd64.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.DirectManipulation.dll -->
+      <Component Id="File_Microsoft_DirectManipulation_dll_32" Guid="{11C9F3E5-53CB-46B8-83B2-7D601F75042F}">
+        <File Id="File_Microsoft_DirectManipulation_dll_32" Source="$(var.PublishOutputPath)Microsoft.DirectManipulation.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Extensions.DependencyInjection.Abstractions.dll -->
+      <Component Id="File_Microsoft_Extensions_DependencyInjection_Abst_33" Guid="{5B6553D6-1018-4AF2-B083-5597FD1AE6EC}">
+        <File Id="File_Microsoft_Extensions_DependencyInjection_Abst_33" Source="$(var.PublishOutputPath)Microsoft.Extensions.DependencyInjection.Abstractions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Extensions.DependencyInjection.dll -->
+      <Component Id="File_Microsoft_Extensions_DependencyInjection_dll_34" Guid="{8BE9B71E-0945-43AD-8578-206B30F62AF7}">
+        <File Id="File_Microsoft_Extensions_DependencyInjection_dll_34" Source="$(var.PublishOutputPath)Microsoft.Extensions.DependencyInjection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Extensions.Logging.Abstractions.dll -->
+      <Component Id="File_Microsoft_Extensions_Logging_Abstractions_dll_35" Guid="{FA214B5E-E535-4507-9EA1-B1848DCD07FB}">
+        <File Id="File_Microsoft_Extensions_Logging_Abstractions_dll_35" Source="$(var.PublishOutputPath)Microsoft.Extensions.Logging.Abstractions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Foundation.winmd -->
+      <Component Id="File_Microsoft_Foundation_winmd_36" Guid="{4E807B0C-EF10-4E55-9AA8-D392BA704AB5}">
+        <File Id="File_Microsoft_Foundation_winmd_36" Source="$(var.PublishOutputPath)Microsoft.Foundation.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Canvas.dll -->
+      <Component Id="File_Microsoft_Graphics_Canvas_dll_37" Guid="{ED3D6EA0-40FA-4F24-A99C-244BB261D21C}">
+        <File Id="File_Microsoft_Graphics_Canvas_dll_37" Source="$(var.PublishOutputPath)Microsoft.Graphics.Canvas.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Canvas.Interop.dll -->
+      <Component Id="File_Microsoft_Graphics_Canvas_Interop_dll_38" Guid="{A835CCD8-50EC-409C-8F9D-F33D4013D868}">
+        <File Id="File_Microsoft_Graphics_Canvas_Interop_dll_38" Source="$(var.PublishOutputPath)Microsoft.Graphics.Canvas.Interop.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Display.dll -->
+      <Component Id="File_Microsoft_Graphics_Display_dll_39" Guid="{B5FD084B-00D4-45E9-A533-E595B5FC83AE}">
+        <File Id="File_Microsoft_Graphics_Display_dll_39" Source="$(var.PublishOutputPath)Microsoft.Graphics.Display.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Imaging.dll -->
+      <Component Id="File_Microsoft_Graphics_Imaging_dll_40" Guid="{A52A5A0A-44AD-4C0E-A012-745525A27555}">
+        <File Id="File_Microsoft_Graphics_Imaging_dll_40" Source="$(var.PublishOutputPath)Microsoft.Graphics.Imaging.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Imaging.Projection.dll -->
+      <Component Id="File_Microsoft_Graphics_Imaging_Projection_dll_41" Guid="{64203B89-C5AE-4C85-86CA-82753E480680}">
+        <File Id="File_Microsoft_Graphics_Imaging_Projection_dll_41" Source="$(var.PublishOutputPath)Microsoft.Graphics.Imaging.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Imaging.winmd -->
+      <Component Id="File_Microsoft_Graphics_Imaging_winmd_42" Guid="{F670F70F-89B7-4949-B9B7-C4F4CEF90DBE}">
+        <File Id="File_Microsoft_Graphics_Imaging_winmd_42" Source="$(var.PublishOutputPath)Microsoft.Graphics.Imaging.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.ImagingInternal.winmd -->
+      <Component Id="File_Microsoft_Graphics_ImagingInternal_winmd_43" Guid="{C1B6989A-542A-43A2-BFB4-60382EDFB612}">
+        <File Id="File_Microsoft_Graphics_ImagingInternal_winmd_43" Source="$(var.PublishOutputPath)Microsoft.Graphics.ImagingInternal.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.Internal.Imaging.winmd -->
+      <Component Id="File_Microsoft_Graphics_Internal_Imaging_winmd_44" Guid="{FFD894A3-AF97-4AEB-99B9-3C8CCB354A5E}">
+        <File Id="File_Microsoft_Graphics_Internal_Imaging_winmd_44" Source="$(var.PublishOutputPath)Microsoft.Graphics.Internal.Imaging.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Graphics.winmd -->
+      <Component Id="File_Microsoft_Graphics_winmd_45" Guid="{CB8A2357-1EF3-4209-9A63-FF5EE598FFF1}">
+        <File Id="File_Microsoft_Graphics_winmd_45" Source="$(var.PublishOutputPath)Microsoft.Graphics.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.InputStateManager.dll -->
+      <Component Id="File_Microsoft_InputStateManager_dll_46" Guid="{53C5DB01-C2D1-4C53-9D53-C30B0F5A891C}">
+        <File Id="File_Microsoft_InputStateManager_dll_46" Source="$(var.PublishOutputPath)Microsoft.InputStateManager.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.InteractiveExperiences.Projection.dll -->
+      <Component Id="File_Microsoft_InteractiveExperiences_Projection_d_47" Guid="{8D963825-E33C-40C8-BAA7-789572A2D41F}">
+        <File Id="File_Microsoft_InteractiveExperiences_Projection_d_47" Source="$(var.PublishOutputPath)Microsoft.InteractiveExperiences.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Internal.FrameworkUdk.dll -->
+      <Component Id="File_Microsoft_Internal_FrameworkUdk_dll_48" Guid="{74798006-44C2-47B0-9AB8-BD37A8E3FD47}">
+        <File Id="File_Microsoft_Internal_FrameworkUdk_dll_48" Source="$(var.PublishOutputPath)Microsoft.Internal.FrameworkUdk.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Security.Authentication.OAuth.Projection.dll -->
+      <Component Id="File_Microsoft_Security_Authentication_OAuth_Proje_49" Guid="{D43D12E2-4152-45D0-B4ED-3C5DC4488846}">
+        <File Id="File_Microsoft_Security_Authentication_OAuth_Proje_49" Source="$(var.PublishOutputPath)Microsoft.Security.Authentication.OAuth.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Security.Authentication.OAuth.winmd -->
+      <Component Id="File_Microsoft_Security_Authentication_OAuth_winmd_50" Guid="{F599393E-4F73-4101-802E-D2E04381AB13}">
+        <File Id="File_Microsoft_Security_Authentication_OAuth_winmd_50" Source="$(var.PublishOutputPath)Microsoft.Security.Authentication.OAuth.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Composition.OSSupport.dll -->
+      <Component Id="File_Microsoft_UI_Composition_OSSupport_dll_51" Guid="{7D7900A3-44C1-417C-BA06-46B022D1AD83}">
+        <File Id="File_Microsoft_UI_Composition_OSSupport_dll_51" Source="$(var.PublishOutputPath)Microsoft.UI.Composition.OSSupport.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.dll -->
+      <Component Id="File_Microsoft_UI_dll_52" Guid="{09D5797E-5606-41E9-977B-BAC93C316B1B}">
+        <File Id="File_Microsoft_UI_dll_52" Source="$(var.PublishOutputPath)Microsoft.UI.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Input.dll -->
+      <Component Id="File_Microsoft_UI_Input_dll_53" Guid="{48094A2A-439E-40B4-9ECF-9B31CD85ADEB}">
+        <File Id="File_Microsoft_UI_Input_dll_53" Source="$(var.PublishOutputPath)Microsoft.UI.Input.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.pri -->
+      <Component Id="File_Microsoft_UI_pri_54" Guid="{98F159FE-E16A-469F-8676-BABB2FE9305A}">
+        <File Id="File_Microsoft_UI_pri_54" Source="$(var.PublishOutputPath)Microsoft.UI.pri" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Text.winmd -->
+      <Component Id="File_Microsoft_UI_Text_winmd_55" Guid="{13360900-FF7B-4F77-8C4A-83EF8D1F5FAA}">
+        <File Id="File_Microsoft_UI_Text_winmd_55" Source="$(var.PublishOutputPath)Microsoft.UI.Text.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Windowing.Core.dll -->
+      <Component Id="File_Microsoft_UI_Windowing_Core_dll_56" Guid="{D19D70A3-ECFF-4E99-9837-0417B90F1824}">
+        <File Id="File_Microsoft_UI_Windowing_Core_dll_56" Source="$(var.PublishOutputPath)Microsoft.UI.Windowing.Core.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Windowing.dll -->
+      <Component Id="File_Microsoft_UI_Windowing_dll_57" Guid="{93F8D6C4-5BE4-49AB-BCD2-91F3889DFF9B}">
+        <File Id="File_Microsoft_UI_Windowing_dll_57" Source="$(var.PublishOutputPath)Microsoft.UI.Windowing.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.winmd -->
+      <Component Id="File_Microsoft_UI_winmd_58" Guid="{0390CB66-4B78-4665-9A35-D259A48C9C69}">
+        <File Id="File_Microsoft_UI_winmd_58" Source="$(var.PublishOutputPath)Microsoft.UI.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Controls.dll -->
+      <Component Id="File_Microsoft_UI_Xaml_Controls_dll_59" Guid="{4DCA9840-EE23-4303-870C-63C1C0BE1E78}">
+        <File Id="File_Microsoft_UI_Xaml_Controls_dll_59" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml.Controls.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Controls.pri -->
+      <Component Id="File_Microsoft_UI_Xaml_Controls_pri_60" Guid="{B23487BD-ADF3-49DF-ACAD-DE33E33B202F}">
+        <File Id="File_Microsoft_UI_Xaml_Controls_pri_60" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml.Controls.pri" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.ui.xaml.dll -->
+      <Component Id="File_Microsoft_ui_xaml_dll_61" Guid="{74528BFF-B641-4440-9A2F-A8D5E37138D6}">
+        <File Id="File_Microsoft_ui_xaml_dll_61" Source="$(var.PublishOutputPath)Microsoft.ui.xaml.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Internal.dll -->
+      <Component Id="File_Microsoft_UI_Xaml_Internal_dll_62" Guid="{53D8DE0E-BCF9-42E3-B52B-5339F8E30994}">
+        <File Id="File_Microsoft_UI_Xaml_Internal_dll_62" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml.Internal.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_63" Guid="{0049E7A9-5F80-4929-AD6C-291489C87D5D}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_63" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml.Phone.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.ui.xaml.resources.19h1.dll -->
+      <Component Id="File_Microsoft_ui_xaml_resources_19h1_dll_64" Guid="{9F2F0DC2-5060-42DA-A77B-883EFFB8726C}">
+        <File Id="File_Microsoft_ui_xaml_resources_19h1_dll_64" Source="$(var.PublishOutputPath)Microsoft.ui.xaml.resources.19h1.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.ui.xaml.resources.common.dll -->
+      <Component Id="File_Microsoft_ui_xaml_resources_common_dll_65" Guid="{7016DB76-32F9-4E3E-AAD4-5DE8BEFBC8FA}">
+        <File Id="File_Microsoft_ui_xaml_resources_common_dll_65" Source="$(var.PublishOutputPath)Microsoft.ui.xaml.resources.common.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.winmd -->
+      <Component Id="File_Microsoft_UI_Xaml_winmd_66" Guid="{676EB053-02B4-416B-820B-CD4862BA00E8}">
+        <File Id="File_Microsoft_UI_Xaml_winmd_66" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.VisualBasic.Core.dll -->
+      <Component Id="File_Microsoft_VisualBasic_Core_dll_67" Guid="{2F9E27B8-0B0D-4727-A0EE-EF68774E1666}">
+        <File Id="File_Microsoft_VisualBasic_Core_dll_67" Source="$(var.PublishOutputPath)Microsoft.VisualBasic.Core.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.VisualBasic.dll -->
+      <Component Id="File_Microsoft_VisualBasic_dll_68" Guid="{1005D2FB-BD8F-4F66-AD93-C8A528DCD7E6}">
+        <File Id="File_Microsoft_VisualBasic_dll_68" Source="$(var.PublishOutputPath)Microsoft.VisualBasic.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Web.WebView2.Core.dll -->
+      <Component Id="File_Microsoft_Web_WebView2_Core_dll_69" Guid="{7EF5A821-EE69-482A-A48D-EF6A2ECDE46F}">
+        <File Id="File_Microsoft_Web_WebView2_Core_dll_69" Source="$(var.PublishOutputPath)Microsoft.Web.WebView2.Core.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Web.WebView2.Core.Projection.dll -->
+      <Component Id="File_Microsoft_Web_WebView2_Core_Projection_dll_70" Guid="{2DF28E57-8895-4E9E-9789-D66E960EE907}">
+        <File Id="File_Microsoft_Web_WebView2_Core_Projection_dll_70" Source="$(var.PublishOutputPath)Microsoft.Web.WebView2.Core.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Win32.Primitives.dll -->
+      <Component Id="File_Microsoft_Win32_Primitives_dll_71" Guid="{C28DE0BA-93A1-463C-BCF7-5DEC8CD2F5C1}">
+        <File Id="File_Microsoft_Win32_Primitives_dll_71" Source="$(var.PublishOutputPath)Microsoft.Win32.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Win32.Registry.dll -->
+      <Component Id="File_Microsoft_Win32_Registry_dll_72" Guid="{B79A15E7-DC16-4ACE-B0BC-D968E87AEA7A}">
+        <File Id="File_Microsoft_Win32_Registry_dll_72" Source="$(var.PublishOutputPath)Microsoft.Win32.Registry.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.ContentModerationInternal.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_ContentModerationInterna_73" Guid="{2233E82B-B7AF-4EEB-A1B0-286DDF5F9E78}">
+        <File Id="File_Microsoft_Windows_AI_ContentModerationInterna_73" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.ContentModerationInternal.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.ContentSafety.dll -->
+      <Component Id="File_Microsoft_Windows_AI_ContentSafety_dll_74" Guid="{923157F2-5BCA-4F35-87CD-490FD15B9BD9}">
+        <File Id="File_Microsoft_Windows_AI_ContentSafety_dll_74" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.ContentSafety.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.ContentSafety.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AI_ContentSafety_Projection_75" Guid="{80070D9E-F050-4E4D-9FB7-32FDD41B8FF6}">
+        <File Id="File_Microsoft_Windows_AI_ContentSafety_Projection_75" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.ContentSafety.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.ContentSafety.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_ContentSafety_winmd_76" Guid="{E2EFBD22-25B3-492F-A9E9-86346EA05FC1}">
+        <File Id="File_Microsoft_Windows_AI_ContentSafety_winmd_76" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.ContentSafety.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Foundation.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_Foundation_winmd_77" Guid="{C5CCD909-F71E-4E07-8FE0-B50915642369}">
+        <File Id="File_Microsoft_Windows_AI_Foundation_winmd_77" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Foundation.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.FoundationInternal.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_FoundationInternal_winmd_78" Guid="{680C6AF4-066A-4BBC-A85B-ED2116F3C7E7}">
+        <File Id="File_Microsoft_Windows_AI_FoundationInternal_winmd_78" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.FoundationInternal.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.GenerativeInternal.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_GenerativeInternal_winmd_79" Guid="{A174316B-0181-4BB2-A17E-95FC5EE23BCE}">
+        <File Id="File_Microsoft_Windows_AI_GenerativeInternal_winmd_79" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.GenerativeInternal.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Imaging.dll -->
+      <Component Id="File_Microsoft_Windows_AI_Imaging_dll_80" Guid="{6ED46005-530C-464B-8021-E2EDF981FF34}">
+        <File Id="File_Microsoft_Windows_AI_Imaging_dll_80" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Imaging.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Imaging.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AI_Imaging_Projection_dll_81" Guid="{486ED597-CAC3-4E77-9B7C-59AE5BDD481E}">
+        <File Id="File_Microsoft_Windows_AI_Imaging_Projection_dll_81" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Imaging.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Imaging.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_Imaging_winmd_82" Guid="{1887FCF3-95E1-46E2-A88A-0C8FFAA38C4C}">
+        <File Id="File_Microsoft_Windows_AI_Imaging_winmd_82" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Imaging.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AI_Projection_dll_83" Guid="{1796B588-B1CD-4F61-B96C-727D3C47F007}">
+        <File Id="File_Microsoft_Windows_AI_Projection_dll_83" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Text.dll -->
+      <Component Id="File_Microsoft_Windows_AI_Text_dll_84" Guid="{ECC63436-BDC2-44B3-9AF3-BD32CBDD0191}">
+        <File Id="File_Microsoft_Windows_AI_Text_dll_84" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Text.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Text.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AI_Text_Projection_dll_85" Guid="{4DD4FF8E-F814-41B8-84CF-23CB22F8E51C}">
+        <File Id="File_Microsoft_Windows_AI_Text_Projection_dll_85" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Text.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.Text.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_Text_winmd_86" Guid="{80D4972B-B419-41BF-932A-9317B3FA6255}">
+        <File Id="File_Microsoft_Windows_AI_Text_winmd_86" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.Text.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AI.winmd -->
+      <Component Id="File_Microsoft_Windows_AI_winmd_87" Guid="{80EDAAEC-3EB7-4C7F-A054-2B5A2CF159F9}">
+        <File Id="File_Microsoft_Windows_AI_winmd_87" Source="$(var.PublishOutputPath)Microsoft.Windows.AI.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Background.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Background_88" Guid="{DCBC1015-05E2-44D0-95F8-35802188C02F}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Background_88" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Background.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Background_89" Guid="{9A003446-5542-485E-9FEE-E326713CCA13}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Background_89" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Background_90" Guid="{9FEC9BDE-8DF6-4C87-A2E0-01A54CA63C7A}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Background_90" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Background.winmd -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Background_91" Guid="{4428E280-19CC-4A50-80FF-148E8BAED625}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Background_91" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Background.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_DynamicDep_92" Guid="{29992DCA-9881-4AFD-AEE8-E1124275A135}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_DynamicDep_92" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.DynamicDependency.winmd -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_DynamicDep_93" Guid="{3A7F6C3D-F462-47CE-AC57-8D5F10549D51}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_DynamicDep_93" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.DynamicDependency.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Resources.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Resources__94" Guid="{11DF6F6C-7EA2-43D0-9512-FF43E90C4D56}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Resources__94" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Resources.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Resources.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Resources__95" Guid="{EB4E9611-9322-4DE4-8325-3DE16BD8C1A9}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Resources__95" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Resources.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.Resources.winmd -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_Resources__96" Guid="{68DE876B-30C6-4E98-810F-2D9595ACAB07}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_Resources__96" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.Resources.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_WindowsApp_97" Guid="{928F7B3C-B9C7-41B3-BF89-BEEA9A8BA934}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_WindowsApp_97" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd -->
+      <Component Id="File_Microsoft_Windows_ApplicationModel_WindowsApp_98" Guid="{0C9A0DFF-92E9-4141-92D1-C166FA8CBC0E}">
+        <File Id="File_Microsoft_Windows_ApplicationModel_WindowsApp_98" Source="$(var.PublishOutputPath)Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppLifecycle.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AppLifecycle_Projection_dll_99" Guid="{89B48B28-425B-409E-884B-07AF47E8BF09}">
+        <File Id="File_Microsoft_Windows_AppLifecycle_Projection_dll_99" Source="$(var.PublishOutputPath)Microsoft.Windows.AppLifecycle.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppLifecycle.winmd -->
+      <Component Id="File_Microsoft_Windows_AppLifecycle_winmd_100" Guid="{67056C17-96DD-4065-A520-F078B4EAE8BC}">
+        <File Id="File_Microsoft_Windows_AppLifecycle_winmd_100" Source="$(var.PublishOutputPath)Microsoft.Windows.AppLifecycle.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppNotifications.Builder.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AppNotifications_Builder_Pr_101" Guid="{016E5E48-8EB5-4223-9C1F-12D7DE72DECE}">
+        <File Id="File_Microsoft_Windows_AppNotifications_Builder_Pr_101" Source="$(var.PublishOutputPath)Microsoft.Windows.AppNotifications.Builder.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppNotifications.Builder.winmd -->
+      <Component Id="File_Microsoft_Windows_AppNotifications_Builder_wi_102" Guid="{4E310146-7B4A-437C-AC13-098DE087118B}">
+        <File Id="File_Microsoft_Windows_AppNotifications_Builder_wi_102" Source="$(var.PublishOutputPath)Microsoft.Windows.AppNotifications.Builder.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppNotifications.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_AppNotifications_Projection_103" Guid="{CFD73D80-D908-416A-987E-52649799B826}">
+        <File Id="File_Microsoft_Windows_AppNotifications_Projection_103" Source="$(var.PublishOutputPath)Microsoft.Windows.AppNotifications.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.AppNotifications.winmd -->
+      <Component Id="File_Microsoft_Windows_AppNotifications_winmd_104" Guid="{C12FCFF1-0590-4C5F-B4C4-6EC05B361213}">
+        <File Id="File_Microsoft_Windows_AppNotifications_winmd_104" Source="$(var.PublishOutputPath)Microsoft.Windows.AppNotifications.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.BadgeNotifications.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_BadgeNotifications_Projecti_105" Guid="{DD4079DC-50BA-4541-B876-B034618971D6}">
+        <File Id="File_Microsoft_Windows_BadgeNotifications_Projecti_105" Source="$(var.PublishOutputPath)Microsoft.Windows.BadgeNotifications.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.BadgeNotifications.winmd -->
+      <Component Id="File_Microsoft_Windows_BadgeNotifications_winmd_106" Guid="{8538FC46-1B0B-4F32-AEAA-B8F213371142}">
+        <File Id="File_Microsoft_Windows_BadgeNotifications_winmd_106" Source="$(var.PublishOutputPath)Microsoft.Windows.BadgeNotifications.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Globalization.winmd -->
+      <Component Id="File_Microsoft_Windows_Globalization_winmd_107" Guid="{7E41FC9A-1E36-4222-9DB0-22551E8E96A5}">
+        <File Id="File_Microsoft_Windows_Globalization_winmd_107" Source="$(var.PublishOutputPath)Microsoft.Windows.Globalization.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Internal.Vision.winmd -->
+      <Component Id="File_Microsoft_Windows_Internal_Vision_winmd_108" Guid="{FAAE33D6-4FCE-4CC7-8BDC-EE442B02AAE2}">
+        <File Id="File_Microsoft_Windows_Internal_Vision_winmd_108" Source="$(var.PublishOutputPath)Microsoft.Windows.Internal.Vision.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Management.Deployment.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_Management_Deployment_Proje_109" Guid="{6500166F-05CE-4C4A-95FF-F00A9E778967}">
+        <File Id="File_Microsoft_Windows_Management_Deployment_Proje_109" Source="$(var.PublishOutputPath)Microsoft.Windows.Management.Deployment.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Management.Deployment.winmd -->
+      <Component Id="File_Microsoft_Windows_Management_Deployment_winmd_110" Guid="{D6D106B9-E219-40FE-87CA-094A6C8FFA40}">
+        <File Id="File_Microsoft_Windows_Management_Deployment_winmd_110" Source="$(var.PublishOutputPath)Microsoft.Windows.Management.Deployment.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Media.Capture.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_Media_Capture_Projection_dl_111" Guid="{25ACAE55-94D2-4923-A48F-96C6B9ECF56D}">
+        <File Id="File_Microsoft_Windows_Media_Capture_Projection_dl_111" Source="$(var.PublishOutputPath)Microsoft.Windows.Media.Capture.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Media.Capture.winmd -->
+      <Component Id="File_Microsoft_Windows_Media_Capture_winmd_112" Guid="{07F272BE-4878-420C-BAD6-836A8B67EC3D}">
+        <File Id="File_Microsoft_Windows_Media_Capture_winmd_112" Source="$(var.PublishOutputPath)Microsoft.Windows.Media.Capture.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Private.Workloads.SessionManager.winmd -->
+      <Component Id="File_Microsoft_Windows_Private_Workloads_SessionMa_113" Guid="{12A805B8-A223-4869-84E7-92D76D1DFE8F}">
+        <File Id="File_Microsoft_Windows_Private_Workloads_SessionMa_113" Source="$(var.PublishOutputPath)Microsoft.Windows.Private.Workloads.SessionManager.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.PrivateCommon.winmd -->
+      <Component Id="File_Microsoft_Windows_PrivateCommon_winmd_114" Guid="{44EE99A4-C44A-411A-B792-F0DC887BCFAB}">
+        <File Id="File_Microsoft_Windows_PrivateCommon_winmd_114" Source="$(var.PublishOutputPath)Microsoft.Windows.PrivateCommon.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.PushNotifications.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_PushNotifications_Projectio_115" Guid="{441350FF-D35A-4F73-A8A9-1C1C88CF3F01}">
+        <File Id="File_Microsoft_Windows_PushNotifications_Projectio_115" Source="$(var.PublishOutputPath)Microsoft.Windows.PushNotifications.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.PushNotifications.winmd -->
+      <Component Id="File_Microsoft_Windows_PushNotifications_winmd_116" Guid="{853A0D9E-1467-401B-B982-000745960B8E}">
+        <File Id="File_Microsoft_Windows_PushNotifications_winmd_116" Source="$(var.PublishOutputPath)Microsoft.Windows.PushNotifications.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.SDK.NET.dll -->
+      <Component Id="File_Microsoft_Windows_SDK_NET_dll_117" Guid="{92E875C1-E99C-463F-BF8D-5046959CF4A5}">
+        <File Id="File_Microsoft_Windows_SDK_NET_dll_117" Source="$(var.PublishOutputPath)Microsoft.Windows.SDK.NET.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Security.AccessControl.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_Security_AccessControl_Proj_118" Guid="{880DC20E-D104-49C1-9C2E-E6320B6DCE90}">
+        <File Id="File_Microsoft_Windows_Security_AccessControl_Proj_118" Source="$(var.PublishOutputPath)Microsoft.Windows.Security.AccessControl.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Security.AccessControl.winmd -->
+      <Component Id="File_Microsoft_Windows_Security_AccessControl_winm_119" Guid="{D3C0EE79-CF2A-452B-81A9-8BAE66E22F54}">
+        <File Id="File_Microsoft_Windows_Security_AccessControl_winm_119" Source="$(var.PublishOutputPath)Microsoft.Windows.Security.AccessControl.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.SemanticSearch.winmd -->
+      <Component Id="File_Microsoft_Windows_SemanticSearch_winmd_120" Guid="{9B376B55-59DC-4CE0-8F9C-E0B02EB5E3F1}">
+        <File Id="File_Microsoft_Windows_SemanticSearch_winmd_120" Source="$(var.PublishOutputPath)Microsoft.Windows.SemanticSearch.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Storage.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_Storage_Projection_dll_121" Guid="{E902F457-B0B2-4A9D-BB81-4E935B23CAA9}">
+        <File Id="File_Microsoft_Windows_Storage_Projection_dll_121" Source="$(var.PublishOutputPath)Microsoft.Windows.Storage.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Storage.winmd -->
+      <Component Id="File_Microsoft_Windows_Storage_winmd_122" Guid="{D1F5349E-C683-4741-A751-926671E0FF60}">
+        <File Id="File_Microsoft_Windows_Storage_winmd_122" Source="$(var.PublishOutputPath)Microsoft.Windows.Storage.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.System.Power.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_System_Power_Projection_dll_123" Guid="{C412F520-0A58-4C56-9612-49D5300ED4D3}">
+        <File Id="File_Microsoft_Windows_System_Power_Projection_dll_123" Source="$(var.PublishOutputPath)Microsoft.Windows.System.Power.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.System.Power.winmd -->
+      <Component Id="File_Microsoft_Windows_System_Power_winmd_124" Guid="{224B5600-946D-4D02-A349-BFF4F5C6FC14}">
+        <File Id="File_Microsoft_Windows_System_Power_winmd_124" Source="$(var.PublishOutputPath)Microsoft.Windows.System.Power.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.System.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_System_Projection_dll_125" Guid="{9799C29A-2CF8-4A3E-91C3-E5FBE43B8177}">
+        <File Id="File_Microsoft_Windows_System_Projection_dll_125" Source="$(var.PublishOutputPath)Microsoft.Windows.System.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.System.winmd -->
+      <Component Id="File_Microsoft_Windows_System_winmd_126" Guid="{385B041B-C3B2-495A-9683-94A04DF544E5}">
+        <File Id="File_Microsoft_Windows_System_winmd_126" Source="$(var.PublishOutputPath)Microsoft.Windows.System.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Vision.winmd -->
+      <Component Id="File_Microsoft_Windows_Vision_winmd_127" Guid="{2A2D4A5D-B2B9-4DA2-812B-C69BA5A6F1C1}">
+        <File Id="File_Microsoft_Windows_Vision_winmd_127" Source="$(var.PublishOutputPath)Microsoft.Windows.Vision.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.VisionInternal.winmd -->
+      <Component Id="File_Microsoft_Windows_VisionInternal_winmd_128" Guid="{8852109D-7029-4295-B1DD-A22D55252C6E}">
+        <File Id="File_Microsoft_Windows_VisionInternal_winmd_128" Source="$(var.PublishOutputPath)Microsoft.Windows.VisionInternal.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Widgets.dll -->
+      <Component Id="File_Microsoft_Windows_Widgets_dll_129" Guid="{50C05434-5B32-43D3-A513-E961EF734C78}">
+        <File Id="File_Microsoft_Windows_Widgets_dll_129" Source="$(var.PublishOutputPath)Microsoft.Windows.Widgets.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Widgets.Projection.dll -->
+      <Component Id="File_Microsoft_Windows_Widgets_Projection_dll_130" Guid="{7CCB5A34-9418-49BD-8766-4850D9266563}">
+        <File Id="File_Microsoft_Windows_Widgets_Projection_dll_130" Source="$(var.PublishOutputPath)Microsoft.Windows.Widgets.Projection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Widgets.winmd -->
+      <Component Id="File_Microsoft_Windows_Widgets_winmd_131" Guid="{0CCCF9BD-929F-409E-8A3E-1C000A555485}">
+        <File Id="File_Microsoft_Windows_Widgets_winmd_131" Source="$(var.PublishOutputPath)Microsoft.Windows.Widgets.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Workloads.dll -->
+      <Component Id="File_Microsoft_Windows_Workloads_dll_132" Guid="{4CAF6E91-ED28-4E9F-B6D8-1960CC05F85B}">
+        <File Id="File_Microsoft_Windows_Workloads_dll_132" Source="$(var.PublishOutputPath)Microsoft.Windows.Workloads.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Workloads.Resources_ec.dll -->
+      <Component Id="File_Microsoft_Windows_Workloads_Resources_ec_dll_133" Guid="{19414CB4-17B3-4955-9B11-775BBDC5DAFC}">
+        <File Id="File_Microsoft_Windows_Workloads_Resources_ec_dll_133" Source="$(var.PublishOutputPath)Microsoft.Windows.Workloads.Resources_ec.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Workloads.Resources.dll -->
+      <Component Id="File_Microsoft_Windows_Workloads_Resources_dll_134" Guid="{DF8EEE37-E4B2-469F-900D-5D5D902E38A1}">
+        <File Id="File_Microsoft_Windows_Workloads_Resources_dll_134" Source="$(var.PublishOutputPath)Microsoft.Windows.Workloads.Resources.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.Windows.Workloads.winmd -->
+      <Component Id="File_Microsoft_Windows_Workloads_winmd_135" Guid="{6E2E0FFC-232A-4022-9904-BEF4A4FCD109}">
+        <File Id="File_Microsoft_Windows_Workloads_winmd_135" Source="$(var.PublishOutputPath)Microsoft.Windows.Workloads.winmd" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+      <Component Id="File_Microsoft_WindowsAppRuntime_Bootstrap_dll_136" Guid="{8C643D5E-71A9-4187-B06F-A4D42C67E6A7}">
+        <File Id="File_Microsoft_WindowsAppRuntime_Bootstrap_dll_136" Source="$(var.PublishOutputPath)Microsoft.WindowsAppRuntime.Bootstrap.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.WindowsAppRuntime.Bootstrap.Net.dll -->
+      <Component Id="File_Microsoft_WindowsAppRuntime_Bootstrap_Net_dll_137" Guid="{B15CAA92-0667-400A-9651-2A3293EB7185}">
+        <File Id="File_Microsoft_WindowsAppRuntime_Bootstrap_Net_dll_137" Source="$(var.PublishOutputPath)Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.WindowsAppRuntime.dll -->
+      <Component Id="File_Microsoft_WindowsAppRuntime_dll_138" Guid="{1215709F-45D9-4DAB-AC4E-431D28661AED}">
+        <File Id="File_Microsoft_WindowsAppRuntime_dll_138" Source="$(var.PublishOutputPath)Microsoft.WindowsAppRuntime.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.WindowsAppRuntime.Insights.Resource.dll -->
+      <Component Id="File_Microsoft_WindowsAppRuntime_Insights_Resource_139" Guid="{D144CE91-27EC-47AA-AC49-EF84C1A604C0}">
+        <File Id="File_Microsoft_WindowsAppRuntime_Insights_Resource_139" Source="$(var.PublishOutputPath)Microsoft.WindowsAppRuntime.Insights.Resource.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.WinUI.dll -->
+      <Component Id="File_Microsoft_WinUI_dll_140" Guid="{908C44AF-32B5-498C-AA0F-70E87A07DE91}">
+        <File Id="File_Microsoft_WinUI_dll_140" Source="$(var.PublishOutputPath)Microsoft.WinUI.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: MRM.dll -->
+      <Component Id="File_MRM_dll_141" Guid="{BB5D0977-2C5F-4820-B4A7-FAC9AE3FBD81}">
+        <File Id="File_MRM_dll_141" Source="$(var.PublishOutputPath)MRM.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: mscordaccore_amd64_amd64_9.0.825.36511.dll -->
+      <Component Id="File_mscordaccore_amd64_amd64_9_0_825_36511_dll_142" Guid="{5B4F4279-C8D1-46B0-A9A9-C52F7D1B31AD}">
+        <File Id="File_mscordaccore_amd64_amd64_9_0_825_36511_dll_142" Source="$(var.PublishOutputPath)mscordaccore_amd64_amd64_9.0.825.36511.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: mscordaccore.dll -->
+      <Component Id="File_mscordaccore_dll_143" Guid="{58576E28-F0E6-4154-A0D1-9A599306B13A}">
+        <File Id="File_mscordaccore_dll_143" Source="$(var.PublishOutputPath)mscordaccore.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: mscordbi.dll -->
+      <Component Id="File_mscordbi_dll_144" Guid="{DB406719-D2B2-4979-B7B9-6A12C34A8BA2}">
+        <File Id="File_mscordbi_dll_144" Source="$(var.PublishOutputPath)mscordbi.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: mscorlib.dll -->
+      <Component Id="File_mscorlib_dll_145" Guid="{0D90D474-C468-4A8D-92D5-FF99F86F3A1A}">
+        <File Id="File_mscorlib_dll_145" Source="$(var.PublishOutputPath)mscorlib.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: mscorrc.dll -->
+      <Component Id="File_mscorrc_dll_146" Guid="{43F560FD-8B6B-41ED-8A53-A1C0FC9E2568}">
+        <File Id="File_mscorrc_dll_146" Source="$(var.PublishOutputPath)mscorrc.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: msquic.dll -->
+      <Component Id="File_msquic_dll_147" Guid="{9BEABFC1-EB92-4102-8CFB-3CCF4F276759}">
+        <File Id="File_msquic_dll_147" Source="$(var.PublishOutputPath)msquic.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: netstandard.dll -->
+      <Component Id="File_netstandard_dll_148" Guid="{C6BED2CF-F6C3-4ED7-A072-D92669BFC79C}">
+        <File Id="File_netstandard_dll_148" Source="$(var.PublishOutputPath)netstandard.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Newtonsoft.Json.dll -->
+      <Component Id="File_Newtonsoft_Json_dll_149" Guid="{E28B046D-CC97-4AE0-91B9-ED260855320A}">
+        <File Id="File_Newtonsoft_Json_dll_149" Source="$(var.PublishOutputPath)Newtonsoft.Json.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: PushNotificationsLongRunningTask.ProxyStub.dll -->
+      <Component Id="File_PushNotificationsLongRunningTask_ProxyStub_dl_150" Guid="{0AA9B8EA-4B4E-4E27-9536-F7656334BDAA}">
+        <File Id="File_PushNotificationsLongRunningTask_ProxyStub_dl_150" Source="$(var.PublishOutputPath)PushNotificationsLongRunningTask.ProxyStub.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: resources.pri -->
+      <Component Id="File_resources_pri_151" Guid="{01D445A3-55E1-43EE-80BB-65FC97AFFE48}">
+        <File Id="File_resources_pri_151" Source="$(var.PublishOutputPath)resources.pri" KeyPath="yes" />
+      </Component>
+
+      <!-- File: RestartAgent.exe -->
+      <Component Id="File_RestartAgent_exe_152" Guid="{A949607B-4371-4AFA-A994-8F21DF63A00C}">
+        <File Id="File_RestartAgent_exe_152" Source="$(var.PublishOutputPath)RestartAgent.exe" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Serilog.dll -->
+      <Component Id="File_Serilog_dll_153" Guid="{CD73286B-73FC-44C8-900D-636F9F76924D}">
+        <File Id="File_Serilog_dll_153" Source="$(var.PublishOutputPath)Serilog.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Serilog.Sinks.Console.dll -->
+      <Component Id="File_Serilog_Sinks_Console_dll_154" Guid="{B48E3252-DDA7-4926-BF6B-564A1F3077BF}">
+        <File Id="File_Serilog_Sinks_Console_dll_154" Source="$(var.PublishOutputPath)Serilog.Sinks.Console.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Serilog.Sinks.Debug.dll -->
+      <Component Id="File_Serilog_Sinks_Debug_dll_155" Guid="{D7789BAA-5FC8-4CFF-A87C-4AEE38056CAC}">
+        <File Id="File_Serilog_Sinks_Debug_dll_155" Source="$(var.PublishOutputPath)Serilog.Sinks.Debug.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Serilog.Sinks.File.dll -->
+      <Component Id="File_Serilog_Sinks_File_dll_156" Guid="{181293CB-FCD2-41FB-AD95-203E204EAD62}">
+        <File Id="File_Serilog_Sinks_File_dll_156" Source="$(var.PublishOutputPath)Serilog.Sinks.File.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: SessionHandleIPCProxyStub.dll -->
+      <Component Id="File_SessionHandleIPCProxyStub_dll_157" Guid="{29776743-10A2-47F5-A6EB-F1BE58777B7C}">
+        <File Id="File_SessionHandleIPCProxyStub_dll_157" Source="$(var.PublishOutputPath)SessionHandleIPCProxyStub.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.AppContext.dll -->
+      <Component Id="File_System_AppContext_dll_158" Guid="{751C2AAF-0136-4FC1-8F05-F8CC40EFBF8B}">
+        <File Id="File_System_AppContext_dll_158" Source="$(var.PublishOutputPath)System.AppContext.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Buffers.dll -->
+      <Component Id="File_System_Buffers_dll_159" Guid="{530A56CC-472A-4BC5-9A38-F892A9030213}">
+        <File Id="File_System_Buffers_dll_159" Source="$(var.PublishOutputPath)System.Buffers.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Collections.Concurrent.dll -->
+      <Component Id="File_System_Collections_Concurrent_dll_160" Guid="{CB8D31AD-F30C-4094-83C9-3F57F82C4AB5}">
+        <File Id="File_System_Collections_Concurrent_dll_160" Source="$(var.PublishOutputPath)System.Collections.Concurrent.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Collections.dll -->
+      <Component Id="File_System_Collections_dll_161" Guid="{6C4204D7-7A1D-4F63-AF37-71129B285285}">
+        <File Id="File_System_Collections_dll_161" Source="$(var.PublishOutputPath)System.Collections.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Collections.Immutable.dll -->
+      <Component Id="File_System_Collections_Immutable_dll_162" Guid="{3872187C-B8B7-4AC4-9DE0-6F4BBAD1FB29}">
+        <File Id="File_System_Collections_Immutable_dll_162" Source="$(var.PublishOutputPath)System.Collections.Immutable.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Collections.NonGeneric.dll -->
+      <Component Id="File_System_Collections_NonGeneric_dll_163" Guid="{314C8D3A-6500-4BD9-83A3-9B38E0752C94}">
+        <File Id="File_System_Collections_NonGeneric_dll_163" Source="$(var.PublishOutputPath)System.Collections.NonGeneric.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Collections.Specialized.dll -->
+      <Component Id="File_System_Collections_Specialized_dll_164" Guid="{C69B091C-0377-41DB-A4D7-EBEDF0A4B19F}">
+        <File Id="File_System_Collections_Specialized_dll_164" Source="$(var.PublishOutputPath)System.Collections.Specialized.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.Annotations.dll -->
+      <Component Id="File_System_ComponentModel_Annotations_dll_165" Guid="{63FC1665-DF47-4755-93E2-A690DC2BC544}">
+        <File Id="File_System_ComponentModel_Annotations_dll_165" Source="$(var.PublishOutputPath)System.ComponentModel.Annotations.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.DataAnnotations.dll -->
+      <Component Id="File_System_ComponentModel_DataAnnotations_dll_166" Guid="{713364CB-D532-41E6-A63B-53CF76E45EA3}">
+        <File Id="File_System_ComponentModel_DataAnnotations_dll_166" Source="$(var.PublishOutputPath)System.ComponentModel.DataAnnotations.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.dll -->
+      <Component Id="File_System_ComponentModel_dll_167" Guid="{FB987202-7377-4E0C-AB6A-761221D92E58}">
+        <File Id="File_System_ComponentModel_dll_167" Source="$(var.PublishOutputPath)System.ComponentModel.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.EventBasedAsync.dll -->
+      <Component Id="File_System_ComponentModel_EventBasedAsync_dll_168" Guid="{BAB3C4DB-879F-4A44-B1E3-754ACBD6605A}">
+        <File Id="File_System_ComponentModel_EventBasedAsync_dll_168" Source="$(var.PublishOutputPath)System.ComponentModel.EventBasedAsync.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.Primitives.dll -->
+      <Component Id="File_System_ComponentModel_Primitives_dll_169" Guid="{5C6EC3A6-1E23-495F-8CAE-6CCFB7BB9B50}">
+        <File Id="File_System_ComponentModel_Primitives_dll_169" Source="$(var.PublishOutputPath)System.ComponentModel.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ComponentModel.TypeConverter.dll -->
+      <Component Id="File_System_ComponentModel_TypeConverter_dll_170" Guid="{517B78C4-2A4C-4CE9-9D5C-7EE3112A175F}">
+        <File Id="File_System_ComponentModel_TypeConverter_dll_170" Source="$(var.PublishOutputPath)System.ComponentModel.TypeConverter.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Configuration.dll -->
+      <Component Id="File_System_Configuration_dll_171" Guid="{570D2BE2-45E0-4115-9A3E-37EA6DFCC14B}">
+        <File Id="File_System_Configuration_dll_171" Source="$(var.PublishOutputPath)System.Configuration.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Console.dll -->
+      <Component Id="File_System_Console_dll_172" Guid="{656433D5-DD9D-4D65-9D47-827F0021C3DF}">
+        <File Id="File_System_Console_dll_172" Source="$(var.PublishOutputPath)System.Console.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Core.dll -->
+      <Component Id="File_System_Core_dll_173" Guid="{3FCCC55A-64F5-4253-9C5A-AE456CC2DFAE}">
+        <File Id="File_System_Core_dll_173" Source="$(var.PublishOutputPath)System.Core.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Data.Common.dll -->
+      <Component Id="File_System_Data_Common_dll_174" Guid="{4E617CAF-B611-4654-9D75-271809D2ED5A}">
+        <File Id="File_System_Data_Common_dll_174" Source="$(var.PublishOutputPath)System.Data.Common.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Data.DataSetExtensions.dll -->
+      <Component Id="File_System_Data_DataSetExtensions_dll_175" Guid="{44BBFC17-0C11-4C48-8034-01B64C40D0BD}">
+        <File Id="File_System_Data_DataSetExtensions_dll_175" Source="$(var.PublishOutputPath)System.Data.DataSetExtensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Data.dll -->
+      <Component Id="File_System_Data_dll_176" Guid="{BDA7239D-E3A0-4DD8-A727-7298A390265B}">
+        <File Id="File_System_Data_dll_176" Source="$(var.PublishOutputPath)System.Data.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.Contracts.dll -->
+      <Component Id="File_System_Diagnostics_Contracts_dll_177" Guid="{D88A8315-D4BF-4AA2-9322-B1FA7E3C06D2}">
+        <File Id="File_System_Diagnostics_Contracts_dll_177" Source="$(var.PublishOutputPath)System.Diagnostics.Contracts.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.Debug.dll -->
+      <Component Id="File_System_Diagnostics_Debug_dll_178" Guid="{C0D95533-BBDC-45BF-AC2F-F265F32E5C70}">
+        <File Id="File_System_Diagnostics_Debug_dll_178" Source="$(var.PublishOutputPath)System.Diagnostics.Debug.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.DiagnosticSource.dll -->
+      <Component Id="File_System_Diagnostics_DiagnosticSource_dll_179" Guid="{046059AC-6A08-4FB6-BBC5-EC4642DB1CA1}">
+        <File Id="File_System_Diagnostics_DiagnosticSource_dll_179" Source="$(var.PublishOutputPath)System.Diagnostics.DiagnosticSource.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.FileVersionInfo.dll -->
+      <Component Id="File_System_Diagnostics_FileVersionInfo_dll_180" Guid="{5014094A-0DD9-4710-BF83-C5CA72FD501F}">
+        <File Id="File_System_Diagnostics_FileVersionInfo_dll_180" Source="$(var.PublishOutputPath)System.Diagnostics.FileVersionInfo.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.Process.dll -->
+      <Component Id="File_System_Diagnostics_Process_dll_181" Guid="{4FD549A5-CE28-45A8-8D6B-8C2046F2DA4D}">
+        <File Id="File_System_Diagnostics_Process_dll_181" Source="$(var.PublishOutputPath)System.Diagnostics.Process.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.StackTrace.dll -->
+      <Component Id="File_System_Diagnostics_StackTrace_dll_182" Guid="{9D0DF853-8ACF-4BC2-924F-2EF81309D672}">
+        <File Id="File_System_Diagnostics_StackTrace_dll_182" Source="$(var.PublishOutputPath)System.Diagnostics.StackTrace.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.TextWriterTraceListener.dll -->
+      <Component Id="File_System_Diagnostics_TextWriterTraceListener_dl_183" Guid="{1F64A5B2-F8F8-4634-9F17-79078CBB84F6}">
+        <File Id="File_System_Diagnostics_TextWriterTraceListener_dl_183" Source="$(var.PublishOutputPath)System.Diagnostics.TextWriterTraceListener.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.Tools.dll -->
+      <Component Id="File_System_Diagnostics_Tools_dll_184" Guid="{4F940046-5AB6-4752-8FC3-F6430EB01806}">
+        <File Id="File_System_Diagnostics_Tools_dll_184" Source="$(var.PublishOutputPath)System.Diagnostics.Tools.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.TraceSource.dll -->
+      <Component Id="File_System_Diagnostics_TraceSource_dll_185" Guid="{DC0A7F50-6F36-43F2-B427-33C677E7A27B}">
+        <File Id="File_System_Diagnostics_TraceSource_dll_185" Source="$(var.PublishOutputPath)System.Diagnostics.TraceSource.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Diagnostics.Tracing.dll -->
+      <Component Id="File_System_Diagnostics_Tracing_dll_186" Guid="{942D6362-6DB4-43F8-B2ED-A7AE81CA7EC7}">
+        <File Id="File_System_Diagnostics_Tracing_dll_186" Source="$(var.PublishOutputPath)System.Diagnostics.Tracing.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.dll -->
+      <Component Id="File_System_dll_187" Guid="{96413DBD-0111-469B-A546-A1B36A7BFB02}">
+        <File Id="File_System_dll_187" Source="$(var.PublishOutputPath)System.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Drawing.dll -->
+      <Component Id="File_System_Drawing_dll_188" Guid="{5593A4A3-C2B5-45F0-B2A4-4DE184680DE7}">
+        <File Id="File_System_Drawing_dll_188" Source="$(var.PublishOutputPath)System.Drawing.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Drawing.Primitives.dll -->
+      <Component Id="File_System_Drawing_Primitives_dll_189" Guid="{A2D8C706-2044-40B5-B538-FD2964636A3A}">
+        <File Id="File_System_Drawing_Primitives_dll_189" Source="$(var.PublishOutputPath)System.Drawing.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Dynamic.Runtime.dll -->
+      <Component Id="File_System_Dynamic_Runtime_dll_190" Guid="{9ECFC79A-4F54-4C5D-91DF-715ECA8FBEC5}">
+        <File Id="File_System_Dynamic_Runtime_dll_190" Source="$(var.PublishOutputPath)System.Dynamic.Runtime.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Formats.Asn1.dll -->
+      <Component Id="File_System_Formats_Asn1_dll_191" Guid="{0FF26D20-9BBF-4A1A-9E22-05AC78157412}">
+        <File Id="File_System_Formats_Asn1_dll_191" Source="$(var.PublishOutputPath)System.Formats.Asn1.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Formats.Tar.dll -->
+      <Component Id="File_System_Formats_Tar_dll_192" Guid="{B9981627-163E-492E-8AB3-66C6D1A1804F}">
+        <File Id="File_System_Formats_Tar_dll_192" Source="$(var.PublishOutputPath)System.Formats.Tar.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Globalization.Calendars.dll -->
+      <Component Id="File_System_Globalization_Calendars_dll_193" Guid="{7AD5E2AE-294C-4DF6-956B-E8A1C81F8722}">
+        <File Id="File_System_Globalization_Calendars_dll_193" Source="$(var.PublishOutputPath)System.Globalization.Calendars.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Globalization.dll -->
+      <Component Id="File_System_Globalization_dll_194" Guid="{9E1B52D0-E09D-4095-B06A-1FBEA90F2F59}">
+        <File Id="File_System_Globalization_dll_194" Source="$(var.PublishOutputPath)System.Globalization.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Globalization.Extensions.dll -->
+      <Component Id="File_System_Globalization_Extensions_dll_195" Guid="{5EACEDEB-1F22-41EC-90F0-2D15231E8ACC}">
+        <File Id="File_System_Globalization_Extensions_dll_195" Source="$(var.PublishOutputPath)System.Globalization.Extensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Compression.Brotli.dll -->
+      <Component Id="File_System_IO_Compression_Brotli_dll_196" Guid="{C9BC7E1A-00EA-4C88-A531-5BDA42CBE5CC}">
+        <File Id="File_System_IO_Compression_Brotli_dll_196" Source="$(var.PublishOutputPath)System.IO.Compression.Brotli.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Compression.dll -->
+      <Component Id="File_System_IO_Compression_dll_197" Guid="{9144C9A9-A055-48D5-80D1-F2B170A33B56}">
+        <File Id="File_System_IO_Compression_dll_197" Source="$(var.PublishOutputPath)System.IO.Compression.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Compression.FileSystem.dll -->
+      <Component Id="File_System_IO_Compression_FileSystem_dll_198" Guid="{6E22CFA2-499D-4ABE-AB34-F7B42EE9BF24}">
+        <File Id="File_System_IO_Compression_FileSystem_dll_198" Source="$(var.PublishOutputPath)System.IO.Compression.FileSystem.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Compression.Native.dll -->
+      <Component Id="File_System_IO_Compression_Native_dll_199" Guid="{F9AD273E-471F-407D-B2C7-B1380BDE58B3}">
+        <File Id="File_System_IO_Compression_Native_dll_199" Source="$(var.PublishOutputPath)System.IO.Compression.Native.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Compression.ZipFile.dll -->
+      <Component Id="File_System_IO_Compression_ZipFile_dll_200" Guid="{D42C7EA0-7101-4ED3-9AB5-368F582AD62C}">
+        <File Id="File_System_IO_Compression_ZipFile_dll_200" Source="$(var.PublishOutputPath)System.IO.Compression.ZipFile.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.dll -->
+      <Component Id="File_System_IO_dll_201" Guid="{FFF23385-F884-4FDF-A325-0E452FADB1E5}">
+        <File Id="File_System_IO_dll_201" Source="$(var.PublishOutputPath)System.IO.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.FileSystem.AccessControl.dll -->
+      <Component Id="File_System_IO_FileSystem_AccessControl_dll_202" Guid="{2C566AA7-0C7C-4907-AD22-3842FAC4E0D8}">
+        <File Id="File_System_IO_FileSystem_AccessControl_dll_202" Source="$(var.PublishOutputPath)System.IO.FileSystem.AccessControl.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.FileSystem.dll -->
+      <Component Id="File_System_IO_FileSystem_dll_203" Guid="{A317CA68-D344-40BA-B88E-76BC00838452}">
+        <File Id="File_System_IO_FileSystem_dll_203" Source="$(var.PublishOutputPath)System.IO.FileSystem.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.FileSystem.DriveInfo.dll -->
+      <Component Id="File_System_IO_FileSystem_DriveInfo_dll_204" Guid="{6D89B765-51E8-4448-8410-3F3B2CC021CF}">
+        <File Id="File_System_IO_FileSystem_DriveInfo_dll_204" Source="$(var.PublishOutputPath)System.IO.FileSystem.DriveInfo.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.FileSystem.Primitives.dll -->
+      <Component Id="File_System_IO_FileSystem_Primitives_dll_205" Guid="{B9E2B8F4-538A-433D-99CF-F4B51433967B}">
+        <File Id="File_System_IO_FileSystem_Primitives_dll_205" Source="$(var.PublishOutputPath)System.IO.FileSystem.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.FileSystem.Watcher.dll -->
+      <Component Id="File_System_IO_FileSystem_Watcher_dll_206" Guid="{32257835-AC4A-4047-A39C-32CC1251083A}">
+        <File Id="File_System_IO_FileSystem_Watcher_dll_206" Source="$(var.PublishOutputPath)System.IO.FileSystem.Watcher.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.IsolatedStorage.dll -->
+      <Component Id="File_System_IO_IsolatedStorage_dll_207" Guid="{3D50EC79-212B-44C9-9AE9-409F9A66E829}">
+        <File Id="File_System_IO_IsolatedStorage_dll_207" Source="$(var.PublishOutputPath)System.IO.IsolatedStorage.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.MemoryMappedFiles.dll -->
+      <Component Id="File_System_IO_MemoryMappedFiles_dll_208" Guid="{6273B668-9721-49D3-BA73-E6F46E8B5988}">
+        <File Id="File_System_IO_MemoryMappedFiles_dll_208" Source="$(var.PublishOutputPath)System.IO.MemoryMappedFiles.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Pipelines.dll -->
+      <Component Id="File_System_IO_Pipelines_dll_209" Guid="{F5EF5125-3190-4D62-B26D-932DF40E4808}">
+        <File Id="File_System_IO_Pipelines_dll_209" Source="$(var.PublishOutputPath)System.IO.Pipelines.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Pipes.AccessControl.dll -->
+      <Component Id="File_System_IO_Pipes_AccessControl_dll_210" Guid="{04363CBB-E6AA-491D-B300-EC7BC0D02BC3}">
+        <File Id="File_System_IO_Pipes_AccessControl_dll_210" Source="$(var.PublishOutputPath)System.IO.Pipes.AccessControl.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.Pipes.dll -->
+      <Component Id="File_System_IO_Pipes_dll_211" Guid="{6AB96806-BBB0-44D9-81B6-870497C97640}">
+        <File Id="File_System_IO_Pipes_dll_211" Source="$(var.PublishOutputPath)System.IO.Pipes.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.IO.UnmanagedMemoryStream.dll -->
+      <Component Id="File_System_IO_UnmanagedMemoryStream_dll_212" Guid="{ECF91532-7158-4984-B3D9-023355E3035D}">
+        <File Id="File_System_IO_UnmanagedMemoryStream_dll_212" Source="$(var.PublishOutputPath)System.IO.UnmanagedMemoryStream.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Linq.dll -->
+      <Component Id="File_System_Linq_dll_213" Guid="{D543ED16-691A-49CC-BE94-A3BE4B754C29}">
+        <File Id="File_System_Linq_dll_213" Source="$(var.PublishOutputPath)System.Linq.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Linq.Expressions.dll -->
+      <Component Id="File_System_Linq_Expressions_dll_214" Guid="{3C079648-71F6-4E43-869D-A5CE7C7079F0}">
+        <File Id="File_System_Linq_Expressions_dll_214" Source="$(var.PublishOutputPath)System.Linq.Expressions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Linq.Parallel.dll -->
+      <Component Id="File_System_Linq_Parallel_dll_215" Guid="{C6BC5823-8C18-44DE-8ABA-DA2A7B24B38B}">
+        <File Id="File_System_Linq_Parallel_dll_215" Source="$(var.PublishOutputPath)System.Linq.Parallel.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Linq.Queryable.dll -->
+      <Component Id="File_System_Linq_Queryable_dll_216" Guid="{E8752E52-21CE-4C22-87DB-CD9C66F1CB26}">
+        <File Id="File_System_Linq_Queryable_dll_216" Source="$(var.PublishOutputPath)System.Linq.Queryable.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Memory.dll -->
+      <Component Id="File_System_Memory_dll_217" Guid="{9119DE2B-6FD1-481A-A768-915036735877}">
+        <File Id="File_System_Memory_dll_217" Source="$(var.PublishOutputPath)System.Memory.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.dll -->
+      <Component Id="File_System_Net_dll_218" Guid="{5A55B1AA-149B-4FA0-AF55-D811B0128D44}">
+        <File Id="File_System_Net_dll_218" Source="$(var.PublishOutputPath)System.Net.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Http.dll -->
+      <Component Id="File_System_Net_Http_dll_219" Guid="{AEC1FE5D-499A-4AFB-B5FF-3F88EC90AEED}">
+        <File Id="File_System_Net_Http_dll_219" Source="$(var.PublishOutputPath)System.Net.Http.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Http.Json.dll -->
+      <Component Id="File_System_Net_Http_Json_dll_220" Guid="{77001BAC-DAF6-4A68-A731-60A022318D8C}">
+        <File Id="File_System_Net_Http_Json_dll_220" Source="$(var.PublishOutputPath)System.Net.Http.Json.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.HttpListener.dll -->
+      <Component Id="File_System_Net_HttpListener_dll_221" Guid="{766E8FAB-59BC-407E-8500-6312524F6128}">
+        <File Id="File_System_Net_HttpListener_dll_221" Source="$(var.PublishOutputPath)System.Net.HttpListener.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Mail.dll -->
+      <Component Id="File_System_Net_Mail_dll_222" Guid="{AC33EBCF-F2C7-4BD1-AB65-08CC986B4815}">
+        <File Id="File_System_Net_Mail_dll_222" Source="$(var.PublishOutputPath)System.Net.Mail.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.NameResolution.dll -->
+      <Component Id="File_System_Net_NameResolution_dll_223" Guid="{819EE04B-25C3-43F3-AE1E-C046EB728058}">
+        <File Id="File_System_Net_NameResolution_dll_223" Source="$(var.PublishOutputPath)System.Net.NameResolution.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.NetworkInformation.dll -->
+      <Component Id="File_System_Net_NetworkInformation_dll_224" Guid="{4269CB3E-E213-4782-A353-4F4E5A302957}">
+        <File Id="File_System_Net_NetworkInformation_dll_224" Source="$(var.PublishOutputPath)System.Net.NetworkInformation.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Ping.dll -->
+      <Component Id="File_System_Net_Ping_dll_225" Guid="{A8C4BADF-1063-4417-809F-2476A5596384}">
+        <File Id="File_System_Net_Ping_dll_225" Source="$(var.PublishOutputPath)System.Net.Ping.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Primitives.dll -->
+      <Component Id="File_System_Net_Primitives_dll_226" Guid="{D3F466AF-EDEA-4068-BF32-BD2EDDA84F30}">
+        <File Id="File_System_Net_Primitives_dll_226" Source="$(var.PublishOutputPath)System.Net.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Quic.dll -->
+      <Component Id="File_System_Net_Quic_dll_227" Guid="{4B969237-D904-4253-BDAC-604EFC63FC85}">
+        <File Id="File_System_Net_Quic_dll_227" Source="$(var.PublishOutputPath)System.Net.Quic.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Requests.dll -->
+      <Component Id="File_System_Net_Requests_dll_228" Guid="{57189953-1B24-43FF-BB4E-0AE6D999ED79}">
+        <File Id="File_System_Net_Requests_dll_228" Source="$(var.PublishOutputPath)System.Net.Requests.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Security.dll -->
+      <Component Id="File_System_Net_Security_dll_229" Guid="{16D8FF35-673F-4F94-A0B8-97DA79038D5B}">
+        <File Id="File_System_Net_Security_dll_229" Source="$(var.PublishOutputPath)System.Net.Security.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.ServicePoint.dll -->
+      <Component Id="File_System_Net_ServicePoint_dll_230" Guid="{5E08D650-DA1B-469F-BAAE-DEF0C32241C0}">
+        <File Id="File_System_Net_ServicePoint_dll_230" Source="$(var.PublishOutputPath)System.Net.ServicePoint.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.Sockets.dll -->
+      <Component Id="File_System_Net_Sockets_dll_231" Guid="{E919D30D-3D8E-48A6-9B37-214FE528B6C8}">
+        <File Id="File_System_Net_Sockets_dll_231" Source="$(var.PublishOutputPath)System.Net.Sockets.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.WebClient.dll -->
+      <Component Id="File_System_Net_WebClient_dll_232" Guid="{9130A767-7168-4D87-B09D-DBE23CA078C7}">
+        <File Id="File_System_Net_WebClient_dll_232" Source="$(var.PublishOutputPath)System.Net.WebClient.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.WebHeaderCollection.dll -->
+      <Component Id="File_System_Net_WebHeaderCollection_dll_233" Guid="{DAD36788-91A6-4BE4-82D7-034704069B63}">
+        <File Id="File_System_Net_WebHeaderCollection_dll_233" Source="$(var.PublishOutputPath)System.Net.WebHeaderCollection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.WebProxy.dll -->
+      <Component Id="File_System_Net_WebProxy_dll_234" Guid="{163F3E6A-E8CC-4516-A1E1-773D84B2EF81}">
+        <File Id="File_System_Net_WebProxy_dll_234" Source="$(var.PublishOutputPath)System.Net.WebProxy.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.WebSockets.Client.dll -->
+      <Component Id="File_System_Net_WebSockets_Client_dll_235" Guid="{1027455A-D189-4C8D-914F-9461DEE4F310}">
+        <File Id="File_System_Net_WebSockets_Client_dll_235" Source="$(var.PublishOutputPath)System.Net.WebSockets.Client.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Net.WebSockets.dll -->
+      <Component Id="File_System_Net_WebSockets_dll_236" Guid="{35BF8373-780A-453A-8345-13492890AB02}">
+        <File Id="File_System_Net_WebSockets_dll_236" Source="$(var.PublishOutputPath)System.Net.WebSockets.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Numerics.dll -->
+      <Component Id="File_System_Numerics_dll_237" Guid="{C2097084-E75A-4FBE-B877-621D543BEE3D}">
+        <File Id="File_System_Numerics_dll_237" Source="$(var.PublishOutputPath)System.Numerics.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Numerics.Vectors.dll -->
+      <Component Id="File_System_Numerics_Vectors_dll_238" Guid="{98CF1BC4-C3BA-4311-9B48-433035DE9EDC}">
+        <File Id="File_System_Numerics_Vectors_dll_238" Source="$(var.PublishOutputPath)System.Numerics.Vectors.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ObjectModel.dll -->
+      <Component Id="File_System_ObjectModel_dll_239" Guid="{8A5D7EF3-BD38-4032-B4D9-B3BFB354EB00}">
+        <File Id="File_System_ObjectModel_dll_239" Source="$(var.PublishOutputPath)System.ObjectModel.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Private.CoreLib.dll -->
+      <Component Id="File_System_Private_CoreLib_dll_240" Guid="{F8033517-1701-4C79-8296-453E8D167EA7}">
+        <File Id="File_System_Private_CoreLib_dll_240" Source="$(var.PublishOutputPath)System.Private.CoreLib.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Private.DataContractSerialization.dll -->
+      <Component Id="File_System_Private_DataContractSerialization_dll_241" Guid="{B90F14DC-9B8D-49F2-9A82-4289BF656748}">
+        <File Id="File_System_Private_DataContractSerialization_dll_241" Source="$(var.PublishOutputPath)System.Private.DataContractSerialization.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Private.Uri.dll -->
+      <Component Id="File_System_Private_Uri_dll_242" Guid="{B8E3B176-70E4-4059-9933-BD8B6EC61700}">
+        <File Id="File_System_Private_Uri_dll_242" Source="$(var.PublishOutputPath)System.Private.Uri.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Private.Xml.dll -->
+      <Component Id="File_System_Private_Xml_dll_243" Guid="{73A18C90-3498-4EE8-A2C0-C127CD25D453}">
+        <File Id="File_System_Private_Xml_dll_243" Source="$(var.PublishOutputPath)System.Private.Xml.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Private.Xml.Linq.dll -->
+      <Component Id="File_System_Private_Xml_Linq_dll_244" Guid="{D980EDCF-AE76-4424-921B-362C5F63E68F}">
+        <File Id="File_System_Private_Xml_Linq_dll_244" Source="$(var.PublishOutputPath)System.Private.Xml.Linq.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.DispatchProxy.dll -->
+      <Component Id="File_System_Reflection_DispatchProxy_dll_245" Guid="{68403D3C-1E1B-44F4-AA47-3524D8CDFAE4}">
+        <File Id="File_System_Reflection_DispatchProxy_dll_245" Source="$(var.PublishOutputPath)System.Reflection.DispatchProxy.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.dll -->
+      <Component Id="File_System_Reflection_dll_246" Guid="{B95A9794-D652-4C29-82FC-10ED06764EB6}">
+        <File Id="File_System_Reflection_dll_246" Source="$(var.PublishOutputPath)System.Reflection.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Emit.dll -->
+      <Component Id="File_System_Reflection_Emit_dll_247" Guid="{87D78EE2-E16F-47E0-86E7-F8AE51946D01}">
+        <File Id="File_System_Reflection_Emit_dll_247" Source="$(var.PublishOutputPath)System.Reflection.Emit.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Emit.ILGeneration.dll -->
+      <Component Id="File_System_Reflection_Emit_ILGeneration_dll_248" Guid="{7DBFCF48-9E1C-4385-8DB0-C14D5B6C7E2F}">
+        <File Id="File_System_Reflection_Emit_ILGeneration_dll_248" Source="$(var.PublishOutputPath)System.Reflection.Emit.ILGeneration.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Emit.Lightweight.dll -->
+      <Component Id="File_System_Reflection_Emit_Lightweight_dll_249" Guid="{DE371CA8-42DF-4592-85D8-07F775609CC6}">
+        <File Id="File_System_Reflection_Emit_Lightweight_dll_249" Source="$(var.PublishOutputPath)System.Reflection.Emit.Lightweight.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Extensions.dll -->
+      <Component Id="File_System_Reflection_Extensions_dll_250" Guid="{7B903CC0-78E4-4D9C-BCE5-171248A97606}">
+        <File Id="File_System_Reflection_Extensions_dll_250" Source="$(var.PublishOutputPath)System.Reflection.Extensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Metadata.dll -->
+      <Component Id="File_System_Reflection_Metadata_dll_251" Guid="{F8900EB0-129B-4496-95BB-3FBD211E3395}">
+        <File Id="File_System_Reflection_Metadata_dll_251" Source="$(var.PublishOutputPath)System.Reflection.Metadata.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.Primitives.dll -->
+      <Component Id="File_System_Reflection_Primitives_dll_252" Guid="{CA503E91-54BC-463D-90BD-E540D4B18F5B}">
+        <File Id="File_System_Reflection_Primitives_dll_252" Source="$(var.PublishOutputPath)System.Reflection.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Reflection.TypeExtensions.dll -->
+      <Component Id="File_System_Reflection_TypeExtensions_dll_253" Guid="{B5158EC5-2CB2-4361-89E7-619A635706A8}">
+        <File Id="File_System_Reflection_TypeExtensions_dll_253" Source="$(var.PublishOutputPath)System.Reflection.TypeExtensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Resources.Reader.dll -->
+      <Component Id="File_System_Resources_Reader_dll_254" Guid="{63D71B73-819A-4ECA-AD3D-E024B2F5FEC7}">
+        <File Id="File_System_Resources_Reader_dll_254" Source="$(var.PublishOutputPath)System.Resources.Reader.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Resources.ResourceManager.dll -->
+      <Component Id="File_System_Resources_ResourceManager_dll_255" Guid="{870F866F-72D9-465F-A9D2-8B2933EC2B80}">
+        <File Id="File_System_Resources_ResourceManager_dll_255" Source="$(var.PublishOutputPath)System.Resources.ResourceManager.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Resources.Writer.dll -->
+      <Component Id="File_System_Resources_Writer_dll_256" Guid="{B4A5600A-3DCF-497F-B5F1-42681A7C7C31}">
+        <File Id="File_System_Resources_Writer_dll_256" Source="$(var.PublishOutputPath)System.Resources.Writer.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.CompilerServices.Unsafe.dll -->
+      <Component Id="File_System_Runtime_CompilerServices_Unsafe_dll_257" Guid="{5C8C508D-D474-40D7-BB05-202F9131D116}">
+        <File Id="File_System_Runtime_CompilerServices_Unsafe_dll_257" Source="$(var.PublishOutputPath)System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.CompilerServices.VisualC.dll -->
+      <Component Id="File_System_Runtime_CompilerServices_VisualC_dll_258" Guid="{D3F2E91B-D5A6-4FB0-8B2D-FD94344DB372}">
+        <File Id="File_System_Runtime_CompilerServices_VisualC_dll_258" Source="$(var.PublishOutputPath)System.Runtime.CompilerServices.VisualC.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.dll -->
+      <Component Id="File_System_Runtime_dll_259" Guid="{09FF546C-AE8C-492E-B359-1484C26B4FFA}">
+        <File Id="File_System_Runtime_dll_259" Source="$(var.PublishOutputPath)System.Runtime.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Extensions.dll -->
+      <Component Id="File_System_Runtime_Extensions_dll_260" Guid="{B3B28190-6021-46F5-B2FD-12B5E9CFCA78}">
+        <File Id="File_System_Runtime_Extensions_dll_260" Source="$(var.PublishOutputPath)System.Runtime.Extensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Handles.dll -->
+      <Component Id="File_System_Runtime_Handles_dll_261" Guid="{69185B80-CD28-4D9C-A9F7-5904217DCC41}">
+        <File Id="File_System_Runtime_Handles_dll_261" Source="$(var.PublishOutputPath)System.Runtime.Handles.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.InteropServices.dll -->
+      <Component Id="File_System_Runtime_InteropServices_dll_262" Guid="{BBCA8F10-01F8-47E4-AE2D-DA9B68E9051F}">
+        <File Id="File_System_Runtime_InteropServices_dll_262" Source="$(var.PublishOutputPath)System.Runtime.InteropServices.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.InteropServices.JavaScript.dll -->
+      <Component Id="File_System_Runtime_InteropServices_JavaScript_dll_263" Guid="{392CA401-6EB1-4605-8866-1D9C13EFE699}">
+        <File Id="File_System_Runtime_InteropServices_JavaScript_dll_263" Source="$(var.PublishOutputPath)System.Runtime.InteropServices.JavaScript.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.InteropServices.RuntimeInformation.dll -->
+      <Component Id="File_System_Runtime_InteropServices_RuntimeInforma_264" Guid="{E6B86117-90F5-48A7-B9F4-1CB2BF3B00D8}">
+        <File Id="File_System_Runtime_InteropServices_RuntimeInforma_264" Source="$(var.PublishOutputPath)System.Runtime.InteropServices.RuntimeInformation.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Intrinsics.dll -->
+      <Component Id="File_System_Runtime_Intrinsics_dll_265" Guid="{30C54D69-D494-4794-98BD-450F5549F37C}">
+        <File Id="File_System_Runtime_Intrinsics_dll_265" Source="$(var.PublishOutputPath)System.Runtime.Intrinsics.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Loader.dll -->
+      <Component Id="File_System_Runtime_Loader_dll_266" Guid="{3F3B3B27-BA67-4FD7-A50E-EC632DA67C35}">
+        <File Id="File_System_Runtime_Loader_dll_266" Source="$(var.PublishOutputPath)System.Runtime.Loader.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Numerics.dll -->
+      <Component Id="File_System_Runtime_Numerics_dll_267" Guid="{06A3937C-9507-4E6A-96CB-10DD33CE8DEC}">
+        <File Id="File_System_Runtime_Numerics_dll_267" Source="$(var.PublishOutputPath)System.Runtime.Numerics.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Serialization.dll -->
+      <Component Id="File_System_Runtime_Serialization_dll_268" Guid="{4F2337A9-3372-4A24-868E-41F82C4027D6}">
+        <File Id="File_System_Runtime_Serialization_dll_268" Source="$(var.PublishOutputPath)System.Runtime.Serialization.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Serialization.Formatters.dll -->
+      <Component Id="File_System_Runtime_Serialization_Formatters_dll_269" Guid="{25C67AF1-4CD3-4F8C-85A6-E85E84681F20}">
+        <File Id="File_System_Runtime_Serialization_Formatters_dll_269" Source="$(var.PublishOutputPath)System.Runtime.Serialization.Formatters.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Serialization.Json.dll -->
+      <Component Id="File_System_Runtime_Serialization_Json_dll_270" Guid="{0FCDEE0A-E01B-4472-8AF7-62EAE0CEA00C}">
+        <File Id="File_System_Runtime_Serialization_Json_dll_270" Source="$(var.PublishOutputPath)System.Runtime.Serialization.Json.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Serialization.Primitives.dll -->
+      <Component Id="File_System_Runtime_Serialization_Primitives_dll_271" Guid="{1754229A-6C7E-4213-9527-A457634FB66C}">
+        <File Id="File_System_Runtime_Serialization_Primitives_dll_271" Source="$(var.PublishOutputPath)System.Runtime.Serialization.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Runtime.Serialization.Xml.dll -->
+      <Component Id="File_System_Runtime_Serialization_Xml_dll_272" Guid="{B0EC8441-266D-4494-91C3-F84A3D13D8EE}">
+        <File Id="File_System_Runtime_Serialization_Xml_dll_272" Source="$(var.PublishOutputPath)System.Runtime.Serialization.Xml.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.AccessControl.dll -->
+      <Component Id="File_System_Security_AccessControl_dll_273" Guid="{85041F58-E4D0-461D-98FF-8DDC4452D05C}">
+        <File Id="File_System_Security_AccessControl_dll_273" Source="$(var.PublishOutputPath)System.Security.AccessControl.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Claims.dll -->
+      <Component Id="File_System_Security_Claims_dll_274" Guid="{B03E2E82-F468-4CA0-8A15-8CA789723AC5}">
+        <File Id="File_System_Security_Claims_dll_274" Source="$(var.PublishOutputPath)System.Security.Claims.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.Algorithms.dll -->
+      <Component Id="File_System_Security_Cryptography_Algorithms_dll_275" Guid="{C7AA7F04-A9E2-4513-A624-3C56B21F310C}">
+        <File Id="File_System_Security_Cryptography_Algorithms_dll_275" Source="$(var.PublishOutputPath)System.Security.Cryptography.Algorithms.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.Cng.dll -->
+      <Component Id="File_System_Security_Cryptography_Cng_dll_276" Guid="{6A625971-9E38-4E4B-83D0-544EAEB467FA}">
+        <File Id="File_System_Security_Cryptography_Cng_dll_276" Source="$(var.PublishOutputPath)System.Security.Cryptography.Cng.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.Csp.dll -->
+      <Component Id="File_System_Security_Cryptography_Csp_dll_277" Guid="{65FE8B3E-001B-4786-BCDD-8523067E2ABC}">
+        <File Id="File_System_Security_Cryptography_Csp_dll_277" Source="$(var.PublishOutputPath)System.Security.Cryptography.Csp.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.dll -->
+      <Component Id="File_System_Security_Cryptography_dll_278" Guid="{650B521E-AF7E-4BD0-ACC6-2054017FE150}">
+        <File Id="File_System_Security_Cryptography_dll_278" Source="$(var.PublishOutputPath)System.Security.Cryptography.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.Encoding.dll -->
+      <Component Id="File_System_Security_Cryptography_Encoding_dll_279" Guid="{A01A20D9-0739-467F-8A02-CC77D48E75CA}">
+        <File Id="File_System_Security_Cryptography_Encoding_dll_279" Source="$(var.PublishOutputPath)System.Security.Cryptography.Encoding.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.OpenSsl.dll -->
+      <Component Id="File_System_Security_Cryptography_OpenSsl_dll_280" Guid="{E4F720E3-460D-47A5-8B03-C51DD97987DC}">
+        <File Id="File_System_Security_Cryptography_OpenSsl_dll_280" Source="$(var.PublishOutputPath)System.Security.Cryptography.OpenSsl.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.Primitives.dll -->
+      <Component Id="File_System_Security_Cryptography_Primitives_dll_281" Guid="{5C3C773E-63FA-426C-9226-A0FD92922650}">
+        <File Id="File_System_Security_Cryptography_Primitives_dll_281" Source="$(var.PublishOutputPath)System.Security.Cryptography.Primitives.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Cryptography.X509Certificates.dll -->
+      <Component Id="File_System_Security_Cryptography_X509Certificates_282" Guid="{AF5627B9-2371-4C32-A3A6-2843684F40D8}">
+        <File Id="File_System_Security_Cryptography_X509Certificates_282" Source="$(var.PublishOutputPath)System.Security.Cryptography.X509Certificates.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.dll -->
+      <Component Id="File_System_Security_dll_283" Guid="{37A2CA9A-9C16-4DC6-B312-1445D0C006D7}">
+        <File Id="File_System_Security_dll_283" Source="$(var.PublishOutputPath)System.Security.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Principal.dll -->
+      <Component Id="File_System_Security_Principal_dll_284" Guid="{D192D071-C1DF-4963-AF89-9BD825B5A236}">
+        <File Id="File_System_Security_Principal_dll_284" Source="$(var.PublishOutputPath)System.Security.Principal.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.Principal.Windows.dll -->
+      <Component Id="File_System_Security_Principal_Windows_dll_285" Guid="{23332D46-6C42-4DD2-BEB7-B416A2167428}">
+        <File Id="File_System_Security_Principal_Windows_dll_285" Source="$(var.PublishOutputPath)System.Security.Principal.Windows.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Security.SecureString.dll -->
+      <Component Id="File_System_Security_SecureString_dll_286" Guid="{56377C1C-BCC8-4373-A3DA-9AD811CDDB14}">
+        <File Id="File_System_Security_SecureString_dll_286" Source="$(var.PublishOutputPath)System.Security.SecureString.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ServiceModel.Web.dll -->
+      <Component Id="File_System_ServiceModel_Web_dll_287" Guid="{D619EF9C-E2ED-4A8D-BAF0-6084F4E24E6B}">
+        <File Id="File_System_ServiceModel_Web_dll_287" Source="$(var.PublishOutputPath)System.ServiceModel.Web.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ServiceProcess.dll -->
+      <Component Id="File_System_ServiceProcess_dll_288" Guid="{1FC9C150-0F6A-4E1D-8DF9-6C9BB779E2BA}">
+        <File Id="File_System_ServiceProcess_dll_288" Source="$(var.PublishOutputPath)System.ServiceProcess.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.Encoding.CodePages.dll -->
+      <Component Id="File_System_Text_Encoding_CodePages_dll_289" Guid="{36E55E34-A323-4420-829F-2C115FB2D60A}">
+        <File Id="File_System_Text_Encoding_CodePages_dll_289" Source="$(var.PublishOutputPath)System.Text.Encoding.CodePages.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.Encoding.dll -->
+      <Component Id="File_System_Text_Encoding_dll_290" Guid="{5CE65B21-B7AA-4D3E-9C39-49E69C86675F}">
+        <File Id="File_System_Text_Encoding_dll_290" Source="$(var.PublishOutputPath)System.Text.Encoding.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.Encoding.Extensions.dll -->
+      <Component Id="File_System_Text_Encoding_Extensions_dll_291" Guid="{309C8323-4C74-4F12-B94D-D2DCCE5CF073}">
+        <File Id="File_System_Text_Encoding_Extensions_dll_291" Source="$(var.PublishOutputPath)System.Text.Encoding.Extensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.Encodings.Web.dll -->
+      <Component Id="File_System_Text_Encodings_Web_dll_292" Guid="{FEE33E63-50E3-4D4E-B709-C554D4877325}">
+        <File Id="File_System_Text_Encodings_Web_dll_292" Source="$(var.PublishOutputPath)System.Text.Encodings.Web.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.Json.dll -->
+      <Component Id="File_System_Text_Json_dll_293" Guid="{94DF8F28-A201-4193-B6E8-C2598B294DEC}">
+        <File Id="File_System_Text_Json_dll_293" Source="$(var.PublishOutputPath)System.Text.Json.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Text.RegularExpressions.dll -->
+      <Component Id="File_System_Text_RegularExpressions_dll_294" Guid="{218946C7-B4B0-46A1-8A85-5174CB494345}">
+        <File Id="File_System_Text_RegularExpressions_dll_294" Source="$(var.PublishOutputPath)System.Text.RegularExpressions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Channels.dll -->
+      <Component Id="File_System_Threading_Channels_dll_295" Guid="{F3CB6D83-96C7-49D6-A619-126ED78517AA}">
+        <File Id="File_System_Threading_Channels_dll_295" Source="$(var.PublishOutputPath)System.Threading.Channels.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.dll -->
+      <Component Id="File_System_Threading_dll_296" Guid="{FAA94237-E4D7-4961-8260-FFE70A59FB20}">
+        <File Id="File_System_Threading_dll_296" Source="$(var.PublishOutputPath)System.Threading.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Overlapped.dll -->
+      <Component Id="File_System_Threading_Overlapped_dll_297" Guid="{5BD34805-C8E1-48AA-8467-5A58A737935B}">
+        <File Id="File_System_Threading_Overlapped_dll_297" Source="$(var.PublishOutputPath)System.Threading.Overlapped.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Tasks.Dataflow.dll -->
+      <Component Id="File_System_Threading_Tasks_Dataflow_dll_298" Guid="{3E0B5AF1-88BC-4EF8-8A6D-B69906721BA1}">
+        <File Id="File_System_Threading_Tasks_Dataflow_dll_298" Source="$(var.PublishOutputPath)System.Threading.Tasks.Dataflow.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Tasks.dll -->
+      <Component Id="File_System_Threading_Tasks_dll_299" Guid="{43A9A050-9E01-4F04-9C86-A06670CFEF03}">
+        <File Id="File_System_Threading_Tasks_dll_299" Source="$(var.PublishOutputPath)System.Threading.Tasks.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Tasks.Extensions.dll -->
+      <Component Id="File_System_Threading_Tasks_Extensions_dll_300" Guid="{0A209C16-F719-4936-BFE4-518B26A19F4F}">
+        <File Id="File_System_Threading_Tasks_Extensions_dll_300" Source="$(var.PublishOutputPath)System.Threading.Tasks.Extensions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Tasks.Parallel.dll -->
+      <Component Id="File_System_Threading_Tasks_Parallel_dll_301" Guid="{2114CA0C-5E5A-4BE8-9765-76DEFFE59EC6}">
+        <File Id="File_System_Threading_Tasks_Parallel_dll_301" Source="$(var.PublishOutputPath)System.Threading.Tasks.Parallel.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Thread.dll -->
+      <Component Id="File_System_Threading_Thread_dll_302" Guid="{E6B1A6C4-265F-4BF0-A7F4-D3F67334CA12}">
+        <File Id="File_System_Threading_Thread_dll_302" Source="$(var.PublishOutputPath)System.Threading.Thread.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.ThreadPool.dll -->
+      <Component Id="File_System_Threading_ThreadPool_dll_303" Guid="{7AF74D11-3828-43B1-87BF-025A620462B7}">
+        <File Id="File_System_Threading_ThreadPool_dll_303" Source="$(var.PublishOutputPath)System.Threading.ThreadPool.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Threading.Timer.dll -->
+      <Component Id="File_System_Threading_Timer_dll_304" Guid="{F9B287AC-C894-4CD8-8AA0-CE0CC28D824E}">
+        <File Id="File_System_Threading_Timer_dll_304" Source="$(var.PublishOutputPath)System.Threading.Timer.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Transactions.dll -->
+      <Component Id="File_System_Transactions_dll_305" Guid="{827B5AA0-6A76-47B7-A6E1-607098397215}">
+        <File Id="File_System_Transactions_dll_305" Source="$(var.PublishOutputPath)System.Transactions.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Transactions.Local.dll -->
+      <Component Id="File_System_Transactions_Local_dll_306" Guid="{4B821035-68CA-4935-934F-CBF66C7BEBB4}">
+        <File Id="File_System_Transactions_Local_dll_306" Source="$(var.PublishOutputPath)System.Transactions.Local.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.ValueTuple.dll -->
+      <Component Id="File_System_ValueTuple_dll_307" Guid="{528A2920-1879-46F7-AE20-0194A93D2D9F}">
+        <File Id="File_System_ValueTuple_dll_307" Source="$(var.PublishOutputPath)System.ValueTuple.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Web.dll -->
+      <Component Id="File_System_Web_dll_308" Guid="{CDFFCCAE-4634-4784-BC72-C5CF6DDDA16F}">
+        <File Id="File_System_Web_dll_308" Source="$(var.PublishOutputPath)System.Web.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Web.HttpUtility.dll -->
+      <Component Id="File_System_Web_HttpUtility_dll_309" Guid="{D8CEC8AA-45F7-4CBC-9F78-A4DEB2FEA985}">
+        <File Id="File_System_Web_HttpUtility_dll_309" Source="$(var.PublishOutputPath)System.Web.HttpUtility.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Windows.dll -->
+      <Component Id="File_System_Windows_dll_310" Guid="{9986BCB6-2FF4-4610-9914-786E5E3DC20C}">
+        <File Id="File_System_Windows_dll_310" Source="$(var.PublishOutputPath)System.Windows.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.dll -->
+      <Component Id="File_System_Xml_dll_311" Guid="{BF57665C-E8EE-474B-9D72-0AF59B3E0B61}">
+        <File Id="File_System_Xml_dll_311" Source="$(var.PublishOutputPath)System.Xml.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.Linq.dll -->
+      <Component Id="File_System_Xml_Linq_dll_312" Guid="{23A1E761-0BA5-4BB0-82C5-9C2D61A86976}">
+        <File Id="File_System_Xml_Linq_dll_312" Source="$(var.PublishOutputPath)System.Xml.Linq.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.ReaderWriter.dll -->
+      <Component Id="File_System_Xml_ReaderWriter_dll_313" Guid="{9F3DCEC8-291F-4239-9ADE-BEF2C284D2BB}">
+        <File Id="File_System_Xml_ReaderWriter_dll_313" Source="$(var.PublishOutputPath)System.Xml.ReaderWriter.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.Serialization.dll -->
+      <Component Id="File_System_Xml_Serialization_dll_314" Guid="{18E24C76-3DD3-4CED-B0EB-A274BB34F13F}">
+        <File Id="File_System_Xml_Serialization_dll_314" Source="$(var.PublishOutputPath)System.Xml.Serialization.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.XDocument.dll -->
+      <Component Id="File_System_Xml_XDocument_dll_315" Guid="{FDC6654B-B4C2-4708-B638-C612C890E9D2}">
+        <File Id="File_System_Xml_XDocument_dll_315" Source="$(var.PublishOutputPath)System.Xml.XDocument.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.XmlDocument.dll -->
+      <Component Id="File_System_Xml_XmlDocument_dll_316" Guid="{71449BDD-8348-429B-A3DA-6FE9571134AD}">
+        <File Id="File_System_Xml_XmlDocument_dll_316" Source="$(var.PublishOutputPath)System.Xml.XmlDocument.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.XmlSerializer.dll -->
+      <Component Id="File_System_Xml_XmlSerializer_dll_317" Guid="{988BA407-D7A9-46F3-A58D-C359A3FDF98E}">
+        <File Id="File_System_Xml_XmlSerializer_dll_317" Source="$(var.PublishOutputPath)System.Xml.XmlSerializer.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.XPath.dll -->
+      <Component Id="File_System_Xml_XPath_dll_318" Guid="{668EF11C-619B-4A15-AA08-A2FD64415BD7}">
+        <File Id="File_System_Xml_XPath_dll_318" Source="$(var.PublishOutputPath)System.Xml.XPath.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: System.Xml.XPath.XDocument.dll -->
+      <Component Id="File_System_Xml_XPath_XDocument_dll_319" Guid="{9309A981-1666-4442-906A-63171661C49E}">
+        <File Id="File_System_Xml_XPath_XDocument_dll_319" Source="$(var.PublishOutputPath)System.Xml.XPath.XDocument.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WebView2Loader.dll -->
+      <Component Id="File_WebView2Loader_dll_320" Guid="{F8C53C49-D4BA-4EE8-A101-BC0326CB66E7}">
+        <File Id="File_WebView2Loader_dll_320" Source="$(var.PublishOutputPath)WebView2Loader.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WindowsAppRuntime.DeploymentExtensions.OneCore.dll -->
+      <Component Id="File_WindowsAppRuntime_DeploymentExtensions_OneCor_321" Guid="{0438C952-C9DD-4E78-BB6F-DE6D5217C7AB}">
+        <File Id="File_WindowsAppRuntime_DeploymentExtensions_OneCor_321" Source="$(var.PublishOutputPath)WindowsAppRuntime.DeploymentExtensions.OneCore.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WindowsAppRuntime.png -->
+      <Component Id="File_WindowsAppRuntime_png_322" Guid="{F49C81E1-5880-4506-BFA0-06D76B465861}">
+        <File Id="File_WindowsAppRuntime_png_322" Source="$(var.PublishOutputPath)WindowsAppRuntime.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WindowsAppSdk.AppxDeploymentExtensions.Desktop-EventLog-Instrumentation.dll -->
+      <Component Id="File_WindowsAppSdk_AppxDeploymentExtensions_Deskto_323" Guid="{BB2C7E42-4997-4822-A588-EB8FC740F68A}">
+        <File Id="File_WindowsAppSdk_AppxDeploymentExtensions_Deskto_323" Source="$(var.PublishOutputPath)WindowsAppSdk.AppxDeploymentExtensions.Desktop-EventLog-Instrumentation.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WindowsAppSdk.AppxDeploymentExtensions.Desktop.dll -->
+      <Component Id="File_WindowsAppSdk_AppxDeploymentExtensions_Deskto_324" Guid="{4D7CDFC6-CB30-4B31-8523-F004A2DF29E5}">
+        <File Id="File_WindowsAppSdk_AppxDeploymentExtensions_Deskto_324" Source="$(var.PublishOutputPath)WindowsAppSdk.AppxDeploymentExtensions.Desktop.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WindowsBase.dll -->
+      <Component Id="File_WindowsBase_dll_325" Guid="{3D0C68A9-EF49-43C1-B36A-9B9A88AE170D}">
+        <File Id="File_WindowsBase_dll_325" Source="$(var.PublishOutputPath)WindowsBase.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WinRT.Runtime.dll -->
+      <Component Id="File_WinRT_Runtime_dll_326" Guid="{0FB66F35-2609-4993-A1CC-CE546F94BC06}">
+        <File Id="File_WinRT_Runtime_dll_326" Source="$(var.PublishOutputPath)WinRT.Runtime.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WinUI3Localizer.dll -->
+      <Component Id="File_WinUI3Localizer_dll_327" Guid="{7F2406FE-7699-4F97-90C6-CBA190A53F7C}">
+        <File Id="File_WinUI3Localizer_dll_327" Source="$(var.PublishOutputPath)WinUI3Localizer.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: WinUIEdit.dll -->
+      <Component Id="File_WinUIEdit_dll_328" Guid="{8507F7AB-05B5-44B4-A665-178F9E5B35D4}">
+        <File Id="File_WinUIEdit_dll_328" Source="$(var.PublishOutputPath)WinUIEdit.dll" KeyPath="yes" />
+      </Component>
+
+      <!-- File: workloads.365.json -->
+      <Component Id="File_workloads_365_json_329" Guid="{A69135D5-C1CB-4B04-8E46-320F1C10900A}">
+        <File Id="File_workloads_365_json_329" Source="$(var.PublishOutputPath)workloads.365.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: workloads.json -->
+      <Component Id="File_workloads_json_330" Guid="{679904CF-D553-47B2-9F35-3189229BAFB1}">
+        <File Id="File_workloads_json_330" Source="$(var.PublishOutputPath)workloads.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: workloads.lnl.json -->
+      <Component Id="File_workloads_lnl_json_331" Guid="{6AC3FDC6-F638-4042-ABFD-B36FC4082A9A}">
+        <File Id="File_workloads_lnl_json_331" Source="$(var.PublishOutputPath)workloads.lnl.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: workloads.qnn.json -->
+      <Component Id="File_workloads_qnn_json_332" Guid="{8A9E2FFA-A647-4022-AE1F-EFFEFF1A072B}">
+        <File Id="File_workloads_qnn_json_332" Source="$(var.PublishOutputPath)workloads.qnn.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: workloads.stx.json -->
+      <Component Id="File_workloads_stx_json_333" Guid="{464744A8-865D-4688-9482-1E8F6DBC666A}">
+        <File Id="File_workloads_stx_json_333" Source="$(var.PublishOutputPath)workloads.stx.json" KeyPath="yes" />
+      </Component>
+
+      <!-- File: wuceffectsi.dll -->
+      <Component Id="File_wuceffectsi_dll_334" Guid="{1CA016F5-DDA4-452B-8C71-475840A6E601}">
+        <File Id="File_wuceffectsi_dll_334" Source="$(var.PublishOutputPath)wuceffectsi.dll" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: af-ZA -->
+    <ComponentGroup Id="Files_af_ZA_Group" Directory="Dir_af_ZA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_335" Guid="{93EFB13F-696D-4A6B-9578-3C129689C48A}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_335" Source="$(var.PublishOutputPath)af-ZA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_336" Guid="{9C45FB3C-57B6-45E5-8482-BF0ED4204612}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_336" Source="$(var.PublishOutputPath)af-ZA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: am-ET -->
+    <ComponentGroup Id="Files_am_ET_Group" Directory="Dir_am_ET">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_337" Guid="{B0B30100-C432-409B-BA93-13DFBBF77962}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_337" Source="$(var.PublishOutputPath)am-ET\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_338" Guid="{4CD74993-F369-43AE-90A9-35DDE458046D}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_338" Source="$(var.PublishOutputPath)am-ET\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ar-SA -->
+    <ComponentGroup Id="Files_ar_SA_Group" Directory="Dir_ar_SA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_339" Guid="{F25BDBD8-703C-4371-B16E-E1C087F195D7}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_339" Source="$(var.PublishOutputPath)ar-SA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_340" Guid="{F9CECE64-DE80-49CB-ADE1-ABDBDFBCDF65}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_340" Source="$(var.PublishOutputPath)ar-SA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: as-IN -->
+    <ComponentGroup Id="Files_as_IN_Group" Directory="Dir_as_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_341" Guid="{CCDD8CD9-DF58-46F0-8479-D25B9DAC5F08}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_341" Source="$(var.PublishOutputPath)as-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_342" Guid="{A9FB7178-4B3A-413F-BA93-95A96C310986}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_342" Source="$(var.PublishOutputPath)as-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Assets -->
+    <ComponentGroup Id="Files_Assets_Group" Directory="Dir_Assets">
+      <!-- File: AppIcon.ico -->
+      <Component Id="File_AppIcon_ico_343" Guid="{A8101821-9A93-478C-B86F-D19FF0FC6D07}">
+        <File Id="File_AppIcon_ico_343" Source="$(var.PublishOutputPath)Assets\AppIcon.ico" KeyPath="yes" />
+      </Component>
+
+      <!-- File: AppIcon.png -->
+      <Component Id="File_AppIcon_png_344" Guid="{92A95C4A-5C05-474A-9EA5-6C3ACC131121}">
+        <File Id="File_AppIcon_png_344" Source="$(var.PublishOutputPath)Assets\AppIcon.png" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Assets\Cover -->
+    <ComponentGroup Id="Files_Assets_Cover_Group" Directory="Dir_Assets_Cover">
+      <!-- File: CoverDark.png -->
+      <Component Id="File_CoverDark_png_345" Guid="{78DA8321-835B-4239-A92F-EBF97FED90F1}">
+        <File Id="File_CoverDark_png_345" Source="$(var.PublishOutputPath)Assets\Cover\CoverDark.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: CoverLight.png -->
+      <Component Id="File_CoverLight_png_346" Guid="{1B87BCF0-3DD0-45F3-8EE7-CF4815864680}">
+        <File Id="File_CoverLight_png_346" Source="$(var.PublishOutputPath)Assets\Cover\CoverLight.png" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Assets\Fluent -->
+    <ComponentGroup Id="Files_Assets_Fluent_Group" Directory="Dir_Assets_Fluent">
+      <!-- File: Backdrop.png -->
+      <Component Id="File_Backdrop_png_347" Guid="{432FC3B1-C6BE-40BD-9797-E6D8B01155B4}">
+        <File Id="File_Backdrop_png_347" Source="$(var.PublishOutputPath)Assets\Fluent\Backdrop.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Color.png -->
+      <Component Id="File_Color_png_348" Guid="{77815ED7-CC1A-4E71-BFCD-58A3013CA96B}">
+        <File Id="File_Color_png_348" Source="$(var.PublishOutputPath)Assets\Fluent\Color.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: DevMode.png -->
+      <Component Id="File_DevMode_png_349" Guid="{869707B1-BCEF-43F1-BD48-3FAF61D68C61}">
+        <File Id="File_DevMode_png_349" Source="$(var.PublishOutputPath)Assets\Fluent\DevMode.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: External.png -->
+      <Component Id="File_External_png_350" Guid="{F233B894-3CAF-4542-9E31-D67470749D61}">
+        <File Id="File_External_png_350" Source="$(var.PublishOutputPath)Assets\Fluent\External.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: General.png -->
+      <Component Id="File_General_png_351" Guid="{201B9C06-802B-4DFC-B5BA-B48A8F292AB7}">
+        <File Id="File_General_png_351" Source="$(var.PublishOutputPath)Assets\Fluent\General.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Info.png -->
+      <Component Id="File_Info_png_352" Guid="{5A77BFF2-90D8-4A2C-A2F9-DC03B166699C}">
+        <File Id="File_Info_png_352" Source="$(var.PublishOutputPath)Assets\Fluent\Info.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Startup.png -->
+      <Component Id="File_Startup_png_353" Guid="{12203BA2-5314-444F-AB2E-6FE96267F681}">
+        <File Id="File_Startup_png_353" Source="$(var.PublishOutputPath)Assets\Fluent\Startup.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Theme.png -->
+      <Component Id="File_Theme_png_354" Guid="{51DF3078-8B90-48CB-B456-EE5844075842}">
+        <File Id="File_Theme_png_354" Source="$(var.PublishOutputPath)Assets\Fluent\Theme.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Update.png -->
+      <Component Id="File_Update_png_355" Guid="{26B62CA2-036C-459D-89F5-DB6A28C38293}">
+        <File Id="File_Update_png_355" Source="$(var.PublishOutputPath)Assets\Fluent\Update.png" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Assets\NavViewMenu -->
+    <ComponentGroup Id="Files_Assets_NavViewMenu_Group" Directory="Dir_Assets_NavViewMenu">
+      <!-- File: AppData.json -->
+      <Component Id="File_AppData_json_356" Guid="{7E74B986-D940-4055-B1E5-6E23772C9623}">
+        <File Id="File_AppData_json_356" Source="$(var.PublishOutputPath)Assets\NavViewMenu\AppData.json" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Assets\Store -->
+    <ComponentGroup Id="Files_Assets_Store_Group" Directory="Dir_Assets_Store">
+      <!-- File: LockScreenLogo.scale-200.png -->
+      <Component Id="File_LockScreenLogo_scale_200_png_357" Guid="{E1E4E0AA-A77F-4DE0-A357-9213E8727D94}">
+        <File Id="File_LockScreenLogo_scale_200_png_357" Source="$(var.PublishOutputPath)Assets\Store\LockScreenLogo.scale-200.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: SplashScreen.scale-200.png -->
+      <Component Id="File_SplashScreen_scale_200_png_358" Guid="{7F969792-906F-4183-B616-6236008B4A57}">
+        <File Id="File_SplashScreen_scale_200_png_358" Source="$(var.PublishOutputPath)Assets\Store\SplashScreen.scale-200.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Square150x150Logo.scale-200.png -->
+      <Component Id="File_Square150x150Logo_scale_200_png_359" Guid="{9BF520C6-1D20-4992-A435-48DD6DFA862C}">
+        <File Id="File_Square150x150Logo_scale_200_png_359" Source="$(var.PublishOutputPath)Assets\Store\Square150x150Logo.scale-200.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Square44x44Logo.scale-200.png -->
+      <Component Id="File_Square44x44Logo_scale_200_png_360" Guid="{143C927B-F381-4477-82F7-425D0E7A1577}">
+        <File Id="File_Square44x44Logo_scale_200_png_360" Source="$(var.PublishOutputPath)Assets\Store\Square44x44Logo.scale-200.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Square44x44Logo.targetsize-24_altform-unplated.png -->
+      <Component Id="File_Square44x44Logo_targetsize_24_altform_unplate_361" Guid="{15A67217-7F6C-42FA-B66F-324172B55E99}">
+        <File Id="File_Square44x44Logo_targetsize_24_altform_unplate_361" Source="$(var.PublishOutputPath)Assets\Store\Square44x44Logo.targetsize-24_altform-unplated.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: StoreLogo.png -->
+      <Component Id="File_StoreLogo_png_362" Guid="{8600CB0E-101E-43F3-89DB-DFD17E28A193}">
+        <File Id="File_StoreLogo_png_362" Source="$(var.PublishOutputPath)Assets\Store\StoreLogo.png" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Wide310x150Logo.scale-200.png -->
+      <Component Id="File_Wide310x150Logo_scale_200_png_363" Guid="{C5DC7E77-DFC0-449F-B0C4-F3C68F53B0F5}">
+        <File Id="File_Wide310x150Logo_scale_200_png_363" Source="$(var.PublishOutputPath)Assets\Store\Wide310x150Logo.scale-200.png" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: az-Latn-AZ -->
+    <ComponentGroup Id="Files_az_Latn_AZ_Group" Directory="Dir_az_Latn_AZ">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_364" Guid="{0292E2EE-1F59-470D-95AE-C547AA85C951}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_364" Source="$(var.PublishOutputPath)az-Latn-AZ\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_365" Guid="{8365EC86-229B-4DD6-B190-E67F31A31DFF}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_365" Source="$(var.PublishOutputPath)az-Latn-AZ\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: bg-BG -->
+    <ComponentGroup Id="Files_bg_BG_Group" Directory="Dir_bg_BG">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_366" Guid="{70B06F45-65D7-42E8-AB42-42ADF40A8BF8}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_366" Source="$(var.PublishOutputPath)bg-BG\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_367" Guid="{876F526C-A9D7-4269-BE53-93C9342EF945}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_367" Source="$(var.PublishOutputPath)bg-BG\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: bn-IN -->
+    <ComponentGroup Id="Files_bn_IN_Group" Directory="Dir_bn_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_368" Guid="{3A8B208A-56BA-470C-A6EC-F0A3E614B987}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_368" Source="$(var.PublishOutputPath)bn-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_369" Guid="{4650B9C4-F12D-4A67-AA5A-A32727011ABB}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_369" Source="$(var.PublishOutputPath)bn-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: bs-Latn-BA -->
+    <ComponentGroup Id="Files_bs_Latn_BA_Group" Directory="Dir_bs_Latn_BA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_370" Guid="{9A665F8C-BDBA-4EFC-8F8D-F4B1673A486F}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_370" Source="$(var.PublishOutputPath)bs-Latn-BA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_371" Guid="{85DECBF7-1565-4731-8E1F-2E307F551410}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_371" Source="$(var.PublishOutputPath)bs-Latn-BA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ca-ES -->
+    <ComponentGroup Id="Files_ca_ES_Group" Directory="Dir_ca_ES">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_372" Guid="{7DAF0585-43B0-4038-8019-FB42B6AAB7CA}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_372" Source="$(var.PublishOutputPath)ca-ES\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_373" Guid="{0E6FD363-81D1-4A89-BFA1-7F01C51B0A97}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_373" Source="$(var.PublishOutputPath)ca-ES\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ca-Es-VALENCIA -->
+    <ComponentGroup Id="Files_ca_Es_VALENCIA_Group" Directory="Dir_ca_Es_VALENCIA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_374" Guid="{514D1F4E-AD10-466D-8DEA-2FFEF15D3B10}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_374" Source="$(var.PublishOutputPath)ca-Es-VALENCIA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_375" Guid="{A65CE9CE-A43A-4DE7-B1E4-345E469FA2FA}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_375" Source="$(var.PublishOutputPath)ca-Es-VALENCIA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: cs-CZ -->
+    <ComponentGroup Id="Files_cs_CZ_Group" Directory="Dir_cs_CZ">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_376" Guid="{789BBB53-DEB0-49A4-98A8-EBD2DC67498F}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_376" Source="$(var.PublishOutputPath)cs-CZ\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_377" Guid="{4089D4E8-4290-4DD2-82D2-F6DB56D3D122}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_377" Source="$(var.PublishOutputPath)cs-CZ\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: cy-GB -->
+    <ComponentGroup Id="Files_cy_GB_Group" Directory="Dir_cy_GB">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_378" Guid="{F744C367-CF17-42ED-9863-17566512D92D}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_378" Source="$(var.PublishOutputPath)cy-GB\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_379" Guid="{665C131D-22A7-4DFB-8904-A11F3EA1C4DB}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_379" Source="$(var.PublishOutputPath)cy-GB\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: da-DK -->
+    <ComponentGroup Id="Files_da_DK_Group" Directory="Dir_da_DK">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_380" Guid="{2D807E84-1F0B-4C32-8EBF-E1272E213B22}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_380" Source="$(var.PublishOutputPath)da-DK\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_381" Guid="{BD143D75-3736-4D8A-82A3-96882C2DB2D5}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_381" Source="$(var.PublishOutputPath)da-DK\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: de-DE -->
+    <ComponentGroup Id="Files_de_DE_Group" Directory="Dir_de_DE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_382" Guid="{BDD37E17-7A7D-47AB-BADB-4D9FAC7D26F3}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_382" Source="$(var.PublishOutputPath)de-DE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_383" Guid="{297CAA51-B435-41B5-B996-9586649118EF}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_383" Source="$(var.PublishOutputPath)de-DE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: el-GR -->
+    <ComponentGroup Id="Files_el_GR_Group" Directory="Dir_el_GR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_384" Guid="{6E4CE952-12C7-4814-9251-4FC2A78C8B99}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_384" Source="$(var.PublishOutputPath)el-GR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_385" Guid="{F6088A0F-8A67-479B-A0AA-ECAD93C3E709}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_385" Source="$(var.PublishOutputPath)el-GR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: en-GB -->
+    <ComponentGroup Id="Files_en_GB_Group" Directory="Dir_en_GB">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_386" Guid="{F9A2DED4-ABC4-489C-A8E8-DF189E67876C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_386" Source="$(var.PublishOutputPath)en-GB\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_387" Guid="{7FC8029E-FC64-47D6-B7F6-1A1DD7B3F83B}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_387" Source="$(var.PublishOutputPath)en-GB\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: en-us -->
+    <ComponentGroup Id="Files_en_us_Group" Directory="Dir_en_us">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_388" Guid="{9A6647C4-A1E9-4397-9123-807961E9CC09}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_388" Source="$(var.PublishOutputPath)en-us\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_389" Guid="{C1EBCF98-6E3E-4265-87D4-6695F30002FE}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_389" Source="$(var.PublishOutputPath)en-us\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: es-ES -->
+    <ComponentGroup Id="Files_es_ES_Group" Directory="Dir_es_ES">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_390" Guid="{B76498C8-7B33-449C-8C68-BB3C159ABCD6}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_390" Source="$(var.PublishOutputPath)es-ES\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_391" Guid="{DA3F8B50-1394-4A9A-8509-E7B698B71309}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_391" Source="$(var.PublishOutputPath)es-ES\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: es-MX -->
+    <ComponentGroup Id="Files_es_MX_Group" Directory="Dir_es_MX">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_392" Guid="{3A1B5BD9-3ED0-4EF1-8D55-1D81100CE780}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_392" Source="$(var.PublishOutputPath)es-MX\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_393" Guid="{E36E2C2B-3CD2-4302-87C1-CD644E4CDA58}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_393" Source="$(var.PublishOutputPath)es-MX\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: et-EE -->
+    <ComponentGroup Id="Files_et_EE_Group" Directory="Dir_et_EE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_394" Guid="{991F65F2-F347-486F-A550-D05908989F74}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_394" Source="$(var.PublishOutputPath)et-EE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_395" Guid="{61C116A2-096C-4767-A888-6F4C1A46D64E}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_395" Source="$(var.PublishOutputPath)et-EE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: eu-ES -->
+    <ComponentGroup Id="Files_eu_ES_Group" Directory="Dir_eu_ES">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_396" Guid="{0F07A0A5-4285-4EFD-A76D-A6538E767127}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_396" Source="$(var.PublishOutputPath)eu-ES\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_397" Guid="{10B27494-2763-485F-BD8C-D58B7706087B}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_397" Source="$(var.PublishOutputPath)eu-ES\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: fa-IR -->
+    <ComponentGroup Id="Files_fa_IR_Group" Directory="Dir_fa_IR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_398" Guid="{420C4E8E-C5C7-4AB3-8C5D-1F4064F721ED}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_398" Source="$(var.PublishOutputPath)fa-IR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_399" Guid="{71AB8A99-4BDA-45D4-81F7-5CA2B83238E2}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_399" Source="$(var.PublishOutputPath)fa-IR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: fi-FI -->
+    <ComponentGroup Id="Files_fi_FI_Group" Directory="Dir_fi_FI">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_400" Guid="{FC826ECB-3796-4811-95F2-0DFF0EA30F47}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_400" Source="$(var.PublishOutputPath)fi-FI\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_401" Guid="{B5AAE51E-1553-4FFA-8D9A-B6E30D627BB5}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_401" Source="$(var.PublishOutputPath)fi-FI\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: fil-PH -->
+    <ComponentGroup Id="Files_fil_PH_Group" Directory="Dir_fil_PH">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_402" Guid="{4912743F-86E6-45E2-86AF-1234CC5138B4}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_402" Source="$(var.PublishOutputPath)fil-PH\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_403" Guid="{2BDFBA37-FBC4-4A18-A648-31EAE3502379}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_403" Source="$(var.PublishOutputPath)fil-PH\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: fr-CA -->
+    <ComponentGroup Id="Files_fr_CA_Group" Directory="Dir_fr_CA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_404" Guid="{920175B2-9EC4-44D8-8BD0-B375975C9EC5}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_404" Source="$(var.PublishOutputPath)fr-CA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_405" Guid="{7E5DE75C-E758-4942-A23F-67C6CABA5F2C}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_405" Source="$(var.PublishOutputPath)fr-CA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: fr-FR -->
+    <ComponentGroup Id="Files_fr_FR_Group" Directory="Dir_fr_FR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_406" Guid="{BEBA3E25-CDF3-4001-A14D-5FCE75557114}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_406" Source="$(var.PublishOutputPath)fr-FR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_407" Guid="{89CB7147-5E26-4C3A-8AFC-A99CD3C21705}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_407" Source="$(var.PublishOutputPath)fr-FR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ga-IE -->
+    <ComponentGroup Id="Files_ga_IE_Group" Directory="Dir_ga_IE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_408" Guid="{A8830C12-C7AC-4798-864D-9A955B61D095}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_408" Source="$(var.PublishOutputPath)ga-IE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_409" Guid="{50C7BE93-8FD9-4066-A5EC-C98E27204BCD}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_409" Source="$(var.PublishOutputPath)ga-IE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: gd-gb -->
+    <ComponentGroup Id="Files_gd_gb_Group" Directory="Dir_gd_gb">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_410" Guid="{10B185AA-C0B0-4C1D-8537-389A46B63DF3}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_410" Source="$(var.PublishOutputPath)gd-gb\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_411" Guid="{CBB7E6B4-AC55-4AB7-8CE9-DE359E3BE1CD}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_411" Source="$(var.PublishOutputPath)gd-gb\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: gl-ES -->
+    <ComponentGroup Id="Files_gl_ES_Group" Directory="Dir_gl_ES">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_412" Guid="{BBD9DB6C-7F00-4CA3-8CBC-19E37BB542D8}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_412" Source="$(var.PublishOutputPath)gl-ES\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_413" Guid="{71C7A6CE-B297-461E-A658-0FFA8829EC78}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_413" Source="$(var.PublishOutputPath)gl-ES\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: gu-IN -->
+    <ComponentGroup Id="Files_gu_IN_Group" Directory="Dir_gu_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_414" Guid="{B8333FEC-0540-45E8-BC31-C438A1E2746B}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_414" Source="$(var.PublishOutputPath)gu-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_415" Guid="{FDCF27E3-6C8F-4738-B760-9BA3079F2BF3}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_415" Source="$(var.PublishOutputPath)gu-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: he-IL -->
+    <ComponentGroup Id="Files_he_IL_Group" Directory="Dir_he_IL">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_416" Guid="{DE6726AF-3316-497E-9838-47CE8670FF9C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_416" Source="$(var.PublishOutputPath)he-IL\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_417" Guid="{1C2B1C05-E966-4D34-9B8A-48CE0D9058F8}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_417" Source="$(var.PublishOutputPath)he-IL\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: hi-IN -->
+    <ComponentGroup Id="Files_hi_IN_Group" Directory="Dir_hi_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_418" Guid="{0C2437E7-DF74-4A73-8525-EFDAEEA7522C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_418" Source="$(var.PublishOutputPath)hi-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_419" Guid="{69E306EE-FB42-4B7D-BFED-9898E6730CAE}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_419" Source="$(var.PublishOutputPath)hi-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: hr-HR -->
+    <ComponentGroup Id="Files_hr_HR_Group" Directory="Dir_hr_HR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_420" Guid="{6AA6B9D6-1E24-4FEA-9E17-1D195BEA8715}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_420" Source="$(var.PublishOutputPath)hr-HR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_421" Guid="{08B80DA7-1FD0-4B41-BE44-032CAE84B186}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_421" Source="$(var.PublishOutputPath)hr-HR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: hu-HU -->
+    <ComponentGroup Id="Files_hu_HU_Group" Directory="Dir_hu_HU">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_422" Guid="{A4A5F573-EAA2-45C4-9924-FAAF3CA71FBE}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_422" Source="$(var.PublishOutputPath)hu-HU\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_423" Guid="{52F16FFB-A031-47C8-9BE1-14A6F834E634}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_423" Source="$(var.PublishOutputPath)hu-HU\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: hy-AM -->
+    <ComponentGroup Id="Files_hy_AM_Group" Directory="Dir_hy_AM">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_424" Guid="{C3A5AFFE-7873-4513-B3F0-D87F4C73740C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_424" Source="$(var.PublishOutputPath)hy-AM\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_425" Guid="{21D7CCC4-8A66-471B-B644-E6B8ECD7A90E}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_425" Source="$(var.PublishOutputPath)hy-AM\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: id-ID -->
+    <ComponentGroup Id="Files_id_ID_Group" Directory="Dir_id_ID">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_426" Guid="{6F635090-F685-4CFC-96FB-EAB427AAAE5B}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_426" Source="$(var.PublishOutputPath)id-ID\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_427" Guid="{6F9AC409-1B3F-4EAF-B0F0-0F0C60D550D8}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_427" Source="$(var.PublishOutputPath)id-ID\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: is-IS -->
+    <ComponentGroup Id="Files_is_IS_Group" Directory="Dir_is_IS">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_428" Guid="{0BE1BFB6-DC93-43DE-B4FD-63F6159BB55E}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_428" Source="$(var.PublishOutputPath)is-IS\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_429" Guid="{75B9CDD9-32BE-4870-BC93-7D1E8F386ADA}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_429" Source="$(var.PublishOutputPath)is-IS\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: it-IT -->
+    <ComponentGroup Id="Files_it_IT_Group" Directory="Dir_it_IT">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_430" Guid="{F337AE7B-6B57-430D-8775-9837F23A31CA}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_430" Source="$(var.PublishOutputPath)it-IT\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_431" Guid="{DB9F51E2-5C22-4192-891A-F6830573B2DC}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_431" Source="$(var.PublishOutputPath)it-IT\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ja-JP -->
+    <ComponentGroup Id="Files_ja_JP_Group" Directory="Dir_ja_JP">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_432" Guid="{C145F722-E219-46F6-8C1F-24F69841E217}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_432" Source="$(var.PublishOutputPath)ja-JP\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_433" Guid="{5DD4E0F8-ECA6-43A2-947F-A59ED97A5A88}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_433" Source="$(var.PublishOutputPath)ja-JP\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ka-GE -->
+    <ComponentGroup Id="Files_ka_GE_Group" Directory="Dir_ka_GE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_434" Guid="{CCC263E5-A168-4500-9E1C-D92A45F56035}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_434" Source="$(var.PublishOutputPath)ka-GE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_435" Guid="{54884CD9-607E-415F-B2D2-814EE37354B3}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_435" Source="$(var.PublishOutputPath)ka-GE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: kk-KZ -->
+    <ComponentGroup Id="Files_kk_KZ_Group" Directory="Dir_kk_KZ">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_436" Guid="{5E437FE1-FD52-464D-BC70-0212AD4ADDE0}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_436" Source="$(var.PublishOutputPath)kk-KZ\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_437" Guid="{6FA3935B-7788-4D63-821F-71FA2771D7EB}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_437" Source="$(var.PublishOutputPath)kk-KZ\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: km-KH -->
+    <ComponentGroup Id="Files_km_KH_Group" Directory="Dir_km_KH">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_438" Guid="{417AEE86-13E8-4A5E-A7F6-D46CAD8562CC}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_438" Source="$(var.PublishOutputPath)km-KH\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_439" Guid="{2A7ED966-F5DE-46C4-B0DC-99051104939D}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_439" Source="$(var.PublishOutputPath)km-KH\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: kn-IN -->
+    <ComponentGroup Id="Files_kn_IN_Group" Directory="Dir_kn_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_440" Guid="{80A0742B-E3BF-4673-9A7A-2ADEB25C6CD2}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_440" Source="$(var.PublishOutputPath)kn-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_441" Guid="{241847F5-F0C4-4F80-8F98-5CF5CB50E566}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_441" Source="$(var.PublishOutputPath)kn-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ko-KR -->
+    <ComponentGroup Id="Files_ko_KR_Group" Directory="Dir_ko_KR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_442" Guid="{CACB47D3-1C71-4D3D-9EBC-2C5615165D99}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_442" Source="$(var.PublishOutputPath)ko-KR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_443" Guid="{C1A2DEB1-F8CE-43F1-A92D-0A4F33D58F04}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_443" Source="$(var.PublishOutputPath)ko-KR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: kok-IN -->
+    <ComponentGroup Id="Files_kok_IN_Group" Directory="Dir_kok_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_444" Guid="{F5FBA06C-EDB7-486C-BB99-38FDF74B64EC}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_444" Source="$(var.PublishOutputPath)kok-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_445" Guid="{F7B4D62C-A5B7-424C-A55B-01F997F73529}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_445" Source="$(var.PublishOutputPath)kok-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: lb-LU -->
+    <ComponentGroup Id="Files_lb_LU_Group" Directory="Dir_lb_LU">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_446" Guid="{D92E1691-318E-4E9D-8D55-C5A16E67B0BA}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_446" Source="$(var.PublishOutputPath)lb-LU\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_447" Guid="{7CE4C1A1-CB17-4058-9E70-EC0E6E3BE9E7}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_447" Source="$(var.PublishOutputPath)lb-LU\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: lo-LA -->
+    <ComponentGroup Id="Files_lo_LA_Group" Directory="Dir_lo_LA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_448" Guid="{5773B4FF-368A-48B1-90A5-61CAA72C6483}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_448" Source="$(var.PublishOutputPath)lo-LA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_449" Guid="{D864473C-3798-40E4-B809-BBFB5B9AE5B1}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_449" Source="$(var.PublishOutputPath)lo-LA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: lt-LT -->
+    <ComponentGroup Id="Files_lt_LT_Group" Directory="Dir_lt_LT">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_450" Guid="{F44BF681-C594-4BB9-8DAB-3C13AD7BFCEA}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_450" Source="$(var.PublishOutputPath)lt-LT\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_451" Guid="{33387F42-0875-4075-B027-8D90F9026DB7}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_451" Source="$(var.PublishOutputPath)lt-LT\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: lv-LV -->
+    <ComponentGroup Id="Files_lv_LV_Group" Directory="Dir_lv_LV">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_452" Guid="{54106554-DD3F-4E63-9011-4AB39563D9EE}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_452" Source="$(var.PublishOutputPath)lv-LV\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_453" Guid="{BE642C3B-A0D8-4A39-90C3-17FBFB33DC68}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_453" Source="$(var.PublishOutputPath)lv-LV\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: mi-NZ -->
+    <ComponentGroup Id="Files_mi_NZ_Group" Directory="Dir_mi_NZ">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_454" Guid="{49A1368C-9800-4543-AE2D-2569FE973B5B}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_454" Source="$(var.PublishOutputPath)mi-NZ\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_455" Guid="{CD1EFAF7-D2C0-41D6-BC4A-DA9C8943C096}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_455" Source="$(var.PublishOutputPath)mi-NZ\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Microsoft.UI.Xaml\Assets -->
+    <ComponentGroup Id="Files_Microsoft_UI_Xaml_Assets_Group" Directory="Dir_Microsoft_UI_Xaml_Assets">
+      <!-- File: map.html -->
+      <Component Id="File_map_html_456" Guid="{98457C79-AC21-4199-99EB-47A2A64EFFF3}">
+        <File Id="File_map_html_456" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml\Assets\map.html" KeyPath="yes" />
+      </Component>
+
+      <!-- File: NoiseAsset_256x256_PNG.png -->
+      <Component Id="File_NoiseAsset_256x256_PNG_png_457" Guid="{BE35F954-0067-4D7E-AE73-CB9A7BA91D1E}">
+        <File Id="File_NoiseAsset_256x256_PNG_png_457" Source="$(var.PublishOutputPath)Microsoft.UI.Xaml\Assets\NoiseAsset_256x256_PNG.png" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: mk-MK -->
+    <ComponentGroup Id="Files_mk_MK_Group" Directory="Dir_mk_MK">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_458" Guid="{1A65202A-DC6D-468C-92A0-DFB16602ED51}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_458" Source="$(var.PublishOutputPath)mk-MK\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_459" Guid="{AEF211B2-B7FF-43C1-A970-6AE40D4D57D8}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_459" Source="$(var.PublishOutputPath)mk-MK\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ml-IN -->
+    <ComponentGroup Id="Files_ml_IN_Group" Directory="Dir_ml_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_460" Guid="{67808B94-BF5D-48EB-B744-81A0D53633A8}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_460" Source="$(var.PublishOutputPath)ml-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_461" Guid="{FFF071BB-E128-47EA-9349-17CC918BB064}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_461" Source="$(var.PublishOutputPath)ml-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: mr-IN -->
+    <ComponentGroup Id="Files_mr_IN_Group" Directory="Dir_mr_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_462" Guid="{0AC9FA70-A88A-4972-ADF0-C981E9EE54E4}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_462" Source="$(var.PublishOutputPath)mr-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_463" Guid="{360C8CF5-EE20-4DAA-A7A4-6DDEFCDBC9A7}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_463" Source="$(var.PublishOutputPath)mr-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ms-MY -->
+    <ComponentGroup Id="Files_ms_MY_Group" Directory="Dir_ms_MY">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_464" Guid="{3FAAACFA-0F1C-4A88-8981-C54020375BF9}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_464" Source="$(var.PublishOutputPath)ms-MY\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_465" Guid="{9F63C9F1-19E8-44C0-9F8C-EFD5119FB523}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_465" Source="$(var.PublishOutputPath)ms-MY\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: mt-MT -->
+    <ComponentGroup Id="Files_mt_MT_Group" Directory="Dir_mt_MT">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_466" Guid="{51803797-FA56-4299-9EDB-741FC4A03270}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_466" Source="$(var.PublishOutputPath)mt-MT\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_467" Guid="{1F375295-C6BF-4BA8-B1A8-D6073448B9DA}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_467" Source="$(var.PublishOutputPath)mt-MT\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: nb-NO -->
+    <ComponentGroup Id="Files_nb_NO_Group" Directory="Dir_nb_NO">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_468" Guid="{1302EBC6-B317-4673-8169-AC51E3399DA0}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_468" Source="$(var.PublishOutputPath)nb-NO\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_469" Guid="{FC9F0BB0-7ACD-406F-85A5-681A424C8A48}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_469" Source="$(var.PublishOutputPath)nb-NO\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ne-NP -->
+    <ComponentGroup Id="Files_ne_NP_Group" Directory="Dir_ne_NP">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_470" Guid="{EF44741E-0962-41C9-ABC6-84D474272821}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_470" Source="$(var.PublishOutputPath)ne-NP\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_471" Guid="{AECC75BE-BBAF-4BB5-A349-7741F698DD4C}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_471" Source="$(var.PublishOutputPath)ne-NP\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: nl-NL -->
+    <ComponentGroup Id="Files_nl_NL_Group" Directory="Dir_nl_NL">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_472" Guid="{0A1461F7-CA6F-4155-9590-0A58CC6C7F19}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_472" Source="$(var.PublishOutputPath)nl-NL\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_473" Guid="{6A94DE6C-D546-4FB9-99C1-F2495D362C79}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_473" Source="$(var.PublishOutputPath)nl-NL\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: nn-NO -->
+    <ComponentGroup Id="Files_nn_NO_Group" Directory="Dir_nn_NO">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_474" Guid="{E0F2B8A0-2C98-4247-B438-39718137275D}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_474" Source="$(var.PublishOutputPath)nn-NO\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_475" Guid="{8D19B205-E951-4C88-9196-6D2D24EDEDF2}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_475" Source="$(var.PublishOutputPath)nn-NO\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: NpuDetect -->
+    <ComponentGroup Id="Files_NpuDetect_Group" Directory="Dir_NpuDetect">
+      <!-- File: NPUDetect.dll -->
+      <Component Id="File_NPUDetect_dll_476" Guid="{F46CD2AC-E463-4955-AE2C-264EA6C02DEE}">
+        <File Id="File_NPUDetect_dll_476" Source="$(var.PublishOutputPath)NpuDetect\NPUDetect.dll" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: or-IN -->
+    <ComponentGroup Id="Files_or_IN_Group" Directory="Dir_or_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_477" Guid="{BF8A211F-54F1-440F-890A-411253C032FB}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_477" Source="$(var.PublishOutputPath)or-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_478" Guid="{44C44FFF-8A8A-4C3F-B2EA-D51D993D4B4B}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_478" Source="$(var.PublishOutputPath)or-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: pa-IN -->
+    <ComponentGroup Id="Files_pa_IN_Group" Directory="Dir_pa_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_479" Guid="{58F28770-24DB-4AB7-AFB6-B9BBB4760A41}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_479" Source="$(var.PublishOutputPath)pa-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_480" Guid="{CCAB6131-666C-4681-838D-EA60DCF3CA7B}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_480" Source="$(var.PublishOutputPath)pa-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: pl-PL -->
+    <ComponentGroup Id="Files_pl_PL_Group" Directory="Dir_pl_PL">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_481" Guid="{3FF4BDCB-A1D5-494D-9EFF-4FAF4004EAF2}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_481" Source="$(var.PublishOutputPath)pl-PL\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_482" Guid="{1C04B792-1542-4767-90F5-05959427AC59}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_482" Source="$(var.PublishOutputPath)pl-PL\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: pt-BR -->
+    <ComponentGroup Id="Files_pt_BR_Group" Directory="Dir_pt_BR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_483" Guid="{2403A03D-EFB4-4401-8FD0-C4303C509C54}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_483" Source="$(var.PublishOutputPath)pt-BR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_484" Guid="{89B828DE-2EA1-426A-82F2-91212B98B051}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_484" Source="$(var.PublishOutputPath)pt-BR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: pt-PT -->
+    <ComponentGroup Id="Files_pt_PT_Group" Directory="Dir_pt_PT">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_485" Guid="{448A1600-A763-49B1-AB79-F6A62DD0D50F}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_485" Source="$(var.PublishOutputPath)pt-PT\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_486" Guid="{A4914CF7-FAEA-43B5-AB86-5E1AF11525E9}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_486" Source="$(var.PublishOutputPath)pt-PT\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: quz-PE -->
+    <ComponentGroup Id="Files_quz_PE_Group" Directory="Dir_quz_PE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_487" Guid="{644C59C0-6112-4FB9-97FB-E65103AE776B}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_487" Source="$(var.PublishOutputPath)quz-PE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_488" Guid="{C16F00AE-B585-44A7-9956-56F88367DA71}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_488" Source="$(var.PublishOutputPath)quz-PE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ro-RO -->
+    <ComponentGroup Id="Files_ro_RO_Group" Directory="Dir_ro_RO">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_489" Guid="{70254326-CDDE-4370-95DD-0922980F7C03}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_489" Source="$(var.PublishOutputPath)ro-RO\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_490" Guid="{AD14A437-04C4-44F5-A453-11F4744016C6}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_490" Source="$(var.PublishOutputPath)ro-RO\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ru-RU -->
+    <ComponentGroup Id="Files_ru_RU_Group" Directory="Dir_ru_RU">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_491" Guid="{C5282835-FDDB-40A1-AE1C-49700AD953F2}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_491" Source="$(var.PublishOutputPath)ru-RU\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_492" Guid="{C7EDA73A-8B7F-4CBD-B91B-B30B6FBA472D}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_492" Source="$(var.PublishOutputPath)ru-RU\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sk-SK -->
+    <ComponentGroup Id="Files_sk_SK_Group" Directory="Dir_sk_SK">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_493" Guid="{79400188-E089-40B9-92AD-CDE81CEFDF06}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_493" Source="$(var.PublishOutputPath)sk-SK\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_494" Guid="{1EE75046-FD57-4868-8430-1D644469DBBB}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_494" Source="$(var.PublishOutputPath)sk-SK\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sl-SI -->
+    <ComponentGroup Id="Files_sl_SI_Group" Directory="Dir_sl_SI">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_495" Guid="{4AA3080D-B4A7-4EEA-8129-71F8281415FB}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_495" Source="$(var.PublishOutputPath)sl-SI\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_496" Guid="{99E4FC67-A846-4028-8802-0B4D279EE538}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_496" Source="$(var.PublishOutputPath)sl-SI\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sq-AL -->
+    <ComponentGroup Id="Files_sq_AL_Group" Directory="Dir_sq_AL">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_497" Guid="{4146AEB2-5D28-412B-80BB-C6000FD4A66F}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_497" Source="$(var.PublishOutputPath)sq-AL\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_498" Guid="{5F1DE603-6734-4041-8618-C9AAAFEFC228}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_498" Source="$(var.PublishOutputPath)sq-AL\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sr-Cyrl-BA -->
+    <ComponentGroup Id="Files_sr_Cyrl_BA_Group" Directory="Dir_sr_Cyrl_BA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_499" Guid="{D98345CC-ABAB-4BA0-9B48-F8E13A0AF721}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_499" Source="$(var.PublishOutputPath)sr-Cyrl-BA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_500" Guid="{58A29C56-C7A8-4A84-A6B6-633FEF607BBF}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_500" Source="$(var.PublishOutputPath)sr-Cyrl-BA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sr-Cyrl-RS -->
+    <ComponentGroup Id="Files_sr_Cyrl_RS_Group" Directory="Dir_sr_Cyrl_RS">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_501" Guid="{6834765A-C9A8-46A8-9A37-5D5239C1DE8A}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_501" Source="$(var.PublishOutputPath)sr-Cyrl-RS\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_502" Guid="{804944BF-CB5E-4CBE-A47B-115FF00C24F6}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_502" Source="$(var.PublishOutputPath)sr-Cyrl-RS\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sr-Latn-RS -->
+    <ComponentGroup Id="Files_sr_Latn_RS_Group" Directory="Dir_sr_Latn_RS">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_503" Guid="{EDAC1E80-4EE5-4CB1-99BB-C78943A85033}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_503" Source="$(var.PublishOutputPath)sr-Latn-RS\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_504" Guid="{47D7B498-4203-4523-AAD7-28AA8D6FA346}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_504" Source="$(var.PublishOutputPath)sr-Latn-RS\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Strings\en-US -->
+    <ComponentGroup Id="Files_Strings_en_US_Group" Directory="Dir_Strings_en_US">
+      <!-- File: Resources.resw -->
+      <Component Id="File_Resources_resw_505" Guid="{5A320471-31A1-40E1-91A1-630E47EC17A2}">
+        <File Id="File_Resources_resw_505" Source="$(var.PublishOutputPath)Strings\en-US\Resources.resw" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Settings.resw -->
+      <Component Id="File_Settings_resw_506" Guid="{4900E5B7-A0E0-492A-A3DF-EBD824B1DB8A}">
+        <File Id="File_Settings_resw_506" Source="$(var.PublishOutputPath)Strings\en-US\Settings.resw" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: Strings\fr-FR -->
+    <ComponentGroup Id="Files_Strings_fr_FR_Group" Directory="Dir_Strings_fr_FR">
+      <!-- File: Resources.resw -->
+      <Component Id="File_Resources_resw_507" Guid="{1C960E9C-E14B-43ED-A791-880BE12B7C2A}">
+        <File Id="File_Resources_resw_507" Source="$(var.PublishOutputPath)Strings\fr-FR\Resources.resw" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Settings.resw -->
+      <Component Id="File_Settings_resw_508" Guid="{C8D09BED-F5AA-498F-A66E-F6939766FBD2}">
+        <File Id="File_Settings_resw_508" Source="$(var.PublishOutputPath)Strings\fr-FR\Settings.resw" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: sv-SE -->
+    <ComponentGroup Id="Files_sv_SE_Group" Directory="Dir_sv_SE">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_509" Guid="{0A91F275-3939-46F2-A30F-D8E57C5C9128}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_509" Source="$(var.PublishOutputPath)sv-SE\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_510" Guid="{123E4ED4-946E-4119-B19D-EBC824E87C47}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_510" Source="$(var.PublishOutputPath)sv-SE\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ta-IN -->
+    <ComponentGroup Id="Files_ta_IN_Group" Directory="Dir_ta_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_511" Guid="{B434635A-4FE1-4F5E-AA1F-95E1B07BCB5A}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_511" Source="$(var.PublishOutputPath)ta-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_512" Guid="{79E3A5C5-1E86-4994-B8F6-2B4CBE3BD081}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_512" Source="$(var.PublishOutputPath)ta-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: te-IN -->
+    <ComponentGroup Id="Files_te_IN_Group" Directory="Dir_te_IN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_513" Guid="{0FE63703-D896-4874-8DD7-A45F9CAECC47}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_513" Source="$(var.PublishOutputPath)te-IN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_514" Guid="{05D57F36-D636-4897-8C74-EFFE54D57DA4}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_514" Source="$(var.PublishOutputPath)te-IN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: th-TH -->
+    <ComponentGroup Id="Files_th_TH_Group" Directory="Dir_th_TH">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_515" Guid="{6FAE433F-D2AB-40F3-8A43-044C56EF03B2}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_515" Source="$(var.PublishOutputPath)th-TH\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_516" Guid="{A71F6F1E-F2C3-4569-9BAA-CAD3AD4DBFE2}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_516" Source="$(var.PublishOutputPath)th-TH\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: tr-TR -->
+    <ComponentGroup Id="Files_tr_TR_Group" Directory="Dir_tr_TR">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_517" Guid="{B393996C-6DE1-4E74-891B-17F7C79C7BA1}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_517" Source="$(var.PublishOutputPath)tr-TR\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_518" Guid="{B3DE6B17-4C13-4C97-9D6E-AD69B623E329}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_518" Source="$(var.PublishOutputPath)tr-TR\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: tt-RU -->
+    <ComponentGroup Id="Files_tt_RU_Group" Directory="Dir_tt_RU">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_519" Guid="{5BB78EB1-4224-45AD-BD32-778203965867}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_519" Source="$(var.PublishOutputPath)tt-RU\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_520" Guid="{6D7876B8-D3B9-47B4-B0DE-EFD59E6868A2}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_520" Source="$(var.PublishOutputPath)tt-RU\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ug-CN -->
+    <ComponentGroup Id="Files_ug_CN_Group" Directory="Dir_ug_CN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_521" Guid="{90B5E698-7B12-4651-94EF-3ABF90E16499}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_521" Source="$(var.PublishOutputPath)ug-CN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_522" Guid="{BB74D9D9-8272-4703-AAD1-181634A9D13C}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_522" Source="$(var.PublishOutputPath)ug-CN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: uk-UA -->
+    <ComponentGroup Id="Files_uk_UA_Group" Directory="Dir_uk_UA">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_523" Guid="{0EFD59F8-09D1-4ABD-809B-47F4B8A8E37C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_523" Source="$(var.PublishOutputPath)uk-UA\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_524" Guid="{9C921284-E6E6-4341-86F6-EADCF425851E}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_524" Source="$(var.PublishOutputPath)uk-UA\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: ur-PK -->
+    <ComponentGroup Id="Files_ur_PK_Group" Directory="Dir_ur_PK">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_525" Guid="{39999742-CA53-4568-975F-E8B6B379E107}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_525" Source="$(var.PublishOutputPath)ur-PK\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_526" Guid="{502B66E1-C980-4DB9-9528-0BFDDC781AFB}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_526" Source="$(var.PublishOutputPath)ur-PK\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: uz-Latn-UZ -->
+    <ComponentGroup Id="Files_uz_Latn_UZ_Group" Directory="Dir_uz_Latn_UZ">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_527" Guid="{29FD0430-31DB-486A-A0D2-759CD7F0700E}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_527" Source="$(var.PublishOutputPath)uz-Latn-UZ\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_528" Guid="{C543CF6F-30B0-4C08-BEDF-249FB80D3A05}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_528" Source="$(var.PublishOutputPath)uz-Latn-UZ\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: vi-VN -->
+    <ComponentGroup Id="Files_vi_VN_Group" Directory="Dir_vi_VN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_529" Guid="{5A81A329-C163-4D08-9FE2-99AA086B0C1C}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_529" Source="$(var.PublishOutputPath)vi-VN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_530" Guid="{9E82F625-1610-446D-A0AC-4265B878606B}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_530" Source="$(var.PublishOutputPath)vi-VN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: zh-CN -->
+    <ComponentGroup Id="Files_zh_CN_Group" Directory="Dir_zh_CN">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_531" Guid="{20569612-A2EB-4F67-B219-A16194A72689}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_531" Source="$(var.PublishOutputPath)zh-CN\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_532" Guid="{F4B8D005-9440-4161-893E-448D676827EE}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_532" Source="$(var.PublishOutputPath)zh-CN\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Components for directory: zh-TW -->
+    <ComponentGroup Id="Files_zh_TW_Group" Directory="Dir_zh_TW">
+      <!-- File: Microsoft.ui.xaml.dll.mui -->
+      <Component Id="File_Microsoft_ui_xaml_dll_mui_533" Guid="{42FE3796-052D-432B-B1F4-F0DC4DE941B1}">
+        <File Id="File_Microsoft_ui_xaml_dll_mui_533" Source="$(var.PublishOutputPath)zh-TW\Microsoft.ui.xaml.dll.mui" KeyPath="yes" />
+      </Component>
+
+      <!-- File: Microsoft.UI.Xaml.Phone.dll.mui -->
+      <Component Id="File_Microsoft_UI_Xaml_Phone_dll_mui_534" Guid="{D47589F7-6FA8-44ED-9D6D-4E48A2AB4CFC}">
+        <File Id="File_Microsoft_UI_Xaml_Phone_dll_mui_534" Source="$(var.PublishOutputPath)zh-TW\Microsoft.UI.Xaml.Phone.dll.mui" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Main ComponentGroup that references all directory groups -->
+    <ComponentGroup Id="AutoHarvestedFiles">
+      <ComponentGroupRef Id="Files_Root_Group" />
+      <ComponentGroupRef Id="Files_af_ZA_Group" />
+      <ComponentGroupRef Id="Files_am_ET_Group" />
+      <ComponentGroupRef Id="Files_ar_SA_Group" />
+      <ComponentGroupRef Id="Files_as_IN_Group" />
+      <ComponentGroupRef Id="Files_Assets_Group" />
+      <ComponentGroupRef Id="Files_Assets_Cover_Group" />
+      <ComponentGroupRef Id="Files_Assets_Fluent_Group" />
+      <ComponentGroupRef Id="Files_Assets_NavViewMenu_Group" />
+      <ComponentGroupRef Id="Files_Assets_Store_Group" />
+      <ComponentGroupRef Id="Files_az_Latn_AZ_Group" />
+      <ComponentGroupRef Id="Files_bg_BG_Group" />
+      <ComponentGroupRef Id="Files_bn_IN_Group" />
+      <ComponentGroupRef Id="Files_bs_Latn_BA_Group" />
+      <ComponentGroupRef Id="Files_ca_ES_Group" />
+      <ComponentGroupRef Id="Files_ca_Es_VALENCIA_Group" />
+      <ComponentGroupRef Id="Files_cs_CZ_Group" />
+      <ComponentGroupRef Id="Files_cy_GB_Group" />
+      <ComponentGroupRef Id="Files_da_DK_Group" />
+      <ComponentGroupRef Id="Files_de_DE_Group" />
+      <ComponentGroupRef Id="Files_el_GR_Group" />
+      <ComponentGroupRef Id="Files_en_GB_Group" />
+      <ComponentGroupRef Id="Files_en_us_Group" />
+      <ComponentGroupRef Id="Files_es_ES_Group" />
+      <ComponentGroupRef Id="Files_es_MX_Group" />
+      <ComponentGroupRef Id="Files_et_EE_Group" />
+      <ComponentGroupRef Id="Files_eu_ES_Group" />
+      <ComponentGroupRef Id="Files_fa_IR_Group" />
+      <ComponentGroupRef Id="Files_fi_FI_Group" />
+      <ComponentGroupRef Id="Files_fil_PH_Group" />
+      <ComponentGroupRef Id="Files_fr_CA_Group" />
+      <ComponentGroupRef Id="Files_fr_FR_Group" />
+      <ComponentGroupRef Id="Files_ga_IE_Group" />
+      <ComponentGroupRef Id="Files_gd_gb_Group" />
+      <ComponentGroupRef Id="Files_gl_ES_Group" />
+      <ComponentGroupRef Id="Files_gu_IN_Group" />
+      <ComponentGroupRef Id="Files_he_IL_Group" />
+      <ComponentGroupRef Id="Files_hi_IN_Group" />
+      <ComponentGroupRef Id="Files_hr_HR_Group" />
+      <ComponentGroupRef Id="Files_hu_HU_Group" />
+      <ComponentGroupRef Id="Files_hy_AM_Group" />
+      <ComponentGroupRef Id="Files_id_ID_Group" />
+      <ComponentGroupRef Id="Files_is_IS_Group" />
+      <ComponentGroupRef Id="Files_it_IT_Group" />
+      <ComponentGroupRef Id="Files_ja_JP_Group" />
+      <ComponentGroupRef Id="Files_ka_GE_Group" />
+      <ComponentGroupRef Id="Files_kk_KZ_Group" />
+      <ComponentGroupRef Id="Files_km_KH_Group" />
+      <ComponentGroupRef Id="Files_kn_IN_Group" />
+      <ComponentGroupRef Id="Files_ko_KR_Group" />
+      <ComponentGroupRef Id="Files_kok_IN_Group" />
+      <ComponentGroupRef Id="Files_lb_LU_Group" />
+      <ComponentGroupRef Id="Files_lo_LA_Group" />
+      <ComponentGroupRef Id="Files_lt_LT_Group" />
+      <ComponentGroupRef Id="Files_lv_LV_Group" />
+      <ComponentGroupRef Id="Files_mi_NZ_Group" />
+      <ComponentGroupRef Id="Files_Microsoft_UI_Xaml_Assets_Group" />
+      <ComponentGroupRef Id="Files_mk_MK_Group" />
+      <ComponentGroupRef Id="Files_ml_IN_Group" />
+      <ComponentGroupRef Id="Files_mr_IN_Group" />
+      <ComponentGroupRef Id="Files_ms_MY_Group" />
+      <ComponentGroupRef Id="Files_mt_MT_Group" />
+      <ComponentGroupRef Id="Files_nb_NO_Group" />
+      <ComponentGroupRef Id="Files_ne_NP_Group" />
+      <ComponentGroupRef Id="Files_nl_NL_Group" />
+      <ComponentGroupRef Id="Files_nn_NO_Group" />
+      <ComponentGroupRef Id="Files_NpuDetect_Group" />
+      <ComponentGroupRef Id="Files_or_IN_Group" />
+      <ComponentGroupRef Id="Files_pa_IN_Group" />
+      <ComponentGroupRef Id="Files_pl_PL_Group" />
+      <ComponentGroupRef Id="Files_pt_BR_Group" />
+      <ComponentGroupRef Id="Files_pt_PT_Group" />
+      <ComponentGroupRef Id="Files_quz_PE_Group" />
+      <ComponentGroupRef Id="Files_ro_RO_Group" />
+      <ComponentGroupRef Id="Files_ru_RU_Group" />
+      <ComponentGroupRef Id="Files_sk_SK_Group" />
+      <ComponentGroupRef Id="Files_sl_SI_Group" />
+      <ComponentGroupRef Id="Files_sq_AL_Group" />
+      <ComponentGroupRef Id="Files_sr_Cyrl_BA_Group" />
+      <ComponentGroupRef Id="Files_sr_Cyrl_RS_Group" />
+      <ComponentGroupRef Id="Files_sr_Latn_RS_Group" />
+      <ComponentGroupRef Id="Files_Strings_en_US_Group" />
+      <ComponentGroupRef Id="Files_Strings_fr_FR_Group" />
+      <ComponentGroupRef Id="Files_sv_SE_Group" />
+      <ComponentGroupRef Id="Files_ta_IN_Group" />
+      <ComponentGroupRef Id="Files_te_IN_Group" />
+      <ComponentGroupRef Id="Files_th_TH_Group" />
+      <ComponentGroupRef Id="Files_tr_TR_Group" />
+      <ComponentGroupRef Id="Files_tt_RU_Group" />
+      <ComponentGroupRef Id="Files_ug_CN_Group" />
+      <ComponentGroupRef Id="Files_uk_UA_Group" />
+      <ComponentGroupRef Id="Files_ur_PK_Group" />
+      <ComponentGroupRef Id="Files_uz_Latn_UZ_Group" />
+      <ComponentGroupRef Id="Files_vi_VN_Group" />
+      <ComponentGroupRef Id="Files_zh_CN_Group" />
+      <ComponentGroupRef Id="Files_zh_TW_Group" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

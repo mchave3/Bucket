@@ -1,0 +1,84 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Variables.wxi ?>
+  <Fragment>
+
+        <!-- Manual Registry Component - Only what can't be harvested -->
+    <ComponentGroup Id="RegistryEntries" Directory="INSTALLFOLDER">
+      <Component Id="UninstallRegistryEntries" Guid="{A1234567-89AB-CDEF-0123-456789ABCDEF}">
+        <!-- Registry entries for Add/Remove Programs -->
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="DisplayName"
+                       Value="$(var.ProductName)"
+                       Type="string"
+                       KeyPath="yes" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="DisplayVersion"
+                       Value="$(var.Version)"
+                       Type="string"
+                       KeyPath="no" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="InstallLocation"
+                       Value="[INSTALLFOLDER]"
+                       Type="string"
+                       KeyPath="no" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="Publisher"
+                       Value="$(var.Manufacturer)"
+                       Type="string"
+                       KeyPath="no" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Desktop Shortcut -->
+    <ComponentGroup Id="DesktopShortcut" Directory="DesktopFolder">
+      <Component Id="DesktopShortcutComponent" Guid="{E5678901-CDEF-0123-4567-89ABCDEF0123}">
+        <Shortcut Id="DesktopShortcut"
+                  Name="$(var.ProductName)"
+                  Description="Launch $(var.ProductName)"
+                  Target="[INSTALLFOLDER]$(var.AppExecutable)"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
+        <RegistryValue Root="HKCU"
+                       Key="SOFTWARE\$(var.Manufacturer)\$(var.ProductName)\Shortcuts"
+                       Name="Desktop"
+                       Value="1"
+                       Type="integer"
+                       KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Start Menu Shortcut -->
+    <ComponentGroup Id="StartMenuShortcut" Directory="STARTMENUDIR">
+      <Component Id="StartMenuShortcutComponent" Guid="{F6789012-DEF0-1234-5678-9ABCDEF01234}">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="$(var.ProductName)"
+                  Description="Launch $(var.ProductName)"
+                  Target="[INSTALLFOLDER]$(var.AppExecutable)"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon.ico" />
+
+        <!-- Uninstall shortcut -->
+        <Shortcut Id="UninstallShortcut"
+                  Name="Uninstall $(var.ProductName)"
+                  Description="Uninstall $(var.ProductName)"
+                  Target="[SystemFolder]msiexec.exe"
+                  Arguments="/x [ProductCode]" />
+
+        <RegistryValue Root="HKCU"
+                       Key="SOFTWARE\$(var.Manufacturer)\$(var.ProductName)\Shortcuts"
+                       Name="StartMenu"
+                       Value="1"
+                       Type="integer"
+                       KeyPath="yes" />
+
+        <!-- Remove start menu folder on uninstall -->
+        <RemoveFolder Id="RemoveStartMenuDir" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+  </Fragment>
+</Wix>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <!--
+    VARIABLES AUTOMATIQUES - Ces valeurs sont automatiquement extraites du .csproj
+    et passées via DefineConstants dans le .wixproj
+
+    Les valeurs ci-dessous sont des fallbacks si l'extraction automatique échoue
+  -->
+
+  <!-- Product information - Auto-extracted from Bucket.App.csproj -->
+  <?ifndef ProductGuid ?>
+    <?define ProductGuid = "{8E47B00A-4743-448F-AC7E-F04BF99D7C64}" ?>
+  <?endif?>
+
+  <?ifndef ProductName ?>
+    <?define ProductName = "Bucket" ?>
+  <?endif?>
+
+  <?ifndef Manufacturer ?>
+    <?define Manufacturer = "Mickaël CHAVE" ?>
+  <?endif?>
+
+  <?ifndef Version ?>
+    <?define Version = "1.0.0.0" ?>
+  <?endif?>
+
+  <!-- Installation directories - Platform-specific, auto-set by .wixproj -->
+  <?ifndef ProgramFilesFolder ?>
+    <?define ProgramFilesFolder = "ProgramFiles64Folder" ?>
+  <?endif?>
+
+  <!-- Publish output path - Auto-calculated by .wixproj -->
+  <?ifndef PublishOutputPath ?>
+    <?define PublishOutputPath = "..\..\src\Bucket.App\bin\x64\Release\net9.0-windows10.0.26100\win-x64\publish\" ?>
+  <?endif?>
+
+  <!-- Target executable name - Auto-extracted from AssemblyName -->
+  <?ifndef AppExecutable ?>
+    <?define AppExecutable = "Bucket.exe" ?>
+  <?endif?>
+</Include>
