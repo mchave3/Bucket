@@ -1,5 +1,5 @@
 name: 'Create Installers'
-description: 'Generate MSI installers using Advanced Installer for all architectures'
+description: 'Generate MSI installers using WiX Toolset for all architectures'
 inputs:
   version:
     description: 'Version for the installers'
@@ -8,10 +8,6 @@ inputs:
     description: 'Build configuration'
     required: false
     default: 'Release'
-  advinst-license:
-    description: 'Advanced Installer license key'
-    required: false
-    default: ''
 
 outputs:
   installers-path:
@@ -28,213 +24,175 @@ runs:
         $installersPath = "artifacts/installers"
         New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
         echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
+        Write-Host "Installers will be generated in: $installersPath" -ForegroundColor Cyan
 
-    - name: Download and Install Advanced Installer MSI
+    - name: Install WiX Toolset
       shell: pwsh
       run: |
-        Write-Host "=== Downloading Advanced Installer MSI ===" -ForegroundColor Cyan
-
-        # Download Advanced Installer MSI
-        $downloadUrl = "https://www.advancedinstaller.com/downloads/advinst.msi"
-        $msiPath = "$env:TEMP\advinst.msi"
-
-        Write-Host "Downloading from: $downloadUrl"
-        Invoke-WebRequest -Uri $downloadUrl -OutFile $msiPath -UseBasicParsing
-
-        Write-Host "Downloaded to: $msiPath"
-        Write-Host "File size: $((Get-Item $msiPath).Length / 1MB) MB"
-
-        Write-Host "=== Installing Advanced Installer MSI ===" -ForegroundColor Cyan
-
-        # Install Advanced Installer silently
-        $installArgs = @(
-          "/i", $msiPath,
-          "/quiet",
-          "/norestart"
-        )
-
-        if ("${{ inputs.advinst-license }}" -ne "") {
-          Write-Host "Installing with license key..."
-          $installArgs += "AI_LICENSE_KEY=${{ inputs.advinst-license }}"
+        Write-Host "=== Installing WiX Toolset ===" -ForegroundColor Cyan
+        
+        # Install WiX as a global tool
+        dotnet tool install --global wix --version 5.0.1
+        
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✅ WiX Toolset installed successfully" -ForegroundColor Green
         } else {
-          Write-Host "Installing without license (free version)..."
-        }
-
-        Write-Host "Running: msiexec $($installArgs -join ' ')"
-        $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $installArgs -Wait -PassThru
-
-        if ($process.ExitCode -eq 0) {
-          Write-Host "✅ Advanced Installer MSI installed successfully" -ForegroundColor Green
-        } else {
-          Write-Error "❌ Advanced Installer MSI installation failed with exit code: $($process.ExitCode)"
+          Write-Error "❌ Failed to install WiX Toolset"
           exit 1
         }
+        
+        # Verify installation
+        wix --version
+        Write-Host "WiX Toolset is ready!" -ForegroundColor Green
 
-        # Clean up downloaded MSI
-        Remove-Item -Path $msiPath -Force -ErrorAction SilentlyContinue
+    - name: Setup .NET and MSBuild
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
 
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
-    - name: Build Setup Projects with MSBuild
+    - name: Ensure artifacts directory exists
       shell: pwsh
       run: |
-        Write-Host "=== Building Setup Projects with MSBuild ===" -ForegroundColor Cyan
-
-        $setupProjects = @(
-          "setup/Bucket.Setup_x64/Bucket.Setup_x64.aiproj",
-          "setup/Bucket.Setup_x86/Bucket.Setup_x86.aiproj",
-          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aiproj"
+        Write-Host "Creating artifacts directory structure..." -ForegroundColor Cyan
+        
+        $directories = @(
+          "artifacts/installers",
+          "artifacts/publish/win-x64",
+          "artifacts/publish/win-x86", 
+          "artifacts/publish/win-arm64"
         )
+        
+        foreach ($dir in $directories) {
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Write-Host "✅ Created: $dir" -ForegroundColor Green
+        }
 
-        foreach ($project in $setupProjects) {
-          if (Test-Path $project) {
-            Write-Host "Building: $project" -ForegroundColor Yellow
-
-            # Build the setup project with MSBuild
-            msbuild $project `
-              /p:Configuration=DefaultBuild `
-              /t:Build `
-              /v:minimal
-
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "✅ Successfully built: $project" -ForegroundColor Green
-            } else {
-              Write-Error "❌ Failed to build: $project"
-              exit 1
-            }
+    - name: Publish application for all platforms
+      shell: pwsh
+      run: |
+        Write-Host "=== Publishing Application for All Platforms ===" -ForegroundColor Cyan
+        
+        $platforms = @(
+          @{ Name = "x64"; RID = "win-x64" },
+          @{ Name = "x86"; RID = "win-x86" },
+          @{ Name = "ARM64"; RID = "win-arm64" }
+        )
+        
+        foreach ($platform in $platforms) {
+          Write-Host "Publishing for $($platform.Name)..." -ForegroundColor Yellow
+          
+          $publishArgs = @(
+            "publish",
+            "src/Bucket.App/Bucket.App.csproj",
+            "-c", "${{ inputs.configuration }}",
+            "-r", $platform.RID,
+            "-p:Platform=$($platform.Name)",
+            "-p:Version=${{ inputs.version }}",
+            "-p:PublishSingleFile=false",
+            "-p:SelfContained=true",
+            "-p:PublishReadyToRun=false",
+            "-p:PublishTrimmed=false",
+            "--no-restore"
+          )
+          
+          dotnet @publishArgs
+          
+          if ($LASTEXITCODE -eq 0) {
+            $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
+            $fileCount = (Get-ChildItem -Path $publishPath -Recurse -File).Count
+            Write-Host "✅ Published $($platform.Name): $fileCount files" -ForegroundColor Green
           } else {
-            Write-Warning "Setup project not found: $project"
+            Write-Error "❌ Failed to publish for $($platform.Name)"
+            exit 1
           }
         }
 
-    - name: Deploy Advanced Installer Tool (Caphyon Action)
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: '23.0'
-        advinst-license: ${{ inputs.advinst-license }}
-        advinst-enable-automation: 'false'
-
-    - name: Update version in Advanced Installer projects
+    - name: Build WiX Setup Projects
       shell: pwsh
       run: |
-        Write-Host "Updating version in Advanced Installer projects to ${{ inputs.version }}..." -ForegroundColor Cyan
-
-        # Extract clean version (remove pre-release suffix)
-        $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
-        Write-Host "Base version: $versionBase"
-
-        # Update each .aip file using Advanced Installer command line
-        $aipFiles = @(
-          "setup/Bucket.Setup_x64/Bucket.Setup_x64.aip",
-          "setup/Bucket.Setup_x86/Bucket.Setup_x86.aip",
-          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64.aip"
-        )
-
-        # Find Advanced Installer executable
-        $aiPaths = @(
-          "${env:ProgramFiles(x86)}\Caphyon\Advanced Installer 23.0\bin\x86\AdvancedInstaller.com",
-          "${env:ProgramFiles}\Caphyon\Advanced Installer 23.0\bin\x86\AdvancedInstaller.com"
-        )
-
-        $aiExe = $null
-        foreach ($path in $aiPaths) {
-          if (Test-Path $path) {
-            $aiExe = $path
-            break
-          }
-        }
-
-        if (-not $aiExe) {
-          Write-Warning "Advanced Installer executable not found. Skipping version update."
-        } else {
-          Write-Host "Using Advanced Installer at: $aiExe"
-
-          foreach ($aipFile in $aipFiles) {
-            if (Test-Path $aipFile) {
-              Write-Host "Updating version in $aipFile..."
-
-              # Use Advanced Installer command line to update version
-              $fullPath = Resolve-Path $aipFile
-              & "$aiExe" /edit "$fullPath" /SetVersion $versionBase
-
-              if ($LASTEXITCODE -eq 0) {
-                Write-Host "✅ Updated version in $aipFile" -ForegroundColor Green
-              } else {
-                Write-Warning "Failed to update version in $aipFile"
+        Write-Host "=== Building WiX Setup Projects ===" -ForegroundColor Cyan
+        
+        $platforms = @("x64", "x86", "ARM64")
+        
+        foreach ($platform in $platforms) {
+          Write-Host "Building MSI for $platform..." -ForegroundColor Yellow
+          
+          # Build the WiX project for this platform
+          $buildArgs = @(
+            "build",
+            "setup/Bucket.Setup/Bucket.Setup.wixproj",
+            "-c", "${{ inputs.configuration }}",
+            "-p:Platform=$platform",
+            "-p:Version=${{ inputs.version }}",
+            "--no-restore"
+          )
+          
+          dotnet @buildArgs
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Successfully built MSI for $platform" -ForegroundColor Green
+          } else {
+            Write-Error "❌ Failed to build MSI for $platform"
+            Get-ChildItem "setup/Bucket.Setup/obj/$platform/${{ inputs.configuration }}" -Recurse -File -Filter "*.log" | 
+              ForEach-Object { 
+                Write-Host "Build log: $($_.FullName)" -ForegroundColor Yellow
+                Get-Content $_.FullName -Tail 50
               }
-            } else {
-              Write-Warning "AIP file not found: $aipFile"
-            }
+            exit 1
           }
         }
 
-    - name: Copy generated MSI files to artifacts
+    - name: Verify generated MSI files
       shell: pwsh
       run: |
-        Write-Host "=== Copying Generated MSI Files ===" -ForegroundColor Cyan
-
-        $msiMappings = @{
-          "setup/Bucket.Setup_x64/Bucket.Setup_x64-SetupFiles/Bucket.Setup_x64.msi" = "Bucket-${{ inputs.version }}-x64.msi"
-          "setup/Bucket.Setup_x86/Bucket.Setup_x86-SetupFiles/Bucket.Setup_x86.msi" = "Bucket-${{ inputs.version }}-x86.msi"
-          "setup/Bucket.Setup_arm64/Bucket.Setup_arm64-SetupFiles/Bucket.Setup_arm64.msi" = "Bucket-${{ inputs.version }}-arm64.msi"
-        }
-
-        foreach ($mapping in $msiMappings.GetEnumerator()) {
-          $source = $mapping.Key
-          $destination = "artifacts/installers/$($mapping.Value)"
-
-          if (Test-Path $source) {
-            Copy-Item -Path $source -Destination $destination -Force
-            $fileSize = (Get-Item $destination).Length / 1MB
-            Write-Host "✅ Copied: $($mapping.Value) ($("{0:N2}" -f $fileSize) MB)" -ForegroundColor Green
-          } else {
-            Write-Warning "⚠️ MSI not found: $source"
-          }
-        }
-
-    - name: List generated installers
-      shell: pwsh
-      run: |
-        Write-Host "=== Generated Installers ===" -ForegroundColor Cyan
-        $installersPath = "artifacts/installers"
-
-        if (Test-Path $installersPath) {
-          $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
-          if ($msiFiles.Count -gt 0) {
-            $msiFiles | ForEach-Object {
-              Write-Host "  - $($_.Name) ($('{0:N2} MB' -f ($_.Length / 1MB)))" -ForegroundColor Green
-            }
-          } else {
-            Write-Host "  No MSI files found" -ForegroundColor Yellow
-          }
-        }
-
-    - name: Verify installer generation
-      shell: pwsh
-      run: |
-        Write-Host "=== Verifying Installer Generation ===" -ForegroundColor Cyan
-        $installersPath = "artifacts/installers"
+        Write-Host "=== Verifying Generated MSI Files ===" -ForegroundColor Cyan
+        
         $expectedFiles = @(
           "Bucket-${{ inputs.version }}-x64.msi",
-          "Bucket-${{ inputs.version }}-x86.msi",
-          "Bucket-${{ inputs.version }}-arm64.msi"
+          "Bucket-${{ inputs.version }}-x86.msi", 
+          "Bucket-${{ inputs.version }}-ARM64.msi"
         )
-
+        
+        $installersPath = "artifacts/installers"
         $missingFiles = @()
+        $generatedFiles = @()
+        
         foreach ($file in $expectedFiles) {
           $fullPath = Join-Path $installersPath $file
-          if (-not (Test-Path $fullPath)) {
+          if (Test-Path $fullPath) {
+            $fileInfo = Get-Item $fullPath
+            $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+            $generatedFiles += "  - $file ($fileSizeMB MB)"
+            Write-Host "✅ Found: $file ($fileSizeMB MB)" -ForegroundColor Green
+          } else {
             $missingFiles += $file
+            Write-Host "❌ Missing: $file" -ForegroundColor Red
           }
         }
-
+        
         if ($missingFiles.Count -gt 0) {
-          Write-Error "❌ Missing installer files: $($missingFiles -join ', ')"
+          Write-Host "Missing files:" -ForegroundColor Red
+          $missingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+          
+          # List what files are actually in the installers directory
+          Write-Host "Files in installers directory:" -ForegroundColor Yellow
+          if (Test-Path $installersPath) {
+            Get-ChildItem $installersPath | ForEach-Object { 
+              Write-Host "  - $($_.Name)" -ForegroundColor Yellow 
+            }
+          } else {
+            Write-Host "  (directory doesn't exist)" -ForegroundColor Red
+          }
+          
           exit 1
-        } else {
-          Write-Host "✅ All installer files generated successfully" -ForegroundColor Green
         }
+        
+        Write-Host "All installer files generated successfully!" -ForegroundColor Green
+        Write-Host "Generated files:" -ForegroundColor Cyan
+        $generatedFiles | ForEach-Object { Write-Host $_ -ForegroundColor Green }
 
     - name: Upload installer artifacts
       uses: actions/upload-artifact@v4
@@ -242,3 +200,25 @@ runs:
         name: installer-artifacts
         path: artifacts/installers/
         retention-days: 7
+        if-no-files-found: error
+
+    - name: Installation verification summary
+      shell: pwsh
+      run: |
+        Write-Host "=== Installation Package Summary ===" -ForegroundColor Cyan
+        
+        $installersPath = "artifacts/installers"
+        if (Test-Path $installersPath) {
+          $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
+          $totalSize = ($msiFiles | Measure-Object -Property Length -Sum).Sum / 1MB
+          
+          Write-Host "📦 Generated $($msiFiles.Count) MSI installers (Total: $([math]::Round($totalSize, 2)) MB)" -ForegroundColor Green
+          
+          foreach ($file in $msiFiles) {
+            $sizeMB = [math]::Round($file.Length / 1MB, 2)
+            Write-Host "  ✅ $($file.Name) - $sizeMB MB" -ForegroundColor Green
+          }
+          
+          Write-Host "" -ForegroundColor Cyan
+          Write-Host "🎯 Ready for GitHub Release distribution!" -ForegroundColor Green
+        }

@@ -1,0 +1,68 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package 
+    Id="$(var.ProductGuid)" 
+    Name="$(var.ProductName)" 
+    Manufacturer="$(var.Manufacturer)" 
+    Version="$(var.Version)"
+    Language="1033"
+    Codepage="1252"
+    InstallerVersion="500"
+    Compressed="yes"
+    InstallScope="perMachine">
+
+    <!-- Package description -->
+    <SummaryInformation 
+      Keywords="Installer,MSI,$(var.ProductName)"
+      Description="$(var.ProductName) Installer"
+      Manufacturer="$(var.Manufacturer)"
+      />
+
+    <!-- Icon for Add/Remove Programs -->
+    <Icon Id="AppIcon.ico" SourceFile="..\..\src\Bucket.App\Assets\AppIcon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+    
+    <!-- Add/Remove Programs properties -->
+    <Property Id="ARPHELPLINK" Value="https://github.com/mchave3/Bucket" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/mchave3/Bucket" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+
+    <!-- System requirements -->
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+    </Property>
+
+    <!-- Launch condition for Windows 10 1809+ -->
+    <Launch Condition="WINDOWSBUILDNUMBER >= 17763" Message="This application requires Windows 10 version 1809 (build 17763) or later." />
+
+    <!-- Major upgrade configuration -->
+    <MajorUpgrade 
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed. Please uninstall it first."
+      Schedule="afterInstallInitialize" />
+
+    <!-- Media -->
+    <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
+
+    <!-- Features -->
+    <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1" Absent="disallow">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentGroupRef Id="DesktopShortcut" />
+      <ComponentGroupRef Id="StartMenuShortcut" />
+    </Feature>
+
+    <!-- Standard directories -->
+    <StandardDirectory Id="$(var.ProgramFilesFolder)">
+      <Directory Id="COMPANYDIR" Name="$(var.Manufacturer)">
+        <Directory Id="INSTALLFOLDER" Name="$(var.ProductName)" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="STARTMENUDIR" Name="$(var.ProductName)" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+  </Package>
+</Wix>
