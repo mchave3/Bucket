@@ -30,17 +30,17 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Installing WiX Toolset ===" -ForegroundColor Cyan
-        
+
         # Install WiX as a global tool
         dotnet tool install --global wix --version 5.0.1
-        
+
         if ($LASTEXITCODE -eq 0) {
           Write-Host "✅ WiX Toolset installed successfully" -ForegroundColor Green
         } else {
           Write-Error "❌ Failed to install WiX Toolset"
           exit 1
         }
-        
+
         # Verify installation
         wix --version
         Write-Host "WiX Toolset is ready!" -ForegroundColor Green
@@ -57,14 +57,14 @@ runs:
       shell: pwsh
       run: |
         Write-Host "Creating artifacts directory structure..." -ForegroundColor Cyan
-        
+
         $directories = @(
           "artifacts/installers",
           "artifacts/publish/win-x64",
-          "artifacts/publish/win-x86", 
+          "artifacts/publish/win-x86",
           "artifacts/publish/win-arm64"
         )
-        
+
         foreach ($dir in $directories) {
           New-Item -ItemType Directory -Force -Path $dir | Out-Null
           Write-Host "✅ Created: $dir" -ForegroundColor Green
@@ -74,16 +74,16 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Publishing Application for All Platforms ===" -ForegroundColor Cyan
-        
+
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64" },
           @{ Name = "x86"; RID = "win-x86" },
           @{ Name = "ARM64"; RID = "win-arm64" }
         )
-        
+
         foreach ($platform in $platforms) {
           Write-Host "Publishing for $($platform.Name)..." -ForegroundColor Yellow
-          
+
           $publishArgs = @(
             "publish",
             "src/Bucket.App/Bucket.App.csproj",
@@ -97,9 +97,9 @@ runs:
             "-p:PublishTrimmed=false",
             "--no-restore"
           )
-          
+
           dotnet @publishArgs
-          
+
           if ($LASTEXITCODE -eq 0) {
             $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
             $fileCount = (Get-ChildItem -Path $publishPath -Recurse -File).Count
@@ -114,12 +114,12 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Building WiX Setup Projects ===" -ForegroundColor Cyan
-        
+
         $platforms = @("x64", "x86", "ARM64")
-        
+
         foreach ($platform in $platforms) {
           Write-Host "Building MSI for $platform..." -ForegroundColor Yellow
-          
+
           # Build the WiX project for this platform
           $buildArgs = @(
             "build",
@@ -129,15 +129,15 @@ runs:
             "-p:Version=${{ inputs.version }}",
             "--no-restore"
           )
-          
+
           dotnet @buildArgs
-          
+
           if ($LASTEXITCODE -eq 0) {
             Write-Host "✅ Successfully built MSI for $platform" -ForegroundColor Green
           } else {
             Write-Error "❌ Failed to build MSI for $platform"
-            Get-ChildItem "setup/Bucket.Setup/obj/$platform/${{ inputs.configuration }}" -Recurse -File -Filter "*.log" | 
-              ForEach-Object { 
+            Get-ChildItem "setup/Bucket.Setup/obj/$platform/${{ inputs.configuration }}" -Recurse -File -Filter "*.log" |
+              ForEach-Object {
                 Write-Host "Build log: $($_.FullName)" -ForegroundColor Yellow
                 Get-Content $_.FullName -Tail 50
               }
@@ -149,17 +149,17 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Verifying Generated MSI Files ===" -ForegroundColor Cyan
-        
+
         $expectedFiles = @(
           "Bucket-${{ inputs.version }}-x64.msi",
-          "Bucket-${{ inputs.version }}-x86.msi", 
+          "Bucket-${{ inputs.version }}-x86.msi",
           "Bucket-${{ inputs.version }}-ARM64.msi"
         )
-        
+
         $installersPath = "artifacts/installers"
         $missingFiles = @()
         $generatedFiles = @()
-        
+
         foreach ($file in $expectedFiles) {
           $fullPath = Join-Path $installersPath $file
           if (Test-Path $fullPath) {
@@ -172,24 +172,24 @@ runs:
             Write-Host "❌ Missing: $file" -ForegroundColor Red
           }
         }
-        
+
         if ($missingFiles.Count -gt 0) {
           Write-Host "Missing files:" -ForegroundColor Red
           $missingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
-          
+
           # List what files are actually in the installers directory
           Write-Host "Files in installers directory:" -ForegroundColor Yellow
           if (Test-Path $installersPath) {
-            Get-ChildItem $installersPath | ForEach-Object { 
-              Write-Host "  - $($_.Name)" -ForegroundColor Yellow 
+            Get-ChildItem $installersPath | ForEach-Object {
+              Write-Host "  - $($_.Name)" -ForegroundColor Yellow
             }
           } else {
             Write-Host "  (directory doesn't exist)" -ForegroundColor Red
           }
-          
+
           exit 1
         }
-        
+
         Write-Host "All installer files generated successfully!" -ForegroundColor Green
         Write-Host "Generated files:" -ForegroundColor Cyan
         $generatedFiles | ForEach-Object { Write-Host $_ -ForegroundColor Green }
@@ -206,19 +206,19 @@ runs:
       shell: pwsh
       run: |
         Write-Host "=== Installation Package Summary ===" -ForegroundColor Cyan
-        
+
         $installersPath = "artifacts/installers"
         if (Test-Path $installersPath) {
           $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
           $totalSize = ($msiFiles | Measure-Object -Property Length -Sum).Sum / 1MB
-          
+
           Write-Host "📦 Generated $($msiFiles.Count) MSI installers (Total: $([math]::Round($totalSize, 2)) MB)" -ForegroundColor Green
-          
+
           foreach ($file in $msiFiles) {
             $sizeMB = [math]::Round($file.Length / 1MB, 2)
             Write-Host "  ✅ $($file.Name) - $sizeMB MB" -ForegroundColor Green
           }
-          
+
           Write-Host "" -ForegroundColor Cyan
           Write-Host "🎯 Ready for GitHub Release distribution!" -ForegroundColor Green
         }

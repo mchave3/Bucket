@@ -1,9 +1,8 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
 
-    <!-- Application Files Component Group - Auto-generated -->
+    <!-- Application Files Component Group -->
     <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
-
       <!-- Main executable -->
       <Component Id="MainExecutable" Guid="{A1234567-89AB-CDEF-0123-456789ABCDEF}">
         <File Id="BucketExe"
@@ -25,34 +24,28 @@
                        KeyPath="no" />
       </Component>
 
-      <!-- Application DLLs and dependencies -->
+      <!-- All other application files -->
       <Component Id="ApplicationDlls" Guid="{B2345678-9ABC-DEF0-1234-56789ABCDEF0}">
-        <!-- Core application DLLs -->
+        <File Id="BucketDll" Source="$(var.AppBinariesPath)\Bucket.dll" />
         <File Id="BucketCoreDll" Source="$(var.AppBinariesPath)\Bucket.Core.dll" />
-
-        <!-- .NET Runtime files (if published as self-contained) -->
-        <File Id="HostFxr" Source="$(var.AppBinariesPath)\hostfxr.dll" Condition="Exists('$(var.AppBinariesPath)\hostfxr.dll')" />
-        <File Id="HostPolicy" Source="$(var.AppBinariesPath)\hostpolicy.dll" Condition="Exists('$(var.AppBinariesPath)\hostpolicy.dll')" />
-
-        <!-- WinUI3 dependencies -->
-        <File Id="MicrosoftWinUIDll" Source="$(var.AppBinariesPath)\Microsoft.WinUI.dll" Condition="Exists('$(var.AppBinariesPath)\Microsoft.WinUI.dll')" />
-        <File Id="WinRTRuntimeDll" Source="$(var.AppBinariesPath)\WinRT.Runtime.dll" Condition="Exists('$(var.AppBinariesPath)\WinRT.Runtime.dll')" />
-        <File Id="MicrosoftWindowsAppSdk" Source="$(var.AppBinariesPath)\Microsoft.WindowsAppSDK.dll" Condition="Exists('$(var.AppBinariesPath)\Microsoft.WindowsAppSDK.dll')" />
+        <!-- WinUI3 and runtime files -->
+        <File Id="MicrosoftWinUIDll" Source="$(var.AppBinariesPath)\Microsoft.WinUI.dll" />
+        <File Id="WinRTRuntimeDll" Source="$(var.AppBinariesPath)\WinRT.Runtime.dll" />
       </Component>
 
-      <!-- Configuration and metadata files -->
+      <!-- Configuration files -->
       <Component Id="ConfigFiles" Guid="{C3456789-ABCD-EF01-2345-6789ABCDEF01}">
-        <File Id="RuntimeConfigJson" Source="$(var.AppBinariesPath)\Bucket.runtimeconfig.json" Condition="Exists('$(var.AppBinariesPath)\Bucket.runtimeconfig.json')" />
-        <File Id="DepsJson" Source="$(var.AppBinariesPath)\Bucket.deps.json" Condition="Exists('$(var.AppBinariesPath)\Bucket.deps.json')" />
-        <File Id="AppHostExe" Source="$(var.AppBinariesPath)\apphost.exe" Condition="Exists('$(var.AppBinariesPath)\apphost.exe')" />
+        <File Id="AppConfigJson" Source="$(var.AppBinariesPath)\appsettings.json" />
+        <File Id="RuntimeConfigJson" Source="$(var.AppBinariesPath)\Bucket.runtimeconfig.json" />
+        <File Id="DepsJson" Source="$(var.AppBinariesPath)\Bucket.deps.json" />
       </Component>
 
-      <!-- Resources and assets -->
-      <Component Id="AppAssets" Guid="{D4567890-BCDE-F012-3456-789ABCDEF012}">
-        <!-- Create the directory, files will be added by Heat during build if needed -->
+      <!-- Resource files -->
+      <Component Id="Resources" Guid="{D4567890-BCDE-F012-3456-789ABCDEF012}">
+        <!-- Localization resources -->
         <CreateFolder />
+        <!-- Note: We'll use Heat.exe to auto-generate these during build -->
       </Component>
-
     </ComponentGroup>
 
     <!-- Desktop Shortcut -->

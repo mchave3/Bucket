@@ -24,7 +24,7 @@
     <XmlPeek XmlInputPath="$(AppProject)" Query="//PropertyGroup/AssemblyName/text()">
       <Output TaskParameter="Result" PropertyName="AppName" />
     </XmlPeek>
-    
+
     <!-- Set version if not already set -->
     <PropertyGroup Condition="'$(Version)' == ''">
       <Version>$(AppVersion)</Version>
@@ -35,7 +35,7 @@
     <PropertyGroup Condition="'$(Manufacturer)' == ''">
       <Manufacturer>$(AppCompany)</Manufacturer>
     </PropertyGroup>
-    
+
     <!-- Set platform-specific properties -->
     <PropertyGroup Condition="'$(Platform)' == 'x64'">
       <AppBinariesPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\win-x64\publish</AppBinariesPath>

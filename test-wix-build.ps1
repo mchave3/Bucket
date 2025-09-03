@@ -76,7 +76,7 @@ dotnet build setup\Bucket.Setup\Bucket.Setup.wixproj `
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ WiX build completed successfully" -ForegroundColor Green
-    
+
     # Check for output file
     $expectedMsi = "artifacts\installers\Bucket-$Version-$Platform.msi"
     if (Test-Path $expectedMsi) {
@@ -92,7 +92,7 @@ if ($LASTEXITCODE -eq 0) {
     }
 } else {
     Write-Error "❌ WiX build failed"
-    
+
     # Show build logs if available
     $logPath = "setup\Bucket.Setup\obj\$Platform\$Configuration"
     if (Test-Path $logPath) {
@@ -102,7 +102,7 @@ if ($LASTEXITCODE -eq 0) {
             Get-Content $_.FullName -Tail 20
         }
     }
-    
+
     exit 1
 }
 

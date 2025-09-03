@@ -1,8 +1,8 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package 
-    Id="$(var.ProductGuid)" 
-    Name="$(var.ProductName)" 
-    Manufacturer="$(var.Manufacturer)" 
+  <Package
+    Id="$(var.ProductGuid)"
+    Name="$(var.ProductName)"
+    Manufacturer="$(var.Manufacturer)"
     Version="$(var.Version)"
     Language="1033"
     Codepage="1252"
@@ -11,7 +11,7 @@
     InstallScope="perMachine">
 
     <!-- Package description -->
-    <SummaryInformation 
+    <SummaryInformation
       Keywords="Installer,MSI,$(var.ProductName)"
       Description="$(var.ProductName) Installer"
       Manufacturer="$(var.Manufacturer)"
@@ -20,7 +20,7 @@
     <!-- Icon for Add/Remove Programs -->
     <Icon Id="AppIcon.ico" SourceFile="..\..\src\Bucket.App\Assets\AppIcon.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
-    
+
     <!-- Add/Remove Programs properties -->
     <Property Id="ARPHELPLINK" Value="https://github.com/mchave3/Bucket" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/mchave3/Bucket" />
@@ -36,7 +36,7 @@
     <Launch Condition="WINDOWSBUILDNUMBER >= 17763" Message="This application requires Windows 10 version 1809 (build 17763) or later." />
 
     <!-- Major upgrade configuration -->
-    <MajorUpgrade 
+    <MajorUpgrade
       AllowSameVersionUpgrades="yes"
       DowngradeErrorMessage="A newer version of [ProductName] is already installed. Please uninstall it first."
       Schedule="afterInstallInitialize" />
