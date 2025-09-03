@@ -1,5 +1,9 @@
 name: Nightly Build
 
+# Global configuration - modify these to change default behavior
+env:
+  SKIP_TESTS_DEFAULT: true  # Set to true to skip tests by default for scheduled runs
+
 on:
   schedule:
     # Run at 2:00 AM UTC every day
@@ -96,7 +100,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Run tests
-        if: github.event.inputs.skip-tests != 'true'
+        if: |
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
+          (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT != 'true')
         uses: ./.github/actions/run-tests
         with:
           configuration: 'Release'
@@ -134,7 +140,11 @@ jobs:
             See the [dev branch commits](https://github.com/${{ github.repository }}/commits/dev) for recent changes.
 
             ### Testing
-            ${{ github.event.inputs.skip-tests == 'true' && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed' }}
+            ${{
+              (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests == 'true') ||
+              (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'true')
+              && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed'
+            }}
             - ✅ Solution built successfully for all architectures
             - ✅ Installers generated successfully
 
