@@ -81,7 +81,7 @@ foreach ($dir in $sortedDirs) {
 }
 
 # Trier par profondeur (nombre de \ dans le chemin) en filtrant les valeurs nulles
-$allPaths = $allPaths | Where-Object { $_ -ne $null -and $_ -ne "" } | Sort-Object { $_.Split('\').Length }, $_
+$allPaths = $allPaths | Where-Object { $_ -ne $null -and $_ -ne "" -and $_.Trim() -ne "" } | Sort-Object @{ Expression = { $_.Split('\').Length } }, @{ Expression = { $_ } }
 
 # Créer tous les répertoires avec leur structure hiérarchique
 $openTags = @()
