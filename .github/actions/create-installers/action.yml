@@ -70,11 +70,103 @@ runs:
           Write-Host "✅ Created: $dir" -ForegroundColor Green
         }
 
+    - name: Publish applications for all platforms
+      shell: pwsh
+      run: |
+        Write-Host "=== Publishing Applications for All Platforms ===" -ForegroundColor Cyan
+        Write-Host "🚀 Publishing .NET applications to prepare for harvesting" -ForegroundColor Green
+
+        $platforms = @(
+          @{ Name = "x64"; RID = "win-x64" },
+          @{ Name = "x86"; RID = "win-x86" },
+          @{ Name = "ARM64"; RID = "win-arm64" }
+        )
+
+        foreach ($platform in $platforms) {
+          Write-Host "Publishing for $($platform.Name)..." -ForegroundColor Yellow
+
+          $publishArgs = @(
+            "publish",
+            "src/Bucket.App/Bucket.App.csproj",
+            "-c", "${{ inputs.configuration }}",
+            "-r", "$($platform.RID)",
+            "-p:Platform=$($platform.Name)",
+            "-p:Version=${{ inputs.version }}",
+            "--self-contained", "true",
+            "--verbosity", "minimal"
+          )
+
+          dotnet @publishArgs
+
+          if ($LASTEXITCODE -eq 0) {
+            $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
+            if (Test-Path $publishPath) {
+              $files = Get-ChildItem -Path $publishPath -Recurse -File
+              Write-Host "✅ Published $($files.Count) files for $($platform.Name)" -ForegroundColor Green
+            } else {
+              Write-Error "❌ Publish directory not found: $publishPath"
+              exit 1
+            }
+          } else {
+            Write-Error "❌ Failed to publish for $($platform.Name)"
+            exit 1
+          }
+        }
+
+    - name: Generate AutoHarvestFiles.wxs for each platform
+      shell: pwsh
+      run: |
+        Write-Host "=== Generating AutoHarvestFiles.wxs for All Platforms ===" -ForegroundColor Cyan
+        Write-Host "🔄 Running PowerShell script to harvest files from each publish directory" -ForegroundColor Green
+
+        $platforms = @("x64", "x86", "ARM64")
+
+        foreach ($platform in $platforms) {
+          Write-Host "Generating harvest for $platform..." -ForegroundColor Yellow
+
+          # Change to the setup directory and run the harvest script with platform-specific settings
+          Push-Location "setup/Bucket.Setup"
+          try {
+            # Run the harvest script with platform-specific publish path
+            $runtimeId = switch ($platform) {
+              "x64" { "win-x64" }
+              "x86" { "win-x86" }
+              "ARM64" { "win-arm64" }
+            }
+            $publishPath = "..\..\src\Bucket.App\bin\$platform\${{ inputs.configuration }}\net9.0-windows10.0.26100\$runtimeId\publish"
+            .\Generate-AutoHarvestFiles.ps1 -PublishPath $publishPath
+
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✅ AutoHarvestFiles.wxs generated successfully for $platform" -ForegroundColor Green
+
+              # Rename the file to be platform-specific if we need different harvests per platform
+              # For now, we'll use the same harvest for all platforms (x64 as reference)
+              if ($platform -eq "x64") {
+                # Show statistics for the main harvest file
+                if (Test-Path "AutoHarvestFiles.wxs") {
+                  $content = Get-Content "AutoHarvestFiles.wxs" -Raw
+                  $componentCount = ($content | Select-String '<Component ' -AllMatches).Matches.Count
+                  $fileCount = ($content | Select-String '<File ' -AllMatches).Matches.Count
+                  Write-Host "   📊 Generated $componentCount components with $fileCount files" -ForegroundColor Cyan
+                }
+              }
+            } else {
+              Write-Error "❌ Failed to generate AutoHarvestFiles.wxs for $platform"
+              exit 1
+            }
+          } finally {
+            Pop-Location
+          }
+
+          # We only need to generate once (using x64 as reference) since the file structure is the same
+          break
+        }
+
     - name: Build WiX Setup Projects (with Auto-Publish & Harvest)
       shell: pwsh
       run: |
-        Write-Host "=== Building WiX Setup Projects with Auto-Publish & Harvest ===" -ForegroundColor Cyan
-        Write-Host "🚀 Using WiX 6 with automatic file collection and variable extraction" -ForegroundColor Green
+        Write-Host "=== Building WiX Setup Projects with Auto-Generated Harvest ===" -ForegroundColor Cyan
+        Write-Host "🚀 Using WiX 6 with pre-generated AutoHarvestFiles.wxs" -ForegroundColor Green
 
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64"; ProgramFiles = "ProgramFiles64Folder" },
@@ -83,9 +175,9 @@ runs:
         )
 
         foreach ($platform in $platforms) {
-          Write-Host "Building MSI for $($platform.Name) with automatic harvesting..." -ForegroundColor Yellow
+          Write-Host "Building MSI for $($platform.Name) with pre-generated harvest..." -ForegroundColor Yellow
 
-          # Build the WiX project - it will auto-publish and harvest files
+          # Build the WiX project using pre-published files and pre-generated harvest
           $buildArgs = @(
             "build",
             "setup/Bucket.Setup/Bucket.Setup.wixproj",
@@ -113,7 +205,7 @@ runs:
               $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
               if (Test-Path $publishPath) {
                 $files = Get-ChildItem -Path $publishPath -Recurse -File
-                Write-Host "   📊 Auto-harvested $($files.Count) files from publish directory" -ForegroundColor Cyan
+                Write-Host "   📊 Using pre-harvested $($files.Count) files from publish directory" -ForegroundColor Cyan
 
                 # Show key files
                 $keyFiles = $files | Where-Object { $_.Extension -in @('.exe', '.dll', '.json') } | Select-Object -First 5
