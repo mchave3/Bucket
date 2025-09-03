@@ -45,7 +45,10 @@ foreach ($platform in $platforms) {
 Write-Host "`n🔄 Step 2: Generating AutoHarvestFiles.wxs file" -ForegroundColor Green
 Push-Location "setup/Bucket.Setup"
 try {
-    $publishPath = "..\..\src\Bucket.App\bin\x64\$configuration\net9.0-windows10.0.26100\win-x64\publish"
+    # Use the same platform as in Step 1
+    $platform = $platforms[0]  # Use first platform (x64)
+    $publishPath = "..\..\src\Bucket.App\bin\$($platform.Name)\$configuration\net9.0-windows10.0.26100\$($platform.RID)\publish"
+    Write-Host "Looking for publish directory: $publishPath" -ForegroundColor Gray
     .\Generate-AutoHarvestFiles.ps1 -PublishPath $publishPath
 
     if ($LASTEXITCODE -eq 0) {
