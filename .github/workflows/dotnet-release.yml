@@ -1,5 +1,9 @@
 name: Release Build
 
+# Global configuration - modify these to change default behavior
+env:
+  SKIP_TESTS_DEFAULT: true  # Set to true to skip tests by default
+
 on:
   workflow_dispatch:
     inputs:
@@ -89,7 +93,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Run tests
-        if: github.event.inputs.skip-tests != 'true'
+        if: |
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
+          (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT != 'true')
         uses: ./.github/actions/run-tests
         with:
           configuration: 'Release'
@@ -125,7 +131,11 @@ jobs:
             ${{ github.event.inputs.release-notes }}
 
             ### Quality Assurance
-            ${{ github.event.inputs.skip-tests == 'true' && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed' }}
+            ${{
+              (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests == 'true') ||
+              (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'true')
+              && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed'
+            }}
             - ✅ Code review completed
             - ✅ Solution built successfully for all architectures
             - ✅ Installers validated
