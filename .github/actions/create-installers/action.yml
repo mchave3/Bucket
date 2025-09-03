@@ -70,11 +70,11 @@ runs:
           Write-Host "✅ Created: $dir" -ForegroundColor Green
         }
 
-    - name: Publish applications for all platforms
+    - name: Verify published applications for all platforms
       shell: pwsh
       run: |
-        Write-Host "=== Publishing Applications for All Platforms ===" -ForegroundColor Cyan
-        Write-Host "🚀 Publishing .NET applications to prepare for harvesting" -ForegroundColor Green
+        Write-Host "=== Verifying Published Applications for All Platforms ===" -ForegroundColor Cyan
+        Write-Host "🔍 Checking that applications were already published by build-and-package action" -ForegroundColor Green
 
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64" },
@@ -83,32 +83,25 @@ runs:
         )
 
         foreach ($platform in $platforms) {
-          Write-Host "Publishing for $($platform.Name)..." -ForegroundColor Yellow
+          Write-Host "Verifying publish directory for $($platform.Name)..." -ForegroundColor Yellow
 
-          $publishArgs = @(
-            "publish",
-            "src/Bucket.App/Bucket.App.csproj",
-            "-c", "${{ inputs.configuration }}",
-            "-r", "$($platform.RID)",
-            "-p:Platform=$($platform.Name)",
-            "-p:Version=${{ inputs.version }}",
-            "--self-contained", "true",
-            "--verbosity", "minimal"
-          )
+          $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
 
-          dotnet @publishArgs
+          if (Test-Path $publishPath) {
+            $files = Get-ChildItem -Path $publishPath -Recurse -File
+            Write-Host "✅ Found $($files.Count) files for $($platform.Name) in $publishPath" -ForegroundColor Green
 
-          if ($LASTEXITCODE -eq 0) {
-            $publishPath = "src/Bucket.App/bin/$($platform.Name)/${{ inputs.configuration }}/net9.0-windows10.0.26100/$($platform.RID)/publish"
-            if (Test-Path $publishPath) {
-              $files = Get-ChildItem -Path $publishPath -Recurse -File
-              Write-Host "✅ Published $($files.Count) files for $($platform.Name)" -ForegroundColor Green
-            } else {
-              Write-Error "❌ Publish directory not found: $publishPath"
-              exit 1
+            # Show key files for verification
+            $keyFiles = $files | Where-Object { $_.Extension -in @('.exe', '.dll') } | Select-Object -First 3
+            $keyFiles | ForEach-Object {
+              Write-Host "   🔸 $($_.Name)" -ForegroundColor Gray
+            }
+            if ($files.Count -gt 3) {
+              Write-Host "   ... and $($files.Count - 3) more files" -ForegroundColor Gray
             }
           } else {
-            Write-Error "❌ Failed to publish for $($platform.Name)"
+            Write-Error "❌ Publish directory not found: $publishPath"
+            Write-Host "This suggests the build-and-package action did not complete successfully." -ForegroundColor Red
             exit 1
           }
         }
