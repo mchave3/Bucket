@@ -76,7 +76,7 @@
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);PublishOutputPath=$(PublishOutputPath)</DefineConstants>
     <!-- Suppress ICE03 validation for invalid language IDs -->
-    <SuppressIces>ICE03</SuppressIces>
+    <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
 
   <!-- Auto-harvest files using heat.exe -->
