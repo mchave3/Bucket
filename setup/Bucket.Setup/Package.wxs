@@ -46,10 +46,10 @@
 
         <!-- Features -->
     <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1">
-      <!-- 🚀 COLLECTE AUTOMATIQUE - Tous les fichiers du publish -->
+      <!-- 🚀 AUTOMATIC COLLECTION - All files from publish -->
       <ComponentGroupRef Id="AutoHarvestedFiles" />
 
-      <!-- 📋 COMPOSANTS MANUELS - Seulement ce qui ne peut pas être harvesté -->
+      <!-- 📋 MANUAL COMPONENTS - Only what cannot be harvested -->
       <ComponentGroupRef Id="RegistryEntries" />
       <ComponentGroupRef Id="DesktopShortcut" />
       <ComponentGroupRef Id="StartMenuShortcut" />

@@ -1,27 +1,38 @@
-# Script pour générer automatiquement AutoHarvestFiles.wxs avec tous les fichiers publiés
+# Script to automatically generate AutoHarvestFiles.wxs with all published files
 param(
     [string]$PublishPath = "..\..\src\Bucket.App\bin\x64\Release\net9.0-windows10.0.26100\win-x64\publish",
     [string]$OutputFile = "AutoHarvestFiles.wxs"
 )
 
-Write-Host "🚀 Génération automatique de $OutputFile" -ForegroundColor Green
-Write-Host "📁 Répertoire source: $PublishPath" -ForegroundColor Cyan
+Write-Host "🚀 Automatic generation of $OutputFile" -ForegroundColor Green
+Write-Host "📁 Source directory: $PublishPath" -ForegroundColor Cyan
 
-# Résoudre le chemin absolu
+# Resolve absolute path
 $PublishPathResolved = Resolve-Path $PublishPath
-Write-Host "📁 Chemin résolu: $PublishPathResolved" -ForegroundColor Gray
+Write-Host "📁 Resolved path: $PublishPathResolved" -ForegroundColor Gray
 
-# Vérifier que le répertoire existe
+# Check that directory exists
 if (-not (Test-Path $PublishPathResolved)) {
-    Write-Error "❌ Répertoire de publication non trouvé: $PublishPathResolved"
+    Write-Error "❌ Publish directory not found: $PublishPathResolved"
     exit 1
 }
 
-# Collecter tous les fichiers (y compris les fichiers de localisation)
-$files = Get-ChildItem -Path $PublishPathResolved -Recurse -File
-Write-Host "📊 Nombre de fichiers trouvés: $($files.Count)" -ForegroundColor Yellow
+# Collect all files (including localization files)
+try {
+    $files = Get-ChildItem -Path $PublishPathResolved -Recurse -File
+    Write-Host "📊 Number of files found: $($files.Count)" -ForegroundColor Yellow
 
-# Analyser tous les répertoires nécessaires
+    if ($files.Count -eq 0) {
+        Write-Error "❌ No files found in publish directory"
+        exit 1
+    }
+}
+catch {
+    Write-Error "❌ Error enumerating files: $_"
+    exit 1
+}
+
+# Analyze all necessary directories
 $directories = @{}
 foreach ($file in $files) {
     $relativeDir = [System.IO.Path]::GetDirectoryName($file.FullName.Replace($PublishPathResolved.Path, "").TrimStart('\'))
@@ -30,7 +41,7 @@ foreach ($file in $files) {
     }
 }
 
-# Début du fichier WiX avec structure de répertoires
+# Beginning of WiX file with directory structure
 $wixContent = @"
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <?include Variables.wxi ?>
@@ -39,11 +50,11 @@ $wixContent = @"
     <DirectoryRef Id="INSTALLFOLDER">
 "@
 
-# Créer la structure de répertoires de manière hiérarchique
-$dirIds = @{"" = "INSTALLFOLDER"}  # Répertoire racine
+# Create directory structure hierarchically
+$dirIds = @{"" = "INSTALLFOLDER"}  # Root directory
 $sortedDirs = $directories.Keys | Sort-Object
 
-# Première passe : créer tous les IDs de répertoires
+# First pass: create all directory IDs
 foreach ($dir in $sortedDirs) {
     $pathParts = $dir.Split('\')
     $currentPath = ""
@@ -62,8 +73,8 @@ foreach ($dir in $sortedDirs) {
     }
 }
 
-# Deuxième passe : créer tous les répertoires de manière simple
-# Créer d'abord tous les répertoires parents nécessaires
+# Second pass: create all directories simply
+# First create all necessary parent directories
 $allPaths = @()
 foreach ($dir in $sortedDirs) {
     $pathParts = $dir.Split('\')
@@ -80,10 +91,10 @@ foreach ($dir in $sortedDirs) {
     }
 }
 
-# Trier par profondeur (nombre de \ dans le chemin) en filtrant les valeurs nulles
+# Sort by depth (number of \ in path) filtering null values
 $allPaths = $allPaths | Where-Object { $_ -ne $null -and $_ -ne "" -and $_.Trim() -ne "" } | Sort-Object @{ Expression = { $_.Split('\').Length } }, @{ Expression = { $_ } }
 
-# Créer tous les répertoires avec leur structure hiérarchique
+# Create all directories with their hierarchical structure
 $openTags = @()
 $currentDepth = 0
 
@@ -94,20 +105,20 @@ foreach ($path in $allPaths) {
     $dirId = "Dir_" + ($path -replace '[\\\/\-\.\s]', '_').Replace('___', '_').Replace('__', '_')
     $dirIds[$path] = $dirId
 
-    Write-Host "📁 Traitement: $path (depth=$depth, currentDepth=$currentDepth)" -ForegroundColor Cyan
+    Write-Host "📁 Processing: $path (depth=$depth, currentDepth=$currentDepth)" -ForegroundColor Cyan
 
-    # Fermer les tags si on remonte dans l'arborescence
+    # Close tags if going up in the tree
     $loopCount = 0
     while ($currentDepth -ge $depth) {
         $loopCount++
         if ($loopCount -gt 100) {
-            Write-Host "❌ ERREUR: Boucle infinie détectée! currentDepth=$currentDepth, depth=$depth" -ForegroundColor Red
+            Write-Host "❌ ERROR: Infinite loop detected! currentDepth=$currentDepth, depth=$depth" -ForegroundColor Red
             Write-Host "   Path: $path" -ForegroundColor Red
             Write-Host "   OpenTags: $($openTags -join ', ')" -ForegroundColor Red
             break
         }
 
-        Write-Host "  🔽 Fermeture niveau $currentDepth" -ForegroundColor Yellow
+        Write-Host "  🔽 Closing level $currentDepth" -ForegroundColor Yellow
         $wixContent += ("  " * ($currentDepth + 1)) + "</Directory>`n"
         if ($openTags.Length -gt 0) {
             $openTags = $openTags[0..($openTags.Length-2)]
@@ -115,18 +126,18 @@ foreach ($path in $allPaths) {
         $currentDepth--
     }
 
-    # Ouvrir le nouveau répertoire
-    Write-Host "  🔼 Ouverture niveau $depth : $dirName" -ForegroundColor Green
+    # Open the new directory
+    Write-Host "  🔼 Opening level $depth : $dirName" -ForegroundColor Green
     $indent = "  " * ($depth + 1)
     $wixContent += "$indent<Directory Id=`"$dirId`" Name=`"$dirName`">`n"
     $openTags += $dirId
     $currentDepth = $depth
 }
 
-# Fermer tous les tags restants
-Write-Host "🔚 Fermeture finale: $($openTags.Length) tags ouverts, currentDepth=$currentDepth" -ForegroundColor Magenta
+# Close all remaining tags
+Write-Host "🔚 Final closing: $($openTags.Length) open tags, currentDepth=$currentDepth" -ForegroundColor Magenta
 while ($openTags.Length -gt 0 -and $currentDepth -gt 0) {
-    Write-Host "  🔽 Fermeture finale niveau $currentDepth" -ForegroundColor Yellow
+    Write-Host "  🔽 Final closing level $currentDepth" -ForegroundColor Yellow
     $indent = "  " * ($currentDepth + 1)
     $wixContent += "$indent</Directory>`n"
     if ($openTags.Length -gt 0) {
@@ -141,12 +152,12 @@ $wixContent += @"
     <!-- Auto-generated components by directory -->
 "@
 
-# Générer un GUID unique pour chaque composant
+# Generate a unique GUID for each component
 function New-Guid {
     [System.Guid]::NewGuid().ToString().ToUpper()
 }
 
-# Créer des ComponentGroups pour chaque répertoire
+# Create ComponentGroups for each directory
 $componentsByDir = @{}
 foreach ($file in $files) {
     $relativeFilePath = $file.FullName.Replace($PublishPathResolved.Path, "").TrimStart('\')
@@ -158,7 +169,7 @@ foreach ($file in $files) {
     $componentsByDir[$relativeDir] += $file
 }
 
-# Générer les composants pour chaque répertoire
+# Generate components for each directory
 $componentIndex = 1
 $isFirstGroup = $true
 foreach ($dir in $componentsByDir.Keys | Sort-Object) {
@@ -178,7 +189,7 @@ foreach ($dir in $componentsByDir.Keys | Sort-Object) {
         $relativeFilePath = $file.FullName.Replace($PublishPathResolved.Path, "").TrimStart('\')
         $fileName = $file.Name
 
-        # Créer un nom de composant valide (limité à 72 caractères)
+        # Create a valid component name (limited to 72 characters)
         $baseName = "File_" + ($fileName -replace '[\\\/\-\.\s]', '_').Replace('___', '_').Replace('__', '_')
         if ($baseName.Length -gt 50) {
             $baseName = $baseName.Substring(0, 50)
@@ -198,7 +209,7 @@ foreach ($dir in $componentsByDir.Keys | Sort-Object) {
     }
 }
 
-# Créer le ComponentGroup principal qui référence tous les autres
+# Create the main ComponentGroup that references all others
 $wixContent += "    </ComponentGroup>`n`n"
 $wixContent += "    <!-- Main ComponentGroup that references all directory groups -->`n"
 $wixContent += "    <ComponentGroup Id=`"AutoHarvestedFiles`">`n"
@@ -215,11 +226,20 @@ $wixContent += @"
 </Wix>
 "@
 
-# Écrire le fichier
-Set-Content -Path $OutputFile -Value $wixContent -Encoding UTF8
-Write-Host "✅ Fichier généré: $OutputFile" -ForegroundColor Green
-Write-Host "📊 Composants créés: $($componentIndex - 1)" -ForegroundColor Cyan
+# Write the file
+try {
+    Set-Content -Path $OutputFile -Value $wixContent -Encoding UTF8
+    Write-Host "✅ File generated: $OutputFile" -ForegroundColor Green
+    Write-Host "📊 Components created: $($componentIndex - 1)" -ForegroundColor Cyan
 
-# Vérifier la taille du fichier généré
-$fileInfo = Get-Item $OutputFile
-Write-Host "📄 Taille du fichier: $([math]::Round($fileInfo.Length / 1KB, 2)) KB" -ForegroundColor Gray
+    # Check the size of the generated file
+    $fileInfo = Get-Item $OutputFile
+    Write-Host "📄 File size: $([math]::Round($fileInfo.Length / 1KB, 2)) KB" -ForegroundColor Gray
+
+    # Explicitly set success exit code
+    exit 0
+}
+catch {
+    Write-Error "❌ Error generating file: $_"
+    exit 1
+}
