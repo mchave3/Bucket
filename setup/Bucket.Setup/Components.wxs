@@ -1,50 +1,35 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Variables.wxi ?>
   <Fragment>
 
-    <!-- Application Files Component Group -->
-    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
-      <!-- Main executable -->
-      <Component Id="MainExecutable" Guid="{A1234567-89AB-CDEF-0123-456789ABCDEF}">
-        <File Id="BucketExe"
-              Source="$(var.AppBinariesPath)\Bucket.exe"
-              KeyPath="yes" />
-
-        <!-- Registry entries for uninstall -->
+        <!-- Manual Registry Component - Only what can't be harvested -->
+    <ComponentGroup Id="RegistryEntries" Directory="INSTALLFOLDER">
+      <Component Id="UninstallRegistryEntries" Guid="{A1234567-89AB-CDEF-0123-456789ABCDEF}">
+        <!-- Registry entries for Add/Remove Programs -->
         <RegistryValue Root="HKLM"
                        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
                        Name="DisplayName"
                        Value="$(var.ProductName)"
                        Type="string"
-                       KeyPath="no" />
+                       KeyPath="yes" />
         <RegistryValue Root="HKLM"
                        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
                        Name="DisplayVersion"
                        Value="$(var.Version)"
                        Type="string"
                        KeyPath="no" />
-      </Component>
-
-      <!-- All other application files -->
-      <Component Id="ApplicationDlls" Guid="{B2345678-9ABC-DEF0-1234-56789ABCDEF0}">
-        <File Id="BucketDll" Source="$(var.AppBinariesPath)\Bucket.dll" />
-        <File Id="BucketCoreDll" Source="$(var.AppBinariesPath)\Bucket.Core.dll" />
-        <!-- WinUI3 and runtime files -->
-        <File Id="MicrosoftWinUIDll" Source="$(var.AppBinariesPath)\Microsoft.WinUI.dll" />
-        <File Id="WinRTRuntimeDll" Source="$(var.AppBinariesPath)\WinRT.Runtime.dll" />
-      </Component>
-
-      <!-- Configuration files -->
-      <Component Id="ConfigFiles" Guid="{C3456789-ABCD-EF01-2345-6789ABCDEF01}">
-        <File Id="AppConfigJson" Source="$(var.AppBinariesPath)\appsettings.json" />
-        <File Id="RuntimeConfigJson" Source="$(var.AppBinariesPath)\Bucket.runtimeconfig.json" />
-        <File Id="DepsJson" Source="$(var.AppBinariesPath)\Bucket.deps.json" />
-      </Component>
-
-      <!-- Resource files -->
-      <Component Id="Resources" Guid="{D4567890-BCDE-F012-3456-789ABCDEF012}">
-        <!-- Localization resources -->
-        <CreateFolder />
-        <!-- Note: We'll use Heat.exe to auto-generate these during build -->
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="InstallLocation"
+                       Value="[INSTALLFOLDER]"
+                       Type="string"
+                       KeyPath="no" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(var.ProductGuid)"
+                       Name="Publisher"
+                       Value="$(var.Manufacturer)"
+                       Type="string"
+                       KeyPath="no" />
       </Component>
     </ComponentGroup>
 
@@ -54,7 +39,7 @@
         <Shortcut Id="DesktopShortcut"
                   Name="$(var.ProductName)"
                   Description="Launch $(var.ProductName)"
-                  Target="[INSTALLFOLDER]Bucket.exe"
+                  Target="[INSTALLFOLDER]$(var.AppExecutable)"
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="AppIcon.ico" />
         <RegistryValue Root="HKCU"
@@ -72,7 +57,7 @@
         <Shortcut Id="StartMenuShortcut"
                   Name="$(var.ProductName)"
                   Description="Launch $(var.ProductName)"
-                  Target="[INSTALLFOLDER]Bucket.exe"
+                  Target="[INSTALLFOLDER]$(var.AppExecutable)"
                   WorkingDirectory="INSTALLFOLDER"
                   Icon="AppIcon.ico" />
 

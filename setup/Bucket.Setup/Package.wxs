@@ -1,6 +1,6 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Variables.wxi ?>
   <Package
-    Id="$(var.ProductGuid)"
     Name="$(var.ProductName)"
     Manufacturer="$(var.Manufacturer)"
     Version="$(var.Version)"
@@ -8,7 +8,7 @@
     Codepage="1252"
     InstallerVersion="500"
     Compressed="yes"
-    InstallScope="perMachine">
+    UpgradeCode="$(var.ProductGuid)">
 
     <!-- Package description -->
     <SummaryInformation
@@ -44,9 +44,13 @@
     <!-- Media -->
     <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
-    <!-- Features -->
-    <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1" Absent="disallow">
-      <ComponentGroupRef Id="ApplicationFiles" />
+        <!-- Features -->
+    <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1">
+      <!-- 🚀 COLLECTE AUTOMATIQUE - Tous les fichiers du publish -->
+      <ComponentGroupRef Id="AutoHarvestedFiles" />
+
+      <!-- 📋 COMPOSANTS MANUELS - Seulement ce qui ne peut pas être harvesté -->
+      <ComponentGroupRef Id="RegistryEntries" />
       <ComponentGroupRef Id="DesktopShortcut" />
       <ComponentGroupRef Id="StartMenuShortcut" />
     </Feature>

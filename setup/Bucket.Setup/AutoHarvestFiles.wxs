@@ -1,0 +1,21 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <?include Variables.wxi ?>
+  <Fragment>
+    <!-- Temporary manual ComponentGroup until auto-harvest works -->
+    <ComponentGroup Id="AutoHarvestedFiles" Directory="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="{12345678-1234-1234-1234-123456789ABC}">
+        <File Id="BucketExe" Source="$(var.PublishOutputPath)Bucket.exe" KeyPath="yes" />
+      </Component>
+
+      <Component Id="CoreLibrary" Guid="{12345678-1234-1234-1234-123456789ABD}">
+        <File Id="BucketCoreDll" Source="$(var.PublishOutputPath)Bucket.Core.dll" />
+      </Component>
+
+      <!-- This will be replaced by full auto-harvest once working -->
+      <Component Id="RuntimeFiles" Guid="{12345678-1234-1234-1234-123456789ABE}">
+        <File Id="RuntimeConfigJson" Source="$(var.PublishOutputPath)Bucket.runtimeconfig.json" />
+        <File Id="DepsJson" Source="$(var.PublishOutputPath)Bucket.deps.json" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
