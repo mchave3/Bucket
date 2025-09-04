@@ -45,13 +45,6 @@ runs:
         wix --version
         Write-Host "WiX Toolset 6 is ready!" -ForegroundColor Green
 
-    - name: Setup .NET and MSBuild
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
 
     - name: Ensure artifacts directory exists
       shell: pwsh
