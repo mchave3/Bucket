@@ -170,8 +170,8 @@ jobs:
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Next Steps" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "To create the actual release, run this workflow again with:" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Dry run**: \`false\`" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Version**: \`${{ needs.validate-version.outputs.version }}\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '- **Dry run**: `false`' >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '- **Version**: `${{ needs.validate-version.outputs.version }}`' >> $env:GITHUB_STEP_SUMMARY
 
   post-release-summary:
     name: 📋 Post Release Summary
@@ -189,14 +189,14 @@ jobs:
           Write-Host "# 🚀 Release Published Successfully!" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Release Information" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Version**: \`${{ needs.validate-version.outputs.version }}\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '- **Version**: `${{ needs.validate-version.outputs.version }}`' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Type**: Stable Release" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Branch**: main" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## 📦 Published Artifacts" >> $env:GITHUB_STEP_SUMMARY
           Write-Host '- 3 MSI installers (x64, x86, ARM64)' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "📝 **Note**: ZIP packages are built for internal use but not published in releases." >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '📝 **Note**: ZIP packages are built for internal use but not published in releases.' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host '[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate-version.outputs.version }})' >> $env:GITHUB_STEP_SUMMARY
 
@@ -213,8 +213,8 @@ jobs:
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "This workflow can only be executed from the **main** branch." >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "**Current branch**: \`${{ github.ref }}\`" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "**Required branch**: \`refs/heads/main\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '**Current branch**: `${{ github.ref }}`' >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '**Required branch**: `refs/heads/main`' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Next Steps" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "1. Switch to the main branch" >> $env:GITHUB_STEP_SUMMARY
