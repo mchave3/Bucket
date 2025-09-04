@@ -58,20 +58,6 @@ runs:
           }
         }
 
-        # Process ZIP files
-        $zipPath = "${{ inputs.artifacts-path }}/zip"
-        if (Test-Path $zipPath) {
-          Get-ChildItem -Path $zipPath -Filter "*.zip" | Sort-Object Name | ForEach-Object {
-            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
-            Write-Host "ZIP: $($_.Name) = $hash" -ForegroundColor Yellow
-
-            $fileName = $_.Name
-            $downloadUrl = "https://github.com/$repository/releases/download/v$version/$fileName"
-            $badgeUrl = "https://img.shields.io/github/downloads/$repository/v$version/$fileName"
-
-            $tableRows += "|[$fileName]($downloadUrl)|``$hash``|<picture>![$fileName]($badgeUrl`?style=flat-square&label=&color=blue)</picture>|"
-          }
-        }
 
         # Create the complete table
         $filesTable = @"
@@ -97,14 +83,6 @@ runs:
 
         $artifacts = @()
 
-        # Collect ZIP files
-        $zipPath = "${{ inputs.artifacts-path }}/zip"
-        if (Test-Path $zipPath) {
-          Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
-            $artifacts += $_.FullName
-            Write-Host "Added ZIP: $($_.Name)" -ForegroundColor Yellow
-          }
-        }
 
         # Collect MSI files
         $installersPath = "${{ inputs.artifacts-path }}/installers"
@@ -148,17 +126,9 @@ runs:
 
         ## 📋 Artifacts
 
-        ### ZIP Packages
+        ### MSI Installers (Available for Download)
         "@
 
-        $zipPath = "${{ inputs.artifacts-path }}/zip"
-        if (Test-Path $zipPath) {
-          Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
-            $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
-          }
-        }
-
-        $summary += "`n`n### MSI Installers"
 
         $installersPath = "${{ inputs.artifacts-path }}/installers"
         if (Test-Path $installersPath) {
