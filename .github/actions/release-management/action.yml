@@ -23,7 +23,7 @@ inputs:
 outputs:
   release-url:
     description: 'URL of the created release'
-    value: ${{ steps.create-release.outputs.upload_url }}
+    value: ${{ steps.create-release.outputs.html_url }}
   release-id:
     description: 'ID of the created release'
     value: ${{ steps.create-release.outputs.id }}
@@ -31,140 +31,107 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Generate release notes
-      id: release-notes
+    - name: Calculate file hashes and generate body
+      id: calculate-hashes
       shell: pwsh
       run: |
-        Write-Host "=== Generating Release Notes ===" -ForegroundColor Cyan
+        Write-Host "=== Calculating File Hashes and Generating Body ===" -ForegroundColor Cyan
 
         $version = "${{ inputs.version }}"
-        $isPrerelease = "${{ inputs.is-prerelease }}"
-        $customNotes = @'
-        ${{ inputs.release-notes }}
-        '@
+        $repository = "${{ github.repository }}"
 
-        # Build release notes
-        $notes = @"
-        # Bucket $version
+        # Start building the table
+        $tableRows = @()
 
-        $(if ($isPrerelease -eq "true") { "**This is a pre-release build (Nightly)**" } else { "**This is a stable release**" })
+        # Process MSI files
+        $installersPath = "${{ inputs.artifacts-path }}/installers"
+        if (Test-Path $installersPath) {
+          Get-ChildItem -Path $installersPath -Filter "*.msi" | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+            Write-Host "MSI: $($_.Name) = $hash" -ForegroundColor Yellow
 
-        ## 📦 Downloads
+            $fileName = $_.Name
+            $downloadUrl = "https://github.com/$repository/releases/download/v$version/$fileName"
+            $badgeUrl = "https://img.shields.io/github/downloads/$repository/v$version/$fileName"
 
-        ### Installers (MSI)
-        - ``Bucket-$version-x64.msi`` - For 64-bit Windows systems
-        - ``Bucket-$version-x86.msi`` - For 32-bit Windows systems
-        - ``Bucket-$version-arm64.msi`` - For ARM64 Windows systems
+            $tableRows += "|[$fileName]($downloadUrl)|``$hash``|<picture>![$fileName]($badgeUrl`?style=flat-square&label=&color=blue)</picture>|"
+          }
+        }
 
-        ### Portable Archives (ZIP)
-        - ``Bucket-$version-x64.zip`` - Portable version for 64-bit Windows
-        - ``Bucket-$version-x86.zip`` - Portable version for 32-bit Windows
-        - ``Bucket-$version-arm64.zip`` - Portable version for ARM64 Windows
+        # Process ZIP files
+        $zipPath = "${{ inputs.artifacts-path }}/zip"
+        if (Test-Path $zipPath) {
+          Get-ChildItem -Path $zipPath -Filter "*.zip" | Sort-Object Name | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+            Write-Host "ZIP: $($_.Name) = $hash" -ForegroundColor Yellow
 
-        ## 📋 System Requirements
-        - Windows 10 version 1809 or higher
-        - Windows 11
-        - .NET 9 Runtime (included in installer)
+            $fileName = $_.Name
+            $downloadUrl = "https://github.com/$repository/releases/download/v$version/$fileName"
+            $badgeUrl = "https://img.shields.io/github/downloads/$repository/v$version/$fileName"
 
-        ## 🚀 What's New
-        $customNotes
+            $tableRows += "|[$fileName]($downloadUrl)|``$hash``|<picture>![$fileName]($badgeUrl`?style=flat-square&label=&color=blue)</picture>|"
+          }
+        }
 
-        ## 📝 Installation Instructions
-
-        ### Using MSI Installer (Recommended)
-        1. Download the appropriate MSI file for your system architecture
-        2. Double-click the MSI file to start the installation
-        3. Follow the installation wizard
-
-        ### Using Portable Version
-        1. Download the appropriate ZIP file for your system architecture
-        2. Extract the ZIP file to your desired location
-        3. Run ``Bucket.App.exe``
-
-        ## 🔧 Verify Your System Architecture
-        To check your Windows architecture, run this in PowerShell:
-        ``[System.Environment]::Is64BitOperatingSystem``
-        - ``True`` = Use x64 version
-        - ``False`` = Use x86 version
-
-        For ARM devices, you'll know if you have an ARM-based system (Surface Pro X, etc.)
-
-        ---
-
-        **Full Changelog**: https://github.com/${{ github.repository }}/compare/$(if ($isPrerelease -eq "true") { "dev" } else { "main" })...v$version
+        # Create the complete table
+        $filesTable = @"
+        ## Files
+        |Files|Hash (SHA256)|Downloads|
+        |---|---|---|
+        $($tableRows -join "`n")
         "@
 
-        # Save to file for the release
-        $notes | Out-File -FilePath "release-notes.md" -Encoding UTF8
-        Write-Host "Release notes generated" -ForegroundColor Green
+        # Save the table to output
+        $filesTable | Out-File -FilePath "files-table.md" -Encoding UTF8
+        echo "files_table<<EOF" >> $env:GITHUB_OUTPUT
+        echo $filesTable >> $env:GITHUB_OUTPUT
+        echo "EOF" >> $env:GITHUB_OUTPUT
+
+        Write-Host "File hashes calculated and table generated" -ForegroundColor Green
+
+    - name: Collect artifacts for upload
+      id: collect-artifacts
+      shell: pwsh
+      run: |
+        Write-Host "=== Collecting Artifacts ===" -ForegroundColor Cyan
+
+        $artifacts = @()
+
+        # Collect ZIP files
+        $zipPath = "${{ inputs.artifacts-path }}/zip"
+        if (Test-Path $zipPath) {
+          Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
+            $artifacts += $_.FullName
+            Write-Host "Added ZIP: $($_.Name)" -ForegroundColor Yellow
+          }
+        }
+
+        # Collect MSI files
+        $installersPath = "${{ inputs.artifacts-path }}/installers"
+        if (Test-Path $installersPath) {
+          Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
+            $artifacts += $_.FullName
+            Write-Host "Added MSI: $($_.Name)" -ForegroundColor Yellow
+          }
+        }
+
+        $artifactsList = $artifacts -join ","
+        echo "artifacts_list=$artifactsList" >> $env:GITHUB_OUTPUT
+        Write-Host "Artifacts collected: $($artifacts.Count)" -ForegroundColor Green
 
     - name: Create GitHub Release
       id: create-release
-      uses: softprops/action-gh-release@v2
+      uses: ncipollo/release-action@v1.18.0
       with:
-        tag_name: v${{ inputs.version }}
+        tag: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
-        body_path: release-notes.md
-        draft: false
         prerelease: ${{ inputs.is-prerelease }}
+        generateReleaseNotes: true
+        artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
         token: ${{ inputs.github-token }}
-        generate_release_notes: true
+        body: |
+          ${{ inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
 
-    - name: Upload ZIP packages
-      shell: pwsh
-      run: |
-        Write-Host "=== Uploading ZIP packages ===" -ForegroundColor Cyan
-
-        $zipPath = "${{ inputs.artifacts-path }}/zip"
-        if (Test-Path $zipPath) {
-          $zipFiles = Get-ChildItem -Path $zipPath -Filter "*.zip"
-
-          foreach ($zip in $zipFiles) {
-            Write-Host "Uploading $($zip.Name)..." -ForegroundColor Yellow
-
-            gh release upload "v${{ inputs.version }}" `
-              "$($zip.FullName)" `
-              --clobber
-
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "Uploaded: $($zip.Name)" -ForegroundColor Green
-            } else {
-              Write-Warning "Failed to upload: $($zip.Name)"
-            }
-          }
-        } else {
-          Write-Warning "No ZIP packages found at: $zipPath"
-        }
-      env:
-        GH_TOKEN: ${{ inputs.github-token }}
-
-    - name: Upload MSI installers
-      shell: pwsh
-      run: |
-        Write-Host "=== Uploading MSI installers ===" -ForegroundColor Cyan
-
-        $installersPath = "${{ inputs.artifacts-path }}/installers"
-        if (Test-Path $installersPath) {
-          $msiFiles = Get-ChildItem -Path $installersPath -Filter "*.msi"
-
-          foreach ($msi in $msiFiles) {
-            Write-Host "Uploading $($msi.Name)..." -ForegroundColor Yellow
-
-            gh release upload "v${{ inputs.version }}" `
-              "$($msi.FullName)" `
-              --clobber
-
-            if ($LASTEXITCODE -eq 0) {
-              Write-Host "Uploaded: $($msi.Name)" -ForegroundColor Green
-            } else {
-              Write-Warning "Failed to upload: $($msi.Name)"
-            }
-          }
-        } else {
-          Write-Warning "No MSI installers found at: $installersPath"
-        }
-      env:
-        GH_TOKEN: ${{ inputs.github-token }}
 
     - name: Generate job summary
       shell: pwsh
