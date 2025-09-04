@@ -5,7 +5,7 @@
 # Bucket
 
 [![Release](https://img.shields.io/github/v/release/mchave3/Bucket?style=flat-square&label=Release&color=blue)](https://github.com/mchave3/Bucket/releases/latest)
-[![Nightly](https://img.shields.io/github/v/release/mchave3/Bucket?include_prereleases&sort=semver&style=flat-square&label=Nightly&color=orange)](https://github.com/mchave3/Bucket/releases?q=prerelease%3Atrue)
+[![Nightly](https://img.shields.io/github/v/tag/mchave3/Bucket?filter=*-Nightly&style=flat-square&label=Nightly&color=orange)](https://github.com/mchave3/Bucket/releases?q=prerelease%3Atrue)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/mchave3/Bucket/dotnet-release.yml?style=flat-square&label=Build)](https://github.com/mchave3/Bucket/actions)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![WinUI 3](https://img.shields.io/badge/WinUI-3-0078D4?style=flat-square&logo=microsoft)](https://docs.microsoft.com/en-us/windows/apps/winui/)
