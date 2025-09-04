@@ -207,8 +207,8 @@ jobs:
           Write-Host "# 🌙 Nightly Build Summary" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Build Information" >> $env:GITHUB_STEP_SUMMARY
-                      Write-Host "- **Git Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
-            Write-Host "- **MSI Version**: ${{ needs.check-changes.outputs.msi_version }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Git Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **MSI Version**: ${{ needs.check-changes.outputs.msi_version }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Branch**: dev" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Status**: ${{ job.status }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
