@@ -81,7 +81,7 @@ runs:
       run: |
         Write-Host "=== Building for x64 ===" -ForegroundColor Green
 
-        # Build solution (exclude Advanced Installer projects)
+        # Build solution
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x64 `
@@ -113,7 +113,7 @@ runs:
           exit 1
         }
 
-        # Publish application (for Advanced Installer compatibility)
+        # Publish application
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x64 `
@@ -141,7 +141,7 @@ runs:
       run: |
         Write-Host "=== Building for x86 ===" -ForegroundColor Green
 
-        # Build solution (exclude Advanced Installer projects)
+        # Build solution
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x86 `
@@ -173,7 +173,7 @@ runs:
           exit 1
         }
 
-        # Publish application (for Advanced Installer compatibility)
+        # Publish application
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x86 `
@@ -201,7 +201,7 @@ runs:
       run: |
         Write-Host "=== Building for ARM64 ===" -ForegroundColor Green
 
-        # Build solution (exclude Advanced Installer projects)
+        # Build solution
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=ARM64 `
@@ -233,7 +233,7 @@ runs:
           exit 1
         }
 
-        # Publish application (for Advanced Installer compatibility)
+        # Publish application
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-arm64 `

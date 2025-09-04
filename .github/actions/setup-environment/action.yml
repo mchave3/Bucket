@@ -1,5 +1,5 @@
 name: 'Setup Environment'
-description: 'Setup build environment with .NET 9 SDK, MSBuild and Advanced Installer'
+description: 'Setup build environment with .NET 9 SDK and MSBuild'
 inputs:
   dotnet-version:
     description: '.NET SDK version to use'
@@ -9,13 +9,6 @@ inputs:
     description: 'MSBuild architecture'
     required: false
     default: 'x64'
-  advanced-installer-version:
-    description: 'Advanced Installer version'
-    required: false
-    default: '23.0'
-  advanced-installer-license:
-    description: 'Advanced Installer license key'
-    required: false
 
 runs:
   using: 'composite'
@@ -30,13 +23,6 @@ runs:
       with:
         msbuild-architecture: ${{ inputs.msbuild-architecture }}
 
-    - name: Setup Advanced Installer
-      if: inputs.advanced-installer-license != ''
-      uses: caphyon/advinst-github-action@main
-      with:
-        advinst-version: ${{ inputs.advanced-installer-version }}
-        advinst-license: ${{ inputs.advanced-installer-license }}
-        advinst-enable-automation: 'true'
 
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v2
