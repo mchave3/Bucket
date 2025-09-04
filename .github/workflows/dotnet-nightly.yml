@@ -38,43 +38,74 @@ jobs:
           fetch-depth: 0
           ref: dev
 
-      - name: Check for recent changes
+      - name: Check for merged PRs since last tag
         id: check
+        shell: bash
         run: |
-          echo "Checking for changes in the last 24 hours..."
+          echo "Checking for merged PRs since last tag..."
 
-          # Get the timestamp for 24 hours ago
-          LAST_BUILD_TIME=$(date -u -d '24 hours ago' '+%Y-%m-%d %H:%M:%S')
-          echo "Last build time threshold: $LAST_BUILD_TIME"
+          # Get the latest release tag (any type)
+          LATEST_TAG=$(git tag -l --sort=-version:refname | head -n 1)
+          echo "Latest release: $LATEST_TAG"
 
-          # Check if there are commits since the last build time
-          CHANGES=$(git log --since="$LAST_BUILD_TIME" --oneline)
-
-          if [ -n "$CHANGES" ] || [ "${{ github.event.inputs.force-build }}" == "true" ]; then
-            echo "Changes detected or force build requested"
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No previous tags found, building first nightly"
             echo "should-build=true" >> $GITHUB_OUTPUT
-            echo "Recent commits:"
-            echo "$CHANGES"
           else
-            echo "No changes detected"
-            echo "should-build=false" >> $GITHUB_OUTPUT
+            # Get all merged PRs since last tag (only merge commits from PRs)
+            MERGED_PRS=$(git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$LATEST_TAG..dev" || echo "")
+
+            # Count merges
+            MERGE_COUNT=$(echo "$MERGED_PRS" | grep -c "Merge pull request" || echo "0")
+
+            if [ "$MERGE_COUNT" -eq 0 ]; then
+              if [ "${{ github.event.inputs.force-build }}" == "true" ]; then
+                echo "No PRs merged since last tag, but force build requested"
+                echo "should-build=true" >> $GITHUB_OUTPUT
+              else
+                echo "No PRs merged to dev since last tag. Skipping build."
+                echo "should-build=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "Merged PRs since last tag (dev):"
+              echo "$MERGED_PRS"
+
+              # Check if only change is a release PR merge (skip in that case)
+              if [ "$MERGE_COUNT" -eq 1 ] && echo "$MERGED_PRS" | grep -q "release/"; then
+                echo "Only change since last tag is a release PR merge. Skipping build."
+                echo "should-build=false" >> $GITHUB_OUTPUT
+              else
+                echo "should-build=true" >> $GITHUB_OUTPUT
+              fi
+            fi
           fi
 
       - name: Generate version
         id: version
         if: steps.check.outputs.should-build == 'true'
+        shell: bash
         run: |
-          # Generate version in format YY.MM.DD.BUILD-Nightly
-          DATE=$(date -u '+%y.%-m.%-d')
+          # Generate version in format YY.MM.DD-Nightly or YY.MM.DD.BUILD-Nightly
+          DATE=$(date -u '+%y.%m.%d')
+          echo "Base date: $DATE"
 
-          # Check how many builds we've done today
-          BUILD_NUM=1
-          EXISTING_TAGS=$(git tag -l "v$DATE.*-Nightly" | wc -l)
-          if [ $EXISTING_TAGS -gt 0 ]; then
-            BUILD_NUM=$((EXISTING_TAGS + 1))
+          # Check if we already have a nightly for today (without build number)
+          BASE_NIGHTLY_EXISTS=$(git tag -l "v$DATE-Nightly" | wc -l)
+
+          if [ $BASE_NIGHTLY_EXISTS -eq 0 ]; then
+            # First nightly of the day
+            VERSION="$DATE-Nightly"
+            echo "First nightly of the day: $VERSION"
+          else
+            # Additional nightly (hotfix), find next build number
+            BUILD_NUM=2
+            while git tag -l "v$DATE.$BUILD_NUM-Nightly" | grep -q "v$DATE.$BUILD_NUM-Nightly"; do
+              BUILD_NUM=$((BUILD_NUM + 1))
+            done
+            VERSION="$DATE.$BUILD_NUM-Nightly"
+            echo "Nightly hotfix build: $VERSION"
           fi
 
-          VERSION="$DATE.$BUILD_NUM-Nightly"
           echo "Generated version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -130,23 +161,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           artifacts-path: 'artifacts'
           release-notes: |
-            ## 🌙 Nightly Build
+            This is an **automated nightly build** created from the latest changes in the dev branch.
 
-            This is an automated nightly build from the `dev` branch.
-
-            ⚠️ **Warning**: This is a pre-release build and may contain bugs or incomplete features.
-
-            ### Recent Changes
-            See the [dev branch commits](https://github.com/${{ github.repository }}/commits/dev) for recent changes.
-
-            ### Testing
-            ${{
-              (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests == 'true') ||
-              (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'true')
-              && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed'
-            }}
-            - ✅ Solution built successfully for all architectures
-            - ✅ Installers generated successfully
+            ⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.
 
       - name: Cleanup old nightly releases
         if: success()

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (format: YY.MM.DD.BUILD)'
+        description: 'Version number (format: YY.MM.DD or YY.MM.DD.BUILD for hotfixes)'
         required: true
         type: string
         default: ''
@@ -66,8 +66,8 @@ jobs:
 
           Write-Host "Validating version: $version" -ForegroundColor Cyan
 
-          # Validate version format (YY.MM.DD.BUILD)
-          if ($version -match '^\d{1,2}\.\d{1,2}\.\d{1,2}\.\d+$') {
+          # Validate version format (YY.MM.DD or YY.MM.DD.BUILD)
+          if ($version -match '^\d{1,2}\.\d{1,2}\.\d{1,2}(\.\d+)?$') {
             Write-Host "✅ Version format is valid" -ForegroundColor Green
 
             # Check if this version already exists
@@ -83,7 +83,9 @@ jobs:
             Write-Host "Version validated: $version" -ForegroundColor Green
           } else {
             Write-Error "❌ Invalid version format!"
-            Write-Host "Expected format: YY.MM.DD.BUILD (e.g., 25.1.15.1)" -ForegroundColor Red
+            Write-Host "Expected formats:" -ForegroundColor Red
+            Write-Host "- Initial release: YY.MM.DD (e.g., 25.01.15)" -ForegroundColor Red
+            Write-Host "- Hotfix: YY.MM.DD.BUILD (e.g., 25.01.15.2)" -ForegroundColor Red
             exit 1
           }
 
@@ -124,25 +126,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           artifacts-path: 'artifacts'
           release-notes: |
-            ## 🎉 Stable Release
-
-            This is a stable release from the `main` branch.
-
             ${{ github.event.inputs.release-notes }}
-
-            ### Quality Assurance
-            ${{
-              (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests == 'true') ||
-              (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'true')
-              && '- ⚠️ Tests were skipped' || '- ✅ All unit tests passed'
-            }}
-            - ✅ Code review completed
-            - ✅ Solution built successfully for all architectures
-            - ✅ Installers validated
-
-            ### Supported Platforms
-            - Windows 10 (1809+) - x64, x86, ARM64
-            - Windows 11 - x64, x86, ARM64
 
       - name: Dry run summary
         if: github.event.inputs.dry-run == 'true'
