@@ -161,14 +161,7 @@ jobs:
           ## Generated Artifacts
           "@
 
-          # List ZIP packages
-          $zipPath = "artifacts/zip"
-          if (Test-Path $zipPath) {
-            $summary += "`n`n### ZIP Packages"
-            Get-ChildItem -Path $zipPath -Filter "*.zip" | ForEach-Object {
-              $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
-            }
-          }
+          # ZIP packages are built but not listed in dry-run (internal use only)
 
           # List MSI installers
           $installersPath = "artifacts/installers"
@@ -217,7 +210,8 @@ jobs:
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## 📦 Published Artifacts" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- 3 MSI installers (x64, x86, ARM64)" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- 3 ZIP packages (x64, x86, ARM64)" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "📝 **Note**: ZIP packages are built for internal use but not published in releases." >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.validate-version.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
 
