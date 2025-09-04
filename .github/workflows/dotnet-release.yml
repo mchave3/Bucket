@@ -41,6 +41,7 @@ jobs:
 
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
+      msi_version: ${{ steps.validate-version.outputs.msi_version }}
 
     steps:
       - name: Validate branch
