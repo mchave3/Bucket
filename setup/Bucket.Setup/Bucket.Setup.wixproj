@@ -89,7 +89,7 @@
     <!-- Publish the application -->
     <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj"
              Targets="Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false;Version=$(Version);AssemblyVersion=$(AssemblyVersion);FileVersion=$(FileVersion)" />
 
     <!-- Verify publish succeeded -->
     <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish"

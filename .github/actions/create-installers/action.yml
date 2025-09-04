@@ -112,6 +112,24 @@ runs:
         Write-Host "=== Building WiX Setup Projects with Manual File Inclusion ===" -ForegroundColor Cyan
         Write-Host "🚀 Building MSI installers using manual file definitions (no auto-harvest)" -ForegroundColor Green
 
+        # Set up version properties for all projects
+        $version = "${{ inputs.version }}"
+        Write-Host "Setting version to: $version" -ForegroundColor Cyan
+
+        # Extract version numbers (remove any pre-release suffix like -Nightly)
+        $versionBase = $version -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
+
+        # Ensure we have 4 version parts
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
+
+        $assemblyVersion = $versionParts -join '.'
+        $fileVersion = $assemblyVersion
+        Write-Host "Assembly Version: $assemblyVersion" -ForegroundColor Yellow
+        Write-Host "File Version: $fileVersion" -ForegroundColor Yellow
+
         $platforms = @(
           @{ Name = "x64"; RID = "win-x64"; ProgramFiles = "ProgramFiles64Folder" },
           @{ Name = "x86"; RID = "win-x86"; ProgramFiles = "ProgramFilesFolder" },
@@ -126,7 +144,9 @@ runs:
             "setup/Bucket.Setup/Bucket.Setup.wixproj",
             "-c", "${{ inputs.configuration }}",
             "-p:Platform=$($platform.Name)",
-            "-p:Version=${{ inputs.version }}",
+            "-p:Version=$version",
+            "-p:AssemblyVersion=$assemblyVersion",
+            "-p:FileVersion=$fileVersion",
             "-p:RuntimeIdentifier=$($platform.RID)",
             "-p:ProgramFilesFolder=$($platform.ProgramFiles)",
             "--verbosity", "normal"
