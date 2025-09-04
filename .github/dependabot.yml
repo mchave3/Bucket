@@ -1,52 +1,21 @@
 # Dependabot configuration for the Bucket project
-# This configuration monitors NuGet packages for security and version updates
+# This configuration monitors GitHub Actions workflows for security and version updates
 # Documentation: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
 updates:
-  # Monitor NuGet packages for the entire solution
-  - package-ecosystem: "nuget"
+  # Monitor GitHub Actions workflows
+  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "Europe/Paris"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     assignees:
       - "mchave3"
     commit-message:
       prefix: "update"
       prefix-development: "update-dev"
       include: "scope"
-    # Group related updates together to reduce noise
-    groups:
-      microsoft-packages:
-        patterns:
-          - "Microsoft.*"
-          - "System.*"
-      devwinui-packages:
-        patterns:
-          - "DevWinUI*"
-      serilog-packages:
-        patterns:
-          - "Serilog*"
-      communitytoolkit-packages:
-        patterns:
-          - "CommunityToolkit.*"
-      nucs-packages:
-        patterns:
-          - "nucs.*"
-      testing-packages:
-        patterns:
-          - "xunit*"
-          - "coverlet.*"
-      htmlagilitypack-packages:
-        patterns:
-          - "HtmlAgilityPack*"
-    # Ignore certain packages that should be updated manually
-    ignore:
-      - dependency-name: "Microsoft.WindowsAppSDK"
-        # WindowsAppSDK updates often require testing
-      - dependency-name: "Microsoft.Windows.SDK.BuildTools"
-        # SDK tools updates need careful consideration
