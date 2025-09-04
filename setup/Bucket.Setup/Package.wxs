@@ -22,7 +22,7 @@
     <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
 
     <!-- Add/Remove Programs properties -->
-    <Property Id="ARPHELPLINK" Value="https://github.com/mchave3/Bucket" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/mchave3/Bucket/issues" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/mchave3/Bucket" />
     <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="ARPNOREPAIR" Value="1" />
@@ -44,7 +44,7 @@
     <!-- Media -->
     <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
-        <!-- Features -->
+    <!-- Features -->
     <Feature Id="MainApplication" Title="$(var.ProductName)" Description="Main application files" Level="1">
       <!-- 🚀 MANUAL FILE INCLUSION - All files from publish directory -->
       <ComponentGroupRef Id="ApplicationFiles" />
