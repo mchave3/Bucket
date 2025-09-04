@@ -1,4 +1,4 @@
-name: 'Create Installers'
+name: 'Subflow - Create Installers'
 description: 'Generate MSI installers using WiX Toolset with manual file inclusion for all architectures'
 inputs:
   version:

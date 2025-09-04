@@ -1,4 +1,4 @@
-name: 'Run Tests'
+name: 'Subflow - Run Tests'
 description: 'Execute unit tests for Bucket.App.Tests and Bucket.Core.Tests'
 inputs:
   configuration:
