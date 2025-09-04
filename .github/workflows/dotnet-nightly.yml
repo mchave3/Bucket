@@ -226,7 +226,7 @@ jobs:
           if ("${{ needs.create-release.result }}" -eq "success") {
             Write-Host "✅ **Nightly build completed successfully!**" >> $env:GITHUB_STEP_SUMMARY
             Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-            Write-Host "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-changes.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host '[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-changes.outputs.version }})' >> $env:GITHUB_STEP_SUMMARY
           } else {
             Write-Host "❌ **Nightly build failed!**" >> $env:GITHUB_STEP_SUMMARY
           }

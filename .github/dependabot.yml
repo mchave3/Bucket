@@ -19,4 +19,3 @@ updates:
       prefix: "update"
       prefix-development: "update-dev"
       include: "scope"
-      
