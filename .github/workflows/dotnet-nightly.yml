@@ -85,29 +85,36 @@ jobs:
         if: steps.check.outputs.should-build == 'true'
         shell: bash
         run: |
-          # Generate version in format YY.MM.DD-Nightly or YY.MM.DD.BUILD-Nightly
+          # Generate version in format YY.MM.DD-Nightly or YY.MM.DD.BUILD-Nightly for Git tag
+          # and YY.M.D.BUILD for MSI (Windows Installer compatible)
           DATE=$(date -u '+%y.%m.%d')
-          echo "Base date: $DATE"
+          DATE_MSI=$(date -u '+%y.%-m.%-d')  # Remove leading zeros for MSI compatibility
+          echo "Base date: $DATE (Git tag format)"
+          echo "Base date MSI: $DATE_MSI (MSI version format)"
 
           # Check if we already have a nightly for today (without build number)
           BASE_NIGHTLY_EXISTS=$(git tag -l "v$DATE-Nightly" | wc -l)
 
           if [ $BASE_NIGHTLY_EXISTS -eq 0 ]; then
             # First nightly of the day
-            VERSION="$DATE-Nightly"
-            echo "First nightly of the day: $VERSION"
+            GIT_VERSION="$DATE-Nightly"
+            MSI_VERSION="$DATE_MSI.1"  # Add .1 for nightly builds to distinguish from releases
+            echo "First nightly of the day: $GIT_VERSION (Git) / $MSI_VERSION (MSI)"
           else
             # Additional nightly (hotfix), find next build number
             BUILD_NUM=2
             while git tag -l "v$DATE.$BUILD_NUM-Nightly" | grep -q "v$DATE.$BUILD_NUM-Nightly"; do
               BUILD_NUM=$((BUILD_NUM + 1))
             done
-            VERSION="$DATE.$BUILD_NUM-Nightly"
-            echo "Nightly hotfix build: $VERSION"
+            GIT_VERSION="$DATE.$BUILD_NUM-Nightly"
+            MSI_VERSION="$DATE_MSI.$BUILD_NUM"
+            echo "Nightly hotfix build: $GIT_VERSION (Git) / $MSI_VERSION (MSI)"
           fi
 
-          echo "Generated version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated Git version: $GIT_VERSION"
+          echo "Generated MSI version: $MSI_VERSION"
+          echo "version=$GIT_VERSION" >> $GITHUB_OUTPUT
+          echo "msi_version=$MSI_VERSION" >> $GITHUB_OUTPUT
 
   build-test-release:
     name: Build, Test and Release
@@ -144,13 +151,13 @@ jobs:
         uses: ./.github/actions/build-and-package
         with:
           configuration: 'Release'
-          version: ${{ needs.check-changes.outputs.version }}
+          version: ${{ needs.check-changes.outputs.msi_version }}
           create-zip: 'true'
 
       - name: Create installers
         uses: ./.github/actions/create-installers
         with:
-          version: ${{ needs.check-changes.outputs.version }}
+          version: ${{ needs.check-changes.outputs.msi_version }}
           configuration: 'Release'
 
       - name: Create release
@@ -199,7 +206,8 @@ jobs:
           Write-Host "# 🌙 Nightly Build Summary" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Build Information" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+                      Write-Host "- **Git Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host "- **MSI Version**: ${{ needs.check-changes.outputs.msi_version }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Branch**: dev" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Status**: ${{ job.status }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
