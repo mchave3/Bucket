@@ -30,6 +30,7 @@ jobs:
     outputs:
       should-build: ${{ steps.check.outputs.should-build }}
       version: ${{ steps.version.outputs.version }}
+      msi_version: ${{ steps.version.outputs.msi_version }}
 
     steps:
       - name: Checkout code
