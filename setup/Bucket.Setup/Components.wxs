@@ -2,7 +2,7 @@
   <?include Variables.wxi ?>
   <Fragment>
 
-        <!-- Manual Registry Component - Only what can't be harvested -->
+    <!-- Manual Registry Component - Only what can't be harvested -->
     <ComponentGroup Id="RegistryEntries" Directory="INSTALLFOLDER">
       <Component Id="UninstallRegistryEntries" Guid="{A1234567-89AB-CDEF-0123-456789ABCDEF}">
         <!-- Registry entries for Add/Remove Programs -->
