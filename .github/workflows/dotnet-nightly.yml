@@ -149,6 +149,9 @@ jobs:
     name: 📦 Create Release
     needs: [check-changes, build-and-package]
     if: needs.check-changes.outputs.should-build == 'true'
+    permissions:
+      contents: write
+      actions: read
     uses: ./.github/workflows/action_release-management.yml
     with:
       version: ${{ needs.check-changes.outputs.version }}
