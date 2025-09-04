@@ -76,35 +76,17 @@ runs:
 
         Write-Host "✅ NuGet packages restored successfully" -ForegroundColor Green
 
+
     - name: Build for x64
       shell: pwsh
       run: |
         Write-Host "=== Building for x64 ===" -ForegroundColor Green
 
-        # Build solution
+        # Build Bucket.App for x64 (MSBuild will automatically build Bucket.Core dependency)
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x64 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild src/Bucket.Core/Bucket.Core.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /p:Platform=x64 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
+          /t:Build `
           /m `
           /v:minimal
 
@@ -113,16 +95,7 @@ runs:
           exit 1
         }
 
-        # Publish application
-        dotnet publish src/Bucket.App/Bucket.App.csproj `
-          --configuration ${{ inputs.configuration }} `
-          --runtime win-x64 `
-          --self-contained true `
-          --output "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64/publish" `
-          /p:Platform=x64 `
-          /p:PublishSingleFile=false
-
-        # Also publish to artifacts for ZIP creation
+        # Publish application (single publication for both WiX and ZIP)
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x64 `
@@ -130,6 +103,11 @@ runs:
           --output "artifacts/publish/x64" `
           /p:Platform=x64 `
           /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x64") | Out-Null
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x64 publish failed!"
@@ -141,30 +119,11 @@ runs:
       run: |
         Write-Host "=== Building for x86 ===" -ForegroundColor Green
 
-        # Build solution
+        # Build Bucket.App for x86 (MSBuild will automatically build Bucket.Core dependency)
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=x86 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild src/Bucket.Core/Bucket.Core.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /p:Platform=x86 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
+          /t:Build `
           /m `
           /v:minimal
 
@@ -173,16 +132,7 @@ runs:
           exit 1
         }
 
-        # Publish application
-        dotnet publish src/Bucket.App/Bucket.App.csproj `
-          --configuration ${{ inputs.configuration }} `
-          --runtime win-x86 `
-          --self-contained true `
-          --output "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86/publish" `
-          /p:Platform=x86 `
-          /p:PublishSingleFile=false
-
-        # Also publish to artifacts for ZIP creation
+        # Publish application (single publication for both WiX and ZIP)
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-x86 `
@@ -190,6 +140,11 @@ runs:
           --output "artifacts/publish/x86" `
           /p:Platform=x86 `
           /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x86") | Out-Null
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x86 publish failed!"
@@ -201,30 +156,11 @@ runs:
       run: |
         Write-Host "=== Building for ARM64 ===" -ForegroundColor Green
 
-        # Build solution
+        # Build Bucket.App for ARM64 (MSBuild will automatically build Bucket.Core dependency)
         msbuild src/Bucket.App/Bucket.App.csproj `
           /p:Configuration=${{ inputs.configuration }} `
           /p:Platform=ARM64 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild src/Bucket.Core/Bucket.Core.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.App.Tests/Bucket.App.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /p:Platform=ARM64 `
-          /t:Rebuild `
-          /m `
-          /v:minimal
-
-        msbuild tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj `
-          /p:Configuration=${{ inputs.configuration }} `
-          /t:Rebuild `
+          /t:Build `
           /m `
           /v:minimal
 
@@ -233,16 +169,7 @@ runs:
           exit 1
         }
 
-        # Publish application
-        dotnet publish src/Bucket.App/Bucket.App.csproj `
-          --configuration ${{ inputs.configuration }} `
-          --runtime win-arm64 `
-          --self-contained true `
-          --output "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64/publish" `
-          /p:Platform=ARM64 `
-          /p:PublishSingleFile=false
-
-        # Also publish to artifacts for ZIP creation
+        # Publish application (single publication for both WiX and ZIP)
         dotnet publish src/Bucket.App/Bucket.App.csproj `
           --configuration ${{ inputs.configuration }} `
           --runtime win-arm64 `
@@ -250,6 +177,11 @@ runs:
           --output "artifacts/publish/arm64" `
           /p:Platform=ARM64 `
           /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/arm64") | Out-Null
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "ARM64 publish failed!"
