@@ -127,6 +127,9 @@ jobs:
     name: 📦 Create Release
     needs: [validate-version, build-and-package]
     if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'false'
+    permissions:
+      contents: write
+      actions: read
     uses: ./.github/workflows/action_release-management.yml
     with:
       version: ${{ needs.validate-version.outputs.version }}
