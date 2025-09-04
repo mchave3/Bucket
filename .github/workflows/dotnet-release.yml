@@ -62,25 +62,38 @@ jobs:
         id: validate-version
         shell: pwsh
         run: |
-          $version = "${{ github.event.inputs.version }}"
+          $inputVersion = "${{ github.event.inputs.version }}"
 
-          Write-Host "Validating version: $version" -ForegroundColor Cyan
+          Write-Host "Validating version: $inputVersion" -ForegroundColor Cyan
 
           # Validate version format (YY.MM.DD or YY.MM.DD.BUILD)
-          if ($version -match '^\d{1,2}\.\d{1,2}\.\d{1,2}(\.\d+)?$') {
+          if ($inputVersion -match '^(\d{1,2})\.(\d{1,2})\.(\d{1,2})(\.(\d+))?$') {
             Write-Host "✅ Version format is valid" -ForegroundColor Green
 
             # Check if this version already exists
-            $existingTag = git tag -l "v$version"
+            $existingTag = git tag -l "v$inputVersion"
             if ($existingTag) {
-              Write-Error "❌ Version $version already exists as a release!"
+              Write-Error "❌ Version $inputVersion already exists as a release!"
               Write-Host "Existing releases:" -ForegroundColor Yellow
               git tag -l "v*" | Select-Object -Last 10
               exit 1
             }
 
-            echo "version=$version" >> $env:GITHUB_OUTPUT
-            Write-Host "Version validated: $version" -ForegroundColor Green
+            # Generate MSI-compatible version (ensure no leading zeros)
+            $year = [int]$matches[1]
+            $month = [int]$matches[2]
+            $day = [int]$matches[3]
+            $build = if ($matches[5]) { [int]$matches[5] } else { $null }
+
+            $msiVersion = "$year.$month.$day"
+            if ($build -ne $null) {
+              $msiVersion += ".$build"
+            }
+
+            echo "version=$inputVersion" >> $env:GITHUB_OUTPUT
+            echo "msi_version=$msiVersion" >> $env:GITHUB_OUTPUT
+            Write-Host "Git version: $inputVersion" -ForegroundColor Green
+            Write-Host "MSI version: $msiVersion" -ForegroundColor Green
           } else {
             Write-Error "❌ Invalid version format!"
             Write-Host "Expected formats:" -ForegroundColor Red
@@ -108,13 +121,13 @@ jobs:
         uses: ./.github/actions/build-and-package
         with:
           configuration: 'Release'
-          version: ${{ steps.validate-version.outputs.version }}
+          version: ${{ steps.validate-version.outputs.msi_version }}
           create-zip: 'true'
 
       - name: Create installers
         uses: ./.github/actions/create-installers
         with:
-          version: ${{ steps.validate-version.outputs.version }}
+          version: ${{ steps.validate-version.outputs.msi_version }}
           configuration: 'Release'
 
       - name: Create release
