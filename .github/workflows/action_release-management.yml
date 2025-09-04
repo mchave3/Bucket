@@ -1,36 +1,63 @@
-name: 'Subflow - Release Management'
-description: 'Create GitHub release with artifacts'
-inputs:
-  version:
-    description: 'Version for the release'
-    required: true
-  is-prerelease:
-    description: 'Whether this is a pre-release'
-    required: false
-    default: 'false'
-  release-notes:
-    description: 'Release notes content'
-    required: false
-    default: ''
-  artifacts-path:
-    description: 'Path to artifacts to upload'
-    required: false
-    default: 'artifacts'
-  github-token:
-    description: 'GitHub token for creating release'
-    required: true
+name: '📦 Subflow - Release Management'
 
-outputs:
-  release-url:
-    description: 'URL of the created release'
-    value: ${{ steps.create-release.outputs.html_url }}
-  release-id:
-    description: 'ID of the created release'
-    value: ${{ steps.create-release.outputs.id }}
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version for the release'
+        required: true
+        type: string
+      is-prerelease:
+        description: 'Whether this is a pre-release'
+        required: false
+        type: string
+        default: 'false'
+      release-notes:
+        description: 'Release notes content'
+        required: false
+        type: string
+        default: ''
+      artifacts-path:
+        description: 'Path to artifacts to upload'
+        required: false
+        type: string
+        default: 'artifacts'
+      checkout-ref:
+        description: 'Git reference to checkout'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      github-token:
+        description: 'GitHub token for creating release'
+        required: true
+    outputs:
+      release-url:
+        description: 'URL of the created release'
+        value: ${{ jobs.release-management.outputs.release-url }}
+      release-id:
+        description: 'ID of the created release'
+        value: ${{ jobs.release-management.outputs.release-id }}
 
-runs:
-  using: 'composite'
-  steps:
+jobs:
+  release-management:
+    name: Release Management
+    runs-on: ubuntu-latest
+    outputs:
+      release-url: ${{ steps.create-release.outputs.html_url }}
+      release-id: ${{ steps.create-release.outputs.id }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.checkout-ref || github.ref }}
+
+    - name: Download build artifacts (includes installers)
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: ${{ inputs.artifacts-path }}/
+
     - name: Calculate file hashes and generate body
       id: calculate-hashes
       shell: pwsh
@@ -106,7 +133,7 @@ runs:
         prerelease: ${{ inputs.is-prerelease }}
         generateReleaseNotes: true
         artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
-        token: ${{ inputs.github-token }}
+        token: ${{ secrets.github-token }}
         body: |
           ${{ inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
 
