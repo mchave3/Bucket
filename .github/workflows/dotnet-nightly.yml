@@ -134,7 +134,7 @@ jobs:
           ref: dev
 
       - name: Setup environment
-        uses: ./.github/actions/action_setup-environment.yml
+        uses: ./.github/workflows/action_setup-environment.yml
         with:
           dotnet-version: '9.0.x'
 
@@ -149,20 +149,20 @@ jobs:
       #     generate-coverage: 'true'
 
       - name: Build and package
-        uses: ./.github/actions/action_build-and-package.yml
+        uses: ./.github/workflows/action_build-and-package.yml
         with:
           configuration: 'Release'
           version: ${{ needs.check-changes.outputs.msi_version }}
           create-zip: 'true'
 
       - name: Create installers
-        uses: ./.github/actions/action_create-installers.yml
+        uses: ./.github/workflows/action_create-installers.yml
         with:
           version: ${{ needs.check-changes.outputs.msi_version }}
           configuration: 'Release'
 
       - name: Create release
-        uses: ./.github/actions/action_release-management.yml
+        uses: ./.github/workflows/action_release-management.yml
         with:
           version: ${{ needs.check-changes.outputs.version }}
           is-prerelease: 'true'

@@ -1,4 +1,4 @@
-name: 'Build and Package'
+name: 'Subflow - Build and Package'
 description: 'Build and publish the solution for all architectures (x64, x86, ARM64)'
 inputs:
   configuration:

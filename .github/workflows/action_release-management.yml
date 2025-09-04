@@ -1,4 +1,4 @@
-name: 'Release Management'
+name: 'Subflow - Release Management'
 description: 'Create GitHub release with artifacts'
 inputs:
   version:
