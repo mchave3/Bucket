@@ -99,7 +99,7 @@ runs:
 
     - name: Create GitHub Release
       id: create-release
-      uses: ncipollo/release-action@v1.18.0
+      uses: ncipollo/release-action@v1.20.0
       with:
         tag: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
