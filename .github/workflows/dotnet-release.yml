@@ -194,11 +194,11 @@ jobs:
           Write-Host "- **Branch**: main" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## 📦 Published Artifacts" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- 3 MSI installers (x64, x86, ARM64)" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '- 3 MSI installers (x64, x86, ARM64)' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "📝 **Note**: ZIP packages are built for internal use but not published in releases." >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate-version.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host '[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate-version.outputs.version }})' >> $env:GITHUB_STEP_SUMMARY
 
   guard-branch:
     name: ⛔ Branch Protection
