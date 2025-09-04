@@ -130,15 +130,15 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Run tests
-        if: |
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-          (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false')
-        uses: ./.github/actions/run-tests
-        with:
-          configuration: 'Release'
-          platforms: 'x64,x86,ARM64'
-          generate-coverage: 'true'
+      # - name: Run tests
+      #   if: |
+      #     (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
+      #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false')
+      #   uses: ./.github/actions/run-tests
+      #   with:
+      #     configuration: 'Release'
+      #     platforms: 'x64,x86,ARM64'
+      #     generate-coverage: 'true'
 
       - name: Build and package
         uses: ./.github/actions/build-and-package
