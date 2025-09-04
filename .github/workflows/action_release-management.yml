@@ -53,7 +53,7 @@ jobs:
         ref: ${{ inputs.checkout-ref || github.ref }}
 
     - name: Download build artifacts (includes installers)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: build-artifacts
         path: ${{ inputs.artifacts-path }}/
