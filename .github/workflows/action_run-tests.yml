@@ -1,34 +1,64 @@
-name: 'Subflow - Run Tests'
-description: 'Execute unit tests for Bucket.App.Tests and Bucket.Core.Tests'
-inputs:
-  configuration:
-    description: 'Build configuration'
-    required: false
-    default: 'Release'
-  platforms:
-    description: 'Target platforms for tests (comma-separated: x64,x86,ARM64)'
-    required: false
-    default: 'x64,x86,ARM64'
-  test-results-path:
-    description: 'Path for test results'
-    required: false
-    default: 'test-results'
-  generate-coverage:
-    description: 'Generate code coverage'
-    required: false
-    default: 'true'
+name: '🧪 Subflow - Run Tests'
 
-outputs:
-  test-results-path:
-    description: 'Path to test results'
-    value: ${{ steps.test-results.outputs.path }}
-  coverage-path:
-    description: 'Path to coverage results'
-    value: ${{ steps.test-results.outputs.coverage }}
+on:
+  workflow_call:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: false
+        type: string
+        default: 'Release'
+      platforms:
+        description: 'Target platforms for tests (comma-separated: x64,x86,ARM64)'
+        required: false
+        type: string
+        default: 'x64,x86,ARM64'
+      test-results-path:
+        description: 'Path for test results'
+        required: false
+        type: string
+        default: 'test-results'
+      generate-coverage:
+        description: 'Generate code coverage'
+        required: false
+        type: string
+        default: 'true'
+      checkout-ref:
+        description: 'Git reference to checkout'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      test-results-path:
+        description: 'Path to test results'
+        value: ${{ jobs.run-tests.outputs.test-results-path }}
+      coverage-path:
+        description: 'Path to coverage results'
+        value: ${{ jobs.run-tests.outputs.coverage-path }}
 
-runs:
-  using: 'composite'
-  steps:
+jobs:
+  run-tests:
+    name: Run Tests
+    runs-on: windows-latest
+    outputs:
+      test-results-path: ${{ steps.test-results.outputs.path }}
+      coverage-path: ${{ steps.test-results.outputs.coverage }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.checkout-ref || github.ref }}
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: 'x64'
+
     - name: Restore dependencies
       shell: pwsh
       run: |

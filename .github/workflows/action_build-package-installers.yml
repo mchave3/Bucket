@@ -1,0 +1,443 @@
+name: '🏗️ Subflow - Build, Package and Create Installers'
+
+on:
+  workflow_call:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: false
+        type: string
+        default: 'Release'
+      version:
+        description: 'Version to apply to builds'
+        required: true
+        type: string
+      create-zip:
+        description: 'Create ZIP packages'
+        required: false
+        type: string
+        default: 'true'
+      checkout-ref:
+        description: 'Git reference to checkout'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      artifacts-path:
+        description: 'Path to build artifacts'
+        value: ${{ jobs.build-and-package.outputs.artifacts-path }}
+      installers-path:
+        description: 'Path to generated installers'
+        value: ${{ jobs.build-and-package.outputs.installers-path }}
+
+jobs:
+  build-and-package:
+    name: Build and Package
+    runs-on: windows-latest
+    outputs:
+      artifacts-path: ${{ steps.paths.outputs.artifacts }}
+      installers-path: ${{ steps.installer-paths.outputs.installers }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.checkout-ref || github.ref }}
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: 'x64'
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Clear NuGet cache
+      shell: pwsh
+      run: |
+        Write-Host "=== Clearing NuGet cache ===" -ForegroundColor Yellow
+        dotnet nuget locals all --clear
+        Write-Host "✅ NuGet cache cleared" -ForegroundColor Green
+
+    - name: Display environment info
+      shell: pwsh
+      run: |
+        Write-Host "=== Environment Information ===" -ForegroundColor Cyan
+        Write-Host "OS: $env:OS"
+        Write-Host "Runner OS: $env:RUNNER_OS"
+        Write-Host ""
+
+        Write-Host "=== .NET SDK Information ===" -ForegroundColor Green
+        dotnet --list-sdks
+        dotnet --version
+        Write-Host ""
+
+        Write-Host "=== MSBuild Information ===" -ForegroundColor Green
+        msbuild -version
+        Write-Host ""
+
+        Write-Host "=== NuGet Information ===" -ForegroundColor Green
+        nuget help | Select-Object -First 1
+
+    - name: Setup paths
+      id: paths
+      shell: pwsh
+      run: |
+        $artifactsPath = "artifacts"
+        New-Item -ItemType Directory -Force -Path $artifactsPath | Out-Null
+        echo "artifacts=$artifactsPath" >> $env:GITHUB_OUTPUT
+
+    - name: Update version in project files
+      shell: pwsh
+      run: |
+        Write-Host "Setting version to ${{ inputs.version }}..." -ForegroundColor Cyan
+
+        # Extract version numbers (remove any pre-release suffix like -Nightly)
+        $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
+
+        # Ensure we have 4 version parts
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
+
+        $assemblyVersion = $versionParts -join '.'
+        $fileVersion = $assemblyVersion
+        $packageVersion = "${{ inputs.version }}"
+
+        Write-Host "Assembly Version: $assemblyVersion"
+        Write-Host "File Version: $fileVersion"
+        Write-Host "Package Version: $packageVersion"
+
+        # Update Directory.Build.props if it exists
+        $buildPropsPath = "Directory.Build.props"
+        if (Test-Path $buildPropsPath) {
+          $content = Get-Content $buildPropsPath -Raw
+          $content = $content -replace '<Version>.*?</Version>', "<Version>$packageVersion</Version>"
+          $content = $content -replace '<AssemblyVersion>.*?</AssemblyVersion>', "<AssemblyVersion>$assemblyVersion</AssemblyVersion>"
+          $content = $content -replace '<FileVersion>.*?</FileVersion>', "<FileVersion>$fileVersion</FileVersion>"
+          Set-Content -Path $buildPropsPath -Value $content
+        }
+
+    - name: Restore NuGet packages
+      shell: pwsh
+      run: |
+        Write-Host "=== Restoring NuGet packages ===" -ForegroundColor Cyan
+
+        # Restore packages for all projects
+        dotnet restore Bucket.sln --verbosity minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "NuGet restore failed!"
+          exit 1
+        }
+
+        Write-Host "✅ NuGet packages restored successfully" -ForegroundColor Green
+
+
+    - name: Build for x64
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for x64 ===" -ForegroundColor Green
+
+        # Build Bucket.App for x64 (MSBuild will automatically build Bucket.Core dependency)
+        msbuild src/Bucket.App/Bucket.App.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x64 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x64 build failed!"
+          exit 1
+        }
+
+        # Publish application (single publication for both WiX and ZIP)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x64 `
+          --self-contained true `
+          --output "artifacts/publish/x64" `
+          /p:Platform=x64 `
+          /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x64") | Out-Null
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x64 publish failed!"
+          exit 1
+        }
+
+    - name: Build for x86
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for x86 ===" -ForegroundColor Green
+
+        # Build Bucket.App for x86 (MSBuild will automatically build Bucket.Core dependency)
+        msbuild src/Bucket.App/Bucket.App.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x86 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x86 build failed!"
+          exit 1
+        }
+
+        # Publish application (single publication for both WiX and ZIP)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x86 `
+          --self-contained true `
+          --output "artifacts/publish/x86" `
+          /p:Platform=x86 `
+          /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x86") | Out-Null
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "x86 publish failed!"
+          exit 1
+        }
+
+    - name: Build for ARM64
+      shell: pwsh
+      run: |
+        Write-Host "=== Building for ARM64 ===" -ForegroundColor Green
+
+        # Build Bucket.App for ARM64 (MSBuild will automatically build Bucket.Core dependency)
+        msbuild src/Bucket.App/Bucket.App.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=ARM64 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "ARM64 build failed!"
+          exit 1
+        }
+
+        # Publish application (single publication for both WiX and ZIP)
+        dotnet publish src/Bucket.App/Bucket.App.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-arm64 `
+          --self-contained true `
+          --output "artifacts/publish/arm64" `
+          /p:Platform=ARM64 `
+          /p:PublishSingleFile=false
+
+        # Create symlink for WiX compatibility
+        $wixPath = "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64"
+        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
+        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/arm64") | Out-Null
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "ARM64 publish failed!"
+          exit 1
+        }
+
+    - name: Create ZIP packages
+      if: inputs.create-zip == 'true'
+      shell: pwsh
+      run: |
+        Write-Host "=== Creating ZIP packages ===" -ForegroundColor Cyan
+
+        $version = "${{ inputs.version }}"
+        $zipPath = "artifacts/zip"
+        New-Item -ItemType Directory -Force -Path $zipPath | Out-Null
+
+        # Create ZIP for each architecture
+        $architectures = @("x64", "x86", "arm64")
+        foreach ($arch in $architectures) {
+          $sourcePath = "artifacts/publish/$arch"
+          $zipFile = "$zipPath/Bucket-$version-$arch.zip"
+
+          Write-Host "Creating $zipFile..." -ForegroundColor Yellow
+
+          if (Test-Path $sourcePath) {
+            Compress-Archive -Path "$sourcePath/*" -DestinationPath $zipFile -Force
+            Write-Host "Created: $zipFile" -ForegroundColor Green
+          } else {
+            Write-Warning "Source path not found: $sourcePath"
+          }
+        }
+
+    - name: Install WiX Toolset 6
+      shell: pwsh
+      run: |
+        Write-Host "=== Installing WiX Toolset 6 ===" -ForegroundColor Cyan
+
+        # Install WiX 6 as a global tool
+        dotnet tool install --global wix --version 6.0.2
+
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✅ WiX Toolset 6.0.2 installed successfully" -ForegroundColor Green
+        } else {
+          Write-Error "❌ Failed to install WiX Toolset 6"
+          exit 1
+        }
+
+        # Verify installation
+        wix --version
+        Write-Host "WiX Toolset 6 is ready!" -ForegroundColor Green
+
+    - name: Setup installer paths
+      id: installer-paths
+      shell: pwsh
+      run: |
+        $installersPath = "artifacts/installers"
+        New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
+        echo "installers=$installersPath" >> $env:GITHUB_OUTPUT
+        Write-Host "Installers will be generated in: $installersPath" -ForegroundColor Cyan
+
+    - name: Build WiX Setup Projects for each platform
+      shell: pwsh
+      run: |
+        Write-Host "=== Building WiX Setup Projects with Manual File Inclusion ===" -ForegroundColor Cyan
+        Write-Host "🚀 Building MSI installers using manual file definitions (no auto-harvest)" -ForegroundColor Green
+
+        # Set up version properties for all projects
+        $version = "${{ inputs.version }}"
+        Write-Host "Setting version to: $version" -ForegroundColor Cyan
+
+        # Extract version numbers (remove any pre-release suffix like -Nightly)
+        $versionBase = $version -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
+
+        # Ensure we have 4 version parts
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
+
+        $assemblyVersion = $versionParts -join '.'
+        $fileVersion = $assemblyVersion
+        Write-Host "Assembly Version: $assemblyVersion" -ForegroundColor Yellow
+        Write-Host "File Version: $fileVersion" -ForegroundColor Yellow
+
+        $platforms = @(
+          @{ Name = "x64"; RID = "win-x64"; ProgramFiles = "ProgramFiles64Folder" },
+          @{ Name = "x86"; RID = "win-x86"; ProgramFiles = "ProgramFilesFolder" },
+          @{ Name = "ARM64"; RID = "win-arm64"; ProgramFiles = "ProgramFiles64Folder" }
+        )
+
+        foreach ($platform in $platforms) {
+          Write-Host "`n🏗️ Building MSI for $($platform.Name) architecture..." -ForegroundColor Yellow
+
+          $buildArgs = @(
+            "build",
+            "setup/Bucket.Setup/Bucket.Setup.wixproj",
+            "-c", "${{ inputs.configuration }}",
+            "-p:Platform=$($platform.Name)",
+            "-p:Version=$version",
+            "-p:AssemblyVersion=$assemblyVersion",
+            "-p:FileVersion=$fileVersion",
+            "-p:RuntimeIdentifier=$($platform.RID)",
+            "-p:ProgramFilesFolder=$($platform.ProgramFiles)",
+            "--verbosity", "normal"
+          )
+
+          Write-Host "  📋 Build command: dotnet $($buildArgs -join ' ')" -ForegroundColor Gray
+
+          dotnet @buildArgs
+
+          if ($LASTEXITCODE -eq 0) {
+            $expectedMsi = "artifacts/installers/Bucket-${{ inputs.version }}-$($platform.Name).msi"
+
+            if (Test-Path $expectedMsi) {
+              $fileInfo = Get-Item $expectedMsi
+              $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+              Write-Host "  ✅ Successfully built MSI for $($platform.Name): $fileSizeMB MB" -ForegroundColor Green
+
+              # Show publish directory contents for verification
+              $publishPath = "artifacts/publish/$($platform.Name.ToLower())"
+              if (Test-Path $publishPath) {
+                $files = Get-ChildItem -Path $publishPath -Recurse -File
+                Write-Host "  📊 Including $($files.Count) files from publish directory" -ForegroundColor Cyan
+
+                # Show key files
+                $keyFiles = $files | Where-Object { $_.Extension -in @('.exe', '.dll', '.json') } | Select-Object -First 5
+                $keyFiles | ForEach-Object {
+                  Write-Host "      🔸 $($_.Name)" -ForegroundColor Gray
+                }
+                if ($files.Count -gt 5) {
+                  Write-Host "      ... and $($files.Count - 5) more files" -ForegroundColor Gray
+                }
+              }
+            } else {
+              Write-Error "❌ Expected MSI file not found: $expectedMsi"
+              exit 1
+            }
+          } else {
+            Write-Error "❌ Failed to build MSI for $($platform.Name)"
+            exit 1
+          }
+
+          Write-Host "  🎉 Completed $($platform.Name) architecture successfully!" -ForegroundColor Green
+        }
+
+    - name: Verify generated MSI files
+      shell: pwsh
+      run: |
+        Write-Host "=== Verifying Generated MSI Files ===" -ForegroundColor Cyan
+
+        $expectedFiles = @(
+          "Bucket-${{ inputs.version }}-x64.msi",
+          "Bucket-${{ inputs.version }}-x86.msi",
+          "Bucket-${{ inputs.version }}-ARM64.msi"
+        )
+
+        $installersPath = "artifacts/installers"
+        $missingFiles = @()
+        $generatedFiles = @()
+
+        foreach ($file in $expectedFiles) {
+          $fullPath = Join-Path $installersPath $file
+          if (Test-Path $fullPath) {
+            $fileInfo = Get-Item $fullPath
+            $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+            $generatedFiles += "  - $file ($fileSizeMB MB)"
+            Write-Host "✅ Found: $file ($fileSizeMB MB)" -ForegroundColor Green
+          } else {
+            $missingFiles += $file
+            Write-Host "❌ Missing: $file" -ForegroundColor Red
+          }
+        }
+
+        if ($missingFiles.Count -gt 0) {
+          Write-Host "Missing files:" -ForegroundColor Red
+          $missingFiles | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+          exit 1
+        }
+
+        Write-Host "All installer files generated successfully!" -ForegroundColor Green
+        Write-Host "Generated files:" -ForegroundColor Cyan
+        $generatedFiles | ForEach-Object { Write-Host $_ -ForegroundColor Green }
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: artifacts/
+        retention-days: 7
+
+    - name: Upload installer artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: installer-artifacts
+        path: artifacts/installers/
+        retention-days: 7
+        if-no-files-found: error

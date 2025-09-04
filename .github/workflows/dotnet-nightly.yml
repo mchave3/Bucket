@@ -1,4 +1,4 @@
-name: Nightly Build
+name: 🌙 Nightly Build
 
 # Global configuration - modify these to change default behavior
 env:
@@ -24,7 +24,7 @@ on:
 # Only run on dev branch
 jobs:
   check-changes:
-    name: Check for Changes
+    name: 🔍 Check for Changes
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev' || github.event_name == 'workflow_dispatch'
     outputs:
@@ -41,140 +41,137 @@ jobs:
 
       - name: Check for merged PRs since last tag
         id: check
-        shell: bash
+        shell: pwsh
         run: |
-          echo "Checking for merged PRs since last tag..."
+          Write-Host "Checking for merged PRs since last tag..." -ForegroundColor Cyan
 
           # Get the latest release tag (any type)
-          LATEST_TAG=$(git tag -l --sort=-version:refname | head -n 1)
-          echo "Latest release: $LATEST_TAG"
+          $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
+          Write-Host "Latest release: $latestTag" -ForegroundColor Yellow
 
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No previous tags found, building first nightly"
-            echo "should-build=true" >> $GITHUB_OUTPUT
-          else
+          if ([string]::IsNullOrEmpty($latestTag)) {
+            Write-Host "No previous tags found, building first nightly" -ForegroundColor Green
+            echo "should-build=true" >> $env:GITHUB_OUTPUT
+          } else {
             # Get all merged PRs since last tag (only merge commits from PRs)
-            MERGED_PRS=$(git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$LATEST_TAG..dev" || echo "")
+            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..dev" 2>$null
 
-            # Count merges
-            MERGE_COUNT=$(echo "$MERGED_PRS" | grep -c "Merge pull request" || echo "0")
+            if ([string]::IsNullOrEmpty($mergedPRs)) {
+              $mergeCount = 0
+            } else {
+              $mergeCount = ($mergedPRs | Select-String "Merge pull request").Count
+            }
 
-            if [ "$MERGE_COUNT" -eq 0 ]; then
-              if [ "${{ github.event.inputs.force-build }}" == "true" ]; then
-                echo "No PRs merged since last tag, but force build requested"
-                echo "should-build=true" >> $GITHUB_OUTPUT
-              else
-                echo "No PRs merged to dev since last tag. Skipping build."
-                echo "should-build=false" >> $GITHUB_OUTPUT
-              fi
-            else
-              echo "Merged PRs since last tag (dev):"
-              echo "$MERGED_PRS"
+            if ($mergeCount -eq 0) {
+              if ("${{ github.event.inputs.force-build }}" -eq "true") {
+                Write-Host "No PRs merged since last tag, but force build requested" -ForegroundColor Yellow
+                echo "should-build=true" >> $env:GITHUB_OUTPUT
+              } else {
+                Write-Host "No PRs merged to dev since last tag. Skipping build." -ForegroundColor Yellow
+                echo "should-build=false" >> $env:GITHUB_OUTPUT
+              }
+            } else {
+              Write-Host "Merged PRs since last tag (dev):" -ForegroundColor Green
+              Write-Host $mergedPRs
 
               # Check if only change is a release PR merge (skip in that case)
-              if [ "$MERGE_COUNT" -eq 1 ] && echo "$MERGED_PRS" | grep -q "release/"; then
-                echo "Only change since last tag is a release PR merge. Skipping build."
-                echo "should-build=false" >> $GITHUB_OUTPUT
-              else
-                echo "should-build=true" >> $GITHUB_OUTPUT
-              fi
-            fi
-          fi
+              if ($mergeCount -eq 1 -and $mergedPRs -like "*release/*") {
+                Write-Host "Only change since last tag is a release PR merge. Skipping build." -ForegroundColor Yellow
+                echo "should-build=false" >> $env:GITHUB_OUTPUT
+              } else {
+                echo "should-build=true" >> $env:GITHUB_OUTPUT
+              }
+            }
+          }
 
       - name: Generate version
         id: version
         if: steps.check.outputs.should-build == 'true'
-        shell: bash
+        shell: pwsh
         run: |
           # Generate version in format YY.MM.DD-Nightly or YY.MM.DD.BUILD-Nightly for Git tag
           # and YY.M.D.BUILD for MSI (Windows Installer compatible)
-          DATE=$(date -u '+%y.%m.%d')
-          DATE_MSI=$(date -u '+%y.%-m.%-d')  # Remove leading zeros for MSI compatibility
-          echo "Base date: $DATE (Git tag format)"
-          echo "Base date MSI: $DATE_MSI (MSI version format)"
+          $date = Get-Date -Format "yy.MM.dd"
+          $dateMsi = Get-Date -Format "yy.M.d"  # Remove leading zeros for MSI compatibility
+          Write-Host "Base date: $date (Git tag format)" -ForegroundColor Cyan
+          Write-Host "Base date MSI: $dateMsi (MSI version format)" -ForegroundColor Cyan
 
           # Check if we already have a nightly for today (without build number)
-          BASE_NIGHTLY_EXISTS=$(git tag -l "v$DATE-Nightly" | wc -l)
+          $baseNightlyExists = (git tag -l "v$date-Nightly" | Measure-Object).Count
 
-          if [ $BASE_NIGHTLY_EXISTS -eq 0 ]; then
+          if ($baseNightlyExists -eq 0) {
             # First nightly of the day
-            GIT_VERSION="$DATE-Nightly"
-            MSI_VERSION="$DATE_MSI.1"  # Add .1 for nightly builds to distinguish from releases
-            echo "First nightly of the day: $GIT_VERSION (Git) / $MSI_VERSION (MSI)"
-          else
+            $gitVersion = "$date-Nightly"
+            $msiVersion = "$dateMsi.1"  # Add .1 for nightly builds to distinguish from releases
+            Write-Host "First nightly of the day: $gitVersion (Git) / $msiVersion (MSI)" -ForegroundColor Green
+          } else {
             # Additional nightly (hotfix), find next build number
-            BUILD_NUM=2
-            while git tag -l "v$DATE.$BUILD_NUM-Nightly" | grep -q "v$DATE.$BUILD_NUM-Nightly"; do
-              BUILD_NUM=$((BUILD_NUM + 1))
-            done
-            GIT_VERSION="$DATE.$BUILD_NUM-Nightly"
-            MSI_VERSION="$DATE_MSI.$BUILD_NUM"
-            echo "Nightly hotfix build: $GIT_VERSION (Git) / $MSI_VERSION (MSI)"
-          fi
+            $buildNum = 2
+            while (git tag -l "v$date.$buildNum-Nightly" | Where-Object { $_ -eq "v$date.$buildNum-Nightly" }) {
+              $buildNum++
+            }
+            $gitVersion = "$date.$buildNum-Nightly"
+            $msiVersion = "$dateMsi.$buildNum"
+            Write-Host "Nightly hotfix build: $gitVersion (Git) / $msiVersion (MSI)" -ForegroundColor Yellow
+          }
 
-          echo "Generated Git version: $GIT_VERSION"
-          echo "Generated MSI version: $MSI_VERSION"
-          echo "version=$GIT_VERSION" >> $GITHUB_OUTPUT
-          echo "msi_version=$MSI_VERSION" >> $GITHUB_OUTPUT
+          Write-Host "Generated Git version: $gitVersion" -ForegroundColor Green
+          Write-Host "Generated MSI version: $msiVersion" -ForegroundColor Green
+          echo "version=$gitVersion" >> $env:GITHUB_OUTPUT
+          echo "msi_version=$msiVersion" >> $env:GITHUB_OUTPUT
 
-  build-test-release:
-    name: Build, Test and Release
-    needs: check-changes
+  # run-tests:
+  #   name: Run Tests
+  #   needs: [check-changes]
+  #   if: |
+  #     needs.check-changes.outputs.should-build == 'true' &&
+  #     ((github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
+  #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false'))
+  #   uses: ./.github/workflows/action_run-tests.yml
+  #   with:
+  #     configuration: 'Release'
+  #     platforms: 'x64,x86,ARM64'
+  #     generate-coverage: 'true'
+  #     checkout-ref: 'dev'
+
+  build-and-package:
+    name: 🏗️ Build, Package and Create Installers
+    needs: [check-changes]
     if: needs.check-changes.outputs.should-build == 'true'
-    runs-on: windows-latest
+    uses: ./.github/workflows/action_build-package-installers.yml
+    with:
+      configuration: 'Release'
+      version: ${{ needs.check-changes.outputs.msi_version }}
+      create-zip: 'true'
+      checkout-ref: 'dev'
 
+  create-release:
+    name: 📦 Create Release
+    needs: [check-changes, build-and-package]
+    if: needs.check-changes.outputs.should-build == 'true'
+    uses: ./.github/workflows/action_release-management.yml
+    with:
+      version: ${{ needs.check-changes.outputs.version }}
+      is-prerelease: 'true'
+      artifacts-path: 'artifacts'
+      checkout-ref: 'dev'
+      release-notes: |
+        This is an **automated nightly build** created from the latest changes in the dev branch.
+
+        ⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup-old-releases:
+    name: 🧹 Cleanup Old Releases
+    needs: [check-changes, create-release]
+    if: needs.check-changes.outputs.should-build == 'true' && success()
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          ref: dev
-
-      - name: Setup environment
-        uses: ./.github/workflows/action_setup-environment.yml
-        with:
-          dotnet-version: '9.0.x'
-
-      # - name: Run tests
-      #   if: |
-      #     (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-      #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false')
-      #   uses: ./.github/actions/run-tests
-      #   with:
-      #     configuration: 'Release'
-      #     platforms: 'x64,x86,ARM64'
-      #     generate-coverage: 'true'
-
-      - name: Build and package
-        uses: ./.github/workflows/action_build-and-package.yml
-        with:
-          configuration: 'Release'
-          version: ${{ needs.check-changes.outputs.msi_version }}
-          create-zip: 'true'
-
-      - name: Create installers
-        uses: ./.github/workflows/action_create-installers.yml
-        with:
-          version: ${{ needs.check-changes.outputs.msi_version }}
-          configuration: 'Release'
-
-      - name: Create release
-        uses: ./.github/workflows/action_release-management.yml
-        with:
-          version: ${{ needs.check-changes.outputs.version }}
-          is-prerelease: 'true'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts-path: 'artifacts'
-          release-notes: |
-            This is an **automated nightly build** created from the latest changes in the dev branch.
-
-            ⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.
-
       - name: Cleanup old nightly releases
-        if: success()
         shell: pwsh
         run: |
           Write-Host "Cleaning up old nightly releases..." -ForegroundColor Cyan
@@ -189,8 +186,12 @@ jobs:
             $toDelete = $nightlyReleases | Select-Object -Skip 7
 
             foreach ($release in $toDelete) {
-              Write-Host "Deleting old nightly release: $($release.tagName)"
-              gh release delete $release.tagName --yes --cleanup-tag
+              Write-Host "Deleting old nightly release: $($release.tagName)" -ForegroundColor Yellow
+              try {
+                gh release delete $release.tagName --yes --cleanup-tag
+              } catch {
+                Write-Host "Failed to delete $($release.tagName): $($_.Exception.Message)" -ForegroundColor Red
+              }
             }
 
             Write-Host "Cleanup complete. Kept the 7 most recent nightly builds." -ForegroundColor Green
@@ -200,8 +201,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Summary
-        if: always()
+  summary:
+    name: 📋 Summary
+    needs: [check-changes, create-release, cleanup-old-releases]
+    if: always() && needs.check-changes.outputs.should-build == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate summary
         shell: pwsh
         run: |
           Write-Host "# 🌙 Nightly Build Summary" >> $env:GITHUB_STEP_SUMMARY
@@ -210,10 +217,10 @@ jobs:
           Write-Host "- **Git Version**: ${{ needs.check-changes.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **MSI Version**: ${{ needs.check-changes.outputs.msi_version }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Branch**: dev" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Status**: ${{ job.status }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Status**: ${{ needs.create-release.result }}" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
 
-          if ("${{ job.status }}" -eq "success") {
+          if ("${{ needs.create-release.result }}" -eq "success") {
             Write-Host "✅ **Nightly build completed successfully!**" >> $env:GITHUB_STEP_SUMMARY
             Write-Host "" >> $env:GITHUB_STEP_SUMMARY
             Write-Host "[View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-changes.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
@@ -221,20 +228,22 @@ jobs:
             Write-Host "❌ **Nightly build failed!**" >> $env:GITHUB_STEP_SUMMARY
           }
 
+
   notify-skip:
-    name: Notify Skip
+    name: ⏭️ Notify Skip
     needs: check-changes
     if: needs.check-changes.outputs.should-build == 'false'
     runs-on: ubuntu-latest
 
     steps:
       - name: Skip notification
+        shell: pwsh
         run: |
-          echo "# ⏭️ Nightly Build Skipped" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "No changes detected in the last 24 hours on the dev branch." >> $GITHUB_STEP_SUMMARY
-          echo "The nightly build has been skipped to save resources." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "To force a build, you can:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Manually trigger this workflow with 'Force build' option" >> $GITHUB_STEP_SUMMARY
-          echo "2. Push new commits to the dev branch" >> $GITHUB_STEP_SUMMARY
+          Write-Host "# ⏭️ Nightly Build Skipped" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "No changes detected in the last 24 hours on the dev branch." >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "The nightly build has been skipped to save resources." >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "To force a build, you can:" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "1. Manually trigger this workflow with 'Force build' option" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "2. Push new commits to the dev branch" >> $env:GITHUB_STEP_SUMMARY

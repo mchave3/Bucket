@@ -1,4 +1,4 @@
-name: Release Build
+name: 🚀 Release Build
 
 # Global configuration - modify these to change default behavior
 env:
@@ -29,15 +29,11 @@ on:
         default: false
 
 jobs:
-  validate-and-build:
-    name: Validate and Build Release
-    runs-on: windows-latest
+  validate-version:
+    name: ✅ Validate Version
+    runs-on: ubuntu-latest
     # Only allow execution from main branch
     if: github.ref == 'refs/heads/main'
-
-    permissions:
-      contents: write
-      packages: write
 
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
@@ -64,7 +60,6 @@ jobs:
         shell: pwsh
         run: |
           $inputVersion = "${{ github.event.inputs.version }}"
-
           Write-Host "Validating version: $inputVersion" -ForegroundColor Cyan
 
           # Validate version format (YY.MM.DD or YY.MM.DD.BUILD)
@@ -103,108 +98,95 @@ jobs:
             exit 1
           }
 
-      - name: Setup environment
-        uses: ./.github/workflows/action_setup-environment.yml
-        with:
-          dotnet-version: '9.0.x'
+  # run-tests:
+  #   name: Run Tests
+  #   needs: [validate-version]
+  #   if: |
+  #     github.ref == 'refs/heads/main' &&
+  #     ((github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
+  #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false'))
+  #   uses: ./.github/workflows/action_run-tests.yml
+  #   with:
+  #     configuration: 'Release'
+  #     platforms: 'x64,x86,ARM64'
+  #     generate-coverage: 'true'
+  #     checkout-ref: 'main'
 
-      # - name: Run tests
-      #   if: |
-      #     (github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-      #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false')
-      #   uses: ./.github/actions/run-tests
-      #   with:
-      #     configuration: 'Release'
-      #     platforms: 'x64,x86,ARM64'
-      #     generate-coverage: 'true'
+  build-and-package:
+    name: 🏗️ Build, Package and Create Installers
+    needs: [validate-version]
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/action_build-package-installers.yml
+    with:
+      configuration: 'Release'
+      version: ${{ needs.validate-version.outputs.msi_version }}
+      create-zip: 'true'
+      checkout-ref: 'main'
 
-      - name: Build and package
-        uses: ./.github/workflows/action_build-and-package.yml
-        with:
-          configuration: 'Release'
-          version: ${{ steps.validate-version.outputs.msi_version }}
-          create-zip: 'true'
+  create-release:
+    name: 📦 Create Release
+    needs: [validate-version, build-and-package]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'false'
+    uses: ./.github/workflows/action_release-management.yml
+    with:
+      version: ${{ needs.validate-version.outputs.version }}
+      is-prerelease: 'false'
+      artifacts-path: 'artifacts'
+      checkout-ref: 'main'
+      release-notes: |
+        ${{ github.event.inputs.release-notes }}
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create installers
-        uses: ./.github/workflows/action_create-installers.yml
-        with:
-          version: ${{ steps.validate-version.outputs.msi_version }}
-          configuration: 'Release'
+  dry-run-summary:
+    name: 🧪 Dry Run Summary
+    needs: [validate-version, build-and-package]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'true'
+    runs-on: ubuntu-latest
 
-      - name: Create release
-        if: github.event.inputs.dry-run == 'false'
-        uses: ./.github/workflows/action_release-management.yml
-        with:
-          version: ${{ steps.validate-version.outputs.version }}
-          is-prerelease: 'false'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts-path: 'artifacts'
-          release-notes: |
-            ${{ github.event.inputs.release-notes }}
+    steps:
 
-      - name: Dry run summary
-        if: github.event.inputs.dry-run == 'true'
+      - name: Generate dry run summary
         shell: pwsh
         run: |
           Write-Host "=== DRY RUN COMPLETED ===" -ForegroundColor Yellow
           Write-Host "Build and packaging completed successfully!" -ForegroundColor Green
           Write-Host "No release was created (dry run mode)" -ForegroundColor Yellow
 
-          $summary = @"
-          # 🧪 Dry Run Completed
+          Write-Host "# 🧪 Dry Run Completed" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Build Results" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Version**: ${{ needs.validate-version.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Configuration**: Release" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Status**: ✅ Success" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Generated Artifacts" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "### MSI Installers" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- MSI installers for x64, x86, and ARM64 architectures have been built" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Next Steps" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "To create the actual release, run this workflow again with:" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Dry run**: \`false\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Version**: \`${{ needs.validate-version.outputs.version }}\`" >> $env:GITHUB_STEP_SUMMARY
 
-          ## Build Results
-          - **Version**: ${{ steps.validate-version.outputs.version }}
-          - **Configuration**: Release
-          - **Status**: ✅ Success
+  post-release-summary:
+    name: 📋 Post Release Summary
+    needs: [validate-version, create-release]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'false' && success()
+    runs-on: ubuntu-latest
 
-          ## Generated Artifacts
-          "@
-
-          # ZIP packages are built but not listed in dry-run (internal use only)
-
-          # List MSI installers
-          $installersPath = "artifacts/installers"
-          if (Test-Path $installersPath) {
-            $summary += "`n`n### MSI Installers"
-            Get-ChildItem -Path $installersPath -Filter "*.msi" | ForEach-Object {
-              $summary += "`n- ``$($_.Name)`` ($('{0:N2} MB' -f ($_.Length / 1MB)))"
-            }
-          }
-
-          $summary += @"
-
-
-          ## Next Steps
-          To create the actual release, run this workflow again with:
-          - **Dry run**: ``false``
-          - **Version**: ``${{ steps.validate-version.outputs.version }}``
-          "@
-
-          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding UTF8 -Append
-
-      - name: Create release tag
-        if: github.event.inputs.dry-run == 'false'
+    steps:
+      - name: Generate post-release summary
         shell: pwsh
         run: |
-          # Create and push tag for tracking
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # The tag should already be created by the release action, but we ensure it's pushed
-          git fetch --tags
-
           Write-Host "Release created successfully!" -ForegroundColor Green
-          Write-Host "Version: ${{ steps.validate-version.outputs.version }}" -ForegroundColor Cyan
+          Write-Host "Version: ${{ needs.validate-version.outputs.version }}" -ForegroundColor Cyan
 
-      - name: Post-release summary
-        if: github.event.inputs.dry-run == 'false'
-        shell: pwsh
-        run: |
           Write-Host "# 🚀 Release Published Successfully!" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "## Release Information" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "- **Version**: ``${{ steps.validate-version.outputs.version }}``" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "- **Version**: \`${{ needs.validate-version.outputs.version }}\`" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Type**: Stable Release" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "- **Branch**: main" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
@@ -213,26 +195,27 @@ jobs:
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host "📝 **Note**: ZIP packages are built for internal use but not published in releases." >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.validate-version.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate-version.outputs.version }})" >> $env:GITHUB_STEP_SUMMARY
 
   guard-branch:
-    name: Branch Protection
+    name: ⛔ Branch Protection
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
 
     steps:
       - name: Block execution
+        shell: pwsh
         run: |
-          echo "# ⛔ Workflow Blocked" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "This workflow can only be executed from the **main** branch." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Current branch**: \`${{ github.ref }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Required branch**: \`refs/heads/main\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Switch to the main branch" >> $GITHUB_STEP_SUMMARY
-          echo "2. Ensure your code is merged and up-to-date" >> $GITHUB_STEP_SUMMARY
-          echo "3. Run this workflow again from the main branch" >> $GITHUB_STEP_SUMMARY
+          Write-Host "# ⛔ Workflow Blocked" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "This workflow can only be executed from the **main** branch." >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "**Current branch**: \`${{ github.ref }}\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "**Required branch**: \`refs/heads/main\`" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "## Next Steps" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "1. Switch to the main branch" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "2. Ensure your code is merged and up-to-date" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "3. Run this workflow again from the main branch" >> $env:GITHUB_STEP_SUMMARY
 
           exit 1
