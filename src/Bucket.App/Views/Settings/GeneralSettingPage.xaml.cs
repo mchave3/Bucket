@@ -2,6 +2,7 @@
 using Bucket.App.Services;
 using Bucket.Core.Models;
 using Bucket.Core.Services;
+using Bucket.App.Helpers;
 
 namespace Bucket.App.Views
 {
@@ -11,6 +12,7 @@ namespace Bucket.App.Views
     {
         public GeneralSettingViewModel ViewModel { get; }
         private readonly ILocalizationService _localizationService;
+        private bool _isLoadingLanguages = false;
 
         public GeneralSettingPage()
         {
@@ -27,28 +29,41 @@ namespace Bucket.App.Views
 
         private void LoadAvailableLanguages()
         {
-            // Use centralized language list from the localization service
-            var availableLanguages = _localizationService.SupportedLanguages.ToList();
+            _isLoadingLanguages = true;
 
-            LanguageComboBox.ItemsSource = availableLanguages;
-
-            // Select the current language from the localization service
-            string currentLanguage = _localizationService.CurrentLanguage;
-            var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
-            if (currentItem != null)
+            try
             {
-                LanguageComboBox.SelectedItem = currentItem;
+                // Use centralized language list from the localization service
+                var availableLanguages = _localizationService.SupportedLanguages.ToList();
+
+                LanguageComboBox.ItemsSource = availableLanguages;
+
+                // Select the current language from the localization service
+                string currentLanguage = _localizationService.CurrentLanguage;
+                var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
+                if (currentItem != null)
+                {
+                    LanguageComboBox.SelectedItem = currentItem;
+                }
+                else
+                {
+                    // Fallback to default language if not found
+                    var defaultItem = availableLanguages.FirstOrDefault();
+                    LanguageComboBox.SelectedItem = defaultItem;
+                }
             }
-            else
+            finally
             {
-                // Fallback to default language if not found
-                var defaultItem = availableLanguages.FirstOrDefault();
-                LanguageComboBox.SelectedItem = defaultItem;
+                _isLoadingLanguages = false;
             }
         }
 
         private async void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Ignore selection changes during loading to prevent infinite loop
+            if (_isLoadingLanguages)
+                return;
+
             if (e.AddedItems.FirstOrDefault() is LanguageItem selectedLanguage)
             {
                 try
@@ -59,6 +74,9 @@ namespace Bucket.App.Views
                     {
                         // Save the selected language in configuration
                         Settings.SelectedLanguage = selectedLanguage.Code;
+
+                        // Apply dynamic language switching using the helper
+                        await LanguageSwitchingHelper.ApplyDynamicLanguageSwitchingAsync(selectedLanguage.Code);
                     }
                 }
                 catch (Exception ex)
