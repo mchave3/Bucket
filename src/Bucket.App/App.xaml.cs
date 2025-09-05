@@ -66,7 +66,17 @@ namespace Bucket.App
             return services.BuildServiceProvider();
         }
 
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
+        {
+            // IMPORTANT: Initialize localization BEFORE creating MainWindow
+            // to ensure NavService gets the correct language from the start
+            await InitializeLocalizationServiceAsync();
+
+            // After language is set, initialize the main window
+            InitializeMainWindow();
+        }
+
+        private void InitializeMainWindow()
         {
             MainWindow = new MainWindow();
 
@@ -78,8 +88,6 @@ namespace Bucket.App
             MainWindow.Activate();
 
             InitializeApp();
-
-            _ = InitializeLocalizationService(); // Initialize localization service
         }
 
         private async void InitializeApp()
@@ -111,7 +119,7 @@ namespace Bucket.App
             UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
         }
 
-        private async Task InitializeLocalizationService()
+        private async Task InitializeLocalizationServiceAsync()
         {
             var localizationService = GetService<ILocalizationService>();
 
@@ -119,8 +127,23 @@ namespace Bucket.App
             bool isFirstStartup = !Settings.HasBeenStartedBefore;
             string savedLanguage = Settings.SelectedLanguage;
 
+            // For non-first startup, set the language override immediately
+            if (!isFirstStartup && !string.IsNullOrEmpty(savedLanguage))
+            {
+                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = savedLanguage;
+            }
+
             // Initialize with auto-detection for first startup
             await localizationService.InitializeWithAutoDetectionAsync(savedLanguage, isFirstStartup);
+
+            // CRITICAL: After initialization, ensure DevWinUI uses the same language
+            // Get the current language from the localization service (could be auto-detected or saved)
+            string currentLanguage = localizationService.CurrentLanguage;
+            if (!string.IsNullOrEmpty(currentLanguage))
+            {
+                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = currentLanguage;
+                System.Diagnostics.Debug.WriteLine($"Language synchronization: Set ApplicationLanguages.PrimaryLanguageOverride to '{currentLanguage}' (FirstStartup: {isFirstStartup})");
+            }
 
             // Mark as started if it was the first time
             if (isFirstStartup)
