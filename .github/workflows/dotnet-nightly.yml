@@ -26,7 +26,6 @@ jobs:
   check-changes:
     name: 🔍 Check for Changes
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev' || github.event_name == 'workflow_dispatch'
     outputs:
       should-build: ${{ steps.check.outputs.should-build }}
       version: ${{ steps.version.outputs.version }}
@@ -194,12 +193,15 @@ jobs:
                 gh release delete $release.tagName --yes --cleanup-tag
               } catch {
                 Write-Host "Failed to delete $($release.tagName): $($_.Exception.Message)" -ForegroundColor Red
+                exit 1
               }
             }
 
             Write-Host "Cleanup complete. Kept the 7 most recent nightly builds." -ForegroundColor Green
+            exit 0
           } else {
             Write-Host "No cleanup needed. Current nightly releases: $($nightlyReleases.Count)" -ForegroundColor Green
+            exit 0
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
