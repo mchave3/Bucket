@@ -100,7 +100,7 @@ jobs:
         $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
         $versionParts = $versionBase -split '\.'
 
-        # Ensure we have 4 version parts
+        # Ensure we have 4 version parts for assembly version
         while ($versionParts.Count -lt 4) {
           $versionParts += "0"
         }
@@ -318,7 +318,7 @@ jobs:
         $versionBase = $version -replace '-.*$', ''
         $versionParts = $versionBase -split '\.'
 
-        # Ensure we have 4 version parts
+        # Ensure we have 4 version parts for assembly version
         while ($versionParts.Count -lt 4) {
           $versionParts += "0"
         }
