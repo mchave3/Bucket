@@ -88,12 +88,10 @@ jobs:
         if: steps.check.outputs.should-build == 'true'
         shell: pwsh
         run: |
-          # Generate version in format YY.MM.DD-Nightly or YY.MM.DD.BUILD-Nightly for Git tag
+          # Generate version in format YY.M.D-Nightly or YY.M.D.BUILD-Nightly for Git tag
           # and YY.M.D.BUILD for MSI (Windows Installer compatible)
-          $date = Get-Date -Format "yy.MM.dd"
-          $dateMsi = Get-Date -Format "yy.M.d"  # Remove leading zeros for MSI compatibility
-          Write-Host "Base date: $date (Git tag format)" -ForegroundColor Cyan
-          Write-Host "Base date MSI: $dateMsi (MSI version format)" -ForegroundColor Cyan
+          $date = Get-Date -Format "yy.M.d"  # Remove leading zeros for both Git and MSI
+          Write-Host "Base date: $date (unified format)" -ForegroundColor Cyan
 
           # Check if we already have a nightly for today (without build number)
           $baseNightlyExists = (git tag -l "v$date-Nightly" | Measure-Object).Count
@@ -101,7 +99,7 @@ jobs:
           if ($baseNightlyExists -eq 0) {
             # First nightly of the day
             $gitVersion = "$date-Nightly"
-            $msiVersion = "$dateMsi.1"  # Add .1 for nightly builds to distinguish from releases
+            $msiVersion = "$date.1"  # Add .1 for nightly builds to distinguish from releases
             Write-Host "First nightly of the day: $gitVersion (Git) / $msiVersion (MSI)" -ForegroundColor Green
           } else {
             # Additional nightly (hotfix), find next build number
@@ -110,7 +108,7 @@ jobs:
               $buildNum++
             }
             $gitVersion = "$date.$buildNum-Nightly"
-            $msiVersion = "$dateMsi.$buildNum"
+            $msiVersion = "$date.$buildNum"
             Write-Host "Nightly hotfix build: $gitVersion (Git) / $msiVersion (MSI)" -ForegroundColor Yellow
           }
 
