@@ -56,7 +56,7 @@ jobs:
         ref: ${{ inputs.checkout-ref || github.ref }}
 
     - name: Download build artifacts (includes installers)
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: build-artifacts
         path: ${{ inputs.artifacts-path }}/
@@ -129,7 +129,7 @@ jobs:
 
     - name: Create GitHub Release
       id: create-release
-      uses: ncipollo/release-action@v1.18.0
+      uses: ncipollo/release-action@v1.20.0
       with:
         tag: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
