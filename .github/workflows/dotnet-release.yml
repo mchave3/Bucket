@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (format: YY.MM.DD or YY.MM.DD.BUILD for hotfixes)'
+        description: 'Version number (format: YY.M.D or YY.M.D.BUILD for hotfixes) - MSI will get .1 for first releases'
         required: true
         type: string
         default: ''
@@ -62,7 +62,7 @@ jobs:
           $inputVersion = "${{ github.event.inputs.version }}"
           Write-Host "Validating version: $inputVersion" -ForegroundColor Cyan
 
-          # Validate version format (YY.MM.DD or YY.MM.DD.BUILD)
+          # Validate version format (YY.M.D or YY.M.D.BUILD)
           if ($inputVersion -match '^(\d{1,2})\.(\d{1,2})\.(\d{1,2})(\.(\d+))?$') {
             Write-Host "✅ Version format is valid" -ForegroundColor Green
 
@@ -75,15 +75,15 @@ jobs:
               exit 1
             }
 
-            # Generate MSI-compatible version (ensure no leading zeros)
-            $year = [int]$matches[1]
-            $month = [int]$matches[2]
-            $day = [int]$matches[3]
-            $build = if ($matches[5]) { [int]$matches[5] } else { $null }
-
-            $msiVersion = "$year.$month.$day"
-            if ($build -ne $null) {
-              $msiVersion += ".$build"
+            # Generate MSI version based on input format
+            if ($inputVersion -match '^(\d{1,2})\.(\d{1,2})\.(\d{1,2})$') {
+              # First release (YY.M.D format) - Add .1 for MSI like nightlies
+              $msiVersion = "$inputVersion.1"
+              Write-Host "First release detected - MSI version will include .1 suffix" -ForegroundColor Yellow
+            } else {
+              # Hotfix release (YY.M.D.BUILD format) - Use as-is
+              $msiVersion = $inputVersion
+              Write-Host "Hotfix release detected - MSI version matches input" -ForegroundColor Yellow
             }
 
             echo "version=$inputVersion" >> $env:GITHUB_OUTPUT
@@ -93,8 +93,8 @@ jobs:
           } else {
             Write-Error "❌ Invalid version format!"
             Write-Host "Expected formats:" -ForegroundColor Red
-            Write-Host "- Initial release: YY.MM.DD (e.g., 25.01.15)" -ForegroundColor Red
-            Write-Host "- Hotfix: YY.MM.DD.BUILD (e.g., 25.01.15.2)" -ForegroundColor Red
+            Write-Host "- Initial release: YY.M.D (e.g., 25.1.15) → MSI: YY.M.D.1" -ForegroundColor Red
+            Write-Host "- Hotfix: YY.M.D.BUILD (e.g., 25.1.15.2) → MSI: YY.M.D.BUILD" -ForegroundColor Red
             exit 1
           }
 
