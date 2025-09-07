@@ -1,5 +1,5 @@
-﻿<Project Sdk="WixToolset.Sdk/6.0.2">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="WixToolset.Sdk/6.0.2">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Platforms>x86;x64;ARM64</Platforms>
@@ -7,30 +7,24 @@
     <OutputPath>..\..\artifacts\installers\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
-
   <!-- Auto-extract variables from referenced projects -->
   <PropertyGroup>
     <!-- Extract properties from Bucket.App.csproj automatically -->
     <Version Condition="'$(Version)' == ''">$(Bucket_App_Version)</Version>
     <Version Condition="'$(Version)' == '' OR '$(Bucket_App_Version)' == ''">1.0.0.0</Version>
-
     <ProductName Condition="'$(ProductName)' == ''">$(Bucket_App_AssemblyName)</ProductName>
     <ProductName Condition="'$(ProductName)' == '' OR '$(Bucket_App_AssemblyName)' == ''">Bucket</ProductName>
-
     <Manufacturer Condition="'$(Manufacturer)' == ''">$(Bucket_App_Company)</Manufacturer>
     <Manufacturer Condition="'$(Manufacturer)' == '' OR '$(Bucket_App_Company)' == ''">Mickaël CHAVE</Manufacturer>
-
     <!-- Platform-specific directories -->
     <ProgramFilesFolder Condition="'$(Platform)' == 'x64'">ProgramFiles64Folder</ProgramFilesFolder>
     <ProgramFilesFolder Condition="'$(Platform)' == 'x86'">ProgramFilesFolder</ProgramFilesFolder>
     <ProgramFilesFolder Condition="'$(Platform)' == 'ARM64'">ProgramFiles64Folder</ProgramFilesFolder>
-
     <!-- Platform-specific GUIDs -->
     <ProductGuid Condition="'$(Platform)' == 'x64'">{8E47B00A-4743-448F-AC7E-F04BF99D7C64}</ProductGuid>
     <ProductGuid Condition="'$(Platform)' == 'x86'">{8E47B00A-4743-448F-AC7E-F04BF99D7C86}</ProductGuid>
     <ProductGuid Condition="'$(Platform)' == 'ARM64'">{8E47B00A-4743-448F-AC7E-F04BF99D7CA4}</ProductGuid>
   </PropertyGroup>
-
   <!-- Pass variables to WiX preprocessor using DefineConstants for WiX 5 -->
   <PropertyGroup>
     <DefineConstants>
@@ -41,12 +35,10 @@
       ProgramFilesFolder=$(ProgramFilesFolder)
     </DefineConstants>
   </PropertyGroup>
-
   <!-- Ensure output directory exists -->
   <Target Name="EnsureOutputDirectory" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
   </Target>
-
   <!-- Project references -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bucket.App\Bucket.App.csproj">
@@ -60,46 +52,33 @@
       <Configuration>Release</Configuration>
     </ProjectReference>
   </ItemGroup>
-
   <!-- Define publish output path for manual file inclusion -->
   <PropertyGroup>
     <!-- Define RID mapping for different platforms -->
     <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
-
     <!-- Path to the publish output for manual file inclusion -->
     <PublishOutputPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\$(RuntimeIdentifier)\publish\</PublishOutputPath>
   </PropertyGroup>
-
   <!-- Pass the publish path to WiX preprocessor -->
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);PublishOutputPath=$(PublishOutputPath)</DefineConstants>
     <!-- Suppress ICE03 validation for invalid language IDs -->
     <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
-
   <!-- Ensure publish happens before any WiX processing -->
   <Target Name="PublishApp" BeforeTargets="BeforeBuild">
     <Message Text="Publishing application to: $(PublishOutputPath)" Importance="high" />
-
     <!-- Create publish directory if it doesn't exist -->
     <MakeDir Directories="$(PublishOutputPath)" Condition="!Exists('$(PublishOutputPath)')" />
-
     <!-- Publish the application -->
-    <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj"
-             Targets="Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false;Version=$(Version);AssemblyVersion=$(AssemblyVersion);FileVersion=$(FileVersion)" />
-
+    <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false;Version=$(Version);AssemblyVersion=$(AssemblyVersion);FileVersion=$(FileVersion)" />
     <!-- Verify publish succeeded -->
-    <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish"
-           Condition="!Exists('$(PublishOutputPath)')" />
-
+    <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish" Condition="!Exists('$(PublishOutputPath)')" />
     <ItemGroup>
       <PublishedFiles Include="$(PublishOutputPath)**\*" />
     </ItemGroup>
-
-    <Message Text="Published @(PublishedFiles->Count()) files to $(PublishOutputPath)" Importance="high" />
+    <Message Text="Published @(PublishedFiles-&gt;Count()) files to $(PublishOutputPath)" Importance="high" />
   </Target>
-
 </Project>

@@ -1,0 +1,9 @@
+﻿global using Bucket.Updater.Common;
+global using Bucket.Updater.ViewModels;
+global using Bucket.Updater.Views;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using DevWinUI;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.UI;
+global using Microsoft.UI.Xaml;
+global using Microsoft.UI.Xaml.Controls;

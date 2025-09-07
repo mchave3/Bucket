@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Bucket.Updater (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Bucket.Updater (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

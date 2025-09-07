@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket.Core.Tests", "tests\
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Bucket.Setup", "setup\Bucket.Setup\Bucket.Setup.wixproj", "{7F4EA010-14BA-4631-A716-3DF72BD51890}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bucket.Updater", "src\Bucket.Updater\Bucket.Updater.csproj", "{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -89,6 +91,24 @@ Global
 		{7F4EA010-14BA-4631-A716-3DF72BD51890}.Release|x64.Build.0 = Release|x64
 		{7F4EA010-14BA-4631-A716-3DF72BD51890}.Release|x86.ActiveCfg = Release|x86
 		{7F4EA010-14BA-4631-A716-3DF72BD51890}.Release|x86.Build.0 = Release|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|ARM64.Build.0 = Debug|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x64.ActiveCfg = Debug|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x64.Build.0 = Debug|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x64.Deploy.0 = Debug|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x86.ActiveCfg = Debug|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x86.Build.0 = Debug|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Debug|x86.Deploy.0 = Debug|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|ARM64.ActiveCfg = Release|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|ARM64.Build.0 = Release|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|ARM64.Deploy.0 = Release|ARM64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x64.ActiveCfg = Release|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x64.Build.0 = Release|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x64.Deploy.0 = Release|x64
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x86.ActiveCfg = Release|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x86.Build.0 = Release|x86
+		{38FBA6CE-5452-4EBF-A351-EA8F193DF2F4}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
