@@ -117,64 +117,112 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="General_RunAtStartup_Card.Header" xml:space="preserve">
-    <value>Run at startup</value>
+  <data name="About_Expander.Description" xml:space="preserve">
+    <value>Application details</value>
   </data>
-  <data name="General_RunAtStartup_Card.Description" xml:space="preserve">
-    <value>Automatically launch app when you log in to Windows</value>
+  <data name="About_Expander.Header" xml:space="preserve">
+    <value>Bucket</value>
   </data>
-  <data name="General_DevMode_Card.Header" xml:space="preserve">
-    <value>Dev mode (Restart Required)</value>
+  <data name="About_RelatedLinks.Text" xml:space="preserve">
+    <value>Related Links</value>
+  </data>
+  <data name="About_ReleaseNotes.Content" xml:space="preserve">
+    <value>Release Notes</value>
+  </data>
+  <data name="About_SourceCode.Content" xml:space="preserve">
+    <value>Source Code</value>
   </data>
   <data name="General_DevMode_Card.Description" xml:space="preserve">
     <value>Help us improve this app by sharing optional diagnostics data to inform bug fixes, performance, and feature enhancements</value>
   </data>
-  <data name="General_Language_Card.Header" xml:space="preserve">
-    <value>Language</value>
-  </data>
-  <data name="General_Language_Card.Description" xml:space="preserve">
-    <value>Select your preferred language for the application</value>
-  </data>
-  <data name="General_DiagnosticsFeedback_Card.Header" xml:space="preserve">
-    <value>Diagnostics &amp; feedback (Restart Required)</value>
+  <data name="General_DevMode_Card.Header" xml:space="preserve">
+    <value>Dev mode (Restart Required)</value>
   </data>
   <data name="General_DiagnosticsFeedback_Card.Description" xml:space="preserve">
     <value>Help us improve this app by sharing optional diagnostics data to inform bug fixes, performance, and feature enhancements</value>
   </data>
-  <data name="Navigation_General.Header" xml:space="preserve">
-    <value>General</value>
+  <data name="General_DiagnosticsFeedback_Card.Header" xml:space="preserve">
+    <value>Diagnostics &amp; feedback (Restart Required)</value>
   </data>
-  <data name="Navigation_General.Description" xml:space="preserve">
-    <value>Change your app Settings</value>
+  <data name="General_Language_Card.Description" xml:space="preserve">
+    <value>Select your preferred language for the application</value>
   </data>
-  <data name="Navigation_Theme.Header" xml:space="preserve">
-    <value>Appearance &amp; behavior</value>
+  <data name="General_Language_Card.Header" xml:space="preserve">
+    <value>Language</value>
   </data>
-  <data name="Navigation_Theme.Description" xml:space="preserve">
-    <value>Explore the different ways to customize the appearance and behavior of your app. You can change the material, theme, accent, and more options to suit your style and preference.</value>
+  <data name="General_RunAtStartup_Card.Description" xml:space="preserve">
+    <value>Automatically launch app when you log in to Windows</value>
   </data>
-  <data name="Navigation_Update.Header" xml:space="preserve">
-    <value>Update App</value>
+  <data name="General_RunAtStartup_Card.Header" xml:space="preserve">
+    <value>Run at startup</value>
   </data>
-  <data name="Navigation_Update.Description" xml:space="preserve">
-    <value>Check for Updates</value>
+  <data name="Navigation_About.Description" xml:space="preserve">
+    <value>About Bucket and Developer.</value>
   </data>
   <data name="Navigation_About.Header" xml:space="preserve">
     <value>About us</value>
   </data>
-  <data name="Navigation_About.Description" xml:space="preserve">
-    <value>About Bucket.App and Developer</value>
+  <data name="Navigation_General.Description" xml:space="preserve">
+    <value>Change your app Settings.</value>
   </data>
-  <data name="Theme_AppTheme_Card.Header" xml:space="preserve">
-    <value>App theme</value>
+  <data name="Navigation_General.Header" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Navigation_Theme.Description" xml:space="preserve">
+    <value>Explore the different ways to customize the appearance and behavior of your app. You can change the material, theme, accent, and more options to suit your style and preference.</value>
+  </data>
+  <data name="Navigation_Theme.Header" xml:space="preserve">
+    <value>Appearance &amp; behavior</value>
+  </data>
+  <data name="Navigation_Update.Description" xml:space="preserve">
+    <value>Check for Updates.</value>
+  </data>
+  <data name="Navigation_Update.Header" xml:space="preserve">
+    <value>Update App</value>
+  </data>
+  <data name="Theme_AccentColor_Card.Description" xml:space="preserve">
+    <value>Sync your app's color with your Windows accent color. You can open the Windows accent color setting by clicking this card.</value>
+  </data>
+  <data name="Theme_AccentColor_Card.Header" xml:space="preserve">
+    <value>Accent color</value>
   </data>
   <data name="Theme_AppTheme_Card.Description" xml:space="preserve">
     <value>Select the theme that suits your mood and preference. You can choose from dark, light, or system themes.</value>
   </data>
-  <data name="Theme_Light" xml:space="preserve">
+  <data name="Theme_AppTheme_Card.Header" xml:space="preserve">
+    <value>App theme</value>
+  </data>
+  <data name="Theme_Dark.Content" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Theme_Default.Content" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Theme_Light.Content" xml:space="preserve">
     <value>Light</value>
   </data>
-  <data name="Theme_Dark" xml:space="preserve">
-    <value>Dark</value>
+  <data name="Theme_Material_Card.Description" xml:space="preserve">
+    <value>Change the appearance of the backdrop material behind your app. You can choose from mica, acrylic, or transparent options.</value>
+  </data>
+  <data name="Theme_Material_Card.Header" xml:space="preserve">
+    <value>Material</value>
+  </data>
+  <data name="Update_CheckButton.Content" xml:space="preserve">
+    <value>Check for New Version</value>
+  </data>
+  <data name="Update_CurrentVersion_Card.Description" xml:space="preserve">
+    <value>Current application version and update status</value>
+  </data>
+  <data name="Update_DownloadButton.Content" xml:space="preserve">
+    <value>Download Update</value>
+  </data>
+  <data name="Update_LastUpdateCheck.Text" xml:space="preserve">
+    <value>Last Update Check</value>
+  </data>
+  <data name="Update_ReleaseNotes.Content" xml:space="preserve">
+    <value>Release Note</value>
+  </data>
+  <data name="Update_Status_Card.Description" xml:space="preserve">
+    <value>Update availability and download options</value>
   </data>
 </root>

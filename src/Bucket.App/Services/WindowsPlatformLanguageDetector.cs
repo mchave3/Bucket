@@ -1,20 +1,30 @@
 using System.Diagnostics;
-using Bucket.Core.Models;
 using Bucket.Core.Services;
 using Windows.System.UserProfile;
 
 namespace Bucket.App.Services
 {
     /// <summary>
-    /// Windows-specific implementation for detecting system language
+    /// Minimal Windows-specific implementation for detecting system language
     /// </summary>
-    public class WindowsSystemLanguageDetectionService : ISystemLanguageDetectionService
+    public class WindowsPlatformLanguageDetector : IPlatformLanguageDetector
     {
+        /// <summary>
+        /// Gets the best matching supported language based on system preferences
+        /// </summary>
+        /// <returns>Supported language code that best matches system preferences</returns>
+        public string GetBestMatchingLanguage()
+        {
+            var systemLanguage = GetSystemLanguageCode();
+            var mappedLanguage = SupportedLanguages.MapOSLanguageToSupported(systemLanguage);
+            return mappedLanguage;
+        }
+
         /// <summary>
         /// Gets the current system language code using Windows APIs
         /// </summary>
         /// <returns>System language code (e.g., "en-US", "fr-FR")</returns>
-        public string GetSystemLanguageCode()
+        private string GetSystemLanguageCode()
         {
             try
             {
@@ -78,17 +88,6 @@ namespace Bucket.App.Services
 
             // Final fallback
             return SupportedLanguages.DefaultLanguage;
-        }
-
-        /// <summary>
-        /// Gets the best matching supported language based on system preferences
-        /// </summary>
-        /// <returns>Supported language code that best matches system preferences</returns>
-        public string GetBestMatchingLanguage()
-        {
-            var systemLanguage = GetSystemLanguageCode();
-            var mappedLanguage = SupportedLanguages.MapOSLanguageToSupported(systemLanguage);
-            return mappedLanguage;
         }
     }
 }

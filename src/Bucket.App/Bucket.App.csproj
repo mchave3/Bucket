@@ -74,6 +74,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\NavViewMenu\AppData.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>

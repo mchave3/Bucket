@@ -123,4 +123,14 @@
   <data name="AppDescription" xml:space="preserve">
     <value>A Windows application</value>
   </data>
+  <data name="Nav_HomeKey.Title" xml:space="preserve">
+    <value>Home</value>
+    <comment>
+</comment>
+  </data>
+  <data name="Nav_HomeKey.Subtitle" xml:space="preserve">
+    <value>Home page</value>
+    <comment>
+</comment>
+  </data>
 </root>
