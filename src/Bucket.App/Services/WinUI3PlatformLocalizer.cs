@@ -5,7 +5,7 @@ using Bucket.Core.Services;
 namespace Bucket.App.Services
 {
     /// <summary>
-    /// Minimal WinUI3 platform-specific localizer implementation
+    /// WinUI3 platform-specific localizer implementation
     /// </summary>
     public class WinUI3PlatformLocalizer : IPlatformLocalizer
     {
@@ -50,7 +50,6 @@ namespace Bucket.App.Services
         /// <param name="languageCode">Language code to set</param>
         public async Task<bool> SetLanguageAsync(string languageCode)
         {
-
             try
             {
                 await _localizer.SetLanguage(languageCode);
@@ -70,7 +69,6 @@ namespace Bucket.App.Services
         /// <returns>Localized string or key if not found</returns>
         public string GetString(string key)
         {
-
             try
             {
                 return _localizer.GetLocalizedString(key);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Windowing;
 using Bucket.Core.Helpers;
+using Bucket.App.Services;
 
 namespace Bucket.App.Views
 {
@@ -28,6 +29,9 @@ namespace Bucket.App.Views
                     .ConfigureTitleBar(AppTitleBar)
                     .ConfigureBreadcrumbBar(BreadCrumbNav, BreadcrumbPageMappings.PageDictionary);
             }
+
+            // Add window closed event handler for cleanup
+            this.Closed += MainWindow_Closed;
         }
 
         private void ThemeButton_Click(object sender, RoutedEventArgs e)
@@ -60,6 +64,12 @@ namespace Bucket.App.Views
         }
 
         internal static MainWindow Instance { get; private set; }
+
+        private void MainWindow_Closed(object sender, WindowEventArgs e)
+        {
+            // Use safe shutdown service to avoid WinRT crash
+            SafeShutdownService.InitiateSafeShutdown();
+        }
     }
 
 }

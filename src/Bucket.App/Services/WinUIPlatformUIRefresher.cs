@@ -7,7 +7,7 @@ using Bucket.Core.Services;
 namespace Bucket.App.Services
 {
     /// <summary>
-    /// Minimal WinUI platform-specific UI refresher for navigation menu and UI elements
+    /// WinUI platform-specific UI refresher for navigation menu and UI elements
     /// </summary>
     public class WinUIPlatformUIRefresher : IPlatformUIRefresher
     {

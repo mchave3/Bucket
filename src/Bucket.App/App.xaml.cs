@@ -8,8 +8,8 @@ namespace Bucket.App
     public partial class App : Application
     {
         public new static App Current => (App)Application.Current;
-        public static Window MainWindow = Window.Current;
-        public static IntPtr Hwnd => WinRT.Interop.WindowNative.GetWindowHandle(MainWindow);
+        public static Window MainWindow { get; private set; }
+        public static IntPtr Hwnd => MainWindow != null ? WinRT.Interop.WindowNative.GetWindowHandle(MainWindow) : IntPtr.Zero;
         public IServiceProvider Services { get; }
         public IJsonNavigationService NavService => GetService<IJsonNavigationService>();
         public IThemeService ThemeService => GetService<IThemeService>();
@@ -44,7 +44,7 @@ namespace Bucket.App
             services.AddSingleton<IPlatformLocalizer, WinUI3PlatformLocalizer>();
             services.AddSingleton<IPlatformLanguageDetector, WindowsPlatformLanguageDetector>();
             services.AddSingleton<IPlatformUIRefresher, WinUIPlatformUIRefresher>();
-            
+
             // Register centralized LocalizationManager
             services.AddSingleton<LocalizationManager>(provider =>
             {
