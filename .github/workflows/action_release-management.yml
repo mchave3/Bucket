@@ -127,8 +127,8 @@ jobs:
               }
             }
 
-            # Remove duplicates and sort
-            $prNumbers = $prNumbers | Sort-Object -Unique -Descending
+            # Remove duplicates and sort in ascending order
+            $prNumbers = $prNumbers | Sort-Object -Unique
 
             # Get PR details for each PR number
             $prNumbers | ForEach-Object {
