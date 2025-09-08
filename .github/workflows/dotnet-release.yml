@@ -136,6 +136,7 @@ jobs:
       is-prerelease: 'false'
       artifacts-path: 'artifacts'
       checkout-ref: 'main'
+      target-branch: 'main'
       release-notes: |
         ${{ github.event.inputs.release-notes }}
     secrets:

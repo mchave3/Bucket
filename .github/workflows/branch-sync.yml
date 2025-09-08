@@ -1,19 +1,21 @@
 name: 🔄 Branch Synchronization
 
 # This workflow manages reverse synchronization between branches:
-# - main -> dev -> feature branches
-# - dev -> feature branches (when changes are made on dev)
-# - Triggered by pull requests targeting dev branch
+# - main -> dev -> feature branches (automatic)
+# - Reduced triggers to prevent excessive auto-sync conflicts
+# - Pre-checks for conflicts before attempting automatic merge
+# - Creates PRs instead of failing when conflicts are detected
 on:
   push:
     branches:
       - main
-      - dev
-  pull_request:
-    branches:
-      - dev
-    types:
-      - closed
+      # Removed 'dev' to reduce aggressive syncing
+  # Disabled automatic PR synchronization to prevent conflicts
+  # pull_request:
+  #   branches:
+  #     - dev
+  #   types:
+  #     - closed
   workflow_dispatch:
     inputs:
       source_branch:
@@ -50,8 +52,8 @@ env:
 
   # Sync Configuration
   PROTECTED_BRANCHES: "main,dev"  # Branches that won't be automatically synced to
-  EXCLUDE_PATTERNS: "temp/*,hotfix/*,release/*"  # Branch patterns to exclude
-  MAX_BRANCHES_PER_SYNC: 20  # Maximum number of branches to sync in one run
+  EXCLUDE_PATTERNS: "temp/*,hotfix/*,release/*,feature/localization*,wip/*,draft/*,auto-sync/*"  # Branch patterns to exclude
+  MAX_BRANCHES_PER_SYNC: 10  # Reduced maximum number of branches to sync in one run
 
 # ============================================================================
 # JOBS PIPELINE
@@ -347,6 +349,75 @@ jobs:
           fi
 
           echo "📊 Found $COMMITS_AHEAD commits to sync"
+
+          # Pre-check for potential conflicts using merge-tree
+          echo "🔍 Pre-checking for potential conflicts..."
+          MERGE_BASE=$(git merge-base "origin/$SOURCE_BRANCH" "origin/$TARGET_BRANCH")
+          
+          # Test merge without actually committing
+          git checkout -B "temp-merge-test-$$" "origin/$TARGET_BRANCH"
+          if ! git merge --no-commit --no-ff "origin/$SOURCE_BRANCH" >/dev/null 2>&1; then
+            echo "⚠️ Pre-check detected potential conflicts"
+            git merge --abort 2>/dev/null || true
+            git checkout "$TARGET_BRANCH" 2>/dev/null || true
+            git branch -D "temp-merge-test-$$" 2>/dev/null || true
+            
+            # Skip automatic merge and go straight to PR creation
+            echo "🔧 Creating pull request due to detected conflicts..."
+            SYNC_BRANCH="auto-sync/$SOURCE_BRANCH-to-$TARGET_BRANCH-$(date +%Y%m%d-%H%M%S)"
+            git checkout -b "$SYNC_BRANCH" "origin/$SOURCE_BRANCH"
+            git push origin "$SYNC_BRANCH"
+
+            # Create PR for manual resolution (same code as conflict resolution)
+            PR_TITLE="🔄 Auto-sync: $SOURCE_BRANCH → $TARGET_BRANCH (Pre-detected conflicts)"
+            PR_BODY="## 🔄 Automated Branch Synchronization
+
+            **Source Branch:** \`$SOURCE_BRANCH\`
+            **Target Branch:** \`$TARGET_BRANCH\`
+            **Status:** ⚠️ Conflicts detected during pre-check
+
+            ### 📊 Sync Details  
+            - **Commits to sync:** $COMMITS_AHEAD
+            - **Triggered by:** ${{ github.actor }}
+            - **Workflow:** ${{ github.workflow }}
+            - **Run:** [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ### 🛠️ Manual Steps Required
+            1. Review the conflicts in this PR
+            2. Resolve conflicts manually  
+            3. Merge this PR to complete the synchronization
+
+            ### 📝 Commits being synced:
+            \`\`\`
+            $(git log --oneline --max-count=10 "origin/$TARGET_BRANCH..origin/$SOURCE_BRANCH")
+            \`\`\`
+
+            ---
+            *This PR was automatically created by the branch synchronization workflow.*"
+
+            if command -v gh >/dev/null 2>&1; then
+              gh pr create \
+                --title "$PR_TITLE" \
+                --body "$PR_BODY" \
+                --base "$TARGET_BRANCH" \
+                --head "$SYNC_BRANCH" \
+                --label "automated-sync,pre-detected-conflicts"
+
+              echo "✅ Created PR for pre-detected conflicts"
+              echo "sync-result=pre-conflict-pr-created" >> $GITHUB_OUTPUT
+            else
+              echo "❌ GitHub CLI not available, cannot create PR"
+              echo "sync-result=pre-conflict-no-pr" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            exit 0
+          else
+            # Clean up test branch
+            git merge --abort 2>/dev/null || true
+            git checkout "$TARGET_BRANCH" 2>/dev/null || true
+            git branch -D "temp-merge-test-$$" 2>/dev/null || true
+            echo "✅ Pre-check passed, proceeding with automatic merge"
+          fi
 
           # Show what commits will be synced
           echo "📝 Commits to be synced:"
