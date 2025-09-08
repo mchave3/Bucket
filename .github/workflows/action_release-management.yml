@@ -59,6 +59,7 @@ jobs:
       uses: actions/checkout@v5
       with:
         ref: ${{ inputs.checkout-ref || github.ref }}
+        fetch-depth: 0  # Fetch full history including tags
 
     - name: Download build artifacts (includes installers)
       uses: actions/download-artifact@v5
@@ -80,9 +81,22 @@ jobs:
         Write-Host "Version: $version" -ForegroundColor Yellow
         Write-Host "Is prerelease: $isPrerelease" -ForegroundColor Yellow
         
-        # Get the latest release tag
+        # Get the latest release tag - fetch tags first
+        Write-Host "Fetching tags..." -ForegroundColor Gray
+        git fetch --tags --quiet 2>$null
+        
+        # Try multiple methods to get the latest tag
         $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
-        Write-Host "Latest tag: $latestTag" -ForegroundColor Yellow
+        if ([string]::IsNullOrEmpty($latestTag)) {
+          # Fallback: try without version sort
+          $latestTag = git tag --sort=-creatordate | Select-Object -First 1
+        }
+        if ([string]::IsNullOrEmpty($latestTag)) {
+          # Fallback: get latest tag by commit date
+          $latestTag = git describe --tags --abbrev=0 2>$null
+        }
+        
+        Write-Host "Latest tag: '$latestTag'" -ForegroundColor Yellow
         
         $releaseNotes = ""
         
