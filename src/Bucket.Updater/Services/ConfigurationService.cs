@@ -25,12 +25,73 @@ namespace Bucket.Updater.Services
             if (_cachedConfiguration != null)
                 return _cachedConfiguration;
 
-            return LoadConfigurationAsync().GetAwaiter().GetResult();
+            return LoadConfigurationSync();
         }
 
         public void SaveConfiguration(UpdaterConfiguration configuration)
         {
-            SaveConfigurationAsync(configuration).GetAwaiter().GetResult();
+            SaveConfigurationSync(configuration);
+        }
+
+        private UpdaterConfiguration LoadConfigurationSync()
+        {
+            try
+            {
+                Logger?.Information("Loading configuration synchronously from {ConfigPath}", _configPath);
+
+                if (File.Exists(_configPath))
+                {
+                    var json = File.ReadAllText(_configPath);
+
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        var configuration = JsonSerializer.Deserialize<UpdaterConfiguration>(json);
+                        if (configuration != null)
+                        {
+                            configuration.InitializeRuntimeProperties();
+                            _cachedConfiguration = configuration;
+                            Logger?.Information("Configuration loaded successfully");
+                            return configuration;
+                        }
+                    }
+                }
+                else
+                {
+                    Logger?.Information("Configuration file not found, creating default configuration");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "Error reading configuration file");
+            }
+
+            // Create default configuration
+            var defaultConfig = new UpdaterConfiguration();
+            defaultConfig.InitializeRuntimeProperties();
+            _cachedConfiguration = defaultConfig;
+            SaveConfigurationSync(defaultConfig);
+            Logger?.Information("Default configuration created and saved");
+            return defaultConfig;
+        }
+
+        private void SaveConfigurationSync(UpdaterConfiguration configuration)
+        {
+            try
+            {
+                Logger?.Information("Saving configuration synchronously to {ConfigPath}", _configPath);
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                var json = JsonSerializer.Serialize(configuration, options);
+                File.WriteAllText(_configPath, json);
+                _cachedConfiguration = configuration;
+                Logger?.Information("Configuration saved successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "Failed to save configuration");
+            }
         }
 
         public async Task<UpdaterConfiguration> LoadConfigurationAsync()
