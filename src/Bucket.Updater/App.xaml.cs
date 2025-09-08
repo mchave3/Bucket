@@ -3,8 +3,8 @@
     public partial class App : Application
     {
         public new static App Current => (App)Application.Current;
-        public static Window MainWindow = Window.Current;
-        public static IntPtr Hwnd => WinRT.Interop.WindowNative.GetWindowHandle(MainWindow);
+        public static Window MainWindow { get; private set; }
+        public static IntPtr Hwnd => MainWindow != null ? WinRT.Interop.WindowNative.GetWindowHandle(MainWindow) : IntPtr.Zero;
         public IServiceProvider Services { get; }
         public IThemeService ThemeService => GetService<IThemeService>();
 
@@ -32,7 +32,7 @@
         private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
-            
+
             // DevWinUI Services
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<ContextMenuService>();
@@ -65,7 +65,7 @@
             MainWindow.Activate();
 
             InitializeApp();
-            
+
             AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
@@ -74,10 +74,10 @@
             // Configure logging
             ConfigureLogger();
             Logger?.Information("Bucket Updater started");
-            
+
             // Setup unhandled exception logging
             UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
-            
+
             var menuService = GetService<ContextMenuService>();
             if (menuService != null && RuntimeHelper.IsPackaged())
             {
