@@ -28,13 +28,27 @@
             System.Runtime.ProfileOptimization.StartProfile("Startup.Profile");
         }
 
+
         private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
+            
+            // DevWinUI Services
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<ContextMenuService>();
 
+            // Application Services
+            services.AddSingleton<IConfigurationService, ConfigurationService>();
+            services.AddSingleton<IGitHubService, GitHubService>();
+            services.AddSingleton<IInstallationService, InstallationService>();
+            services.AddSingleton<IUpdateService, UpdateService>();
+
+            // ViewModels
             services.AddTransient<MainViewModel>();
+            services.AddTransient<WelcomePageViewModel>();
+            services.AddTransient<ChangelogPageViewModel>();
+            services.AddTransient<DownloadPageViewModel>();
+            services.AddTransient<InstallPageViewModel>();
 
             return services.BuildServiceProvider();
         }
@@ -51,10 +65,19 @@
             MainWindow.Activate();
 
             InitializeApp();
+            
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
         }
 
         private async void InitializeApp()
         {
+            // Configure logging
+            ConfigureLogger();
+            Logger?.Information("Bucket Updater started");
+            
+            // Setup unhandled exception logging
+            UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
+            
             var menuService = GetService<ContextMenuService>();
             if (menuService != null && RuntimeHelper.IsPackaged())
             {
@@ -74,6 +97,10 @@
                 await menuService.SaveAsync(menu);
             }
         }
-    }
 
+        private static void OnProcessExit(object? sender, EventArgs e)
+        {
+            Logger?.Information("Bucket Updater shutting down");
+        }
+    }
 }

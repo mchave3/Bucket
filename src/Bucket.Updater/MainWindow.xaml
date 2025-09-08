@@ -7,15 +7,17 @@
         xmlns:local="using:Bucket.Updater"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
+
+        <!-- Title Bar -->
         <TitleBar x:Name="AppTitleBar"
-                  Title="{x:Bind dev:ProcessInfoHelper.ProductName}"
-                  Subtitle="{x:Bind dev:ProcessInfoHelper.VersionWithPrefix}">
-            <!--  Temporary Fix TitleBar Icon  -->
+                  Title="Bucket Updater"
+                  Subtitle="{x:Bind ViewModel.CurrentVersion, Mode=OneWay}">
             <TitleBar.LeftHeader>
                 <ImageIcon Width="16"
                            Height="16"
@@ -23,9 +25,16 @@
                            Source="ms-appx:///Assets/AppIcon.png" />
             </TitleBar.LeftHeader>
         </TitleBar>
-        <StackPanel Grid.Row="1">
 
-        </StackPanel>
+        <!-- Main Content Area -->
+        <Border Grid.Row="1"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                CornerRadius="8"
+                Margin="16">
+            <Frame x:Name="ContentFrame" 
+                   x:FieldModifier="public"
+                   NavigationFailed="OnNavigationFailed"/>
+        </Border>
     </Grid>
 </Window>
 

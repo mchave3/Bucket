@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dir:*)",
+      "WebSearch",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet restore:*)"
     ],
     "deny": [],
     "ask": []
