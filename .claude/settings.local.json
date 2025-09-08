@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh release list:*)",
+      "Bash(git tag:*)",
+      "mcp__fetch__fetch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

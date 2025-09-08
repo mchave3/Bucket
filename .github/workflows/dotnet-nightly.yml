@@ -155,6 +155,7 @@ jobs:
       is-prerelease: 'true'
       artifacts-path: 'artifacts'
       checkout-ref: 'dev'
+      target-branch: 'dev'
       release-notes: |
         This is an **automated nightly build** created from the latest changes in the dev branch.
 
