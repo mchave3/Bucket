@@ -72,19 +72,19 @@ jobs:
       shell: pwsh
       run: |
         Write-Host "=== Generating Custom Release Notes ==="-ForegroundColor Cyan
-        
+
         $targetBranch = "${{ inputs.target-branch }}"
         $version = "${{ inputs.version }}"
         $isPrerelease = "${{ inputs.is-prerelease }}" -eq "true"
-        
+
         Write-Host "Target branch: $targetBranch" -ForegroundColor Yellow
         Write-Host "Version: $version" -ForegroundColor Yellow
         Write-Host "Is prerelease: $isPrerelease" -ForegroundColor Yellow
-        
+
         # Get the latest release tag - fetch tags first
         Write-Host "Fetching tags..." -ForegroundColor Gray
         git fetch --tags --quiet 2>$null
-        
+
         # Try multiple methods to get the latest tag
         $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
         if ([string]::IsNullOrEmpty($latestTag)) {
@@ -95,25 +95,25 @@ jobs:
           # Fallback: get latest tag by commit date
           $latestTag = git describe --tags --abbrev=0 2>$null
         }
-        
+
         Write-Host "Latest tag: '$latestTag'" -ForegroundColor Yellow
-        
+
         $releaseNotes = ""
-        
+
         if ($isPrerelease -and $targetBranch -eq "dev") {
           Write-Host "Generating nightly release notes from dev branch" -ForegroundColor Green
-          
+
           # Get merged PRs since last tag on dev branch
           if ([string]::IsNullOrEmpty($latestTag)) {
             $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" $targetBranch 2>$null
           } else {
             $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..$targetBranch" 2>$null
           }
-          
+
           if (![string]::IsNullOrEmpty($mergedPRs)) {
             $releaseNotes += "## 🚀 Changes in this nightly build`n`n"
             $releaseNotes += "This nightly build includes the following merged pull requests since the last release:`n`n"
-            
+
             # Collect unique PR numbers
             $prNumbers = @()
             $mergedPRs -split "`n" | ForEach-Object {
@@ -121,10 +121,10 @@ jobs:
                 $prNumbers += $matches[1]
               }
             }
-            
+
             # Remove duplicates and sort
             $prNumbers = $prNumbers | Sort-Object -Unique -Descending
-            
+
             # Get PR details for each PR number
             $prNumbers | ForEach-Object {
               $prNumber = $_
@@ -143,7 +143,7 @@ jobs:
                 $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
               }
             }
-            
+
             $releaseNotes += "`n⚠️ **Warning**: This is an automated nightly build and may contain unstable features.`n`n"
           } else {
             $releaseNotes += "## 🚀 Nightly Build`n`n"
@@ -154,16 +154,17 @@ jobs:
           Write-Host "Using default GitHub release notes generation" -ForegroundColor Green
           $releaseNotes = "<!-- GitHub will generate release notes automatically -->"
         }
-        
+
         # Output the generated notes
         $releaseNotes | Out-File -FilePath "custom-release-notes.md" -Encoding UTF8
-        
+
         # Use proper multiline output format for GitHub Actions
         Add-Content -Path $env:GITHUB_OUTPUT -Value "custom_notes<<EOF"
         Add-Content -Path $env:GITHUB_OUTPUT -Value $releaseNotes
         Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
-        
+
         Write-Host "Custom release notes generated" -ForegroundColor Green
+        exit 0
 
     - name: Calculate file hashes and generate body
       id: calculate-hashes
@@ -203,7 +204,7 @@ jobs:
 
         # Save the table to output
         $filesTable | Out-File -FilePath "files-table.md" -Encoding UTF8
-        
+
         # Use proper multiline output format for GitHub Actions
         Add-Content -Path $env:GITHUB_OUTPUT -Value "files_table<<EOF"
         Add-Content -Path $env:GITHUB_OUTPUT -Value $filesTable
