@@ -61,6 +61,11 @@ jobs:
         ref: ${{ inputs.checkout-ref || github.ref }}
         fetch-depth: 0  # Fetch full history including tags
 
+    - name: Setup GitHub CLI
+      run: |
+        echo "${{ secrets.github-token }}" | gh auth login --with-token
+      shell: bash
+
     - name: Download build artifacts (includes installers)
       uses: actions/download-artifact@v5
       with:
@@ -130,17 +135,34 @@ jobs:
               $prNumber = $_
               try {
                 Write-Host "Fetching details for PR #$prNumber..." -ForegroundColor Gray
+
+                # First try with gh CLI
                 $prInfo = gh pr view $prNumber --json title,author --repo "${{ github.repository }}" 2>$null | ConvertFrom-Json
-                if ($prInfo) {
+                if ($prInfo -and $prInfo.title) {
                   $title = $prInfo.title
                   $author = $prInfo.author.login
                   $releaseNotes += "- **#$prNumber**: $title by @$author`n"
                 } else {
-                  $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                  # Fallback: try to get basic info from git log
+                  Write-Host "Fallback: Using git log for PR #$prNumber..." -ForegroundColor Gray
+                  $commitInfo = git log --grep="Merge pull request #$prNumber" --pretty=format:"%s" -1 2>$null
+                  if ($commitInfo -and $commitInfo -match "Merge pull request #$prNumber from .*/(.+)") {
+                    $branchName = $matches[1]
+                    $releaseNotes += "- **#$prNumber**: $branchName`n"
+                  } else {
+                    $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                  }
                 }
               } catch {
-                Write-Host "Warning: Could not fetch details for PR #$prNumber" -ForegroundColor Yellow
-                $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                Write-Host "Warning: Could not fetch details for PR #$prNumber - Error: $($_.Exception.Message)" -ForegroundColor Yellow
+                # Try git log fallback
+                $commitInfo = git log --grep="Merge pull request #$prNumber" --pretty=format:"%s" -1 2>$null
+                if ($commitInfo -and $commitInfo -match "Merge pull request #$prNumber from .*/(.+)") {
+                  $branchName = $matches[1]
+                  $releaseNotes += "- **#$prNumber**: $branchName`n"
+                } else {
+                  $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                }
               }
             }
 
