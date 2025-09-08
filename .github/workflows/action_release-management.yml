@@ -114,15 +114,33 @@ jobs:
             $releaseNotes += "## 🚀 Changes in this nightly build`n`n"
             $releaseNotes += "This nightly build includes the following merged pull requests since the last release:`n`n"
             
+            # Collect unique PR numbers
+            $prNumbers = @()
             $mergedPRs -split "`n" | ForEach-Object {
-              if ($_ -match "Merge pull request #(\d+) from (.+?)/(.+)") {
-                $prNumber = $matches[1]
-                $branch = $matches[3]
-                $releaseNotes += "- PR #$prNumber`: $branch`n"
-              } elseif ($_ -match "^([a-f0-9]{7,}) (.+)") {
-                $commit = $matches[1]
-                $message = $matches[2]
-                $releaseNotes += "- $message ($commit)`n"
+              if ($_ -match "Merge pull request #(\d+)") {
+                $prNumbers += $matches[1]
+              }
+            }
+            
+            # Remove duplicates and sort
+            $prNumbers = $prNumbers | Sort-Object -Unique -Descending
+            
+            # Get PR details for each PR number
+            $prNumbers | ForEach-Object {
+              $prNumber = $_
+              try {
+                Write-Host "Fetching details for PR #$prNumber..." -ForegroundColor Gray
+                $prInfo = gh pr view $prNumber --json title,author --repo "${{ github.repository }}" 2>$null | ConvertFrom-Json
+                if ($prInfo) {
+                  $title = $prInfo.title
+                  $author = $prInfo.author.login
+                  $releaseNotes += "- **#$prNumber**: $title by @$author`n"
+                } else {
+                  $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                }
+              } catch {
+                Write-Host "Warning: Could not fetch details for PR #$prNumber" -ForegroundColor Yellow
+                $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
               }
             }
             
