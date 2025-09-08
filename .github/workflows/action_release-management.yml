@@ -125,10 +125,11 @@ jobs:
         
         # Output the generated notes
         $releaseNotes | Out-File -FilePath "custom-release-notes.md" -Encoding UTF8
-        $releaseNotes >> $env:GITHUB_OUTPUT
-        echo "custom_notes<<EOF" >> $env:GITHUB_OUTPUT
-        echo $releaseNotes >> $env:GITHUB_OUTPUT
-        echo "EOF" >> $env:GITHUB_OUTPUT
+        
+        # Use proper multiline output format for GitHub Actions
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "custom_notes<<EOF"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value $releaseNotes
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
         
         Write-Host "Custom release notes generated" -ForegroundColor Green
 
@@ -170,9 +171,11 @@ jobs:
 
         # Save the table to output
         $filesTable | Out-File -FilePath "files-table.md" -Encoding UTF8
-        echo "files_table<<EOF" >> $env:GITHUB_OUTPUT
-        echo $filesTable >> $env:GITHUB_OUTPUT
-        echo "EOF" >> $env:GITHUB_OUTPUT
+        
+        # Use proper multiline output format for GitHub Actions
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "files_table<<EOF"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value $filesTable
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
 
         Write-Host "File hashes calculated and table generated" -ForegroundColor Green
 
