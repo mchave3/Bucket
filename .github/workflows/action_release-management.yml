@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: ''
+      target-branch:
+        description: 'Target branch for generating release notes (main, dev, etc.)'
+        required: false
+        type: string
+        default: 'main'
     secrets:
       github-token:
         description: 'GitHub token for creating release'
@@ -54,12 +59,112 @@ jobs:
       uses: actions/checkout@v5
       with:
         ref: ${{ inputs.checkout-ref || github.ref }}
+        fetch-depth: 0  # Fetch full history including tags
 
     - name: Download build artifacts (includes installers)
       uses: actions/download-artifact@v5
       with:
         name: build-artifacts
         path: ${{ inputs.artifacts-path }}/
+
+    - name: Generate custom release notes
+      id: generate-notes
+      shell: pwsh
+      run: |
+        Write-Host "=== Generating Custom Release Notes ==="-ForegroundColor Cyan
+
+        $targetBranch = "${{ inputs.target-branch }}"
+        $version = "${{ inputs.version }}"
+        $isPrerelease = "${{ inputs.is-prerelease }}" -eq "true"
+
+        Write-Host "Target branch: $targetBranch" -ForegroundColor Yellow
+        Write-Host "Version: $version" -ForegroundColor Yellow
+        Write-Host "Is prerelease: $isPrerelease" -ForegroundColor Yellow
+
+        # Get the latest release tag - fetch tags first
+        Write-Host "Fetching tags..." -ForegroundColor Gray
+        git fetch --tags --quiet 2>$null
+
+        # Try multiple methods to get the latest tag
+        $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
+        if ([string]::IsNullOrEmpty($latestTag)) {
+          # Fallback: try without version sort
+          $latestTag = git tag --sort=-creatordate | Select-Object -First 1
+        }
+        if ([string]::IsNullOrEmpty($latestTag)) {
+          # Fallback: get latest tag by commit date
+          $latestTag = git describe --tags --abbrev=0 2>$null
+        }
+
+        Write-Host "Latest tag: '$latestTag'" -ForegroundColor Yellow
+
+        $releaseNotes = ""
+
+        if ($isPrerelease -and $targetBranch -eq "dev") {
+          Write-Host "Generating nightly release notes from dev branch" -ForegroundColor Green
+
+          # Get merged PRs since last tag on dev branch
+          if ([string]::IsNullOrEmpty($latestTag)) {
+            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" $targetBranch 2>$null
+          } else {
+            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..$targetBranch" 2>$null
+          }
+
+          if (![string]::IsNullOrEmpty($mergedPRs)) {
+            $releaseNotes += "## 🚀 Changes in this nightly build`n`n"
+            $releaseNotes += "This nightly build includes the following merged pull requests since the last release:`n`n"
+
+            # Collect unique PR numbers
+            $prNumbers = @()
+            $mergedPRs -split "`n" | ForEach-Object {
+              if ($_ -match "Merge pull request #(\d+)") {
+                $prNumbers += $matches[1]
+              }
+            }
+
+            # Remove duplicates and sort
+            $prNumbers = $prNumbers | Sort-Object -Unique -Descending
+
+            # Get PR details for each PR number
+            $prNumbers | ForEach-Object {
+              $prNumber = $_
+              try {
+                Write-Host "Fetching details for PR #$prNumber..." -ForegroundColor Gray
+                $prInfo = gh pr view $prNumber --json title,author --repo "${{ github.repository }}" 2>$null | ConvertFrom-Json
+                if ($prInfo) {
+                  $title = $prInfo.title
+                  $author = $prInfo.author.login
+                  $releaseNotes += "- **#$prNumber**: $title by @$author`n"
+                } else {
+                  $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+                }
+              } catch {
+                Write-Host "Warning: Could not fetch details for PR #$prNumber" -ForegroundColor Yellow
+                $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
+              }
+            }
+
+            $releaseNotes += "`n⚠️ **Warning**: This is an automated nightly build and may contain unstable features.`n`n"
+          } else {
+            $releaseNotes += "## 🚀 Nightly Build`n`n"
+            $releaseNotes += "This nightly build was generated automatically.`n`n"
+            $releaseNotes += "⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.`n`n"
+          }
+        } else {
+          Write-Host "Using default GitHub release notes generation" -ForegroundColor Green
+          $releaseNotes = "<!-- GitHub will generate release notes automatically -->"
+        }
+
+        # Output the generated notes
+        $releaseNotes | Out-File -FilePath "custom-release-notes.md" -Encoding UTF8
+
+        # Use proper multiline output format for GitHub Actions
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "custom_notes<<EOF"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value $releaseNotes
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+
+        Write-Host "Custom release notes generated" -ForegroundColor Green
+        exit 0
 
     - name: Calculate file hashes and generate body
       id: calculate-hashes
@@ -99,9 +204,11 @@ jobs:
 
         # Save the table to output
         $filesTable | Out-File -FilePath "files-table.md" -Encoding UTF8
-        echo "files_table<<EOF" >> $env:GITHUB_OUTPUT
-        echo $filesTable >> $env:GITHUB_OUTPUT
-        echo "EOF" >> $env:GITHUB_OUTPUT
+
+        # Use proper multiline output format for GitHub Actions
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "files_table<<EOF"
+        Add-Content -Path $env:GITHUB_OUTPUT -Value $filesTable
+        Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
 
         Write-Host "File hashes calculated and table generated" -ForegroundColor Green
 
@@ -134,11 +241,11 @@ jobs:
         tag: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
         prerelease: ${{ inputs.is-prerelease }}
-        generateReleaseNotes: true
+        generateReleaseNotes: ${{ inputs.target-branch == 'main' }}
         artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
         token: ${{ secrets.github-token }}
         body: |
-          ${{ inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
+          ${{ inputs.target-branch == 'dev' && inputs.is-prerelease == 'true' && steps.generate-notes.outputs.custom_notes || inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
 
 
     - name: Generate job summary
