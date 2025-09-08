@@ -1,6 +1,7 @@
 ﻿using Nucs.JsonSettings.Examples;
 using Nucs.JsonSettings.Modulation;
 using System.Runtime.InteropServices;
+using Bucket.Core.Helpers;
 
 namespace Bucket.App.Common
 {
@@ -35,7 +36,7 @@ namespace Bucket.App.Common
         public void InitializeRuntimeProperties()
         {
             // Automatically detect the update channel based on version
-            updateChannel = ProcessInfoHelper.Version.Contains("-Nightly") ? "Nightly" : "Release";
+            updateChannel = VersionHelper.GetAppVersion().Contains("-Nightly") ? "Nightly" : "Release";
             
             // Automatically detect the system architecture
             architecture = RuntimeInformation.ProcessArchitecture switch

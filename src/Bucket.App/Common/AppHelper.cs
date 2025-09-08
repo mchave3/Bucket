@@ -17,8 +17,11 @@ namespace Bucket.App.Common
                                     .WithVersioning(VersioningResultAction.RenameAndLoadDefault)
                                     .LoadNow();
             
-            // Initialize runtime properties
+            // Initialize runtime properties (always update on each startup)
             config.InitializeRuntimeProperties();
+            
+            // Force save to ensure runtime properties are persisted
+            config.Save();
             
             return config;
         }
