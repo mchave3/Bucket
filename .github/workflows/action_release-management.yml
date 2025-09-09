@@ -111,9 +111,9 @@ jobs:
             $latestTag = git tag --sort=-creatordate | Where-Object { $_ -notmatch '\-Nightly$' } | Select-Object -First 1
           }
         }
+        # If no tag found with filtering, that's OK - means it's the first nightly/release
         if ([string]::IsNullOrEmpty($latestTag)) {
-          # Fallback: get latest tag by commit date
-          $latestTag = git describe --tags --abbrev=0 2>$null
+          Write-Host "No previous tags found with the current filter (nightly/stable)" -ForegroundColor Gray
         }
 
         Write-Host "Latest tag: '$latestTag'" -ForegroundColor Yellow
