@@ -90,11 +90,21 @@ jobs:
         Write-Host "Fetching tags..." -ForegroundColor Gray
         git fetch --tags --quiet 2>$null
 
-        # Try multiple methods to get the latest tag
-        $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
+        # Get reference tag based on release type
+        if ($isPrerelease -and $targetBranch -eq "dev") {
+          # For nightly builds, compare with previous nightly tags
+          $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
+        } else {
+          # For stable releases, compare with previous stable releases
+          $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -notmatch '\-Nightly$' } | Select-Object -First 1
+        }
         if ([string]::IsNullOrEmpty($latestTag)) {
-          # Fallback: try without version sort
-          $latestTag = git tag --sort=-creatordate | Select-Object -First 1
+          # Fallback: try without version sort with appropriate filtering
+          if ($isPrerelease -and $targetBranch -eq "dev") {
+            $latestTag = git tag --sort=-creatordate | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
+          } else {
+            $latestTag = git tag --sort=-creatordate | Where-Object { $_ -notmatch '\-Nightly$' } | Select-Object -First 1
+          }
         }
         if ([string]::IsNullOrEmpty($latestTag)) {
           # Fallback: get latest tag by commit date
