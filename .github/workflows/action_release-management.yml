@@ -161,6 +161,45 @@ jobs:
         echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
         echo "Tagging commit: $COMMIT_SHA"
 
+    - name: Generate release body
+      id: generate-body
+      shell: pwsh
+      run: |
+        Write-Host "=== Generating Release Body ===" -ForegroundColor Cyan
+
+        # Choose the appropriate template
+        if ("${{ inputs.is-prerelease }}" -eq "true") {
+          $templatePath = ".github/workflows/nightly-body-template.md"
+          Write-Host "Using nightly template: $templatePath" -ForegroundColor Yellow
+        } else {
+          $templatePath = ".github/workflows/release-body-template.md"
+          Write-Host "Using release template: $templatePath" -ForegroundColor Yellow
+        }
+
+        # Read the template
+        $template = Get-Content -Path $templatePath -Raw
+        Write-Host "Template loaded successfully" -ForegroundColor Green
+
+        # Replace placeholders
+        $releaseNotes = "${{ inputs.release-notes }}"
+        $filesTable = "${{ steps.calculate-hashes.outputs.files_table }}"
+
+        # Handle release notes substitution
+        if ([string]::IsNullOrEmpty($releaseNotes)) {
+          # Remove the {RELEASE_NOTES} placeholder and extra newlines
+          $body = $template -replace '\{RELEASE_NOTES\}\r?\n\r?\n', ''
+          $body = $body -replace '\{RELEASE_NOTES\}', ''
+        } else {
+          $body = $template -replace '\{RELEASE_NOTES\}', $releaseNotes
+        }
+
+        # Replace files table placeholder
+        $body = $body -replace '\{FILES_TABLE\}', $filesTable
+
+        # Write the generated body to file
+        $body | Out-File -FilePath "generated-release-body.md" -Encoding UTF8 -NoNewline
+        Write-Host "Release body generated successfully" -ForegroundColor Green
+
     - name: Create GitHub Release
       id: create-release
       uses: softprops/action-gh-release@v2
@@ -172,8 +211,7 @@ jobs:
         generate_release_notes: true
         files: ${{ steps.collect-artifacts.outputs.artifacts_list }}
         token: ${{ secrets.github-token }}
-        body: |
-          ${{ inputs.is-prerelease == 'true' && '⚠️ **Warning**: This is an automated nightly build and may contain unstable features.\n\n' || '' }}${{ inputs.release-notes && inputs.release-notes != '' && format('{0}\n\n', inputs.release-notes) || '' }}${{ steps.calculate-hashes.outputs.files_table }}
+        body_path: generated-release-body.md
 
 
     - name: Generate job summary
