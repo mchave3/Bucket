@@ -158,7 +158,7 @@ jobs:
     permissions:
       contents: write
       actions: read
-      pull-requests: read
+      pull-requests: write
     uses: ./.github/workflows/action_release-management.yml
     with:
       version: ${{ needs.check-changes.outputs.version }}

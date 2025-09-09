@@ -130,6 +130,7 @@ jobs:
     permissions:
       contents: write
       actions: read
+      pull-requests: write
     uses: ./.github/workflows/action_release-management.yml
     with:
       version: ${{ needs.validate-version.outputs.version }}
