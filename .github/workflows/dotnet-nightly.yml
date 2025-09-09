@@ -63,12 +63,7 @@ jobs:
           } else {
             # Get all merged PRs since last tag (only merge commits from PRs)
             $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..dev" 2>$null
-
-            if ([string]::IsNullOrEmpty($mergedPRs)) {
-              $mergeCount = 0
-            } else {
-              $mergeCount = ($mergedPRs | Select-String "Merge pull request").Count
-            }
+            $mergeCount = ($mergedPRs | Measure-Object).Count
 
             if ($mergeCount -eq 0) {
               if ("${{ github.event.inputs.force-build }}" -eq "true") {
@@ -79,11 +74,11 @@ jobs:
                 echo "should-build=false" >> $env:GITHUB_OUTPUT
               }
             } else {
-              Write-Host "Merged PRs since last tag (dev):" -ForegroundColor Green
+              Write-Host "Merged PRs since last tag (dev): $mergeCount" -ForegroundColor Green
               Write-Host $mergedPRs
 
               # Check if only change is a release PR merge (skip in that case)
-              if ($mergeCount -eq 1 -and $mergedPRs -like "*release/*") {
+              if ($mergeCount -eq 1 -and $mergedPRs -match "Merge pull request #\d+ from .*/release/") {
                 Write-Host "Only change since last tag is a release PR merge. Skipping build." -ForegroundColor Yellow
                 echo "should-build=false" >> $env:GITHUB_OUTPUT
               } else {
@@ -167,10 +162,7 @@ jobs:
       checkout-ref: 'dev'
       target-branch: 'dev'
       commit-sha: ${{ needs.check-changes.outputs.commit-sha }}
-      release-notes: |
-        This is an **automated nightly build** created from the latest changes in the dev branch.
-
-        ⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.
+      release-notes: ''
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
