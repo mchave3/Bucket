@@ -38,6 +38,7 @@ jobs:
     outputs:
       version: ${{ steps.validate-version.outputs.version }}
       msi_version: ${{ steps.validate-version.outputs.msi_version }}
+      commit-sha: ${{ steps.get-commit.outputs.commit-sha }}
 
     steps:
       - name: Validate branch
@@ -98,6 +99,14 @@ jobs:
             exit 1
           }
 
+      - name: Get current commit SHA
+        id: get-commit
+        shell: bash
+        run: |
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "Release will use commit: $COMMIT_SHA"
+
   # run-tests:
   #   name: Run Tests
   #   needs: [validate-version]
@@ -138,6 +147,7 @@ jobs:
       artifacts-path: 'artifacts'
       checkout-ref: 'main'
       target-branch: 'main'
+      commit-sha: ${{ needs.validate-version.outputs.commit-sha }}
       release-notes: |
         ${{ github.event.inputs.release-notes }}
     secrets:
