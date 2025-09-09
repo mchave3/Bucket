@@ -32,6 +32,11 @@ on:
         required: false
         type: string
         default: 'main'
+      commit-sha:
+        description: 'Specific commit SHA to tag (optional, uses HEAD if not provided)'
+        required: false
+        type: string
+        default: ''
     secrets:
       github-token:
         description: 'GitHub token for creating release'
@@ -266,12 +271,27 @@ jobs:
         echo "artifacts_list=$artifactsList" >> $env:GITHUB_OUTPUT
         Write-Host "Artifacts collected: $($artifacts.Count)" -ForegroundColor Green
 
+    - name: Determine commit SHA
+      id: get-commit
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.commit-sha }}" ]; then
+          COMMIT_SHA="${{ inputs.commit-sha }}"
+          echo "Using provided commit SHA: $COMMIT_SHA"
+        else
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "Using current HEAD commit: $COMMIT_SHA"
+        fi
+        echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+        echo "Tagging commit: $COMMIT_SHA"
+
     - name: Create GitHub Release
       id: create-release
       uses: ncipollo/release-action@v1.20.0
       with:
         tag: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
+        commit: ${{ steps.get-commit.outputs.commit-sha }}
         prerelease: ${{ inputs.is-prerelease }}
         generateReleaseNotes: ${{ inputs.target-branch == 'main' }}
         artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
