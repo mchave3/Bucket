@@ -58,7 +58,7 @@ jobs:
       actions: read
       pull-requests: write
     outputs:
-      release-url: ${{ steps.create-release.outputs.html_url }}
+      release-url: ${{ steps.create-release.outputs.url }}
       release-id: ${{ steps.create-release.outputs.id }}
     steps:
     - name: Checkout code
@@ -78,131 +78,6 @@ jobs:
         name: build-artifacts
         path: ${{ inputs.artifacts-path }}/
 
-    - name: Generate custom release notes
-      id: generate-notes
-      shell: pwsh
-      run: |
-        Write-Host "=== Generating Custom Release Notes ==="-ForegroundColor Cyan
-
-        $targetBranch = "${{ inputs.target-branch }}"
-        $version = "${{ inputs.version }}"
-        $isPrerelease = "${{ inputs.is-prerelease }}" -eq "true"
-
-        Write-Host "Target branch: $targetBranch" -ForegroundColor Yellow
-        Write-Host "Version: $version" -ForegroundColor Yellow
-        Write-Host "Is prerelease: $isPrerelease" -ForegroundColor Yellow
-
-        # Get the latest release tag - fetch tags first
-        Write-Host "Fetching tags..." -ForegroundColor Gray
-        git fetch --tags --quiet 2>$null
-
-        # Get reference tag based on release type
-        if ($isPrerelease -and $targetBranch -eq "dev") {
-          # For nightly builds, compare with previous nightly tags
-          $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
-        } else {
-          # For stable releases, compare with previous stable releases
-          $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -notmatch '\-Nightly$' } | Select-Object -First 1
-        }
-        if ([string]::IsNullOrEmpty($latestTag)) {
-          # Fallback: try without version sort with appropriate filtering
-          if ($isPrerelease -and $targetBranch -eq "dev") {
-            $latestTag = git tag --sort=-creatordate | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
-          } else {
-            $latestTag = git tag --sort=-creatordate | Where-Object { $_ -notmatch '\-Nightly$' } | Select-Object -First 1
-          }
-        }
-        # If no tag found with filtering, that's OK - means it's the first nightly/release
-        if ([string]::IsNullOrEmpty($latestTag)) {
-          Write-Host "No previous tags found with the current filter (nightly/stable)" -ForegroundColor Gray
-        }
-
-        Write-Host "Latest tag: '$latestTag'" -ForegroundColor Yellow
-
-        $releaseNotes = ""
-
-        if ($isPrerelease -and $targetBranch -eq "dev") {
-          Write-Host "Generating nightly release notes from dev branch" -ForegroundColor Green
-
-          # Get merged PRs since last tag on dev branch
-          if ([string]::IsNullOrEmpty($latestTag)) {
-            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" $targetBranch 2>$null
-          } else {
-            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..$targetBranch" 2>$null
-          }
-
-          if (![string]::IsNullOrEmpty($mergedPRs)) {
-            $releaseNotes += "## 🚀 Changes in this nightly build`n`n"
-            $releaseNotes += "This nightly build includes the following merged pull requests since the last release:`n`n"
-
-            # Collect unique PR numbers
-            $prNumbers = @()
-            $mergedPRs -split "`n" | ForEach-Object {
-              if ($_ -match "Merge pull request #(\d+)") {
-                $prNumbers += $matches[1]
-              }
-            }
-
-            # Remove duplicates and sort in ascending numeric order
-            $prNumbers = $prNumbers | Sort-Object { [int]$_ } -Unique
-
-            # Get PR details for each PR number
-            $prNumbers | ForEach-Object {
-              $prNumber = $_
-              try {
-                Write-Host "Fetching details for PR #$prNumber..." -ForegroundColor Gray
-
-                # First try with gh CLI
-                $prInfo = gh pr view $prNumber --json title,author --repo "${{ github.repository }}" 2>$null | ConvertFrom-Json
-                if ($prInfo -and $prInfo.title) {
-                  $title = $prInfo.title
-                  $author = $prInfo.author.login
-                  $releaseNotes += "- **#$prNumber**: $title by @$author`n"
-                } else {
-                  # Fallback: try to get basic info from git log
-                  Write-Host "Fallback: Using git log for PR #$prNumber..." -ForegroundColor Gray
-                  $commitInfo = git log --grep="Merge pull request #$prNumber" --pretty=format:"%s" -1 2>$null
-                  if ($commitInfo -and $commitInfo -match "Merge pull request #$prNumber from .*/(.+)") {
-                    $branchName = $matches[1]
-                    $releaseNotes += "- **#$prNumber**: $branchName`n"
-                  } else {
-                    $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
-                  }
-                }
-              } catch {
-                Write-Host "Warning: Could not fetch details for PR #$prNumber - Error: $($_.Exception.Message)" -ForegroundColor Yellow
-                # Try git log fallback
-                $commitInfo = git log --grep="Merge pull request #$prNumber" --pretty=format:"%s" -1 2>$null
-                if ($commitInfo -and $commitInfo -match "Merge pull request #$prNumber from .*/(.+)") {
-                  $branchName = $matches[1]
-                  $releaseNotes += "- **#$prNumber**: $branchName`n"
-                } else {
-                  $releaseNotes += "- **#$prNumber**: _PR details not available_`n"
-                }
-              }
-            }
-
-            $releaseNotes += "`n⚠️ **Warning**: This is an automated nightly build and may contain unstable features.`n`n"
-          } else {
-            $releaseNotes += "## 🚀 Nightly Build`n`n"
-            $releaseNotes += "This nightly build was generated automatically.`n`n"
-            $releaseNotes += "⚠️ **Warning**: This build may contain unstable features and is intended for testing purposes only.`n`n"
-          }
-        } else {
-          Write-Host "Using default GitHub release notes generation" -ForegroundColor Green
-          $releaseNotes = "<!-- GitHub will generate release notes automatically -->"
-        }
-
-        # Output the generated notes
-        $releaseNotes | Out-File -FilePath "custom-release-notes.md" -Encoding UTF8
-
-        # Use proper multiline output format for GitHub Actions
-        Add-Content -Path $env:GITHUB_OUTPUT -Value "custom_notes<<EOF"
-        Add-Content -Path $env:GITHUB_OUTPUT -Value $releaseNotes
-        Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
-
-        Write-Host "Custom release notes generated" -ForegroundColor Green
-        exit 0
 
     - name: Calculate file hashes and generate body
       id: calculate-hashes
@@ -268,7 +143,7 @@ jobs:
           }
         }
 
-        $artifactsList = $artifacts -join ","
+        $artifactsList = $artifacts -join "`n"
         echo "artifacts_list=$artifactsList" >> $env:GITHUB_OUTPUT
         Write-Host "Artifacts collected: $($artifacts.Count)" -ForegroundColor Green
 
@@ -288,17 +163,17 @@ jobs:
 
     - name: Create GitHub Release
       id: create-release
-      uses: ncipollo/release-action@v1.20.0
+      uses: softprops/action-gh-release@v2
       with:
-        tag: v${{ inputs.version }}
+        tag_name: v${{ inputs.version }}
         name: Bucket ${{ inputs.version }}
-        commit: ${{ steps.get-commit.outputs.commit-sha }}
+        target_commitish: ${{ steps.get-commit.outputs.commit-sha }}
         prerelease: ${{ inputs.is-prerelease }}
-        generateReleaseNotes: ${{ inputs.target-branch == 'main' }}
-        artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
+        generate_release_notes: true
+        files: ${{ steps.collect-artifacts.outputs.artifacts_list }}
         token: ${{ secrets.github-token }}
         body: |
-          ${{ inputs.target-branch == 'dev' && inputs.is-prerelease == 'true' && steps.generate-notes.outputs.custom_notes || inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
+          ${{ inputs.is-prerelease == 'true' && '⚠️ **Warning**: This is an automated nightly build and may contain unstable features.\n\n' || '' }}${{ inputs.release-notes && inputs.release-notes != '' && format('{0}\n\n', inputs.release-notes) || '' }}${{ steps.calculate-hashes.outputs.files_table }}
 
 
     - name: Generate job summary
