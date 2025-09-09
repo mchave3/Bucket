@@ -44,8 +44,8 @@ jobs:
         run: |
           Write-Host "Checking for merged PRs since last tag..." -ForegroundColor Cyan
 
-          # Get the latest release tag (any type)
-          $latestTag = git tag -l --sort=-version:refname | Select-Object -First 1
+          # Get the latest nightly tag (only compare with previous nightly builds)
+          $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
           Write-Host "Latest release: $latestTag" -ForegroundColor Yellow
 
           if ([string]::IsNullOrEmpty($latestTag)) {
