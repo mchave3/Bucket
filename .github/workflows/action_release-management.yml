@@ -296,8 +296,6 @@ jobs:
         prerelease: ${{ inputs.is-prerelease }}
         generateReleaseNotes: ${{ inputs.target-branch == 'main' }}
         artifacts: ${{ steps.collect-artifacts.outputs.artifacts_list }}
-        allowUpdates: true
-        replacesArtifacts: true
         token: ${{ secrets.github-token }}
         body: |
           ${{ inputs.target-branch == 'dev' && inputs.is-prerelease == 'true' && steps.generate-notes.outputs.custom_notes || inputs.release-notes }}${{ steps.calculate-hashes.outputs.files_table }}
