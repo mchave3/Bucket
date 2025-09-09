@@ -53,10 +53,7 @@ jobs:
   release-management:
     name: Release Management
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-      pull-requests: read
+    permissions: write-all
     outputs:
       release-url: ${{ steps.create-release.outputs.html_url }}
       release-id: ${{ steps.create-release.outputs.id }}
