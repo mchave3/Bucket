@@ -210,8 +210,9 @@ jobs:
         prerelease: ${{ inputs.is-prerelease }}
         generate_release_notes: true
         files: ${{ steps.collect-artifacts.outputs.artifacts_list }}
-        token: ${{ secrets.github-token }}
         body_path: generated-release-body.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.github-token }}
 
 
     - name: Generate job summary
