@@ -30,6 +30,7 @@ jobs:
       should-build: ${{ steps.check.outputs.should-build }}
       version: ${{ steps.version.outputs.version }}
       msi_version: ${{ steps.version.outputs.msi_version }}
+      commit-sha: ${{ steps.get-commit.outputs.commit-sha }}
 
     steps:
       - name: Checkout code
@@ -37,6 +38,14 @@ jobs:
         with:
           fetch-depth: 0
           ref: dev
+
+      - name: Get current commit SHA
+        id: get-commit
+        shell: bash
+        run: |
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "Build will use commit: $COMMIT_SHA"
 
       - name: Check for merged PRs since last tag
         id: check
@@ -157,6 +166,7 @@ jobs:
       artifacts-path: 'artifacts'
       checkout-ref: 'dev'
       target-branch: 'dev'
+      commit-sha: ${{ needs.check-changes.outputs.commit-sha }}
       release-notes: |
         This is an **automated nightly build** created from the latest changes in the dev branch.
 
