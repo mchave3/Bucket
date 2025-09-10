@@ -65,8 +65,8 @@ namespace Bucket.Updater.Services
                 Logger?.Error(ex, "Error reading configuration file");
             }
 
-            // Create default configuration
-            var defaultConfig = new UpdaterConfiguration();
+            // Try to read from Bucket.App AppConfig if available
+            var defaultConfig = LoadFromAppConfig() ?? new UpdaterConfiguration();
             defaultConfig.InitializeRuntimeProperties();
             _cachedConfiguration = defaultConfig;
             SaveConfigurationSync(defaultConfig);
@@ -127,8 +127,8 @@ namespace Bucket.Updater.Services
                 Logger?.Warning(ex, "Failed to load configuration file, creating default configuration");
             }
 
-            // Create default configuration
-            var defaultConfig = new UpdaterConfiguration();
+            // Try to read from Bucket.App AppConfig if available
+            var defaultConfig = LoadFromAppConfig() ?? new UpdaterConfiguration();
             defaultConfig.InitializeRuntimeProperties();
             _cachedConfiguration = defaultConfig;
             await SaveConfigurationAsync(defaultConfig);
@@ -164,6 +164,68 @@ namespace Bucket.Updater.Services
                 Directory.CreateDirectory(directory);
                 Logger?.Information("Created configuration directory: {Directory}", directory);
             }
+        }
+
+        private UpdaterConfiguration? LoadFromAppConfig()
+        {
+            try
+            {
+                // Try to find Bucket.App's AppConfig.json in the same directory or parent directory
+                var currentDir = AppContext.BaseDirectory;
+                var parentDir = Directory.GetParent(currentDir)?.FullName;
+                
+                string[] possiblePaths = {
+                    Path.Combine(currentDir, "AppConfig.json"),
+                    Path.Combine(parentDir ?? currentDir, "AppConfig.json"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Bucket", "AppConfig.json")
+                };
+
+                foreach (var configPath in possiblePaths)
+                {
+                    if (File.Exists(configPath))
+                    {
+                        Logger?.Information("Found Bucket.App AppConfig at {Path}", configPath);
+                        var json = File.ReadAllText(configPath);
+                        
+                        // Parse the AppConfig JSON to extract relevant information
+                        using var document = JsonDocument.Parse(json);
+                        if (document.RootElement.TryGetProperty("Version", out var versionElement) &&
+                            document.RootElement.TryGetProperty("updateChannel", out var channelElement) &&
+                            document.RootElement.TryGetProperty("architecture", out var archElement))
+                        {
+                            var config = new UpdaterConfiguration();
+                            
+                            // Set version
+                            if (versionElement.GetString() is string version)
+                            {
+                                config.CurrentVersion = version;
+                            }
+                            
+                            // Set update channel
+                            if (channelElement.GetString() is string channel)
+                            {
+                                config.UpdateChannel = channel.Equals("Nightly", StringComparison.OrdinalIgnoreCase) 
+                                    ? UpdateChannel.Nightly 
+                                    : UpdateChannel.Release;
+                            }
+                            
+                            // Architecture will be set by InitializeRuntimeProperties()
+                            
+                            Logger?.Information("Loaded configuration from AppConfig: Version={Version}, Channel={Channel}", 
+                                config.CurrentVersion, config.UpdateChannel);
+                            return config;
+                        }
+                    }
+                }
+                
+                Logger?.Information("No Bucket.App AppConfig found, using default configuration");
+            }
+            catch (Exception ex)
+            {
+                Logger?.Warning(ex, "Failed to load from Bucket.App AppConfig, using default configuration");
+            }
+            
+            return null;
         }
     }
 }

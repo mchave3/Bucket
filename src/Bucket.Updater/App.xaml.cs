@@ -45,10 +45,8 @@
 
             // ViewModels
             services.AddTransient<MainViewModel>();
-            services.AddTransient<WelcomePageViewModel>();
-            services.AddTransient<ChangelogPageViewModel>();
-            services.AddTransient<DownloadPageViewModel>();
-            services.AddTransient<InstallPageViewModel>();
+            services.AddTransient<UpdateCheckPageViewModel>();
+            services.AddTransient<DownloadInstallPageViewModel>();
 
             return services.BuildServiceProvider();
         }

@@ -5,7 +5,8 @@
       "Bash(dir:*)",
       "WebSearch",
       "Bash(dotnet clean:*)",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(del \"C:\\DEV\\Github\\Bucket\\src\\Bucket.Updater\\Views\\ChangelogPage.xaml\")"
     ],
     "deny": [],
     "ask": []

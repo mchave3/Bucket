@@ -46,7 +46,7 @@ namespace Bucket.Updater.Views
 
         private void NavigateToWelcomePage()
         {
-            ContentFrame.Navigate(typeof(WelcomePage));
+            ContentFrame.Navigate(typeof(UpdateCheckPage));
         }
 
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
