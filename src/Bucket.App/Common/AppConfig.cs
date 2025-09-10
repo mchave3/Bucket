@@ -8,41 +8,41 @@ namespace Bucket.App.Common
     [GenerateAutoSaveOnChange]
     public partial class AppConfig : NotifiyingJsonSettings, IVersionable
     {
-        // Version of the application
-        [EnforcedVersion("1.0.0.0")]
-        public Version Version { get; set; } = new Version(1, 0, 0, 0);
-
         // File name of the application configuration
         private string fileName { get; set; } = Constants.AppConfigPath;
 
-        // Whether to use developer mode
-        private bool useDeveloperMode { get; set; }
+        // Application metadata
+        [EnforcedVersion("1.0.0.0")]
+        public Version Version { get; set; } = new Version(1, 0, 0, 0);
+        private string updateChannel { get; set; } = "Release";
+        private string architecture { get; set; } = "x64";
 
-        // Last time the application was updated
+        // Update settings
+        public string GitHubOwner { get; set; } = "mchave3";
+        public string GitHubRepository { get; set; } = "Bucket";
+
+        // Application state
+        private bool hasBeenStartedBefore { get; set; } = false;
         private string lastUpdateCheck { get; set; }
 
-        // Selected language for the application
+        // User preferences
         private string selectedLanguage { get; set; } = "en-US";
+        private bool useDeveloperMode { get; set; }
 
-        // Whether this is the first time the application has been started
-        private bool hasBeenStartedBefore { get; set; } = false;
-
-        // Update channel of the application (Release/Nightly)
-        private string updateChannel { get; set; } = "Release";
-
-        // Architecture of the application (x86/x64/arm64)
-        private string architecture { get; set; } = "x64";
 
         public void InitializeRuntimeProperties()
         {
+            // Set the version to the current application version
+            Version = new Version(VersionHelper.GetAppVersion().Split('-')[0]);
+
             // Automatically detect the update channel based on version
             updateChannel = VersionHelper.GetAppVersion().Contains("-Nightly") ? "Nightly" : "Release";
-            
+
             // Automatically detect the system architecture
             architecture = RuntimeInformation.ProcessArchitecture switch
             {
                 System.Runtime.InteropServices.Architecture.X86 => "x86",
-                System.Runtime.InteropServices.Architecture.X64 => "x64", 
+                System.Runtime.InteropServices.Architecture.X64 => "x64",
                 System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
                 _ => "x64" // Default value
             };
