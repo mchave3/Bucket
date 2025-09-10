@@ -6,7 +6,7 @@ namespace Bucket.Updater.ViewModels
         private Bucket.Updater.Models.UpdateInfo? _availableUpdate;
 
         [ObservableProperty]
-        private string headerText = "Checking for Updates...";
+        private string headerText = "🔍 Checking for Updates...";
 
         [ObservableProperty]
         private string subHeaderText = string.Empty;
@@ -53,7 +53,7 @@ namespace Bucket.Updater.ViewModels
             _updateService = updateService;
             LoadSystemInfo();
             Logger?.Information("UpdateCheckPageViewModel initialized");
-            
+
             // Start update check automatically
             _ = Task.Run(CheckForUpdatesAutomaticallyAsync);
         }
@@ -69,11 +69,11 @@ namespace Bucket.Updater.ViewModels
         private async Task CheckForUpdatesAutomaticallyAsync()
         {
             await Task.Delay(500); // Small delay for UI
-            
+
             try
             {
                 Logger?.Information("Starting automatic update check");
-                
+
                 _availableUpdate = await _updateService.CheckForUpdatesAsync();
 
                 App.MainWindow.DispatcherQueue.TryEnqueue(() =>
@@ -81,7 +81,7 @@ namespace Bucket.Updater.ViewModels
                     if (_availableUpdate != null)
                     {
                         // Update available
-                        HeaderText = "Update Available!";
+                        HeaderText = "🎉 Update Available!";
                         SubHeaderText = $"A new version of Bucket is ready to install";
                         SubHeaderVisibility = Visibility.Visible;
                         NewVersion = _availableUpdate.Version;
@@ -93,26 +93,26 @@ namespace Bucket.Updater.ViewModels
                     else
                     {
                         // No update available
-                        HeaderText = "You're up to date!";
+                        HeaderText = "✅ You're up to date!";
                         SubHeaderText = "No updates are currently available";
                         SubHeaderVisibility = Visibility.Visible;
                         StatusMessage = "You have the latest version";
                         CanCheckUpdates = true;
                         CheckButtonVisibility = Visibility.Visible;
                     }
-                    
+
                     IsChecking = false;
                 });
-                
+
                 Logger?.Information("Automatic update check completed. Update available: {HasUpdate}", _availableUpdate != null);
             }
             catch (Exception ex)
             {
                 Logger?.Error(ex, "Error during automatic update check");
-                
+
                 App.MainWindow.DispatcherQueue.TryEnqueue(() =>
                 {
-                    HeaderText = "Error Checking Updates";
+                    HeaderText = "❌ Error Checking Updates";
                     StatusMessage = $"Failed to check for updates: {ex.Message}";
                     IsChecking = false;
                     CanCheckUpdates = true;
@@ -125,21 +125,21 @@ namespace Bucket.Updater.ViewModels
         private async Task CheckUpdatesAsync()
         {
             Logger?.Information("Manual update check requested");
-            
+
             IsChecking = true;
             CanCheckUpdates = false;
             StatusMessage = "Checking for updates...";
             CheckButtonVisibility = Visibility.Collapsed;
             NewVersionVisibility = Visibility.Collapsed;
             DownloadInstallButtonVisibility = Visibility.Collapsed;
-            
+
             try
             {
                 _availableUpdate = await _updateService.CheckForUpdatesAsync();
 
                 if (_availableUpdate != null)
                 {
-                    HeaderText = "Update Available!";
+                    HeaderText = "🎉 Update Available!";
                     SubHeaderText = $"A new version of Bucket is ready to install";
                     SubHeaderVisibility = Visibility.Visible;
                     NewVersion = _availableUpdate.Version;
@@ -150,7 +150,7 @@ namespace Bucket.Updater.ViewModels
                 }
                 else
                 {
-                    HeaderText = "You're up to date!";
+                    HeaderText = "✅ You're up to date!";
                     SubHeaderText = "No updates are currently available";
                     SubHeaderVisibility = Visibility.Visible;
                     StatusMessage = "You have the latest version";
@@ -160,7 +160,7 @@ namespace Bucket.Updater.ViewModels
             }
             catch (Exception ex)
             {
-                HeaderText = "Error Checking Updates";
+                HeaderText = "❌ Error Checking Updates";
                 StatusMessage = $"Failed to check for updates: {ex.Message}";
                 CanCheckUpdates = true;
                 CheckButtonVisibility = Visibility.Visible;
