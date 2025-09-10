@@ -16,7 +16,7 @@ namespace Bucket.Updater.Views
             AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
             
             SetWindowSize();
-            NavigateToWelcomePage();
+            NavigateToUpdateCheckPage();
         }
 
         private void SetWindowSize()
@@ -44,7 +44,7 @@ namespace Bucket.Updater.Views
             }
         }
 
-        private void NavigateToWelcomePage()
+        private void NavigateToUpdateCheckPage()
         {
             ContentFrame.Navigate(typeof(UpdateCheckPage));
         }

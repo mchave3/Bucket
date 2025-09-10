@@ -8,9 +8,6 @@
         private string currentVersion = "1.0.0.0";
 
         [ObservableProperty]
-        private Bucket.Updater.Models.UpdateInfo? availableUpdate;
-
-        [ObservableProperty]
         private UpdaterConfiguration configuration;
 
         public MainViewModel(IUpdateService updateService)
@@ -21,7 +18,5 @@
             
             Logger?.Information("MainViewModel initialized with version {Version}", CurrentVersion);
         }
-
-        public IUpdateService UpdateService => _updateService;
     }
 }

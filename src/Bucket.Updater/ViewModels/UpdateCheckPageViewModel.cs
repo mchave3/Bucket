@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Bucket.Updater.ViewModels
 {
     public partial class UpdateCheckPageViewModel : ObservableObject
@@ -43,8 +41,6 @@ namespace Bucket.Updater.ViewModels
         [ObservableProperty]
         private bool canDownloadInstall = false;
 
-        [ObservableProperty]
-        private Visibility closeButtonVisibility = Visibility.Collapsed;
 
         [ObservableProperty]
         private Visibility checkButtonVisibility = Visibility.Collapsed;
@@ -102,7 +98,6 @@ namespace Bucket.Updater.ViewModels
                         SubHeaderVisibility = Visibility.Visible;
                         StatusMessage = "You have the latest version";
                         CanCheckUpdates = true;
-                        CloseButtonVisibility = Visibility.Visible;
                         CheckButtonVisibility = Visibility.Visible;
                     }
                     
@@ -121,7 +116,6 @@ namespace Bucket.Updater.ViewModels
                     StatusMessage = $"Failed to check for updates: {ex.Message}";
                     IsChecking = false;
                     CanCheckUpdates = true;
-                    CloseButtonVisibility = Visibility.Visible;
                     CheckButtonVisibility = Visibility.Visible;
                 });
             }
@@ -135,7 +129,6 @@ namespace Bucket.Updater.ViewModels
             IsChecking = true;
             CanCheckUpdates = false;
             StatusMessage = "Checking for updates...";
-            CloseButtonVisibility = Visibility.Collapsed;
             CheckButtonVisibility = Visibility.Collapsed;
             NewVersionVisibility = Visibility.Collapsed;
             DownloadInstallButtonVisibility = Visibility.Collapsed;
@@ -162,7 +155,6 @@ namespace Bucket.Updater.ViewModels
                     SubHeaderVisibility = Visibility.Visible;
                     StatusMessage = "You have the latest version";
                     CanCheckUpdates = true;
-                    CloseButtonVisibility = Visibility.Visible;
                     CheckButtonVisibility = Visibility.Visible;
                 }
             }
@@ -171,7 +163,6 @@ namespace Bucket.Updater.ViewModels
                 HeaderText = "Error Checking Updates";
                 StatusMessage = $"Failed to check for updates: {ex.Message}";
                 CanCheckUpdates = true;
-                CloseButtonVisibility = Visibility.Visible;
                 CheckButtonVisibility = Visibility.Visible;
                 Logger?.Error(ex, "Error during manual update check");
             }
