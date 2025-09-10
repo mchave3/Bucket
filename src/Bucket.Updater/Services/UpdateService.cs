@@ -7,7 +7,6 @@ namespace Bucket.Updater.Services
         Task<bool> InstallUpdateAsync(string msiFilePath, IProgress<string>? progress = null, CancellationToken cancellationToken = default);
         void CleanupFiles(string downloadPath);
         UpdaterConfiguration GetConfiguration();
-        Task SaveConfigurationAsync(UpdaterConfiguration configuration);
     }
 
     public class UpdateService : IUpdateService
@@ -24,7 +23,7 @@ namespace Bucket.Updater.Services
             _configurationService = configurationService;
             _gitHubService = gitHubService;
             _installationService = installationService;
-            Logger?.Information("UpdateService initialized");
+            Logger?.Information("UpdateService initialized (read-only configuration)");
         }
 
         public async Task<Bucket.Updater.Models.UpdateInfo?> CheckForUpdatesAsync()
@@ -37,9 +36,10 @@ namespace Bucket.Updater.Services
 
                 if (updateInfo != null)
                 {
-                    configuration.LastUpdateCheck = DateTime.Now;
-                    await _configurationService.SaveConfigurationAsync(configuration);
                     Logger?.Information("Update check completed, update available: {Version}", updateInfo.Version);
+                    
+                    // NOTE: LastUpdateCheck is no longer updated here as Bucket.Updater is read-only
+                    // This responsibility could be delegated to Bucket.App if necessary
                 }
                 else
                 {
@@ -107,9 +107,5 @@ namespace Bucket.Updater.Services
             return _configurationService.GetConfiguration();
         }
 
-        public async Task SaveConfigurationAsync(UpdaterConfiguration configuration)
-        {
-            await _configurationService.SaveConfigurationAsync(configuration);
-        }
     }
 }

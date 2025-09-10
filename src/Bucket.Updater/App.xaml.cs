@@ -37,8 +37,11 @@
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<ContextMenuService>();
 
-            // Application Services
+            // Configuration Services
+            services.AddSingleton<IAppConfigReader, AppConfigReader>();
             services.AddSingleton<IConfigurationService, ConfigurationService>();
+
+            // Application Services
             services.AddSingleton<IGitHubService, GitHubService>();
             services.AddSingleton<IInstallationService, InstallationService>();
             services.AddSingleton<IUpdateService, UpdateService>();

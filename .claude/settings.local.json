@@ -6,7 +6,8 @@
       "WebSearch",
       "Bash(dotnet clean:*)",
       "Bash(dotnet restore:*)",
-      "Bash(del \"C:\\DEV\\Github\\Bucket\\src\\Bucket.Updater\\Views\\ChangelogPage.xaml\")"
+      "Bash(del \"C:\\DEV\\Github\\Bucket\\src\\Bucket.Updater\\Views\\ChangelogPage.xaml\")",
+      "mcp__sequentialthinking__sequentialthinking"
     ],
     "deny": [],
     "ask": []
