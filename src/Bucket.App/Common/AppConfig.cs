@@ -18,8 +18,8 @@ namespace Bucket.App.Common
         private string architecture { get; set; } = "x64";
 
         // Update settings
-        public string GitHubOwner { get; set; } = "mchave3";
-        public string GitHubRepository { get; set; } = "Bucket";
+        private string gitHubOwner { get; set; } = "mchave3";
+        private string gitHubRepository { get; set; } = "Bucket";
 
         // Application state
         private bool hasBeenStartedBefore { get; set; } = false;

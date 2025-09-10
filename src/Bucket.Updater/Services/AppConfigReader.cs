@@ -92,14 +92,14 @@ namespace Bucket.Updater.Services
                     };
                 }
 
-                // Parse GitHubOwner
-                if (root.TryGetProperty("GitHubOwner", out var ownerElement) && ownerElement.GetString() is string owner)
+                // Parse gitHubOwner (private property in AppConfig)
+                if (root.TryGetProperty("gitHubOwner", out var ownerElement) && ownerElement.GetString() is string owner)
                 {
                     config.GitHubOwner = owner;
                 }
 
-                // Parse GitHubRepository
-                if (root.TryGetProperty("GitHubRepository", out var repoElement) && repoElement.GetString() is string repo)
+                // Parse gitHubRepository (private property in AppConfig)
+                if (root.TryGetProperty("gitHubRepository", out var repoElement) && repoElement.GetString() is string repo)
                 {
                     config.GitHubRepository = repo;
                 }
