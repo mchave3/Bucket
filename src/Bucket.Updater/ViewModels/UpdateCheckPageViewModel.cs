@@ -98,7 +98,7 @@ namespace Bucket.Updater.ViewModels
                         SubHeaderVisibility = Visibility.Visible;
                         StatusMessage = "You have the latest version";
                         CanCheckUpdates = true;
-                        CheckButtonVisibility = Visibility.Visible;
+                        CheckButtonVisibility = Visibility.Collapsed;
                     }
 
                     IsChecking = false;
@@ -155,7 +155,7 @@ namespace Bucket.Updater.ViewModels
                     SubHeaderVisibility = Visibility.Visible;
                     StatusMessage = "You have the latest version";
                     CanCheckUpdates = true;
-                    CheckButtonVisibility = Visibility.Visible;
+                    CheckButtonVisibility = Visibility.Collapsed;
                 }
             }
             catch (Exception ex)
