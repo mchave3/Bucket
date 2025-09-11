@@ -225,14 +225,8 @@ namespace Bucket.Updater.ViewModels
             // Check if installation file still exists
             if (string.IsNullOrEmpty(_installInfo.DownloadPath) || !File.Exists(_installInfo.DownloadPath))
             {
-                Logger?.Warning("Installation file not found, redirecting to download page");
-
-                // Navigate on UI thread using DispatcherQueue
-                App.MainWindow.DispatcherQueue.TryEnqueue(() =>
-                {
-                    var frame = App.MainWindow.Content as Frame;
-                    frame?.Navigate(typeof(DownloadPage), _installInfo.UpdateInfo);
-                });
+                Logger?.Warning("Installation file not found at path: {DownloadPath}", _installInfo.DownloadPath ?? "null");
+                HandleError("Installation file (.msi) not found. Please download the update again.");
                 return;
             }
 
