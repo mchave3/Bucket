@@ -18,9 +18,9 @@
         <!--  Header  -->
         <StackPanel
             Grid.Row="0"
+            Height="90"
             HorizontalAlignment="Center"
-            Spacing="8"
-            Height="90">
+            Spacing="8">
             <TextBlock
                 HorizontalAlignment="Center"
                 FontSize="28"
