@@ -15,7 +15,7 @@ namespace Bucket.Updater.ViewModels
         private InstallState _currentState = InstallState.Installing;
 
         [ObservableProperty]
-        private string headerText = "Installing Update";
+        private string headerText = "🔄 Installing Update";
 
         [ObservableProperty]
         private string updateVersion = string.Empty;
@@ -73,7 +73,7 @@ namespace Bucket.Updater.ViewModels
                 UpdateVersion = _installInfo.UpdateInfo.Version;
                 Logger?.Information("Starting installation for version {Version}", _installInfo.UpdateInfo.Version);
             }
-            
+
             await StartInstallationAsync();
         }
 
@@ -88,7 +88,7 @@ namespace Bucket.Updater.ViewModels
             try
             {
                 _currentState = InstallState.Installing;
-                HeaderText = "Installing Update";
+                HeaderText = "🔄 Installing Update";
                 StatusMessage = "Installing update...";
                 IsProgressActive = true;
                 ProgressRingVisibility = Visibility.Visible;
@@ -132,9 +132,9 @@ namespace Bucket.Updater.ViewModels
 
         private void AppendToLog(string message)
         {
-            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            var timestamp = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
             var logEntry = $"[{timestamp}] {message}";
-            
+
             if (string.IsNullOrEmpty(InstallationLog))
             {
                 InstallationLog = logEntry;
@@ -143,12 +143,17 @@ namespace Bucket.Updater.ViewModels
             {
                 InstallationLog += Environment.NewLine + logEntry;
             }
+
+            // Trigger scroll to bottom if needed
+            OnLogUpdated?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler OnLogUpdated;
 
         private void HandleInstallationComplete()
         {
             _currentState = InstallState.Completed;
-            HeaderText = "Installation Complete";
+            HeaderText = "✅ Installation Complete";
             StatusMessage = "Update has been installed successfully!";
             IsProgressActive = false;
             ProgressRingVisibility = Visibility.Collapsed;
@@ -156,13 +161,14 @@ namespace Bucket.Updater.ViewModels
             IsCompleted = true;
             FinishButtonVisibility = Visibility.Visible;
             AppendToLog("Installation completed successfully");
-            
+
             Logger?.Information("Installation completed successfully for version {Version}", _installInfo?.UpdateInfo?.Version);
         }
 
         private void HandleError(string message)
         {
             _currentState = InstallState.Error;
+            HeaderText = "❌ Installation Failed";
             HasError = true;
             ErrorMessage = message;
             StatusMessage = "Installation failed";
@@ -179,7 +185,7 @@ namespace Bucket.Updater.ViewModels
         private void Cancel()
         {
             Logger?.Information("User cancelled installation process");
-            
+
             // Navigate back or close
             var frame = App.MainWindow.Content as Frame;
             if (frame?.CanGoBack == true)
@@ -198,14 +204,14 @@ namespace Bucket.Updater.ViewModels
             if (_installInfo?.UpdateInfo == null) return;
 
             Logger?.Information("Retrying installation for version {Version}", _installInfo.UpdateInfo.Version);
-            
+
             // Reset state
             HasError = false;
             ErrorMessage = string.Empty;
             InstallationLog = string.Empty;
             RetryButtonVisibility = Visibility.Collapsed;
             FinishButtonVisibility = Visibility.Collapsed;
-            
+
             // Go back to download page to restart the whole process
             var frame = App.MainWindow.Content as Frame;
             frame?.Navigate(typeof(DownloadPage), _installInfo.UpdateInfo);
