@@ -6,6 +6,7 @@ namespace Bucket.Updater.Services
         Task<string> DownloadUpdateAsync(Bucket.Updater.Models.UpdateInfo updateInfo, IProgress<(long downloaded, long total)>? progress = null, CancellationToken cancellationToken = default);
         Task<bool> InstallUpdateAsync(string msiFilePath, IProgress<string>? progress = null, CancellationToken cancellationToken = default);
         void CleanupFiles(string downloadPath);
+        void CleanupAllTemporaryFiles();
         UpdaterConfiguration GetConfiguration();
     }
 
@@ -37,7 +38,7 @@ namespace Bucket.Updater.Services
                 if (updateInfo != null)
                 {
                     Logger?.Information("Update check completed, update available: {Version}", updateInfo.Version);
-                    
+
                     // NOTE: LastUpdateCheck is no longer updated here as Bucket.Updater is read-only
                     // This responsibility could be delegated to Bucket.App if necessary
                 }
@@ -100,6 +101,12 @@ namespace Bucket.Updater.Services
         {
             Logger?.Information("UpdateService cleaning up files at {Path}", downloadPath);
             _installationService.CleanupDownloadedFiles(downloadPath);
+        }
+
+        public void CleanupAllTemporaryFiles()
+        {
+            Logger?.Information("UpdateService cleaning up all temporary files");
+            _installationService.CleanupAllTemporaryFiles();
         }
 
         public UpdaterConfiguration GetConfiguration()

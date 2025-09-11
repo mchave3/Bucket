@@ -8,6 +8,7 @@ namespace Bucket.Updater.Services
         Task<bool> ValidateMsiFileAsync(string msiFilePath);
         Task<bool> EnsureBucketProcessStoppedAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default);
         void CleanupDownloadedFiles(string downloadPath);
+        void CleanupAllTemporaryFiles();
     }
 
     public class InstallationService : IInstallationService
@@ -15,7 +16,7 @@ namespace Bucket.Updater.Services
         public async Task<bool> InstallUpdateAsync(string msiFilePath, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
             Logger?.Information("Starting MSI installation: {FilePath}", msiFilePath);
-            
+
             try
             {
                 if (!File.Exists(msiFilePath))
@@ -43,7 +44,7 @@ namespace Bucket.Updater.Services
 
                 progress?.Report("Starting installation...");
                 Logger?.Information("Executing MSI installation with msiexec");
-                
+
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "msiexec.exe",
@@ -62,7 +63,7 @@ namespace Bucket.Updater.Services
 
                 progress?.Report("Installation in progress...");
                 Logger?.Information("Waiting for msiexec process to complete");
-                
+
                 await process.WaitForExitAsync(cancellationToken);
 
                 switch (process.ExitCode)
@@ -114,7 +115,7 @@ namespace Bucket.Updater.Services
 
                 // MSI files use OLE/Structured Storage format with signature: D0 CF 11 E0 A1 B1 1A E1
                 var expectedSignature = new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 };
-                
+
                 for (int i = 0; i < expectedSignature.Length; i++)
                 {
                     if (buffer[i] != expectedSignature[i])
@@ -135,7 +136,7 @@ namespace Bucket.Updater.Services
             {
                 Logger?.Information("Checking for running Bucket processes");
                 var bucketProcesses = Process.GetProcessesByName("Bucket").ToList();
-                
+
                 if (!bucketProcesses.Any())
                 {
                     Logger?.Information("No Bucket processes found running");
@@ -160,7 +161,7 @@ namespace Bucket.Updater.Services
                         {
                             // Wait up to 10 seconds for graceful shutdown
                             bool exited = await Task.Run(() => process.WaitForExit(10000), cancellationToken);
-                            
+
                             if (exited)
                             {
                                 Logger?.Information("Bucket process (PID: {ProcessId}) closed gracefully", process.Id);
@@ -173,10 +174,10 @@ namespace Bucket.Updater.Services
                         {
                             Logger?.Warning("Graceful shutdown failed, force killing Bucket process (PID: {ProcessId})", process.Id);
                             progress?.Report("Force closing Bucket application...");
-                            
+
                             process.Kill();
                             await Task.Run(() => process.WaitForExit(5000), cancellationToken);
-                            
+
                             Logger?.Information("Bucket process (PID: {ProcessId}) force killed", process.Id);
                         }
                     }
@@ -192,16 +193,16 @@ namespace Bucket.Updater.Services
 
                 // Final check to ensure all processes are stopped
                 await Task.Delay(1000, cancellationToken); // Small delay to ensure processes are fully terminated
-                
+
                 var remainingProcesses = Process.GetProcessesByName("Bucket");
                 if (remainingProcesses.Any())
                 {
                     Logger?.Error("Failed to stop all Bucket processes. {Count} processes still running", remainingProcesses.Length);
                     progress?.Report($"Failed to stop all Bucket processes. {remainingProcesses.Length} still running");
-                    
+
                     foreach (var process in remainingProcesses)
                         process.Dispose();
-                    
+
                     return false;
                 }
 
@@ -232,7 +233,7 @@ namespace Bucket.Updater.Services
                     var tempFiles = Directory.GetFiles(directory, "*.tmp")
                                             .Concat(Directory.GetFiles(directory, "*.partial"))
                                             .ToArray();
-                    
+
                     foreach (var tempFile in tempFiles)
                     {
                         try
@@ -243,6 +244,51 @@ namespace Bucket.Updater.Services
                         {
                             // Ignore individual file deletion errors
                         }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+        }
+
+        public void CleanupAllTemporaryFiles()
+        {
+            try
+            {
+                var tempPath = Path.GetTempPath();
+                Logger?.Information("Cleaning up all temporary update files in {TempPath}", tempPath);
+
+                // Look for MSI files that might be from Bucket updates
+                var patterns = new[] { "Bucket*.msi", "bucket*.msi", "*.tmp", "*.partial" };
+
+                foreach (var pattern in patterns)
+                {
+                    try
+                    {
+                        var files = Directory.GetFiles(tempPath, pattern, SearchOption.TopDirectoryOnly);
+                        foreach (var file in files)
+                        {
+                            try
+                            {
+                                // Check if file is likely from our update process
+                                var fileInfo = new FileInfo(file);
+                                if (fileInfo.CreationTime > DateTime.Now.AddDays(-1)) // Only files from last 24 hours
+                                {
+                                    File.Delete(file);
+                                    Logger?.Debug("Deleted temporary file: {File}", file);
+                                }
+                            }
+                            catch
+                            {
+                                // Ignore individual file deletion errors
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore pattern search errors
                     }
                 }
             }

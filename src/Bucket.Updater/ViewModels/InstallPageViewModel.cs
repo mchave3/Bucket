@@ -102,6 +102,9 @@ namespace Bucket.Updater.ViewModels
                 if (success)
                 {
                     HandleInstallationComplete();
+
+                    // Cleanup downloaded file only after successful installation
+                    CleanupDownloadedFiles("Installation completed successfully");
                 }
                 else
                 {
@@ -112,15 +115,6 @@ namespace Bucket.Updater.ViewModels
             {
                 Logger?.Error(ex, "Installation exception for version {Version}", _installInfo?.UpdateInfo?.Version);
                 HandleError($"Installation failed: {ex.Message}");
-            }
-            finally
-            {
-                // Cleanup downloaded file after installation attempt
-                Logger?.Information("Cleaning up downloaded files");
-                if (!string.IsNullOrEmpty(_installInfo?.DownloadPath))
-                {
-                    _updateService.CleanupFiles(_installInfo.DownloadPath);
-                }
             }
         }
 
@@ -149,6 +143,26 @@ namespace Bucket.Updater.ViewModels
         }
 
         public event EventHandler OnLogUpdated;
+
+        private void CleanupDownloadedFiles(string reason)
+        {
+            if (!string.IsNullOrEmpty(_installInfo?.DownloadPath))
+            {
+                Logger?.Information("Cleaning up downloaded files: {Reason}", reason);
+                try
+                {
+                    _updateService?.CleanupFiles(_installInfo.DownloadPath);
+                }
+                catch (Exception ex)
+                {
+                    Logger?.Warning(ex, "Failed to cleanup downloaded files");
+                }
+            }
+            else
+            {
+                Logger?.Debug("No download path to cleanup for reason: {Reason}", reason);
+            }
+        }
 
         private void HandleInstallationComplete()
         {
@@ -186,6 +200,9 @@ namespace Bucket.Updater.ViewModels
         {
             Logger?.Information("User cancelled installation process");
 
+            // Cleanup downloaded files when cancelling, especially after an error
+            CleanupDownloadedFiles("User cancelled installation");
+
             // Navigate back or close
             var frame = App.MainWindow.Content as Frame;
             if (frame?.CanGoBack == true)
@@ -205,28 +222,59 @@ namespace Bucket.Updater.ViewModels
 
             Logger?.Information("Retrying installation for version {Version}", _installInfo.UpdateInfo.Version);
 
-            // Reset state
+            // Check if installation file still exists
+            if (string.IsNullOrEmpty(_installInfo.DownloadPath) || !File.Exists(_installInfo.DownloadPath))
+            {
+                Logger?.Warning("Installation file not found, redirecting to download page");
+
+                // Navigate on UI thread using DispatcherQueue
+                App.MainWindow.DispatcherQueue.TryEnqueue(() =>
+                {
+                    var frame = App.MainWindow.Content as Frame;
+                    frame?.Navigate(typeof(DownloadPage), _installInfo.UpdateInfo);
+                });
+                return;
+            }
+
+            // Reset error state
             HasError = false;
             ErrorMessage = string.Empty;
             InstallationLog = string.Empty;
             RetryButtonVisibility = Visibility.Collapsed;
             FinishButtonVisibility = Visibility.Collapsed;
+            ErrorIconVisibility = Visibility.Collapsed;
 
-            // Go back to download page to restart the whole process
-            var frame = App.MainWindow.Content as Frame;
-            frame?.Navigate(typeof(DownloadPage), _installInfo.UpdateInfo);
+            // Restart the installation process directly
+            await StartInstallationAsync().ConfigureAwait(false);
         }
 
         [RelayCommand]
         private void Finish()
         {
             Logger?.Information("Installation process completed, closing updater");
+
+            // Cleanup files if installation failed and we're finishing
+            if (_currentState == InstallState.Error)
+            {
+                CleanupDownloadedFiles("Finishing after installation error");
+            }
+
             App.MainWindow.Close();
         }
 
         public void Cleanup()
         {
-            // Any cleanup if needed
+            // Only cleanup downloaded files if installation failed or was cancelled
+            // If installation succeeded, files were already cleaned up in HandleInstallationComplete
+            if (_currentState == InstallState.Error || _currentState == InstallState.Installing)
+            {
+                CleanupDownloadedFiles("ViewModel cleanup - installation not completed successfully");
+                Logger?.Information("Cleaned up files for incomplete installation (state: {State})", _currentState);
+            }
+            else if (_currentState == InstallState.Completed)
+            {
+                Logger?.Information("Skipping cleanup for completed installation - files already cleaned");
+            }
         }
     }
 }

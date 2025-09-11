@@ -10,12 +10,26 @@
 
         public static T GetService<T>() where T : class
         {
-            if ((App.Current as App)!.Services.GetService(typeof(T)) is not T service)
+            var currentApp = App.Current as App;
+            if (currentApp?.Services?.GetService(typeof(T)) is not T service)
             {
                 throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
             }
 
             return service;
+        }
+
+        public static T? GetServiceSafe<T>() where T : class
+        {
+            try
+            {
+                var currentApp = App.Current as App;
+                return currentApp?.Services?.GetService(typeof(T)) as T;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public App()
@@ -103,6 +117,25 @@
         private static void OnProcessExit(object? sender, EventArgs e)
         {
             Logger?.Information("Bucket Updater shutting down");
+
+            // Cleanup any remaining downloaded files safely
+            try
+            {
+                var updateService = GetServiceSafe<IUpdateService>();
+                if (updateService != null)
+                {
+                    updateService.CleanupAllTemporaryFiles();
+                    Logger?.Information("Cleaned up temporary files on application exit");
+                }
+                else
+                {
+                    Logger?.Warning("Could not get UpdateService during shutdown, skipping cleanup");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger?.Warning(ex, "Failed to cleanup temporary files on application exit");
+            }
         }
     }
 }

@@ -10,11 +10,11 @@ namespace Bucket.Updater.Views
         {
             ViewModel = App.GetService<MainViewModel>();
             this.InitializeComponent();
-            
+
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(AppTitleBar);
             AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
-            
+
             SetWindowSize();
             NavigateToUpdateCheckPage();
         }
@@ -26,7 +26,7 @@ namespace Bucket.Updater.Views
 
             var appWindow = this.AppWindow;
             appWindow.Resize(new Windows.Graphics.SizeInt32(WindowWidth, WindowHeight));
-            
+
             if (appWindow.Presenter is OverlappedPresenter presenter)
             {
                 presenter.IsResizable = false;
