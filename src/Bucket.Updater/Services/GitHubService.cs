@@ -28,15 +28,15 @@ namespace Bucket.Updater.Services
 
         public async Task<Bucket.Updater.Models.UpdateInfo?> CheckForUpdatesAsync(UpdaterConfiguration configuration)
         {
-            Logger?.Information("Checking for updates: Channel={Channel}, Architecture={Architecture}", 
+            Logger?.Information("Checking for updates: Channel={Channel}, Architecture={Architecture}",
                 configuration.UpdateChannel, configuration.Architecture);
-            
+
             try
             {
                 var releases = await GetReleasesAsync(configuration.GitHubOwner, configuration.GitHubRepository, true);
-                
+
                 GitHubRelease? targetRelease = null;
-                
+
                 if (configuration.UpdateChannel == UpdateChannel.Release)
                 {
                     targetRelease = releases.FirstOrDefault(r => !r.Prerelease);
@@ -53,13 +53,13 @@ namespace Bucket.Updater.Services
                 }
 
                 var architectureString = configuration.GetArchitectureString();
-                var msiAsset = targetRelease.Assets.FirstOrDefault(a => 
-                    a.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) && 
+                var msiAsset = targetRelease.Assets.FirstOrDefault(a =>
+                    a.Name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) &&
                     a.Name.Contains(architectureString, StringComparison.OrdinalIgnoreCase));
 
                 if (msiAsset == null)
                 {
-                    Logger?.Warning("No MSI asset found for architecture {Architecture} in release {Version}", 
+                    Logger?.Warning("No MSI asset found for architecture {Architecture} in release {Version}",
                         architectureString, targetRelease.TagName);
                     return null;
                 }
@@ -88,12 +88,12 @@ namespace Bucket.Updater.Services
                 var isNewer = IsNewerVersion(updateInfo.Version, configuration.CurrentVersion);
                 if (isNewer)
                 {
-                    Logger?.Information("Update available: {Version} > {CurrentVersion}", 
+                    Logger?.Information("Update available: {Version} > {CurrentVersion}",
                         updateInfo.Version, configuration.CurrentVersion);
                 }
                 else
                 {
-                    Logger?.Information("No update needed: Current version {CurrentVersion} is up to date", 
+                    Logger?.Information("No update needed: Current version {CurrentVersion} is up to date",
                         configuration.CurrentVersion);
                 }
 
@@ -109,7 +109,7 @@ namespace Bucket.Updater.Services
         public async Task<Stream> DownloadUpdateAsync(string downloadUrl, IProgress<(long downloaded, long total)>? progress = null, CancellationToken cancellationToken = default)
         {
             Logger?.Information("Starting download from {Url}", downloadUrl);
-            
+
             try
             {
                 var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -117,9 +117,9 @@ namespace Bucket.Updater.Services
 
                 var totalBytes = response.Content.Headers.ContentLength ?? 0;
                 Logger?.Information("Download started, size: {Size} bytes", totalBytes);
-                
+
                 var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                
+
                 if (progress == null)
                     return stream;
 
@@ -210,10 +210,10 @@ namespace Bucket.Updater.Services
         public override bool CanSeek => _baseStream.CanSeek;
         public override bool CanWrite => _baseStream.CanWrite;
         public override long Length => _baseStream.Length;
-        public override long Position 
-        { 
-            get => _baseStream.Position; 
-            set => _baseStream.Position = value; 
+        public override long Position
+        {
+            get => _baseStream.Position;
+            set => _baseStream.Position = value;
         }
 
         public override void Flush() => _baseStream.Flush();

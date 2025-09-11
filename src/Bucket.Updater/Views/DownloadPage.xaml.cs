@@ -14,7 +14,7 @@ namespace Bucket.Updater.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            
+
             if (e.Parameter is Bucket.Updater.Models.UpdateInfo updateInfo)
             {
                 ViewModel.StartDownload(updateInfo);
@@ -24,7 +24,7 @@ namespace Bucket.Updater.Views
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            
+
             // Cleanup any resources if needed
             ViewModel.Cleanup();
         }

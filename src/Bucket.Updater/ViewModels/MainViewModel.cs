@@ -15,7 +15,7 @@
             _updateService = updateService;
             configuration = _updateService.GetConfiguration();
             CurrentVersion = configuration.CurrentVersion;
-            
+
             Logger?.Information("MainViewModel initialized with version {Version}", CurrentVersion);
         }
     }

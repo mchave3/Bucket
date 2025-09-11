@@ -10,14 +10,14 @@ namespace Bucket.Updater.Views
             this.InitializeComponent();
             ViewModel = App.GetService<InstallPageViewModel>();
             DataContext = ViewModel;
-            
+
             // Initialize scroll timer for debouncing
             _scrollTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
             _scrollTimer.Tick += ScrollTimer_Tick;
-            
+
             // Subscribe to log changes for auto-scroll
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         }
@@ -59,7 +59,7 @@ namespace Bucket.Updater.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            
+
             if (e.Parameter is InstallInfo installInfo)
             {
                 ViewModel.StartInstallation(installInfo);
@@ -69,10 +69,10 @@ namespace Bucket.Updater.Views
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            
+
             // Unsubscribe to prevent memory leaks
             ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
-            
+
             // Cleanup timer
             _scrollTimer?.Stop();
             if (_scrollTimer != null)
@@ -80,7 +80,7 @@ namespace Bucket.Updater.Views
                 _scrollTimer.Tick -= ScrollTimer_Tick;
                 _scrollTimer = null;
             }
-            
+
             // Cleanup ViewModel
             ViewModel.Cleanup();
         }

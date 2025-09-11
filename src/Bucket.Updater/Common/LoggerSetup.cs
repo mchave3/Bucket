@@ -14,14 +14,14 @@ namespace Bucket.Updater.Common
         public static void ConfigureLogger()
         {
             EnsureLogDirectoryExists();
-            
+
             var logLevel = GetLogLevel();
-            
+
             Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(logLevel)
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
-                
+
                 // Enrichers for contextual information
                 .Enrich.WithProperty("Application", "Bucket.Updater")
                 .Enrich.WithProperty("Version", ProcessInfoHelper.Version)
@@ -31,7 +31,7 @@ namespace Bucket.Updater.Common
                 .Enrich.WithProperty("ProcessId", Environment.ProcessId)
                 .Enrich.WithProperty("Architecture", RuntimeInformation.OSArchitecture.ToString())
                 .Enrich.FromLogContext()
-                
+
                 // File sink with structured logging (JSON)
                 .WriteTo.File(
                     path: Path.Combine(Constants.LogDirectoryPath, "updater-.json"),
@@ -41,7 +41,7 @@ namespace Bucket.Updater.Common
                     fileSizeLimitBytes: 100 * 1024 * 1024, // 100MB max per file
                     rollOnFileSizeLimit: true,
                     shared: true)
-                
+
                 // Human readable file sink
                 .WriteTo.File(
                     path: Path.Combine(Constants.LogDirectoryPath, "updater-.log"),
@@ -51,7 +51,7 @@ namespace Bucket.Updater.Common
                     fileSizeLimitBytes: 50 * 1024 * 1024, // 50MB max per file
                     rollOnFileSizeLimit: true,
                     shared: true)
-                
+
                 // User-friendly file sink
                 .WriteTo.File(
                     path: Path.Combine(Constants.LogDirectoryPath, "updater-user-.log"),
@@ -62,24 +62,24 @@ namespace Bucket.Updater.Common
                     fileSizeLimitBytes: 10 * 1024 * 1024, // 10MB max per file
                     rollOnFileSizeLimit: true,
                     shared: true)
-                
+
                 // Debug sink for development
                 .WriteTo.Debug(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u3}] [{SessionId}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-                
+
                 // Console sink when debugger attached
                 .WriteTo.Logger(lc => lc
                     .Filter.ByIncludingOnly(_ => Debugger.IsAttached)
                     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u3}] {Message:lj}{NewLine}{Exception}"))
-                
+
                 .CreateLogger();
-                
+
             // Log startup information
             Logger.Information("=== Bucket Updater Starting ===");
-            Logger.Information("Session: {SessionId}, Version: {Version}, Machine: {MachineName}", 
+            Logger.Information("Session: {SessionId}, Version: {Version}, Machine: {MachineName}",
                 SessionId, ProcessInfoHelper.Version, Environment.MachineName);
             Logger.Information("Process: {ProcessId}, User: {UserName}, Architecture: {Architecture}",
                 Environment.ProcessId, Environment.UserName, RuntimeInformation.OSArchitecture);
-                
+
             // Schedule log cleanup
             _ = Task.Run(CleanupOldLogsAsync);
         }
@@ -120,11 +120,11 @@ namespace Bucket.Updater.Common
                 // Fallback to temp directory if cannot create in CommonApplicationData
                 var tempLogPath = Path.Combine(Path.GetTempPath(), "Bucket", "Log");
                 Directory.CreateDirectory(tempLogPath);
-                
+
                 // Update constants to use temp path
                 typeof(Constants).GetField(nameof(Constants.LogDirectoryPath))?.SetValue(null, tempLogPath);
                 typeof(Constants).GetField(nameof(Constants.LogFilePath))?.SetValue(null, Path.Combine(tempLogPath, "Updater-Log.log"));
-                
+
                 Console.WriteLine($"Failed to create log directory, using temp: {tempLogPath}. Error: {ex.Message}");
             }
         }
@@ -134,7 +134,7 @@ namespace Bucket.Updater.Common
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(30)); // Wait 30s after startup
-                
+
                 var logDirectory = new DirectoryInfo(Constants.LogDirectoryPath);
                 if (!logDirectory.Exists) return;
 
@@ -176,7 +176,7 @@ namespace Bucket.Updater.Common
             {
                 return days;
             }
-            
+
             return 60; // Default 60 days retention
         }
 

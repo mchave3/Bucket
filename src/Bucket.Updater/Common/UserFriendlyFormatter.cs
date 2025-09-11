@@ -1,7 +1,5 @@
 using Serilog.Events;
 using Serilog.Formatting;
-using System.Globalization;
-using System.Text;
 
 namespace Bucket.Updater.Common
 {

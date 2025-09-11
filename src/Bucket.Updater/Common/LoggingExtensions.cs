@@ -14,7 +14,7 @@ namespace Bucket.Updater.Common
         {
             var operationId = Guid.NewGuid().ToString("N")[..8];
             var stopwatch = Stopwatch.StartNew();
-            
+
             var properties = new List<(string, object)>
             {
                 ("OperationId", operationId),
@@ -38,7 +38,7 @@ namespace Bucket.Updater.Common
             logger?.Information("Operation {OperationName} started with ID {OperationId}", operationName, operationId);
 
             var contexts = properties.Select(p => LogContext.PushProperty(p.Item1, p.Item2)).ToArray();
-            
+
             return new OperationScope(logger, operationName, operationId, stopwatch, contexts);
         }
 
@@ -64,7 +64,7 @@ namespace Bucket.Updater.Common
         {
             if (result != null)
             {
-                logger?.Debug("Exiting {MethodName} after {Duration}ms with result: {@Result}", 
+                logger?.Debug("Exiting {MethodName} after {Duration}ms with result: {@Result}",
                     methodName, duration.TotalMilliseconds, result);
             }
             else
@@ -108,7 +108,7 @@ namespace Bucket.Updater.Common
                 {
                     message += ", processed {BytesProcessed} bytes";
                     args.Add(bytesProcessed.Value);
-                    
+
                     var throughputMBps = (bytesProcessed.Value / 1024.0 / 1024.0) / duration.TotalSeconds;
                     using (LogContext.PushProperty("ThroughputMBps", throughputMBps))
                     {
@@ -137,12 +137,12 @@ namespace Bucket.Updater.Common
             {
                 if (!string.IsNullOrEmpty(reason))
                 {
-                    logger?.Information("State transition for {Entity}: {FromState} → {ToState} (reason: {Reason})", 
+                    logger?.Information("State transition for {Entity}: {FromState} → {ToState} (reason: {Reason})",
                         entity, fromState, toState, reason);
                 }
                 else
                 {
-                    logger?.Information("State transition for {Entity}: {FromState} → {ToState}", 
+                    logger?.Information("State transition for {Entity}: {FromState} → {ToState}",
                         entity, fromState, toState);
                 }
             }
@@ -215,12 +215,12 @@ namespace Bucket.Updater.Common
                     {
                         if (additionalInfo != null)
                         {
-                            logger?.Information("Progress: {Operation} - {Status} ({Percentage}%) {@AdditionalInfo}", 
+                            logger?.Information("Progress: {Operation} - {Status} ({Percentage}%) {@AdditionalInfo}",
                                 operation, status, percentage.Value, additionalInfo);
                         }
                         else
                         {
-                            logger?.Information("Progress: {Operation} - {Status} ({Percentage}%)", 
+                            logger?.Information("Progress: {Operation} - {Status} ({Percentage}%)",
                                 operation, status, percentage.Value);
                         }
                     }
@@ -229,7 +229,7 @@ namespace Bucket.Updater.Common
                 {
                     if (additionalInfo != null)
                     {
-                        logger?.Information("Progress: {Operation} - {Status} {@AdditionalInfo}", 
+                        logger?.Information("Progress: {Operation} - {Status} {@AdditionalInfo}",
                             operation, status, additionalInfo);
                     }
                     else
@@ -283,7 +283,7 @@ namespace Bucket.Updater.Common
             if (!_disposed)
             {
                 _stopwatch.Stop();
-                _logger?.Information("Operation {OperationName} completed in {Duration}ms (ID: {OperationId})", 
+                _logger?.Information("Operation {OperationName} completed in {Duration}ms (ID: {OperationId})",
                     _operationName, _stopwatch.ElapsedMilliseconds, _operationId);
 
                 foreach (var context in _contexts)

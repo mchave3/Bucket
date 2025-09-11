@@ -188,15 +188,15 @@ namespace Bucket.Updater.ViewModels
         {
             if (_availableUpdate != null)
             {
-                Logger?.LogUserAction("InitiateDownloadInstall", new 
-                { 
+                Logger?.LogUserAction("InitiateDownloadInstall", new
+                {
                     CurrentVersion = CurrentVersion,
                     NewVersion = _availableUpdate.Version,
                     Channel = UpdateChannel,
                     FileSize = _availableUpdate.FileSize
                 });
                 Logger?.Information("Starting download and install process for version {Version}", _availableUpdate.Version);
-                
+
                 var mainWindow = App.MainWindow as MainWindow;
                 var frame = mainWindow?.ContentFrame;
                 if (frame != null)
@@ -218,8 +218,8 @@ namespace Bucket.Updater.ViewModels
         [RelayCommand]
         private void Close()
         {
-            Logger?.LogUserAction("CloseUpdater", new 
-            { 
+            Logger?.LogUserAction("CloseUpdater", new
+            {
                 CurrentVersion = CurrentVersion,
                 HasAvailableUpdate = _availableUpdate != null,
                 UpdateVersion = _availableUpdate?.Version

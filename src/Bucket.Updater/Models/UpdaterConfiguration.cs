@@ -10,7 +10,7 @@ namespace Bucket.Updater.Models
         public string GitHubRepository { get; set; } = "Bucket";
         public string CurrentVersion { get; set; } = "1.0.0.0";
         public DateTime LastUpdateCheck { get; set; } = DateTime.MinValue;
-        
+
         public void InitializeRuntimeProperties()
         {
             Architecture = RuntimeInformation.ProcessArchitecture switch
@@ -21,13 +21,13 @@ namespace Bucket.Updater.Models
                 _ => SystemArchitecture.X64
             };
         }
-        
+
         public string GetArchitectureString()
         {
             return Architecture switch
             {
                 SystemArchitecture.X86 => "x86",
-                SystemArchitecture.X64 => "x64", 
+                SystemArchitecture.X64 => "x64",
                 SystemArchitecture.ARM64 => "arm64",
                 _ => "x64"
             };

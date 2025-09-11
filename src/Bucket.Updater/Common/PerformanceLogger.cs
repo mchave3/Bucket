@@ -15,13 +15,13 @@ namespace Bucket.Updater.Common
         {
             logger ??= LoggerSetup.Logger;
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 logger?.Debug("Starting performance measurement for {OperationName}", operationName);
                 var result = operation();
                 stopwatch.Stop();
-                
+
                 logger?.LogPerformance(operationName, stopwatch.Elapsed);
                 return result;
             }
@@ -40,13 +40,13 @@ namespace Bucket.Updater.Common
         {
             logger ??= LoggerSetup.Logger;
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 logger?.Debug("Starting async performance measurement for {OperationName}", operationName);
                 var result = await operation();
                 stopwatch.Stop();
-                
+
                 logger?.LogPerformance(operationName, stopwatch.Elapsed);
                 return result;
             }
@@ -65,13 +65,13 @@ namespace Bucket.Updater.Common
         {
             logger ??= LoggerSetup.Logger;
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 logger?.Debug("Starting performance measurement for {OperationName}", operationName);
                 operation();
                 stopwatch.Stop();
-                
+
                 logger?.LogPerformance(operationName, stopwatch.Elapsed);
             }
             catch (Exception ex)
@@ -89,13 +89,13 @@ namespace Bucket.Updater.Common
         {
             logger ??= LoggerSetup.Logger;
             var stopwatch = Stopwatch.StartNew();
-            
+
             try
             {
                 logger?.Debug("Starting async performance measurement for {OperationName}", operationName);
                 await operation();
                 stopwatch.Stop();
-                
+
                 logger?.LogPerformance(operationName, stopwatch.Elapsed);
             }
             catch (Exception ex)
@@ -127,7 +127,7 @@ namespace Bucket.Updater.Common
             _operationName = operationName;
             _logger = logger;
             _stopwatch = Stopwatch.StartNew();
-            
+
             _logger?.Debug("Performance measurement started for {OperationName}", operationName);
         }
 

@@ -91,7 +91,7 @@ namespace Bucket.Updater.ViewModels
         private async Task StartInstallationAsync()
         {
             using var performanceScope = PerformanceLogger.BeginMeasurement("Installation");
-            
+
             if (_installInfo?.DownloadPath == null)
             {
                 Logger?.Error("Installation started with null download path");
@@ -122,7 +122,7 @@ namespace Bucket.Updater.ViewModels
 
                 var progress = new Progress<string>(OnInstallationProgress);
                 var success = await PerformanceLogger.MeasureAndLogAsync(
-                    "UpdateService.InstallUpdate", 
+                    "UpdateService.InstallUpdate",
                     () => _updateService.InstallUpdateAsync(_installInfo.DownloadPath, progress));
 
                 if (success)
@@ -138,7 +138,7 @@ namespace Bucket.Updater.ViewModels
             }
             catch (Exception ex)
             {
-                Logger?.Error(ex, "Installation exception for version {Version} {@Context}", 
+                Logger?.Error(ex, "Installation exception for version {Version} {@Context}",
                     _installInfo?.UpdateInfo?.Version, installationContext);
                 HandleError($"Installation failed: {ex.Message}");
             }
@@ -220,7 +220,7 @@ namespace Bucket.Updater.ViewModels
             RetryButtonVisibility = Visibility.Visible;
             FinishButtonVisibility = Visibility.Visible;
 
-            Logger?.Error("Installation error: {ErrorMessage} for version {Version}", 
+            Logger?.Error("Installation error: {ErrorMessage} for version {Version}",
                 message, _installInfo?.UpdateInfo?.Version);
             AppendToLog($"Error: {message}");
         }
@@ -228,8 +228,8 @@ namespace Bucket.Updater.ViewModels
         [RelayCommand]
         private void Cancel()
         {
-            Logger?.LogUserAction("CancelInstallation", new 
-            { 
+            Logger?.LogUserAction("CancelInstallation", new
+            {
                 Version = _installInfo?.UpdateInfo?.Version,
                 State = _currentState.ToString(),
                 HasError = HasError
@@ -254,7 +254,7 @@ namespace Bucket.Updater.ViewModels
         [RelayCommand]
         private async Task RetryAsync()
         {
-            if (_installInfo?.UpdateInfo == null) 
+            if (_installInfo?.UpdateInfo == null)
             {
                 Logger?.Error("Retry attempted with null UpdateInfo");
                 return;
@@ -294,8 +294,8 @@ namespace Bucket.Updater.ViewModels
         [RelayCommand]
         private void Finish()
         {
-            Logger?.LogUserAction("FinishInstallation", new 
-            { 
+            Logger?.LogUserAction("FinishInstallation", new
+            {
                 Version = _installInfo?.UpdateInfo?.Version,
                 State = _currentState.ToString(),
                 Success = _currentState == InstallState.Completed
