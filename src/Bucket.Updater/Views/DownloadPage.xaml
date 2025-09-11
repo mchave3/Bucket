@@ -67,12 +67,6 @@
                            HorizontalAlignment="Center" />
             </StackPanel>
 
-            <!-- Cancel Button (only during download) -->
-            <Button x:Name="CancelButton"
-                    Content="Cancel"
-                    Command="{x:Bind ViewModel.CancelCommand}"
-                    HorizontalAlignment="Center"
-                    Visibility="{x:Bind ViewModel.CancelButtonVisibility, Mode=OneWay}" />
 
         </StackPanel>
 

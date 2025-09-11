@@ -36,8 +36,6 @@ namespace Bucket.Updater.ViewModels
         [ObservableProperty]
         private string downloadSpeed = string.Empty;
 
-        [ObservableProperty]
-        private Visibility cancelButtonVisibility = Visibility.Visible;
 
         public DownloadPageViewModel(IUpdateService updateService)
         {
@@ -64,7 +62,6 @@ namespace Bucket.Updater.ViewModels
             {
                 IsProgressActive = true;
                 StatusMessage = "Starting download...";
-                CancelButtonVisibility = Visibility.Visible;
 
                 _cancellationTokenSource = new CancellationTokenSource();
                 _stopwatch.Start();
@@ -133,8 +130,9 @@ namespace Bucket.Updater.ViewModels
                     DownloadPath = _downloadPath
                 };
 
-                // Navigate to InstallPage
-                var frame = App.MainWindow.Content as Frame;
+                // Navigate to InstallPage using MainWindow's ContentFrame
+                var mainWindow = App.MainWindow as MainWindow;
+                var frame = mainWindow?.ContentFrame;
                 frame?.Navigate(typeof(InstallPage), installInfo);
             }
         }
@@ -142,29 +140,11 @@ namespace Bucket.Updater.ViewModels
         private void HandleError(string message)
         {
             StatusMessage = message;
-            CancelButtonVisibility = Visibility.Collapsed;
             
             // Could add retry logic or error navigation here
             Logger?.Error("Download error: {Message}", message);
         }
 
-        [RelayCommand]
-        private void Cancel()
-        {
-            Logger?.Information("User cancelled download process");
-            _cancellationTokenSource?.Cancel();
-            
-            // Navigate back to UpdateCheckPage or close
-            var frame = App.MainWindow.Content as Frame;
-            if (frame?.CanGoBack == true)
-            {
-                frame.GoBack();
-            }
-            else
-            {
-                App.MainWindow.Close();
-            }
-        }
 
         public void Cleanup()
         {
