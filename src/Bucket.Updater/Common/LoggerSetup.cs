@@ -6,17 +6,31 @@ using System.Runtime.InteropServices;
 
 namespace Bucket.Updater.Common
 {
+    /// <summary>
+    /// Provides static methods to configure and manage logging for the Bucket Updater application.
+    /// </summary>
     public static partial class LoggerSetup
     {
+        /// <summary>
+        /// The main Serilog logger instance used throughout the application.
+        /// </summary>
         public static ILogger Logger { get; private set; }
+
+        /// <summary>
+        /// A unique identifier for the current logging session, generated at startup.
+        /// </summary>
         public static string SessionId { get; private set; } = Guid.NewGuid().ToString("N")[..8];
 
+        /// <summary>
+        /// Initializes and configures the Serilog logger with multiple sinks and enrichers.
+        /// </summary>
         public static void ConfigureLogger()
         {
             EnsureLogDirectoryExists();
 
             var logLevel = GetLogLevel();
 
+            // Configure Serilog logger with various sinks and enrichers
             Logger = new LoggerConfiguration()
                 .MinimumLevel.Is(logLevel)
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -80,10 +94,14 @@ namespace Bucket.Updater.Common
             Logger.Information("Process: {ProcessId}, User: {UserName}, Architecture: {Architecture}",
                 Environment.ProcessId, Environment.UserName, RuntimeInformation.OSArchitecture);
 
-            // Schedule log cleanup
+            // Schedule log cleanup asynchronously
             _ = Task.Run(CleanupOldLogsAsync);
         }
 
+        /// <summary>
+        /// Determines the minimum log level for logging based on environment variables, debugger status, or build configuration.
+        /// </summary>
+        /// <returns>The selected <see cref="LogEventLevel"/>.</returns>
         private static LogEventLevel GetLogLevel()
         {
             // Check environment variable first
@@ -106,6 +124,9 @@ namespace Bucket.Updater.Common
 #endif
         }
 
+        /// <summary>
+        /// Ensures the log directory exists, falling back to a temp directory if creation fails.
+        /// </summary>
         private static void EnsureLogDirectoryExists()
         {
             try
@@ -129,6 +150,9 @@ namespace Bucket.Updater.Common
             }
         }
 
+        /// <summary>
+        /// Asynchronously deletes old log files based on retention policy.
+        /// </summary>
         private static async Task CleanupOldLogsAsync()
         {
             try
@@ -141,6 +165,7 @@ namespace Bucket.Updater.Common
                 var retentionDays = GetLogRetentionDays();
                 var cutoffDate = DateTime.Now.AddDays(-retentionDays);
 
+                // Find log files older than the cutoff date
                 var oldFiles = logDirectory.GetFiles("updater-*.*")
                     .Where(f => f.CreationTime < cutoffDate)
                     .ToList();
@@ -169,6 +194,10 @@ namespace Bucket.Updater.Common
             }
         }
 
+        /// <summary>
+        /// Determines the number of days to retain log files based on environment variable or default value.
+        /// </summary>
+        /// <returns>Number of days to retain log files.</returns>
         private static int GetLogRetentionDays()
         {
             var envRetention = Environment.GetEnvironmentVariable("BUCKET_UPDATER_LOG_RETENTION_DAYS");
@@ -180,6 +209,9 @@ namespace Bucket.Updater.Common
             return 60; // Default 60 days retention
         }
 
+        /// <summary>
+        /// Logs shutdown information and disposes the logger if necessary.
+        /// </summary>
         public static void Shutdown()
         {
             Logger?.Information("=== Bucket Updater Shutting Down ===");
