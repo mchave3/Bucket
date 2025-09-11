@@ -180,7 +180,7 @@ namespace Bucket.Updater.ViewModels
                 Logger?.Information("Starting download and install process for version {Version}", _availableUpdate.Version);
                 var mainWindow = App.MainWindow as MainWindow;
                 var frame = mainWindow?.ContentFrame;
-                frame?.Navigate(typeof(DownloadInstallPage), _availableUpdate);
+                frame?.Navigate(typeof(DownloadPage), _availableUpdate);
             }
         }
 

@@ -49,7 +49,8 @@
             // ViewModels
             services.AddTransient<MainViewModel>();
             services.AddTransient<UpdateCheckPageViewModel>();
-            services.AddTransient<DownloadInstallPageViewModel>();
+            services.AddTransient<DownloadPageViewModel>();
+            services.AddTransient<InstallPageViewModel>();
 
             return services.BuildServiceProvider();
         }

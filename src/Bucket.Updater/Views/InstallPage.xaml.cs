@@ -1,14 +1,14 @@
 namespace Bucket.Updater.Views
 {
-    public sealed partial class DownloadInstallPage : Page
+    public sealed partial class InstallPage : Page
     {
-        public DownloadInstallPageViewModel ViewModel { get; }
+        public InstallPageViewModel ViewModel { get; }
         private DispatcherTimer? _scrollTimer;
 
-        public DownloadInstallPage()
+        public InstallPage()
         {
             this.InitializeComponent();
-            ViewModel = App.GetService<DownloadInstallPageViewModel>();
+            ViewModel = App.GetService<InstallPageViewModel>();
             DataContext = ViewModel;
             
             // Initialize scroll timer for debouncing
@@ -60,9 +60,9 @@ namespace Bucket.Updater.Views
         {
             base.OnNavigatedTo(e);
             
-            if (e.Parameter is Bucket.Updater.Models.UpdateInfo updateInfo)
+            if (e.Parameter is InstallInfo installInfo)
             {
-                ViewModel.StartDownloadAndInstall(updateInfo);
+                ViewModel.StartInstallation(installInfo);
             }
         }
 
@@ -80,6 +80,9 @@ namespace Bucket.Updater.Views
                 _scrollTimer.Tick -= ScrollTimer_Tick;
                 _scrollTimer = null;
             }
+            
+            // Cleanup ViewModel
+            ViewModel.Cleanup();
         }
     }
 }
