@@ -43,12 +43,12 @@ namespace Bucket.Updater.Services
                 }
 
                 progress?.Report("Starting installation...");
-                Logger?.Information("Executing MSI installation with msiexec");
+                Logger?.Information("Executing MSI installation with msiexec (silent mode)");
 
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "msiexec.exe",
-                    Arguments = $"/i \"{msiFilePath}\" /passive /norestart",
+                    Arguments = $"/i \"{msiFilePath}\" /quiet /norestart",
                     UseShellExecute = true,
                     Verb = "runas"
                 };

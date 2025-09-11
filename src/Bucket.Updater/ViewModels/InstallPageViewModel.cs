@@ -174,7 +174,6 @@ namespace Bucket.Updater.ViewModels
             SuccessIconVisibility = Visibility.Visible;
             IsCompleted = true;
             FinishButtonVisibility = Visibility.Visible;
-            AppendToLog("Installation completed successfully");
 
             Logger?.Information("Installation completed successfully for version {Version}", _installInfo?.UpdateInfo?.Version);
         }
