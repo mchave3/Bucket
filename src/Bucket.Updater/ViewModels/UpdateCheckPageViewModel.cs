@@ -97,8 +97,6 @@ namespace Bucket.Updater.ViewModels
                             DownloadInstallButtonVisibility = Visibility.Visible;
 
                             Logger?.Information("Update found: {CurrentVersion} → {NewVersion}", CurrentVersion, _availableUpdate.Version);
-                            Logger?.LogUserFriendlyMessage("UPDATE", $"New version available: {_availableUpdate.Version}", 
-                                new { CurrentVersion, NewVersion = _availableUpdate.Version });
                         }
                         else
                         {
@@ -111,8 +109,6 @@ namespace Bucket.Updater.ViewModels
                             CheckButtonVisibility = Visibility.Collapsed;
 
                             Logger?.Information("No updates available for current version {CurrentVersion}", CurrentVersion);
-                            Logger?.LogUserFriendlyMessage("CHECK", "No update available", 
-                                new { CurrentVersion });
                         }
 
                         IsChecking = false;
@@ -200,7 +196,6 @@ namespace Bucket.Updater.ViewModels
                     FileSize = _availableUpdate.FileSize
                 });
                 Logger?.Information("Starting download and install process for version {Version}", _availableUpdate.Version);
-                Logger?.LogUserFriendlyMessage("UPDATE", $"Installation of version {_availableUpdate.Version} started by user");
                 
                 var mainWindow = App.MainWindow as MainWindow;
                 var frame = mainWindow?.ContentFrame;

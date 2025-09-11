@@ -80,6 +80,10 @@ namespace Bucket.Updater.Common
 
         private bool ShouldSkipMessage(string message, LogEvent logEvent)
         {
+            // Skip debug level messages
+            if (logEvent.Level == LogEventLevel.Debug)
+                return true;
+
             // Skip highly technical messages
             var technicalKeywords = new[]
             {
@@ -87,14 +91,25 @@ namespace Bucket.Updater.Common
                 "Entering ", "Exiting ", "Performance:", "Debug",
                 "with parameters:", "Method", "Process.GetProcessesByName",
                 "LogContext", "Stopwatch", "BeginOperationScope",
-                "SessionId", "OperationId", "ProcessId"
+                "SessionId", "OperationId", "ProcessId", "async performance measurement",
+                "Deleted existing file", "Download configuration:", "Created temp directory",
+                "Starting download from", "Download started, size:", "File.Create", 
+                "GitHubService", "ConfigurationService", "InstallationService",
+                "UpdateService cleaning up", "Could not get Update Service"
             };
 
             if (technicalKeywords.Any(keyword => message.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
                 return true;
 
-            // Skip debug level messages
-            if (logEvent.Level == LogEventLevel.Debug)
+            // Skip messages that are already user-friendly formatted (avoid double processing)
+            if (message.Contains(": \"") && (message.Contains("CHECK") || message.Contains("UPDATE") || 
+                message.Contains("DOWNLOAD") || message.Contains("INSTALL")))
+                return true;
+
+            // Skip messages with technical properties structure
+            if (message.Contains("{") && message.Contains("}") && 
+                (message.Contains("CurrentVersion") || message.Contains("NewVersion") || 
+                 message.Contains("FileSize") || message.Contains("DownloadUrl")))
                 return true;
 
             return false;
@@ -102,16 +117,17 @@ namespace Bucket.Updater.Common
 
         private string MakeMessageUserFriendly(string message, LogEvent logEvent)
         {
-            // Replace technical terms with user-friendly equivalents
-            var friendlyMessage = message;
-
-            // Version updates
+            // Handle specific message patterns directly
+            
+            // Version updates - extract from message text when possible
             if (message.Contains("Update available:") && message.Contains("→"))
             {
-                if (logEvent.Properties.TryGetValue("NewVersion", out var newVersion))
+                // Extract version from message like "Update available: 1.0.0.0 → 25.9.9"
+                var parts = message.Split('→');
+                if (parts.Length == 2)
                 {
-                    var version = newVersion.ToString().Trim('"');
-                    return $"New version available: {version}";
+                    var newVersion = parts[1].Trim().Split(' ')[0]; // Get version before any additional info
+                    return $"New version available: {newVersion}";
                 }
                 return "New version available";
             }
@@ -126,34 +142,45 @@ namespace Bucket.Updater.Common
                 return "No update available";
             }
 
-            // Download progress
+            // Download progress - extract size from message when available
             if (message.Contains("Download completed successfully"))
             {
-                if (logEvent.Properties.TryGetValue("FileSize", out var fileSize))
+                // Try to extract size from message like "...to path (60132300 bytes)"
+                var bytesMatch = System.Text.RegularExpressions.Regex.Match(message, @"\((\d+) bytes\)");
+                if (bytesMatch.Success && long.TryParse(bytesMatch.Groups[1].Value, out var size))
                 {
-                    if (long.TryParse(fileSize.ToString(), out var size))
-                    {
-                        var sizeStr = FormatFileSize(size);
-                        return $"Download completed ({sizeStr})";
-                    }
+                    var sizeStr = FormatFileSize(size);
+                    return $"Download completed ({sizeStr})";
                 }
                 return "Download completed";
             }
 
-            if (message.Contains("Starting download"))
+            // Extract version from download messages
+            if (message.Contains("Starting download process for version"))
             {
-                if (logEvent.Properties.TryGetValue("Version", out var version))
+                // Extract from "Starting download process for version 25.9.9, size: ..."
+                var versionMatch = System.Text.RegularExpressions.Regex.Match(message, @"version ([^\s,]+)");
+                if (versionMatch.Success)
                 {
-                    var versionStr = version.ToString().Trim('"');
-                    return $"Starting download version {versionStr}";
+                    return $"Starting download version {versionMatch.Groups[1].Value}";
                 }
                 return "Starting download";
             }
 
-            // Installation
+            // Installation messages - handle various installation patterns
             if (message.Contains("MSI installation completed successfully"))
             {
                 return "Installation completed successfully";
+            }
+
+            if (message.Contains("Starting installation for version"))
+            {
+                var versionMatch = System.Text.RegularExpressions.Regex.Match(message, @"version ([^\s,\)]+)");
+                if (versionMatch.Success)
+                {
+                    return $"Starting installation version {versionMatch.Groups[1].Value}";
+                }
+                return "Starting installation";
             }
 
             if (message.Contains("Starting MSI installation"))
@@ -199,20 +226,30 @@ namespace Bucket.Updater.Common
                     return "Installation started by user";
             }
 
-            // Generic cleanup
-            friendlyMessage = friendlyMessage.Replace("UpdateService", "Update Service");
-            friendlyMessage = friendlyMessage.Replace("InstallationService", "Installation Service");
-            
-            // Remove technical details like file paths, IDs, etc.
-            friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
-                friendlyMessage, @"\b[A-Z]:\\[^\s]+", "[file_path]");
-            
-            friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
-                friendlyMessage, @"\b[a-f0-9]{8}\b", "");
-            
-            friendlyMessage = friendlyMessage.Trim();
+            // If no specific pattern matched, do basic cleanup but be more selective
+            var friendlyMessage = message;
 
-            return string.IsNullOrEmpty(friendlyMessage) ? message : friendlyMessage;
+            // Only do generic cleanup if the message seems worth showing to users
+            if (message.Contains("Update") || message.Contains("Download") || message.Contains("Install"))
+            {
+                // Basic cleanup
+                friendlyMessage = friendlyMessage.Replace("UpdateService", "Update Service");
+                friendlyMessage = friendlyMessage.Replace("InstallationService", "Installation Service");
+                
+                // Remove technical details like file paths, IDs, etc.
+                friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
+                    friendlyMessage, @"\b[A-Z]:\\[^\s]+", "[file_path]");
+                
+                friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
+                    friendlyMessage, @"\b[a-f0-9]{8}\b", "");
+                
+                friendlyMessage = friendlyMessage.Trim();
+
+                return string.IsNullOrEmpty(friendlyMessage) ? message : friendlyMessage;
+            }
+
+            // For other messages, return as-is (they'll likely be filtered out anyway)
+            return message;
         }
 
         private string FormatFileSize(long bytes)

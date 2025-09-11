@@ -62,7 +62,6 @@ namespace Bucket.Updater.ViewModels
                         DownloadUrl = updateInfo.DownloadUrl 
                     });
                     Logger?.Information("Starting download process for version {Version}, size: {Size}", updateInfo.Version, TotalSize);
-                    Logger?.LogUserFriendlyMessage("DOWNLOAD", $"Starting download version {updateInfo.Version}");
                 }
                 else
                 {
@@ -112,7 +111,6 @@ namespace Bucket.Updater.ViewModels
                 Logger?.LogPerformance("DownloadComplete", _stopwatch.Elapsed, finalSize);
                 Logger?.Information("Download completed successfully for version {Version}, final size: {Size} bytes", 
                     _updateInfo.Version, finalSize);
-                Logger?.LogUserFriendlyMessage("DOWNLOAD", $"Download completed ({FormatFileSize(finalSize)})");
                 
                 NavigateToInstallPage();
             }
@@ -120,7 +118,6 @@ namespace Bucket.Updater.ViewModels
             {
                 Logger?.LogUserAction("DownloadCancelled", new { Version = _updateInfo.Version });
                 Logger?.Information("Download cancelled by user for version {Version}", _updateInfo.Version);
-                Logger?.LogUserFriendlyMessage("DOWNLOAD", "Download cancelled by user");
                 HandleError("Download was cancelled");
             }
             catch (Exception ex)

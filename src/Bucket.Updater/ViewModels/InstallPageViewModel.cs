@@ -76,7 +76,6 @@ namespace Bucket.Updater.ViewModels
                     UpdateVersion = _installInfo.UpdateInfo.Version;
                     Logger?.LogUserAction("StartInstallation", new { Version = _installInfo.UpdateInfo.Version });
                     Logger?.Information("Starting installation for version {Version}", _installInfo.UpdateInfo.Version);
-                    Logger?.LogUserFriendlyMessage("INSTALL", $"Starting installation version {_installInfo.UpdateInfo.Version}");
                 }
                 else
                 {
@@ -205,7 +204,6 @@ namespace Bucket.Updater.ViewModels
 
             Logger?.LogUserAction("InstallationCompleted", new { Version = _installInfo?.UpdateInfo?.Version });
             Logger?.Information("Installation completed successfully for version {Version}", _installInfo?.UpdateInfo?.Version);
-            Logger?.LogUserFriendlyMessage("INSTALL", "Installation completed successfully");
         }
 
         private void HandleError(string message)
@@ -224,7 +222,6 @@ namespace Bucket.Updater.ViewModels
 
             Logger?.Error("Installation error: {ErrorMessage} for version {Version}", 
                 message, _installInfo?.UpdateInfo?.Version);
-            Logger?.LogUserFriendlyMessage("INSTALL", $"Installation error: {message}");
             AppendToLog($"Error: {message}");
         }
 

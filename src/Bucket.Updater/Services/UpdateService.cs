@@ -60,8 +60,6 @@ namespace Bucket.Updater.Services
                     {
                         Logger?.Information("Update check completed, update available: {CurrentVersion} → {NewVersion} ({FileSize} bytes)", 
                             configuration.CurrentVersion, updateInfo.Version, updateInfo.FileSize);
-                        Logger?.LogUserFriendlyMessage("CHECK", "New version available", 
-                            new { CurrentVersion = configuration.CurrentVersion, NewVersion = updateInfo.Version });
                         Logger?.Debug("Update details: {@UpdateInfo}", new
                         {
                             updateInfo.Version,
@@ -73,7 +71,6 @@ namespace Bucket.Updater.Services
                     {
                         Logger?.Information("Update check completed, no updates available for version {CurrentVersion}", 
                             configuration.CurrentVersion);
-                        Logger?.LogUserFriendlyMessage("CHECK", "No update available");
                     }
 
                     return updateInfo;
