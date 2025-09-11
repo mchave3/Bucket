@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="80" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -26,50 +27,60 @@
                        HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Install Content (Centered) -->
+        <!-- Install Content -->
         <StackPanel Grid.Row="1" 
-                    VerticalAlignment="Center"
+                    VerticalAlignment="Top"
                     HorizontalAlignment="Center"
-                    Spacing="32"
-                    MaxWidth="700">
+                    Spacing="24"
+                    MaxWidth="600"
+                    Margin="0,48,0,0">
             
-            <!-- Status Icon -->
-            <StackPanel HorizontalAlignment="Center" 
-                        Spacing="16">
+            <!-- Status Icon Container -->
+            <Grid HorizontalAlignment="Center"
+                  Width="80"
+                  Height="80">
                 <!-- Install Progress Ring -->
                 <dev:ProgressRing IsActive="{x:Bind ViewModel.IsProgressActive, Mode=OneWay}"
                                   Width="64" 
                                   Height="64"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
                                   Visibility="{x:Bind ViewModel.ProgressRingVisibility, Mode=OneWay}" />
                 
                 <!-- Success Icon -->
                 <FontIcon Glyph="&#xE73E;" 
                           FontSize="64"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
                           Foreground="{ThemeResource SystemFillColorSuccessBrush}"
                           Visibility="{x:Bind ViewModel.SuccessIconVisibility, Mode=OneWay}" />
                 
                 <!-- Error Icon -->
                 <FontIcon Glyph="&#xE783;" 
                           FontSize="64"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
                           Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                           Visibility="{x:Bind ViewModel.ErrorIconVisibility, Mode=OneWay}" />
-            </StackPanel>
+            </Grid>
 
             <!-- Status Text -->
             <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" 
                        FontSize="18"
                        FontWeight="SemiBold"
                        HorizontalAlignment="Center"
-                       TextAlignment="Center" />
+                       TextAlignment="Center"
+                       MaxWidth="500"
+                       TextWrapping="WrapWholeWords" />
 
-            <!-- Installation Logs (Expandable) -->
+            <!-- Installation Logs -->
             <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
                     CornerRadius="8"
                     Padding="16"
-                    MinHeight="200"
-                    MaxHeight="400"
-                    HorizontalAlignment="Stretch"
-                    Visibility="{x:Bind ViewModel.LogsVisibility, Mode=OneWay}">
+                    MinHeight="250"
+                    MaxHeight="300"
+                    Width="580"
+                    HorizontalAlignment="Center">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -90,33 +101,39 @@
                                    TextWrapping="Wrap"
                                    FontFamily="Consolas"
                                    FontSize="12"
-                                   IsTextSelectionEnabled="True" />
+                                   IsTextSelectionEnabled="True"
+                                   Margin="4,0,4,0" />
                     </ScrollViewer>
                 </Grid>
             </Border>
 
-            <!-- Success/Error Messages -->
-            <StackPanel Spacing="12"
-                        HorizontalAlignment="Stretch">
-                <!-- Success Message -->
-                <InfoBar IsOpen="{x:Bind ViewModel.IsCompleted, Mode=OneWay}"
-                         Severity="Success"
-                         Title="Installation Completed"
-                         Message="The update has been installed successfully. Please restart the application to use the new version."
-                         IsClosable="False" />
+        </StackPanel>
 
-                <!-- Error Message -->
-                <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
-                         Severity="Error"
-                         Title="Update Failed"
-                         Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-                         IsClosable="False" />
-            </StackPanel>
+        <!-- Success/Error Messages -->
+        <StackPanel Grid.Row="2"
+                    Spacing="12"
+                    Width="580"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <!-- Success Message -->
+            <InfoBar IsOpen="{x:Bind ViewModel.IsCompleted, Mode=OneWay}"
+                     Severity="Success"
+                     Title="Installation Completed"
+                     Message="The update has been installed successfully. Please restart the application to use the new version."
+                     IsClosable="False"
+                     HorizontalAlignment="Stretch" />
 
+            <!-- Error Message -->
+            <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+                     Severity="Error"
+                     Title="Update Failed"
+                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                     IsClosable="False"
+                     HorizontalAlignment="Stretch" />
         </StackPanel>
 
         <!-- Navigation Buttons -->
-        <StackPanel Grid.Row="2" 
+        <StackPanel Grid.Row="3" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     Spacing="12" 
