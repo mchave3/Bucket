@@ -10,12 +10,16 @@
     <Grid Padding="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="8" HorizontalAlignment="Center">
+        <StackPanel Grid.Row="0" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,32">
             <TextBlock Text="{x:Bind ViewModel.HeaderText, Mode=OneWay}" 
                        FontSize="28" 
                        FontWeight="Bold"
@@ -26,102 +30,118 @@
                        HorizontalAlignment="Center" />
         </StackPanel>
 
-        <!-- Progress Content -->
-        <dev:Card Grid.Row="1" 
-                  Margin="0,32,0,0" 
-                  Padding="32"
-                  VerticalAlignment="Center">
-            <StackPanel Spacing="24">
-                <!-- Progress Icon -->
-                <StackPanel HorizontalAlignment="Center" Spacing="16">
-                    <!-- Download/Install Progress Ring -->
-                    <dev:ProgressRing IsActive="{x:Bind ViewModel.IsProgressActive, Mode=OneWay}"
-                                      Width="64" 
-                                      Height="64"
-                                      Visibility="{x:Bind ViewModel.ProgressRingVisibility, Mode=OneWay}" />
-                    
-                    <!-- Success Icon -->
-                    <FontIcon Glyph="&#xE73E;" 
-                              FontSize="64"
-                              Foreground="{ThemeResource SystemFillColorSuccessBrush}"
-                              Visibility="{x:Bind ViewModel.SuccessIconVisibility, Mode=OneWay}" />
-                    
-                    <!-- Error Icon -->
-                    <FontIcon Glyph="&#xE783;" 
-                              FontSize="64"
-                              Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                              Visibility="{x:Bind ViewModel.ErrorIconVisibility, Mode=OneWay}" />
-                </StackPanel>
+        <!-- Progress Icon -->
+        <StackPanel Grid.Row="1" 
+                    HorizontalAlignment="Center" 
+                    Spacing="16" 
+                    Margin="0,0,0,24">
+            <!-- Download/Install Progress Ring -->
+            <dev:ProgressRing IsActive="{x:Bind ViewModel.IsProgressActive, Mode=OneWay}"
+                              Width="64" 
+                              Height="64"
+                              Visibility="{x:Bind ViewModel.ProgressRingVisibility, Mode=OneWay}" />
+            
+            <!-- Success Icon -->
+            <FontIcon Glyph="&#xE73E;" 
+                      FontSize="64"
+                      Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                      Visibility="{x:Bind ViewModel.SuccessIconVisibility, Mode=OneWay}" />
+            
+            <!-- Error Icon -->
+            <FontIcon Glyph="&#xE783;" 
+                      FontSize="64"
+                      Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                      Visibility="{x:Bind ViewModel.ErrorIconVisibility, Mode=OneWay}" />
+        </StackPanel>
 
-                <!-- Progress Bar (for download) -->
-                <ProgressBar Value="{x:Bind ViewModel.ProgressPercentage, Mode=OneWay}"
-                             Minimum="0"
-                             Maximum="100"
-                             Visibility="{x:Bind ViewModel.ProgressBarVisibility, Mode=OneWay}" />
+        <!-- Progress Bar (for download) -->
+        <ProgressBar Grid.Row="2"
+                     Value="{x:Bind ViewModel.ProgressPercentage, Mode=OneWay}"
+                     Minimum="0"
+                     Maximum="100"
+                     Visibility="{x:Bind ViewModel.ProgressBarVisibility, Mode=OneWay}"
+                     Margin="0,0,0,24" />
 
-                <!-- Status Text -->
-                <StackPanel Spacing="8" HorizontalAlignment="Center">
-                    <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" 
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center" />
-                    
-                    <!-- Download specific info -->
-                    <StackPanel Orientation="Horizontal" 
-                                Spacing="8"
-                                HorizontalAlignment="Center"
-                                Visibility="{x:Bind ViewModel.DownloadInfoVisibility, Mode=OneWay}">
-                        <TextBlock Text="{x:Bind ViewModel.DownloadedSize, Mode=OneWay}" />
-                        <TextBlock Text="/" />
-                        <TextBlock Text="{x:Bind ViewModel.TotalSize, Mode=OneWay}" />
-                    </StackPanel>
-                    
-                    <TextBlock Text="{x:Bind ViewModel.DownloadSpeed, Mode=OneWay}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               HorizontalAlignment="Center"
-                               Visibility="{x:Bind ViewModel.DownloadInfoVisibility, Mode=OneWay}" />
-                </StackPanel>
-
-                <!-- Installation Log -->
-                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                        CornerRadius="8"
-                        Padding="16"
-                        Visibility="{x:Bind ViewModel.InstallLogVisibility, Mode=OneWay}">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Installation Details" 
-                                   FontWeight="SemiBold" />
-                        
-                        <ScrollViewer MaxHeight="120"
-                                      VerticalScrollBarVisibility="Auto"
-                                      ZoomMode="Disabled">
-                            <TextBlock Text="{x:Bind ViewModel.InstallationLog, Mode=OneWay}"
-                                       TextWrapping="Wrap"
-                                       FontFamily="Consolas"
-                                       FontSize="12"
-                                       IsTextSelectionEnabled="True" />
-                        </ScrollViewer>
-                    </StackPanel>
-                </Border>
-
-                <!-- Success Message -->
-                <InfoBar IsOpen="{x:Bind ViewModel.IsCompleted, Mode=OneWay}"
-                         Severity="Success"
-                         Title="Installation Completed"
-                         Message="The update has been installed successfully. Please restart the application to use the new version."
-                         IsClosable="False" />
-
-                <!-- Error Message -->
-                <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
-                         Severity="Error"
-                         Title="Update Failed"
-                         Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
-                         IsClosable="False" />
+        <!-- Status Text -->
+        <StackPanel Grid.Row="3" 
+                    Spacing="8" 
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,24">
+            <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" 
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center" />
+            
+            <!-- Download specific info -->
+            <StackPanel Orientation="Horizontal" 
+                        Spacing="8"
+                        HorizontalAlignment="Center"
+                        Visibility="{x:Bind ViewModel.DownloadInfoVisibility, Mode=OneWay}">
+                <TextBlock Text="{x:Bind ViewModel.DownloadedSize, Mode=OneWay}" />
+                <TextBlock Text="/" />
+                <TextBlock Text="{x:Bind ViewModel.TotalSize, Mode=OneWay}" />
             </StackPanel>
-        </dev:Card>
+            
+            <TextBlock Text="{x:Bind ViewModel.DownloadSpeed, Mode=OneWay}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       HorizontalAlignment="Center"
+                       Visibility="{x:Bind ViewModel.DownloadInfoVisibility, Mode=OneWay}" />
+        </StackPanel>
+
+        <!-- Installation Log (Expandable) -->
+        <Border Grid.Row="4"
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                CornerRadius="8"
+                Padding="16"
+                Visibility="{x:Bind ViewModel.InstallLogVisibility, Mode=OneWay}"
+                MinHeight="120">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0"
+                           Text="Installation Details" 
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,12" />
+                
+                <ScrollViewer Grid.Row="1"
+                              x:Name="LogScrollViewer"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              ZoomMode="Disabled">
+                    <TextBlock Text="{x:Bind ViewModel.InstallationLog, Mode=OneWay}"
+                               TextWrapping="Wrap"
+                               FontFamily="Consolas"
+                               FontSize="12"
+                               IsTextSelectionEnabled="True" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Success/Error Messages -->
+        <StackPanel Grid.Row="5" 
+                    Spacing="12"
+                    Margin="0,24,0,0">
+            <!-- Success Message -->
+            <InfoBar IsOpen="{x:Bind ViewModel.IsCompleted, Mode=OneWay}"
+                     Severity="Success"
+                     Title="Installation Completed"
+                     Message="The update has been installed successfully. Please restart the application to use the new version."
+                     IsClosable="False" />
+
+            <!-- Error Message -->
+            <InfoBar IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+                     Severity="Error"
+                     Title="Update Failed"
+                     Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                     IsClosable="False" />
+        </StackPanel>
 
         <!-- Navigation Buttons -->
-        <StackPanel Grid.Row="2" 
+        <StackPanel Grid.Row="6" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     Spacing="12" 
