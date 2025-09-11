@@ -129,14 +129,40 @@
                 }
                 else
                 {
-                    Logger?.Warning("Could not get UpdateService during shutdown, skipping cleanup");
+                    Logger?.Debug("UpdateService not available during shutdown, performing manual cleanup");
+
+                    // Manual cleanup fallback
+                    try
+                    {
+                        var tempPath = Path.Combine(Path.GetTempPath(), "BucketUpdater");
+                        if (Directory.Exists(tempPath))
+                        {
+                            var files = Directory.GetFiles(tempPath, "*.msi");
+                            foreach (var file in files)
+                            {
+                                try
+                                {
+                                    File.Delete(file);
+                                    Logger?.Debug("Manually deleted temporary file: {File}", file);
+                                }
+                                catch
+                                {
+                                    // Ignore cleanup errors for individual files
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        Logger?.Debug(cleanupEx, "Manual cleanup failed, but this is not critical");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Logger?.Warning(ex, "Failed to cleanup temporary files on application exit");
             }
-            
+
             // Properly shutdown logger
             LoggerSetup.Shutdown();
         }

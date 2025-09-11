@@ -31,7 +31,7 @@ namespace Bucket.Updater.Common
                 return;
 
             var timestamp = logEvent.Timestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
-            var message = logEvent.RenderMessage();
+            var message = logEvent.RenderMessage(CultureInfo.InvariantCulture);
             var action = ExtractUserFriendlyAction(logEvent, message);
 
             // Skip highly technical messages
@@ -39,7 +39,7 @@ namespace Bucket.Updater.Common
                 return;
 
             var userFriendlyMessage = MakeMessageUserFriendly(message, logEvent);
-            
+
             // Format: [HH:mm:ss] ACTION: Message
             output.WriteLine($"[{timestamp}] {action}: {userFriendlyMessage}");
         }
@@ -65,10 +65,10 @@ namespace Bucket.Updater.Common
             // Categorize by message content
             if (message.Contains("check", StringComparison.OrdinalIgnoreCase))
                 return "CHECK";
-            
+
             if (message.Contains("download", StringComparison.OrdinalIgnoreCase))
                 return "DOWNLOAD";
-            
+
             if (message.Contains("install", StringComparison.OrdinalIgnoreCase))
                 return "INSTALL";
 
@@ -87,13 +87,13 @@ namespace Bucket.Updater.Common
             // Skip highly technical messages
             var technicalKeywords = new[]
             {
-                "Operation ", "started with ID", "completed in", "ms (ID:", 
+                "Operation ", "started with ID", "completed in", "ms (ID:",
                 "Entering ", "Exiting ", "Performance:", "Debug",
                 "with parameters:", "Method", "Process.GetProcessesByName",
                 "LogContext", "Stopwatch", "BeginOperationScope",
                 "SessionId", "OperationId", "ProcessId", "async performance measurement",
                 "Deleted existing file", "Download configuration:", "Created temp directory",
-                "Starting download from", "Download started, size:", "File.Create", 
+                "Starting download from", "Download started, size:", "File.Create",
                 "GitHubService", "ConfigurationService", "InstallationService",
                 "UpdateService cleaning up", "Could not get Update Service"
             };
@@ -102,14 +102,18 @@ namespace Bucket.Updater.Common
                 return true;
 
             // Skip messages that are already user-friendly formatted (avoid double processing)
-            if (message.Contains(": \"") && (message.Contains("CHECK") || message.Contains("UPDATE") || 
-                message.Contains("DOWNLOAD") || message.Contains("INSTALL")))
+            if (message.Contains(": \"", StringComparison.Ordinal) && (message.Contains("CHECK", StringComparison.OrdinalIgnoreCase) || message.Contains("UPDATE", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("DOWNLOAD", StringComparison.OrdinalIgnoreCase) || message.Contains("INSTALL", StringComparison.OrdinalIgnoreCase)))
                 return true;
 
             // Skip messages with technical properties structure
-            if (message.Contains("{") && message.Contains("}") && 
-                (message.Contains("CurrentVersion") || message.Contains("NewVersion") || 
-                 message.Contains("FileSize") || message.Contains("DownloadUrl")))
+            if (message.Contains('{', StringComparison.Ordinal) && message.Contains('}', StringComparison.Ordinal) &&
+                (message.Contains("CurrentVersion", StringComparison.OrdinalIgnoreCase) || message.Contains("NewVersion", StringComparison.OrdinalIgnoreCase) ||
+                 message.Contains("FileSize", StringComparison.OrdinalIgnoreCase) || message.Contains("DownloadUrl", StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            // Skip already formatted download completion messages to avoid duplicates
+            if (message.Contains("Download completed", StringComparison.OrdinalIgnoreCase) && message.Contains('(', StringComparison.Ordinal) && message.Contains("MB)", StringComparison.OrdinalIgnoreCase))
                 return true;
 
             return false;
@@ -118,9 +122,9 @@ namespace Bucket.Updater.Common
         private string MakeMessageUserFriendly(string message, LogEvent logEvent)
         {
             // Handle specific message patterns directly
-            
+
             // Version updates - extract from message text when possible
-            if (message.Contains("Update available:") && message.Contains("→"))
+            if (message.Contains("Update available:", StringComparison.OrdinalIgnoreCase) && message.Contains('→', StringComparison.Ordinal))
             {
                 // Extract version from message like "Update available: 1.0.0.0 → 25.9.9"
                 var parts = message.Split('→');
@@ -132,18 +136,18 @@ namespace Bucket.Updater.Common
                 return "New version available";
             }
 
-            if (message.Contains("Update check completed, update available:"))
+            if (message.Contains("Update check completed, update available:", StringComparison.OrdinalIgnoreCase))
             {
                 return "Update check completed - Update available";
             }
 
-            if (message.Contains("No updates available"))
+            if (message.Contains("No updates available", StringComparison.OrdinalIgnoreCase))
             {
                 return "No update available";
             }
 
             // Download progress - extract size from message when available
-            if (message.Contains("Download completed successfully"))
+            if (message.Contains("Download completed successfully", StringComparison.OrdinalIgnoreCase))
             {
                 // Try to extract size from message like "...to path (60132300 bytes)"
                 var bytesMatch = System.Text.RegularExpressions.Regex.Match(message, @"\((\d+) bytes\)");
@@ -156,7 +160,7 @@ namespace Bucket.Updater.Common
             }
 
             // Extract version from download messages
-            if (message.Contains("Starting download process for version"))
+            if (message.Contains("Starting download process for version", StringComparison.OrdinalIgnoreCase))
             {
                 // Extract from "Starting download process for version 25.9.9, size: ..."
                 var versionMatch = System.Text.RegularExpressions.Regex.Match(message, @"version ([^\s,]+)");
@@ -168,12 +172,12 @@ namespace Bucket.Updater.Common
             }
 
             // Installation messages - handle various installation patterns
-            if (message.Contains("MSI installation completed successfully"))
+            if (message.Contains("MSI installation completed successfully", StringComparison.OrdinalIgnoreCase))
             {
                 return "Installation completed successfully";
             }
 
-            if (message.Contains("Starting installation for version"))
+            if (message.Contains("Starting installation for version", StringComparison.OrdinalIgnoreCase))
             {
                 var versionMatch = System.Text.RegularExpressions.Regex.Match(message, @"version ([^\s,\)]+)");
                 if (versionMatch.Success)
@@ -183,23 +187,23 @@ namespace Bucket.Updater.Common
                 return "Starting installation";
             }
 
-            if (message.Contains("Starting MSI installation"))
+            if (message.Contains("Starting MSI installation", StringComparison.OrdinalIgnoreCase))
             {
                 return "Starting installation";
             }
 
-            if (message.Contains("Installation failed"))
+            if (message.Contains("Installation failed", StringComparison.OrdinalIgnoreCase))
             {
                 return "Installation failed";
             }
 
-            if (message.Contains("Installation completed"))
+            if (message.Contains("Installation completed", StringComparison.OrdinalIgnoreCase))
             {
                 return "Installation completed";
             }
 
             // Process management
-            if (message.Contains("Bucket process") && message.Contains("stopped"))
+            if (message.Contains("Bucket process", StringComparison.OrdinalIgnoreCase) && message.Contains("stopped", StringComparison.OrdinalIgnoreCase))
             {
                 return "Application closed for update";
             }
@@ -235,14 +239,14 @@ namespace Bucket.Updater.Common
                 // Basic cleanup
                 friendlyMessage = friendlyMessage.Replace("UpdateService", "Update Service");
                 friendlyMessage = friendlyMessage.Replace("InstallationService", "Installation Service");
-                
+
                 // Remove technical details like file paths, IDs, etc.
                 friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
                     friendlyMessage, @"\b[A-Z]:\\[^\s]+", "[file_path]");
-                
+
                 friendlyMessage = System.Text.RegularExpressions.Regex.Replace(
                     friendlyMessage, @"\b[a-f0-9]{8}\b", "");
-                
+
                 friendlyMessage = friendlyMessage.Trim();
 
                 return string.IsNullOrEmpty(friendlyMessage) ? message : friendlyMessage;
