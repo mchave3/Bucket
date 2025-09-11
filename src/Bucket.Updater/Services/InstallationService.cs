@@ -103,9 +103,16 @@ namespace Bucket.Updater.Services
                 using var fileStream = File.OpenRead(msiFilePath);
                 await fileStream.ReadAsync(buffer, 0, 8);
 
-                var signature = System.Text.Encoding.ASCII.GetString(buffer);
-                return signature.StartsWith("ÐÀÂ", StringComparison.Ordinal) || 
-                       signature.Contains("Microsoft", StringComparison.OrdinalIgnoreCase);
+                // MSI files use OLE/Structured Storage format with signature: D0 CF 11 E0 A1 B1 1A E1
+                var expectedSignature = new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 };
+                
+                for (int i = 0; i < expectedSignature.Length; i++)
+                {
+                    if (buffer[i] != expectedSignature[i])
+                        return false;
+                }
+
+                return true;
             }
             catch
             {
