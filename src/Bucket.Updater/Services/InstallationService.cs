@@ -6,6 +6,7 @@ namespace Bucket.Updater.Services
     {
         Task<bool> InstallUpdateAsync(string msiFilePath, IProgress<string>? progress = null, CancellationToken cancellationToken = default);
         Task<bool> ValidateMsiFileAsync(string msiFilePath);
+        Task<bool> EnsureBucketProcessStoppedAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default);
         void CleanupDownloadedFiles(string downloadPath);
     }
 
@@ -29,6 +30,14 @@ namespace Bucket.Updater.Services
                 {
                     Logger?.Error("MSI file validation failed: {FilePath}", msiFilePath);
                     progress?.Report("MSI file validation failed");
+                    return false;
+                }
+
+                progress?.Report("Stopping Bucket application...");
+                if (!await EnsureBucketProcessStoppedAsync(progress, cancellationToken))
+                {
+                    Logger?.Error("Failed to stop Bucket process before installation");
+                    progress?.Report("Failed to stop Bucket application");
                     return false;
                 }
 
@@ -116,6 +125,94 @@ namespace Bucket.Updater.Services
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public async Task<bool> EnsureBucketProcessStoppedAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                Logger?.Information("Checking for running Bucket processes");
+                var bucketProcesses = Process.GetProcessesByName("Bucket").ToList();
+                
+                if (!bucketProcesses.Any())
+                {
+                    Logger?.Information("No Bucket processes found running");
+                    return true;
+                }
+
+                Logger?.Information("Found {Count} Bucket process(es) running", bucketProcesses.Count);
+                progress?.Report($"Found {bucketProcesses.Count} Bucket process(es) running...");
+
+                foreach (var process in bucketProcesses)
+                {
+                    try
+                    {
+                        if (process.HasExited)
+                            continue;
+
+                        Logger?.Information("Attempting to gracefully close Bucket process (PID: {ProcessId})", process.Id);
+                        progress?.Report("Attempting graceful shutdown...");
+
+                        // Try graceful shutdown first
+                        if (process.CloseMainWindow())
+                        {
+                            // Wait up to 10 seconds for graceful shutdown
+                            bool exited = await Task.Run(() => process.WaitForExit(10000), cancellationToken);
+                            
+                            if (exited)
+                            {
+                                Logger?.Information("Bucket process (PID: {ProcessId}) closed gracefully", process.Id);
+                                continue;
+                            }
+                        }
+
+                        // If graceful shutdown failed, force kill
+                        if (!process.HasExited)
+                        {
+                            Logger?.Warning("Graceful shutdown failed, force killing Bucket process (PID: {ProcessId})", process.Id);
+                            progress?.Report("Force closing Bucket application...");
+                            
+                            process.Kill();
+                            await Task.Run(() => process.WaitForExit(5000), cancellationToken);
+                            
+                            Logger?.Information("Bucket process (PID: {ProcessId}) force killed", process.Id);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger?.Error(ex, "Error stopping Bucket process (PID: {ProcessId})", process.Id);
+                    }
+                    finally
+                    {
+                        process.Dispose();
+                    }
+                }
+
+                // Final check to ensure all processes are stopped
+                await Task.Delay(1000, cancellationToken); // Small delay to ensure processes are fully terminated
+                
+                var remainingProcesses = Process.GetProcessesByName("Bucket");
+                if (remainingProcesses.Any())
+                {
+                    Logger?.Error("Failed to stop all Bucket processes. {Count} processes still running", remainingProcesses.Length);
+                    progress?.Report($"Failed to stop all Bucket processes. {remainingProcesses.Length} still running");
+                    
+                    foreach (var process in remainingProcesses)
+                        process.Dispose();
+                    
+                    return false;
+                }
+
+                Logger?.Information("All Bucket processes successfully stopped");
+                progress?.Report("Bucket application stopped successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "Exception occurred while stopping Bucket processes");
+                progress?.Report($"Error stopping Bucket application: {ex.Message}");
                 return false;
             }
         }
