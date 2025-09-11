@@ -15,8 +15,8 @@
 
         <!-- Header -->
         <StackPanel Grid.Row="0" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,32">
-            <TextBlock Text="{x:Bind ViewModel.HeaderText, Mode=OneWay}" 
-                       FontSize="28" 
+            <TextBlock Text="{x:Bind ViewModel.HeaderText, Mode=OneWay}"
+                       FontSize="28"
                        FontWeight="Bold"
                        HorizontalAlignment="Center" />
             <TextBlock Text="{x:Bind ViewModel.UpdateVersion, Mode=OneWay}"
@@ -26,15 +26,14 @@
         </StackPanel>
 
         <!-- Download Content (Centered) -->
-        <StackPanel Grid.Row="1" 
+        <StackPanel Grid.Row="1"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    Spacing="32"
-                    MaxWidth="500">
-            
+                    Spacing="32">
+
             <!-- Progress Ring -->
             <dev:ProgressRing IsActive="{x:Bind ViewModel.IsProgressActive, Mode=OneWay}"
-                              Width="64" 
+                              Width="64"
                               Height="64"
                               HorizontalAlignment="Center" />
 
@@ -42,26 +41,27 @@
             <ProgressBar Value="{x:Bind ViewModel.ProgressPercentage, Mode=OneWay}"
                          Minimum="0"
                          Maximum="100"
-                         HorizontalAlignment="Stretch" />
+                         HorizontalAlignment="Center"
+                         Width="350"/>
 
             <!-- Status Text -->
-            <StackPanel Spacing="8" 
+            <StackPanel Spacing="8"
                         HorizontalAlignment="Center">
-                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" 
+                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
                            FontSize="18"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"
                            TextAlignment="Center" />
-                
+
                 <!-- Download specific info -->
-                <StackPanel Orientation="Horizontal" 
+                <StackPanel Orientation="Horizontal"
                             Spacing="8"
                             HorizontalAlignment="Center">
                     <TextBlock Text="{x:Bind ViewModel.DownloadedSize, Mode=OneWay}" />
                     <TextBlock Text="/" />
                     <TextBlock Text="{x:Bind ViewModel.TotalSize, Mode=OneWay}" />
                 </StackPanel>
-                
+
                 <TextBlock Text="{x:Bind ViewModel.DownloadSpeed, Mode=OneWay}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            HorizontalAlignment="Center" />
