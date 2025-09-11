@@ -62,31 +62,56 @@ namespace Bucket.Updater.ViewModels
         public InstallPageViewModel(IUpdateService updateService)
         {
             _updateService = updateService;
-            Logger?.Information("InstallPageViewModel initialized");
+            Logger?.LogMethodEntry(nameof(InstallPageViewModel));
+            Logger?.Information("InstallPageViewModel initialized with UpdateService");
         }
 
         public async void StartInstallation(InstallInfo installInfo)
         {
-            _installInfo = installInfo;
-            if (_installInfo?.UpdateInfo != null)
+            using (Logger?.BeginOperationScope("InstallationProcess", new { Version = installInfo?.UpdateInfo?.Version }))
             {
-                UpdateVersion = _installInfo.UpdateInfo.Version;
-                Logger?.Information("Starting installation for version {Version}", _installInfo.UpdateInfo.Version);
-            }
+                _installInfo = installInfo;
+                if (_installInfo?.UpdateInfo != null)
+                {
+                    UpdateVersion = _installInfo.UpdateInfo.Version;
+                    Logger?.LogUserAction("StartInstallation", new { Version = _installInfo.UpdateInfo.Version });
+                    Logger?.Information("Starting installation for version {Version}", _installInfo.UpdateInfo.Version);
+                    Logger?.LogUserFriendlyMessage("INSTALL", $"Starting installation version {_installInfo.UpdateInfo.Version}");
+                }
+                else
+                {
+                    Logger?.Error("StartInstallation called with null UpdateInfo");
+                    HandleError("Invalid installation information");
+                    return;
+                }
 
-            await StartInstallationAsync();
+                await StartInstallationAsync();
+            }
         }
 
         private async Task StartInstallationAsync()
         {
+            using var performanceScope = PerformanceLogger.BeginMeasurement("Installation");
+            
             if (_installInfo?.DownloadPath == null)
             {
+                Logger?.Error("Installation started with null download path");
                 HandleError("Installation file not found");
                 return;
             }
 
+            var installationContext = new
+            {
+                Version = _installInfo.UpdateInfo?.Version,
+                DownloadPath = _installInfo.DownloadPath,
+                FileSize = File.Exists(_installInfo.DownloadPath) ? new FileInfo(_installInfo.DownloadPath).Length : -1
+            };
+
+            Logger?.Information("Starting installation process {@Context}", installationContext);
+
             try
             {
+                Logger?.LogStateTransition("InstallationState", _currentState, InstallState.Installing, "User initiated installation");
                 _currentState = InstallState.Installing;
                 HeaderText = "🔄 Installing Update";
                 StatusMessage = "Installing update...";
@@ -97,23 +122,25 @@ namespace Bucket.Updater.ViewModels
                 LogsVisibility = Visibility.Visible;
 
                 var progress = new Progress<string>(OnInstallationProgress);
-                var success = await _updateService.InstallUpdateAsync(_installInfo.DownloadPath, progress);
+                var success = await PerformanceLogger.MeasureAndLogAsync(
+                    "UpdateService.InstallUpdate", 
+                    () => _updateService.InstallUpdateAsync(_installInfo.DownloadPath, progress));
 
                 if (success)
                 {
                     HandleInstallationComplete();
-
-                    // Cleanup downloaded file only after successful installation
                     CleanupDownloadedFiles("Installation completed successfully");
                 }
                 else
                 {
+                    Logger?.Warning("Installation returned false for version {Version}", _installInfo.UpdateInfo?.Version);
                     HandleError("Installation failed");
                 }
             }
             catch (Exception ex)
             {
-                Logger?.Error(ex, "Installation exception for version {Version}", _installInfo?.UpdateInfo?.Version);
+                Logger?.Error(ex, "Installation exception for version {Version} {@Context}", 
+                    _installInfo?.UpdateInfo?.Version, installationContext);
                 HandleError($"Installation failed: {ex.Message}");
             }
         }
@@ -166,6 +193,7 @@ namespace Bucket.Updater.ViewModels
 
         private void HandleInstallationComplete()
         {
+            Logger?.LogStateTransition("InstallationState", _currentState, InstallState.Completed, "Installation successful");
             _currentState = InstallState.Completed;
             HeaderText = "✅ Installation Complete";
             StatusMessage = "Update has been installed successfully!";
@@ -175,11 +203,14 @@ namespace Bucket.Updater.ViewModels
             IsCompleted = true;
             FinishButtonVisibility = Visibility.Visible;
 
+            Logger?.LogUserAction("InstallationCompleted", new { Version = _installInfo?.UpdateInfo?.Version });
             Logger?.Information("Installation completed successfully for version {Version}", _installInfo?.UpdateInfo?.Version);
+            Logger?.LogUserFriendlyMessage("INSTALL", "Installation completed successfully");
         }
 
         private void HandleError(string message)
         {
+            Logger?.LogStateTransition("InstallationState", _currentState, InstallState.Error, $"Error occurred: {message}");
             _currentState = InstallState.Error;
             HeaderText = "❌ Installation Failed";
             HasError = true;
@@ -191,25 +222,34 @@ namespace Bucket.Updater.ViewModels
             RetryButtonVisibility = Visibility.Visible;
             FinishButtonVisibility = Visibility.Visible;
 
+            Logger?.Error("Installation error: {ErrorMessage} for version {Version}", 
+                message, _installInfo?.UpdateInfo?.Version);
+            Logger?.LogUserFriendlyMessage("INSTALL", $"Installation error: {message}");
             AppendToLog($"Error: {message}");
         }
 
         [RelayCommand]
         private void Cancel()
         {
-            Logger?.Information("User cancelled installation process");
+            Logger?.LogUserAction("CancelInstallation", new 
+            { 
+                Version = _installInfo?.UpdateInfo?.Version,
+                State = _currentState.ToString(),
+                HasError = HasError
+            });
+            Logger?.Information("User cancelled installation process in state {State}", _currentState);
 
-            // Cleanup downloaded files when cancelling, especially after an error
             CleanupDownloadedFiles("User cancelled installation");
 
-            // Navigate back or close
             var frame = App.MainWindow.Content as Frame;
             if (frame?.CanGoBack == true)
             {
                 frame.GoBack();
+                Logger?.Debug("Navigated back from installation page");
             }
             else
             {
+                Logger?.Debug("Closing application from installation page");
                 App.MainWindow.Close();
             }
         }
@@ -217,8 +257,13 @@ namespace Bucket.Updater.ViewModels
         [RelayCommand]
         private async Task RetryAsync()
         {
-            if (_installInfo?.UpdateInfo == null) return;
+            if (_installInfo?.UpdateInfo == null) 
+            {
+                Logger?.Error("Retry attempted with null UpdateInfo");
+                return;
+            }
 
+            Logger?.LogUserAction("RetryInstallation", new { Version = _installInfo.UpdateInfo.Version });
             Logger?.Information("Retrying installation for version {Version}", _installInfo.UpdateInfo.Version);
 
             // Check if installation file still exists
@@ -229,7 +274,16 @@ namespace Bucket.Updater.ViewModels
                 return;
             }
 
+            // Log file information for diagnostics
+            if (!string.IsNullOrEmpty(_installInfo.DownloadPath))
+            {
+                var fileInfo = new FileInfo(_installInfo.DownloadPath);
+                Logger?.Debug("Retrying with file: {Path}, Size: {Size} bytes, LastWrite: {LastWrite}",
+                    _installInfo.DownloadPath, fileInfo.Length, fileInfo.LastWriteTime);
+            }
+
             // Reset error state
+            Logger?.LogStateTransition("InstallationState", _currentState, InstallState.Installing, "User initiated retry");
             HasError = false;
             ErrorMessage = string.Empty;
             InstallationLog = string.Empty;
@@ -237,14 +291,19 @@ namespace Bucket.Updater.ViewModels
             FinishButtonVisibility = Visibility.Collapsed;
             ErrorIconVisibility = Visibility.Collapsed;
 
-            // Restart the installation process directly
             await StartInstallationAsync().ConfigureAwait(false);
         }
 
         [RelayCommand]
         private void Finish()
         {
-            Logger?.Information("Installation process completed, closing updater");
+            Logger?.LogUserAction("FinishInstallation", new 
+            { 
+                Version = _installInfo?.UpdateInfo?.Version,
+                State = _currentState.ToString(),
+                Success = _currentState == InstallState.Completed
+            });
+            Logger?.Information("Installation process finished in state {State}, closing updater", _currentState);
 
             // Cleanup files if installation failed and we're finishing
             if (_currentState == InstallState.Error)

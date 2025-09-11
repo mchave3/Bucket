@@ -7,7 +7,9 @@
       "Bash(dotnet clean:*)",
       "Bash(dotnet restore:*)",
       "Bash(del \"C:\\DEV\\Github\\Bucket\\src\\Bucket.Updater\\Views\\ChangelogPage.xaml\")",
-      "mcp__sequentialthinking__sequentialthinking"
+      "mcp__sequentialthinking__sequentialthinking",
+      "mcp__memory__create_entities",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

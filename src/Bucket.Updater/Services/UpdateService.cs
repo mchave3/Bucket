@@ -24,71 +24,120 @@ namespace Bucket.Updater.Services
             _configurationService = configurationService;
             _gitHubService = gitHubService;
             _installationService = installationService;
-            Logger?.Information("UpdateService initialized (read-only configuration)");
+            Logger?.LogMethodEntry(nameof(UpdateService), new 
+            { 
+                ConfigurationService = configurationService?.GetType().Name,
+                GitHubService = gitHubService?.GetType().Name,
+                InstallationService = installationService?.GetType().Name
+            });
+            Logger?.Information("UpdateService initialized (read-only configuration) with injected services");
         }
 
         public async Task<Bucket.Updater.Models.UpdateInfo?> CheckForUpdatesAsync()
         {
-            Logger?.Information("UpdateService checking for updates");
-            try
+            using (Logger?.BeginOperationScope("CheckForUpdates"))
             {
-                var configuration = await _configurationService.LoadConfigurationAsync();
-                var updateInfo = await _gitHubService.CheckForUpdatesAsync(configuration);
-
-                if (updateInfo != null)
+                Logger?.LogMethodEntry(nameof(CheckForUpdatesAsync));
+                
+                try
                 {
-                    Logger?.Information("Update check completed, update available: {Version}", updateInfo.Version);
+                    var configuration = await PerformanceLogger.MeasureAndLogAsync(
+                        "ConfigurationService.LoadConfiguration",
+                        () => _configurationService.LoadConfigurationAsync());
+                    
+                    Logger?.Debug("Configuration loaded: {@Configuration}", new
+                    {
+                        CurrentVersion = configuration.CurrentVersion,
+                        Channel = configuration.UpdateChannel.ToString(),
+                        Architecture = configuration.GetArchitectureString()
+                    });
 
-                    // NOTE: LastUpdateCheck is no longer updated here as Bucket.Updater is read-only
-                    // This responsibility could be delegated to Bucket.App if necessary
+                    var updateInfo = await PerformanceLogger.MeasureAndLogAsync(
+                        "GitHubService.CheckForUpdates",
+                        () => _gitHubService.CheckForUpdatesAsync(configuration));
+
+                    if (updateInfo != null)
+                    {
+                        Logger?.Information("Update check completed, update available: {CurrentVersion} → {NewVersion} ({FileSize} bytes)", 
+                            configuration.CurrentVersion, updateInfo.Version, updateInfo.FileSize);
+                        Logger?.LogUserFriendlyMessage("CHECK", "New version available", 
+                            new { CurrentVersion = configuration.CurrentVersion, NewVersion = updateInfo.Version });
+                        Logger?.Debug("Update details: {@UpdateInfo}", new
+                        {
+                            updateInfo.Version,
+                            updateInfo.FileSize,
+                            updateInfo.DownloadUrl
+                        });
+                    }
+                    else
+                    {
+                        Logger?.Information("Update check completed, no updates available for version {CurrentVersion}", 
+                            configuration.CurrentVersion);
+                        Logger?.LogUserFriendlyMessage("CHECK", "No update available");
+                    }
+
+                    return updateInfo;
                 }
-                else
+                catch (Exception ex)
                 {
-                    Logger?.Information("Update check completed, no updates available");
+                    Logger?.Error(ex, "UpdateService failed to check for updates");
+                    return null;
                 }
-
-                return updateInfo;
-            }
-            catch (Exception ex)
-            {
-                Logger?.Error(ex, "UpdateService failed to check for updates");
-                return null;
             }
         }
 
         public async Task<string> DownloadUpdateAsync(Bucket.Updater.Models.UpdateInfo updateInfo, IProgress<(long downloaded, long total)>? progress = null, CancellationToken cancellationToken = default)
         {
-            Logger?.Information("UpdateService starting download for version {Version}", updateInfo.Version);
-            try
+            using (Logger?.BeginOperationScope("DownloadUpdate", new { Version = updateInfo.Version, FileSize = updateInfo.FileSize }))
             {
-                var tempDirectory = Path.Combine(Path.GetTempPath(), "BucketUpdater");
-                if (!Directory.Exists(tempDirectory))
+                Logger?.LogMethodEntry(nameof(DownloadUpdateAsync), new { updateInfo.Version, updateInfo.FileSize, Url = updateInfo.DownloadUrl });
+                
+                try
                 {
-                    Directory.CreateDirectory(tempDirectory);
-                    Logger?.Information("Created temp directory: {Directory}", tempDirectory);
+                    var tempDirectory = Path.Combine(Path.GetTempPath(), "BucketUpdater");
+                    if (!Directory.Exists(tempDirectory))
+                    {
+                        Directory.CreateDirectory(tempDirectory);
+                        Logger?.Information("Created temp directory: {Directory}", tempDirectory);
+                    }
+
+                    var fileName = Path.GetFileName(new Uri(updateInfo.DownloadUrl).LocalPath);
+                    var downloadPath = Path.Combine(tempDirectory, fileName);
+                    Logger?.Debug("Download configuration: {@DownloadConfig}", new
+                    {
+                        TempDirectory = tempDirectory,
+                        FileName = fileName,
+                        DownloadPath = downloadPath,
+                        Url = updateInfo.DownloadUrl
+                    });
+
+                    if (File.Exists(downloadPath))
+                    {
+                        var existingSize = new FileInfo(downloadPath).Length;
+                        File.Delete(downloadPath);
+                        Logger?.Information("Deleted existing file at download path (was {Size} bytes)", existingSize);
+                    }
+
+                    using var downloadStream = await PerformanceLogger.MeasureAndLogAsync(
+                        "GitHubService.DownloadUpdate",
+                        () => _gitHubService.DownloadUpdateAsync(updateInfo.DownloadUrl, progress, cancellationToken));
+                    
+                    using var fileStream = File.Create(downloadPath);
+                    await PerformanceLogger.MeasureAndLogAsync(
+                        "FileStream.CopyTo",
+                        () => downloadStream.CopyToAsync(fileStream, cancellationToken));
+
+                    var finalFileInfo = new FileInfo(downloadPath);
+                    Logger?.LogPerformance("DownloadAndSave", TimeSpan.Zero, finalFileInfo.Length);
+                    Logger?.Information("Download completed successfully to {Path} ({Size} bytes)", downloadPath, finalFileInfo.Length);
+                    
+                    return downloadPath;
                 }
-
-                var fileName = Path.GetFileName(new Uri(updateInfo.DownloadUrl).LocalPath);
-                var downloadPath = Path.Combine(tempDirectory, fileName);
-                Logger?.Information("Download path: {Path}", downloadPath);
-
-                if (File.Exists(downloadPath))
+                catch (Exception ex)
                 {
-                    File.Delete(downloadPath);
-                    Logger?.Information("Deleted existing file at download path");
+                    Logger?.Error(ex, "UpdateService failed to download update for version {Version}", updateInfo.Version);
+                    throw;
                 }
-
-                using var downloadStream = await _gitHubService.DownloadUpdateAsync(updateInfo.DownloadUrl, progress, cancellationToken);
-                using var fileStream = File.Create(downloadPath);
-                await downloadStream.CopyToAsync(fileStream, cancellationToken);
-
-                Logger?.Information("Download completed successfully to {Path}", downloadPath);
-                return downloadPath;
-            }
-            catch (Exception ex)
-            {
-                Logger?.Error(ex, "UpdateService failed to download update");
-                throw;
             }
         }
 

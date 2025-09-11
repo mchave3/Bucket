@@ -136,6 +136,9 @@
             {
                 Logger?.Warning(ex, "Failed to cleanup temporary files on application exit");
             }
+            
+            // Properly shutdown logger
+            LoggerSetup.Shutdown();
         }
     }
 }

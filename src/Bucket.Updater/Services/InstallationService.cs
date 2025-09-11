@@ -15,99 +15,133 @@ namespace Bucket.Updater.Services
     {
         public async Task<bool> InstallUpdateAsync(string msiFilePath, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
-            Logger?.Information("Starting MSI installation: {FilePath}", msiFilePath);
-
-            try
+            using (Logger?.BeginOperationScope("MSIInstallation", new { FilePath = msiFilePath }))
             {
-                if (!File.Exists(msiFilePath))
+                Logger?.LogMethodEntry(nameof(InstallUpdateAsync), new { msiFilePath });
+                
+                try
                 {
-                    Logger?.Error("MSI file not found: {FilePath}", msiFilePath);
-                    progress?.Report("MSI file not found");
-                    return false;
-                }
+                    if (!File.Exists(msiFilePath))
+                    {
+                        Logger?.Error("MSI file not found: {FilePath}", msiFilePath);
+                        progress?.Report("MSI file not found");
+                        return false;
+                    }
 
-                progress?.Report("Validating MSI file...");
-                if (!await ValidateMsiFileAsync(msiFilePath))
-                {
-                    Logger?.Error("MSI file validation failed: {FilePath}", msiFilePath);
-                    progress?.Report("MSI file validation failed");
-                    return false;
-                }
+                    var fileInfo = new FileInfo(msiFilePath);
+                    Logger?.Information("Starting MSI installation: {FilePath} ({Size} bytes, modified: {LastWrite})", 
+                        msiFilePath, fileInfo.Length, fileInfo.LastWriteTime);
 
-                progress?.Report("Stopping Bucket application...");
-                if (!await EnsureBucketProcessStoppedAsync(progress, cancellationToken))
-                {
-                    Logger?.Error("Failed to stop Bucket process before installation");
-                    progress?.Report("Failed to stop Bucket application");
-                    return false;
-                }
+                    progress?.Report("Validating MSI file...");
+                    var validationResult = await PerformanceLogger.MeasureAndLogAsync(
+                        "ValidateMsiFile",
+                        () => ValidateMsiFileAsync(msiFilePath));
+                    
+                    if (!validationResult)
+                    {
+                        Logger?.Error("MSI file validation failed: {FilePath}", msiFilePath);
+                        progress?.Report("MSI file validation failed");
+                        return false;
+                    }
 
-                progress?.Report("Starting installation...");
-                Logger?.Information("Executing MSI installation with msiexec (silent mode)");
+                    progress?.Report("Stopping Bucket application...");
+                    var processStoppedResult = await PerformanceLogger.MeasureAndLogAsync(
+                        "EnsureBucketProcessStopped",
+                        () => EnsureBucketProcessStoppedAsync(progress, cancellationToken));
+                    
+                    if (!processStoppedResult)
+                    {
+                        Logger?.Error("Failed to stop Bucket process before installation");
+                        progress?.Report("Failed to stop Bucket application");
+                        return false;
+                    }
 
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "msiexec.exe",
+                    progress?.Report("Starting installation...");
+                    Logger?.Information("Executing MSI installation with msiexec (silent mode)");
+
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "msiexec.exe",
                     Arguments = $"/i \"{msiFilePath}\" /quiet /norestart",
                     UseShellExecute = true,
                     Verb = "runas"
                 };
 
-                using var process = Process.Start(startInfo);
-                if (process == null)
+                    Logger?.Debug("Starting msiexec process with arguments: {Arguments}", startInfo.Arguments);
+                    
+                    using var process = PerformanceLogger.MeasureAndLog(
+                        "Process.Start.Msiexec", 
+                        () => Process.Start(startInfo));
+                    
+                    if (process == null)
+                    {
+                        Logger?.Error("Failed to start msiexec process");
+                        progress?.Report("Failed to start installation process");
+                        return false;
+                    }
+
+                    progress?.Report("Installation in progress...");
+                    Logger?.Information("Waiting for msiexec process to complete (PID: {ProcessId})", process.Id);
+
+                    await PerformanceLogger.MeasureAndLogAsync(
+                        "Process.WaitForExit.Msiexec",
+                        () => process.WaitForExitAsync(cancellationToken));
+
+                    Logger?.Information("MSI installation process completed with exit code: {ExitCode}", process.ExitCode);
+                    
+                    switch (process.ExitCode)
+                    {
+                        case 0:
+                            Logger?.Information("MSI installation completed successfully");
+                            progress?.Report("Installation completed successfully");
+                            return true;
+                        case 1602:
+                            Logger?.Warning("MSI installation was cancelled by user");
+                            progress?.Report("Installation was cancelled by user");
+                            return false;
+                        case 1603:
+                            Logger?.Error("MSI installation failed with error 1603 (fatal error during installation)");
+                            progress?.Report("Installation failed with error 1603");
+                            return false;
+                        case 3010:
+                            Logger?.Information("MSI installation completed successfully, restart required");
+                            progress?.Report("Installation completed successfully (restart required)");
+                            return true;
+                        default:
+                            Logger?.Error("MSI installation failed with exit code: {ExitCode}", process.ExitCode);
+                            progress?.Report($"Installation failed with exit code: {process.ExitCode}");
+                            return false;
+                    }
+                }
+                catch (Exception ex)
                 {
-                    Logger?.Error("Failed to start msiexec process");
-                    progress?.Report("Failed to start installation process");
+                    Logger?.Error(ex, "MSI installation threw exception");
+                    progress?.Report($"Installation error: {ex.Message}");
                     return false;
                 }
-
-                progress?.Report("Installation in progress...");
-                Logger?.Information("Waiting for msiexec process to complete");
-
-                await process.WaitForExitAsync(cancellationToken);
-
-                switch (process.ExitCode)
-                {
-                    case 0:
-                        Logger?.Information("MSI installation completed successfully");
-                        progress?.Report("Installation completed successfully");
-                        return true;
-                    case 1602:
-                        Logger?.Warning("MSI installation was cancelled by user");
-                        progress?.Report("Installation was cancelled by user");
-                        return false;
-                    case 1603:
-                        Logger?.Error("MSI installation failed with error 1603 (fatal error during installation)");
-                        progress?.Report("Installation failed with error 1603");
-                        return false;
-                    case 3010:
-                        Logger?.Information("MSI installation completed successfully, restart required");
-                        progress?.Report("Installation completed successfully (restart required)");
-                        return true;
-                    default:
-                        Logger?.Error("MSI installation failed with exit code: {ExitCode}", process.ExitCode);
-                        progress?.Report($"Installation failed with exit code: {process.ExitCode}");
-                        return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger?.Error(ex, "MSI installation threw exception");
-                progress?.Report($"Installation error: {ex.Message}");
-                return false;
             }
         }
 
         public async Task<bool> ValidateMsiFileAsync(string msiFilePath)
         {
+            Logger?.LogMethodEntry(nameof(ValidateMsiFileAsync), new { msiFilePath });
+            
             try
             {
                 if (!File.Exists(msiFilePath))
+                {
+                    Logger?.Warning("MSI validation failed: file not found at {FilePath}", msiFilePath);
                     return false;
+                }
 
                 var fileInfo = new FileInfo(msiFilePath);
                 if (fileInfo.Length < 1024)
+                {
+                    Logger?.Warning("MSI validation failed: file too small ({Size} bytes) at {FilePath}", fileInfo.Length, msiFilePath);
                     return false;
+                }
+
+                Logger?.Debug("Validating MSI file signature for {FilePath} ({Size} bytes)", msiFilePath, fileInfo.Length);
 
                 var buffer = new byte[8];
                 using var fileStream = File.OpenRead(msiFilePath);
@@ -119,35 +153,48 @@ namespace Bucket.Updater.Services
                 for (int i = 0; i < expectedSignature.Length; i++)
                 {
                     if (buffer[i] != expectedSignature[i])
+                    {
+                        Logger?.Warning("MSI validation failed: invalid signature at position {Position}. Expected: {Expected}, Found: {Found}",
+                            i, expectedSignature[i], buffer[i]);
                         return false;
+                    }
                 }
 
+                Logger?.Information("MSI file validation successful: {FilePath}", msiFilePath);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger?.Error(ex, "MSI file validation threw exception for {FilePath}", msiFilePath);
                 return false;
             }
         }
 
         public async Task<bool> EnsureBucketProcessStoppedAsync(IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
-            try
+            using (Logger?.BeginOperationScope("EnsureBucketProcessStopped"))
             {
-                Logger?.Information("Checking for running Bucket processes");
-                var bucketProcesses = Process.GetProcessesByName("Bucket").ToList();
-
-                if (!bucketProcesses.Any())
+                Logger?.LogMethodEntry(nameof(EnsureBucketProcessStoppedAsync));
+                
+                try
                 {
-                    Logger?.Information("No Bucket processes found running");
-                    return true;
-                }
+                    Logger?.Information("Checking for running Bucket processes");
+                    var bucketProcesses = PerformanceLogger.MeasureAndLog(
+                        "Process.GetProcessesByName",
+                        () => Process.GetProcessesByName("Bucket").ToList());
 
-                Logger?.Information("Found {Count} Bucket process(es) running", bucketProcesses.Count);
-                progress?.Report($"Found {bucketProcesses.Count} Bucket process(es) running...");
+                    if (!bucketProcesses.Any())
+                    {
+                        Logger?.Information("No Bucket processes found running");
+                        return true;
+                    }
 
-                foreach (var process in bucketProcesses)
-                {
+                    var processDetails = bucketProcesses.Select(p => new { PID = p.Id, HasExited = p.HasExited }).ToList();
+                    Logger?.Information("Found {Count} Bucket process(es) running: {@Processes}", bucketProcesses.Count, processDetails);
+                    progress?.Report($"Found {bucketProcesses.Count} Bucket process(es) running...");
+
+                    foreach (var process in bucketProcesses)
+                    {
                     try
                     {
                         if (process.HasExited)
@@ -206,15 +253,16 @@ namespace Bucket.Updater.Services
                     return false;
                 }
 
-                Logger?.Information("All Bucket processes successfully stopped");
-                progress?.Report("Bucket application stopped successfully");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logger?.Error(ex, "Exception occurred while stopping Bucket processes");
-                progress?.Report($"Error stopping Bucket application: {ex.Message}");
-                return false;
+                    Logger?.Information("All Bucket processes successfully stopped");
+                    progress?.Report("Bucket application stopped successfully");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Logger?.Error(ex, "Exception occurred while stopping Bucket processes");
+                    progress?.Report($"Error stopping Bucket application: {ex.Message}");
+                    return false;
+                }
             }
         }
 

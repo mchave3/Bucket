@@ -40,23 +40,59 @@ namespace Bucket.Updater.ViewModels
         public DownloadPageViewModel(IUpdateService updateService)
         {
             _updateService = updateService;
-            Logger?.Information("DownloadPageViewModel initialized");
+            Logger?.LogMethodEntry(nameof(DownloadPageViewModel));
+            Logger?.Information("DownloadPageViewModel initialized with UpdateService");
         }
 
         public async void StartDownload(Bucket.Updater.Models.UpdateInfo updateInfo)
         {
-            _updateInfo = updateInfo;
-            UpdateVersion = updateInfo.Version;
-            TotalSize = FormatFileSize(updateInfo.FileSize);
-            
-            Logger?.Information("Starting download process for version {Version}, size: {Size}", updateInfo.Version, TotalSize);
-            
-            await StartDownloadAsync();
+            using (Logger?.BeginOperationScope("DownloadProcess", new { Version = updateInfo?.Version, Size = updateInfo?.FileSize }))
+            {
+                _updateInfo = updateInfo;
+                if (updateInfo != null)
+                {
+                    UpdateVersion = updateInfo.Version;
+                    TotalSize = FormatFileSize(updateInfo.FileSize);
+                    
+                    Logger?.LogUserAction("StartDownload", new 
+                    { 
+                        Version = updateInfo.Version, 
+                        FileSize = updateInfo.FileSize,
+                        FormattedSize = TotalSize,
+                        DownloadUrl = updateInfo.DownloadUrl 
+                    });
+                    Logger?.Information("Starting download process for version {Version}, size: {Size}", updateInfo.Version, TotalSize);
+                    Logger?.LogUserFriendlyMessage("DOWNLOAD", $"Starting download version {updateInfo.Version}");
+                }
+                else
+                {
+                    Logger?.Error("StartDownload called with null UpdateInfo");
+                    HandleError("Invalid download information");
+                    return;
+                }
+                
+                await StartDownloadAsync();
+            }
         }
 
         private async Task StartDownloadAsync()
         {
-            if (_updateInfo == null) return;
+            if (_updateInfo == null) 
+            {
+                Logger?.Error("StartDownloadAsync called with null UpdateInfo");
+                return;
+            }
+
+            using var performanceScope = PerformanceLogger.BeginMeasurement("Download");
+
+            var downloadContext = new
+            {
+                Version = _updateInfo.Version,
+                FileSize = _updateInfo.FileSize,
+                Url = _updateInfo.DownloadUrl
+            };
+
+            Logger?.Information("Starting download process {@Context}", downloadContext);
 
             try
             {
@@ -65,23 +101,31 @@ namespace Bucket.Updater.ViewModels
 
                 _cancellationTokenSource = new CancellationTokenSource();
                 _stopwatch.Start();
+                _lastProgressUpdate = DateTime.Now;
 
                 var progress = new Progress<(long downloaded, long total)>(OnDownloadProgressChanged);
-                _downloadPath = await _updateService.DownloadUpdateAsync(_updateInfo, progress, _cancellationTokenSource.Token);
+                _downloadPath = await PerformanceLogger.MeasureAndLogAsync(
+                    "UpdateService.DownloadUpdate", 
+                    () => _updateService.DownloadUpdateAsync(_updateInfo, progress, _cancellationTokenSource.Token));
 
-                Logger?.Information("Download completed successfully for version {Version}", _updateInfo.Version);
+                var finalSize = File.Exists(_downloadPath) ? new FileInfo(_downloadPath).Length : -1;
+                Logger?.LogPerformance("DownloadComplete", _stopwatch.Elapsed, finalSize);
+                Logger?.Information("Download completed successfully for version {Version}, final size: {Size} bytes", 
+                    _updateInfo.Version, finalSize);
+                Logger?.LogUserFriendlyMessage("DOWNLOAD", $"Download completed ({FormatFileSize(finalSize)})");
                 
-                // Navigate to InstallPage
                 NavigateToInstallPage();
             }
             catch (OperationCanceledException)
             {
+                Logger?.LogUserAction("DownloadCancelled", new { Version = _updateInfo.Version });
                 Logger?.Information("Download cancelled by user for version {Version}", _updateInfo.Version);
+                Logger?.LogUserFriendlyMessage("DOWNLOAD", "Download cancelled by user");
                 HandleError("Download was cancelled");
             }
             catch (Exception ex)
             {
-                Logger?.Error(ex, "Download failed for version {Version}", _updateInfo.Version);
+                Logger?.Error(ex, "Download failed for version {Version} {@Context}", _updateInfo.Version, downloadContext);
                 HandleError($"Download failed: {ex.Message}");
             }
             finally
