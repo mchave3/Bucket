@@ -4,7 +4,7 @@ using Serilog.Formatting;
 namespace Bucket.Updater.Common
 {
     /// <summary>
-    /// Formatter for user-friendly log messages that filters technical details
+    /// Log formatter that converts technical messages into user-friendly display text
     /// </summary>
     public class UserFriendlyFormatter : ITextFormatter
     {
@@ -22,6 +22,11 @@ namespace Bucket.Updater.Common
             { "EnsureBucketProcessStopped", "PREPARE" }
         };
 
+        /// <summary>
+        /// Formats log events for user-friendly display
+        /// </summary>
+        /// <param name="logEvent">The log event to format</param>
+        /// <param name="output">Text writer for the formatted output</param>
         public void Format(LogEvent logEvent, TextWriter output)
         {
             // Only process Information and Warning levels for user-friendly logs
@@ -42,9 +47,12 @@ namespace Bucket.Updater.Common
             output.WriteLine($"[{timestamp}] {action}: {userFriendlyMessage}");
         }
 
+        /// <summary>
+        /// Extracts a user-friendly action category from log event
+        /// </summary>
         private string ExtractUserFriendlyAction(LogEvent logEvent, string message)
         {
-            // Check for specific action types in properties
+            // Check for specific action types in log properties
             if (logEvent.Properties.TryGetValue("ActionType", out var actionType))
             {
                 var actionStr = actionType.ToString().Trim('"');
@@ -52,7 +60,7 @@ namespace Bucket.Updater.Common
                     return friendlyAction;
             }
 
-            // Check for operation name
+            // Check for operation name in log properties
             if (logEvent.Properties.TryGetValue("OperationName", out var operationName))
             {
                 var opStr = operationName.ToString().Trim('"');
@@ -60,7 +68,7 @@ namespace Bucket.Updater.Common
                     return friendlyAction;
             }
 
-            // Categorize by message content
+            // Fallback to message content analysis
             if (message.Contains("check", StringComparison.OrdinalIgnoreCase))
                 return "CHECK";
 
@@ -76,13 +84,16 @@ namespace Bucket.Updater.Common
             return "INFO";
         }
 
+        /// <summary>
+        /// Determines if a message should be filtered out from user display
+        /// </summary>
         private bool ShouldSkipMessage(string message, LogEvent logEvent)
         {
-            // Skip debug level messages
+            // Skip debug level messages - too technical
             if (logEvent.Level == LogEventLevel.Debug)
                 return true;
 
-            // Skip highly technical messages
+            // Filter out highly technical developer messages
             var technicalKeywords = new[]
             {
                 "Operation ", "started with ID", "completed in", "ms (ID:",
@@ -104,7 +115,7 @@ namespace Bucket.Updater.Common
                 message.Contains("DOWNLOAD", StringComparison.OrdinalIgnoreCase) || message.Contains("INSTALL", StringComparison.OrdinalIgnoreCase)))
                 return true;
 
-            // Skip messages with technical properties structure
+            // Skip technical JSON-like messages with object properties
             if (message.Contains('{', StringComparison.Ordinal) && message.Contains('}', StringComparison.Ordinal) &&
                 (message.Contains("CurrentVersion", StringComparison.OrdinalIgnoreCase) || message.Contains("NewVersion", StringComparison.OrdinalIgnoreCase) ||
                  message.Contains("FileSize", StringComparison.OrdinalIgnoreCase) || message.Contains("DownloadUrl", StringComparison.OrdinalIgnoreCase)))
@@ -117,11 +128,14 @@ namespace Bucket.Updater.Common
             return false;
         }
 
+        /// <summary>
+        /// Converts technical messages into user-friendly text
+        /// </summary>
         private string MakeMessageUserFriendly(string message, LogEvent logEvent)
         {
-            // Handle specific message patterns directly
+            // Handle specific message patterns with user-friendly alternatives
 
-            // Version updates - extract from message text when possible
+            // Version updates - extract version info from message text
             if (message.Contains("Update available:", StringComparison.OrdinalIgnoreCase) && message.Contains('→', StringComparison.Ordinal))
             {
                 // Extract version from message like "Update available: 1.0.0.0 → 25.9.9"
@@ -254,16 +268,22 @@ namespace Bucket.Updater.Common
             return message;
         }
 
+        /// <summary>
+        /// Formats byte count into human-readable file size
+        /// </summary>
         private string FormatFileSize(long bytes)
         {
             string[] sizes = { "B", "KB", "MB", "GB" };
             double len = bytes;
             int order = 0;
+            
+            // Convert to appropriate unit (KB, MB, etc.)
             while (len >= 1024 && order < sizes.Length - 1)
             {
                 order++;
                 len = len / 1024;
             }
+            
             return $"{len:0.##} {sizes[order]}";
         }
     }

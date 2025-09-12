@@ -5,16 +5,25 @@ using System.Diagnostics;
 
 namespace Bucket.Updater.Common
 {
+    /// <summary>
+    /// Extension methods for enhanced logging with Serilog
+    /// </summary>
     public static class LoggingExtensions
     {
         /// <summary>
-        /// Creates a disposable scope for correlated logging
+        /// Creates a logging scope with operation ID and timing
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="operationName">Name of the operation</param>
+        /// <param name="additionalProperties">Optional additional properties</param>
+        /// <returns>Disposable scope that logs completion when disposed</returns>
         public static IDisposable BeginOperationScope(this ILogger logger, string operationName, object? additionalProperties = null)
         {
+            // Generate short operation ID for correlation
             var operationId = Guid.NewGuid().ToString("N")[..8];
             var stopwatch = Stopwatch.StartNew();
 
+            // Build list of properties for log context
             var properties = new List<(string, object)>
             {
                 ("OperationId", operationId),
@@ -22,6 +31,7 @@ namespace Bucket.Updater.Common
                 ("OperationStartTime", DateTimeOffset.Now)
             };
 
+            // Add additional properties if provided
             if (additionalProperties != null)
             {
                 var props = additionalProperties.GetType().GetProperties();
@@ -35,16 +45,21 @@ namespace Bucket.Updater.Common
                 }
             }
 
+            // Log operation start
             logger?.Information("Operation {OperationName} started with ID {OperationId}", operationName, operationId);
 
+            // Create log context with all properties
             var contexts = properties.Select(p => LogContext.PushProperty(p.Item1, p.Item2)).ToArray();
 
             return new OperationScope(logger, operationName, operationId, stopwatch, contexts);
         }
 
         /// <summary>
-        /// Logs method entry with parameters
+        /// Logs method entry with optional parameters (Debug level)
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="methodName">Name of the method</param>
+        /// <param name="parameters">Optional method parameters</param>
         public static void LogMethodEntry(this ILogger logger, string methodName, object? parameters = null)
         {
             if (parameters != null)
@@ -58,8 +73,12 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs method exit with duration and result
+        /// Logs method exit with execution time and optional result (Debug level)
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="methodName">Name of the method</param>
+        /// <param name="duration">Method execution duration</param>
+        /// <param name="result">Optional method result</param>
         public static void LogMethodExit(this ILogger logger, string methodName, TimeSpan duration, object? result = null)
         {
             if (result != null)
@@ -74,8 +93,11 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs user action for audit purposes
+        /// Logs user actions for auditing and tracking
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="action">The user action performed</param>
+        /// <param name="context">Optional action context</param>
         public static void LogUserAction(this ILogger logger, string action, object? context = null)
         {
             using (LogContext.PushProperty("Category", "UserAction"))
@@ -93,8 +115,13 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs performance metrics
+        /// Logs performance metrics with duration and optional throughput
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="operationName">Name of the operation</param>
+        /// <param name="duration">Operation duration</param>
+        /// <param name="bytesProcessed">Optional bytes processed for throughput calculation</param>
+        /// <param name="additionalMetrics">Optional additional metrics</param>
         public static void LogPerformance(this ILogger logger, string operationName, TimeSpan duration, long? bytesProcessed = null, object? additionalMetrics = null)
         {
             using (LogContext.PushProperty("Category", "Performance"))
@@ -109,6 +136,7 @@ namespace Bucket.Updater.Common
                     message += ", processed {BytesProcessed} bytes";
                     args.Add(bytesProcessed.Value);
 
+                    // Calculate throughput in MB/s
                     var throughputMBps = (bytesProcessed.Value / 1024.0 / 1024.0) / duration.TotalSeconds;
                     using (LogContext.PushProperty("ThroughputMBps", throughputMBps))
                     {
@@ -128,8 +156,13 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs state transition
+        /// Logs state changes for entities with optional reason
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="entity">The entity changing state</param>
+        /// <param name="fromState">Previous state</param>
+        /// <param name="toState">New state</param>
+        /// <param name="reason">Optional reason for the change</param>
         public static void LogStateTransition(this ILogger logger, string entity, object fromState, object toState, string? reason = null)
         {
             using (LogContext.PushProperty("Category", "StateTransition"))
@@ -149,8 +182,14 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs network request/response
+        /// Logs HTTP requests with response details
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="url">Request URL</param>
+        /// <param name="statusCode">Optional HTTP status code</param>
+        /// <param name="duration">Optional request duration</param>
+        /// <param name="responseSize">Optional response size in bytes</param>
         public static void LogNetworkRequest(this ILogger logger, string method, string url, int? statusCode = null, TimeSpan? duration = null, long? responseSize = null)
         {
             using (LogContext.PushProperty("Category", "Network"))
@@ -162,6 +201,7 @@ namespace Bucket.Updater.Common
                     var message = "Network request: {Method} {Url} → {StatusCode} in {Duration}ms";
                     var args = new object[] { method, url, statusCode.Value, duration.Value.TotalMilliseconds };
 
+                    // Include response size if available
                     if (responseSize.HasValue)
                     {
                         using (LogContext.PushProperty("ResponseSizeBytes", responseSize.Value))
@@ -182,8 +222,12 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs user-friendly message that will be formatted nicely in user logs
+        /// Logs user-friendly messages for display in user interfaces
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="action">The action being performed</param>
+        /// <param name="message">User-friendly message</param>
+        /// <param name="context">Optional message context</param>
         public static void LogUserFriendlyMessage(this ILogger logger, string action, string message, object? context = null)
         {
             using (LogContext.PushProperty("Category", "UserFriendly"))
@@ -201,8 +245,13 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs progress update for user-friendly display
+        /// Logs progress updates with percentage and status
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="operation">The operation in progress</param>
+        /// <param name="status">Current status</param>
+        /// <param name="percentage">Optional completion percentage</param>
+        /// <param name="additionalInfo">Optional additional information</param>
         public static void LogProgressUpdate(this ILogger logger, string operation, string status, int? percentage = null, object? additionalInfo = null)
         {
             using (LogContext.PushProperty("Category", "Progress"))
@@ -241,11 +290,17 @@ namespace Bucket.Updater.Common
         }
 
         /// <summary>
-        /// Logs both technical details and user-friendly message
+        /// Logs both technical and user-friendly messages
         /// </summary>
+        /// <param name="logger">The logger instance</param>
+        /// <param name="level">Log level for technical message</param>
+        /// <param name="technicalMessage">Technical details for developers</param>
+        /// <param name="userFriendlyAction">User-friendly action name</param>
+        /// <param name="userMessage">User-friendly message</param>
+        /// <param name="context">Optional context information</param>
         public static void LogWithUserMessage(this ILogger logger, LogEventLevel level, string technicalMessage, string userFriendlyAction, string userMessage, object? context = null)
         {
-            // Log technical message first
+            // Log technical message first for developers
             if (context != null)
             {
                 logger?.Write(level, technicalMessage + " {@Context}", context);
@@ -255,11 +310,14 @@ namespace Bucket.Updater.Common
                 logger?.Write(level, technicalMessage);
             }
 
-            // Log user-friendly message
+            // Then log user-friendly message for UI display
             logger?.LogUserFriendlyMessage(userFriendlyAction, userMessage, context);
         }
     }
 
+    /// <summary>
+    /// Internal class that manages operation scope lifecycle and logging
+    /// </summary>
     internal class OperationScope : IDisposable
     {
         private readonly ILogger _logger;
@@ -283,9 +341,12 @@ namespace Bucket.Updater.Common
             if (!_disposed)
             {
                 _stopwatch.Stop();
+                
+                // Log operation completion with duration
                 _logger?.Information("Operation {OperationName} completed in {Duration}ms (ID: {OperationId})",
                     _operationName, _stopwatch.ElapsedMilliseconds, _operationId);
 
+                // Clean up log context properties
                 foreach (var context in _contexts)
                 {
                     context?.Dispose();
