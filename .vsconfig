@@ -5,6 +5,7 @@
   "extensions": [
     "https://marketplace.visualstudio.com/items?itemName=TomEnglert.ResXManager",
     "https://marketplace.visualstudio.com/items?itemName=FireGiant.FireGiantHeatWaveDev17",
-    "https://marketplace.visualstudio.com/items?itemName=MahdiHosseini.DevWinUITemplates"
+    "https://marketplace.visualstudio.com/items?itemName=MahdiHosseini.DevWinUITemplates",
+    "https://marketplace.visualstudio.com/items?itemName=TeamXavalon.XAMLStyler2022"
   ]
 }
