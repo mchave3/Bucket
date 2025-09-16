@@ -88,6 +88,7 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.9" />
+    <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.9" />
   </ItemGroup>
   <!--
 	Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
@@ -101,7 +102,4 @@
   <!-- Import the targets file to remove unwanted language folders -->
   <Import Project="RemoveLanguageFolders.targets" />
 
-<ItemGroup>
-	<PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.9" />
-</ItemGroup>
 </Project>
