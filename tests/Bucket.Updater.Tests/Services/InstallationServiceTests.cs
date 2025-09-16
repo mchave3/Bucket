@@ -4,7 +4,7 @@ namespace Bucket.Updater.Tests.Services
     using System.Threading;
     using System.Threading.Tasks;
     using Bucket.Updater.Services;
-    using Moq;
+    using NSubstitute;
     using Xunit;
 
     public class InstallationServiceTests
@@ -20,8 +20,8 @@ namespace Bucket.Updater.Tests.Services
         public async Task CanCallInstallUpdateAsync()
         {
             // Arrange
-            var msiFilePath = "TestValue348402166";
-            var progress = new Mock<IProgress<string>>().Object;
+            var msiFilePath = "TestValue1946165921";
+            var progress = Substitute.For<IProgress<string>>();
             var cancellationToken = CancellationToken.None;
 
             // Act
@@ -37,14 +37,14 @@ namespace Bucket.Updater.Tests.Services
         [InlineData("   ")]
         public async Task CannotCallInstallUpdateAsyncWithInvalidMsiFilePath(string value)
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.InstallUpdateAsync(value, new Mock<IProgress<string>>().Object, CancellationToken.None));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.InstallUpdateAsync(value, Substitute.For<IProgress<string>>(), CancellationToken.None));
         }
 
         [Fact]
         public async Task CanCallValidateMsiFileAsync()
         {
             // Arrange
-            var msiFilePath = "TestValue1353373145";
+            var msiFilePath = "TestValue1976381845";
 
             // Act
             var result = await _testClass.ValidateMsiFileAsync(msiFilePath);
@@ -66,7 +66,7 @@ namespace Bucket.Updater.Tests.Services
         public async Task CanCallEnsureBucketProcessStoppedAsync()
         {
             // Arrange
-            var progress = new Mock<IProgress<string>>().Object;
+            var progress = Substitute.For<IProgress<string>>();
             var cancellationToken = CancellationToken.None;
 
             // Act
@@ -80,7 +80,7 @@ namespace Bucket.Updater.Tests.Services
         public void CanCallCleanupDownloadedFiles()
         {
             // Arrange
-            var downloadPath = "TestValue79200411";
+            var downloadPath = "TestValue1064338083";
 
             // Act
             _testClass.CleanupDownloadedFiles(downloadPath);

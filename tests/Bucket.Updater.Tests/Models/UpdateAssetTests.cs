@@ -17,7 +17,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetName()
         {
             // Arrange
-            var testValue = "TestValue453527662";
+            var testValue = "TestValue253584009";
 
             // Act
             _testClass.Name = testValue;
@@ -30,7 +30,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetDownloadUrl()
         {
             // Arrange
-            var testValue = "TestValue469254261";
+            var testValue = "TestValue2009012526";
 
             // Act
             _testClass.DownloadUrl = testValue;
@@ -43,7 +43,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetSize()
         {
             // Arrange
-            var testValue = 990776636L;
+            var testValue = 2092816064L;
 
             // Act
             _testClass.Size = testValue;
@@ -56,7 +56,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetContentType()
         {
             // Arrange
-            var testValue = "TestValue281395077";
+            var testValue = "TestValue2142183205";
 
             // Act
             _testClass.ContentType = testValue;

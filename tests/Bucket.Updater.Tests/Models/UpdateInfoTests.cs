@@ -18,7 +18,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetVersion()
         {
             // Arrange
-            var testValue = "TestValue1530410118";
+            var testValue = "TestValue2065854430";
 
             // Act
             _testClass.Version = testValue;
@@ -31,7 +31,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetTagName()
         {
             // Arrange
-            var testValue = "TestValue1979245194";
+            var testValue = "TestValue661530158";
 
             // Act
             _testClass.TagName = testValue;
@@ -44,7 +44,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetName()
         {
             // Arrange
-            var testValue = "TestValue1737233652";
+            var testValue = "TestValue348211891";
 
             // Act
             _testClass.Name = testValue;
@@ -57,7 +57,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetBody()
         {
             // Arrange
-            var testValue = "TestValue1347245476";
+            var testValue = "TestValue345661239";
 
             // Act
             _testClass.Body = testValue;
@@ -83,7 +83,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetIsPrerelease()
         {
             // Arrange
-            var testValue = false;
+            var testValue = true;
 
             // Act
             _testClass.IsPrerelease = testValue;
@@ -109,7 +109,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetDownloadUrl()
         {
             // Arrange
-            var testValue = "TestValue1433272941";
+            var testValue = "TestValue948937811";
 
             // Act
             _testClass.DownloadUrl = testValue;
@@ -122,7 +122,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetFileSize()
         {
             // Arrange
-            var testValue = 394219525L;
+            var testValue = 439872591L;
 
             // Act
             _testClass.FileSize = testValue;
@@ -135,7 +135,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetChannel()
         {
             // Arrange
-            var testValue = UpdateChannel.Release;
+            var testValue = UpdateChannel.Nightly;
 
             // Act
             _testClass.Channel = testValue;
@@ -148,7 +148,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetArchitecture()
         {
             // Arrange
-            var testValue = SystemArchitecture.ARM64;
+            var testValue = SystemArchitecture.X64;
 
             // Act
             _testClass.Architecture = testValue;

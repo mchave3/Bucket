@@ -18,7 +18,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetId()
         {
             // Arrange
-            var testValue = 2134331627L;
+            var testValue = 1215479999L;
 
             // Act
             _testClass.Id = testValue;
@@ -31,7 +31,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetTagName()
         {
             // Arrange
-            var testValue = "TestValue110477464";
+            var testValue = "TestValue914706413";
 
             // Act
             _testClass.TagName = testValue;
@@ -44,7 +44,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetName()
         {
             // Arrange
-            var testValue = "TestValue1659749158";
+            var testValue = "TestValue621464606";
 
             // Act
             _testClass.Name = testValue;
@@ -57,7 +57,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetBody()
         {
             // Arrange
-            var testValue = "TestValue2063643112";
+            var testValue = "TestValue1226430984";
 
             // Act
             _testClass.Body = testValue;
@@ -83,7 +83,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetPrerelease()
         {
             // Arrange
-            var testValue = false;
+            var testValue = true;
 
             // Act
             _testClass.Prerelease = testValue;

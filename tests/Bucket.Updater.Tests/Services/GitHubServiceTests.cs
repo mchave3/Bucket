@@ -6,7 +6,7 @@ namespace Bucket.Updater.Tests.Services
     using System.Threading.Tasks;
     using Bucket.Updater.Models;
     using Bucket.Updater.Services;
-    using Moq;
+    using NSubstitute;
     using Xunit;
 
     public class GitHubServiceTests
@@ -64,8 +64,8 @@ namespace Bucket.Updater.Tests.Services
         public async Task CanCallDownloadUpdateAsync()
         {
             // Arrange
-            var downloadUrl = "TestValue2016645262";
-            var progress = new Mock<IProgress<(long downloaded, long total)>>().Object;
+            var downloadUrl = "TestValue29014691";
+            var progress = Substitute.For<IProgress<(long downloaded, long total)>>();
             var cancellationToken = CancellationToken.None;
 
             // Act
@@ -81,15 +81,15 @@ namespace Bucket.Updater.Tests.Services
         [InlineData("   ")]
         public async Task CannotCallDownloadUpdateAsyncWithInvalidDownloadUrl(string value)
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.DownloadUpdateAsync(value, new Mock<IProgress<(long downloaded, long total)>>().Object, CancellationToken.None));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.DownloadUpdateAsync(value, Substitute.For<IProgress<(long downloaded, long total)>>(), CancellationToken.None));
         }
 
         [Fact]
         public async Task CanCallGetReleasesAsync()
         {
             // Arrange
-            var owner = "TestValue1752580427";
-            var repository = "TestValue148046602";
+            var owner = "TestValue1685794576";
+            var repository = "TestValue1496139061";
             var includePrerelease = true;
 
             // Act
@@ -105,7 +105,7 @@ namespace Bucket.Updater.Tests.Services
         [InlineData("   ")]
         public async Task CannotCallGetReleasesAsyncWithInvalidOwner(string value)
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.GetReleasesAsync(value, "TestValue1823482900", false));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.GetReleasesAsync(value, "TestValue789152761", true));
         }
 
         [Theory]
@@ -114,7 +114,7 @@ namespace Bucket.Updater.Tests.Services
         [InlineData("   ")]
         public async Task CannotCallGetReleasesAsyncWithInvalidRepository(string value)
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.GetReleasesAsync("TestValue796258390", value, true));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.GetReleasesAsync("TestValue170187224", value, true));
         }
 
         [Fact]
@@ -145,21 +145,21 @@ namespace Bucket.Updater.Tests.Services
         private readonly TestProgressStream _testClass;
         private Stream _baseStream;
         private long _totalBytes;
-        private readonly Mock<IProgress<(long downloaded, long total)>> _progress;
+        private readonly IProgress<(long downloaded, long total)> _progress;
 
         public ProgressStreamTests()
         {
             _baseStream = new MemoryStream();
-            _totalBytes = 1816354239L;
-            _progress = new Mock<IProgress<(long downloaded, long total)>>();
-            _testClass = new TestProgressStream(_baseStream, _totalBytes, _progress.Object);
+            _totalBytes = 785568750L;
+            _progress = Substitute.For<IProgress<(long downloaded, long total)>>();
+            _testClass = new TestProgressStream(_baseStream, _totalBytes, _progress);
         }
 
         [Fact]
         public void CanConstruct()
         {
             // Act
-            var instance = new TestProgressStream(_baseStream, _totalBytes, _progress.Object);
+            var instance = new TestProgressStream(_baseStream, _totalBytes, _progress);
 
             // Assert
             Assert.NotNull(instance);
@@ -168,7 +168,7 @@ namespace Bucket.Updater.Tests.Services
         [Fact]
         public void CannotConstructWithNullBaseStream()
         {
-            Assert.Throws<ArgumentNullException>(() => new TestProgressStream(default(Stream), _totalBytes, _progress.Object));
+            Assert.Throws<ArgumentNullException>(() => new TestProgressStream(default(Stream), _totalBytes, _progress));
         }
 
         [Fact]
@@ -181,9 +181,9 @@ namespace Bucket.Updater.Tests.Services
         public async Task CanCallReadAsync()
         {
             // Arrange
-            var buffer = new byte[] { 76, 85, 221, 206 };
-            var offset = 1353272748;
-            var count = 1160690908;
+            var buffer = new byte[] { 246, 84, 37, 95 };
+            var offset = 453806236;
+            var count = 790262142;
             var cancellationToken = CancellationToken.None;
 
             // Act
@@ -196,16 +196,16 @@ namespace Bucket.Updater.Tests.Services
         [Fact]
         public async Task CannotCallReadAsyncWithNullBuffer()
         {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.ReadAsync(default(byte[]), 718220272, 927074049, CancellationToken.None));
+            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.ReadAsync(default(byte[]), 1798203477, 1127539907, CancellationToken.None));
         }
 
         [Fact]
         public void CanCallRead()
         {
             // Arrange
-            var buffer = new byte[] { 137, 120, 126, 65 };
-            var offset = 275748557;
-            var count = 1472839095;
+            var buffer = new byte[] { 135, 62, 21, 241 };
+            var offset = 1326379695;
+            var count = 941736119;
 
             // Act
             var result = _testClass.Read(buffer, offset, count);
@@ -217,7 +217,7 @@ namespace Bucket.Updater.Tests.Services
         [Fact]
         public void CannotCallReadWithNullBuffer()
         {
-            Assert.Throws<ArgumentNullException>(() => _testClass.Read(default(byte[]), 567460878, 635452689));
+            Assert.Throws<ArgumentNullException>(() => _testClass.Read(default(byte[]), 1397260580, 1726648899));
         }
 
         [Fact]
@@ -234,8 +234,8 @@ namespace Bucket.Updater.Tests.Services
         public void CanCallSeek()
         {
             // Arrange
-            var offset = 416761260L;
-            var origin = SeekOrigin.End;
+            var offset = 951690817L;
+            var origin = SeekOrigin.Current;
 
             // Act
             var result = _testClass.Seek(offset, origin);
@@ -248,7 +248,7 @@ namespace Bucket.Updater.Tests.Services
         public void CanCallSetLength()
         {
             // Arrange
-            var value = 589020371L;
+            var value = 2018842933L;
 
             // Act
             _testClass.SetLength(value);
@@ -261,9 +261,9 @@ namespace Bucket.Updater.Tests.Services
         public void CanCallWrite()
         {
             // Arrange
-            var buffer = new byte[] { 20, 201, 28, 7 };
-            var offset = 315228596;
-            var count = 370988962;
+            var buffer = new byte[] { 244, 110, 123, 108 };
+            var offset = 1553237461;
+            var count = 808728613;
 
             // Act
             _testClass.Write(buffer, offset, count);
@@ -275,7 +275,7 @@ namespace Bucket.Updater.Tests.Services
         [Fact]
         public void CannotCallWriteWithNullBuffer()
         {
-            Assert.Throws<ArgumentNullException>(() => _testClass.Write(default(byte[]), 295155605, 1529685104));
+            Assert.Throws<ArgumentNullException>(() => _testClass.Write(default(byte[]), 308217903, 1191179432));
         }
 
         [Fact]
@@ -331,7 +331,7 @@ namespace Bucket.Updater.Tests.Services
         public void CanSetAndGetPosition()
         {
             // Arrange
-            var testValue = 393177461L;
+            var testValue = 1923903528L;
 
             // Act
             _testClass.Position = testValue;

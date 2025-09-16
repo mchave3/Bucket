@@ -37,7 +37,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetUpdateChannel()
         {
             // Arrange
-            var testValue = UpdateChannel.Release;
+            var testValue = UpdateChannel.Nightly;
 
             // Act
             _testClass.UpdateChannel = testValue;
@@ -50,7 +50,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetArchitecture()
         {
             // Arrange
-            var testValue = SystemArchitecture.X64;
+            var testValue = SystemArchitecture.X86;
 
             // Act
             _testClass.Architecture = testValue;
@@ -63,7 +63,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetGitHubOwner()
         {
             // Arrange
-            var testValue = "TestValue1183295140";
+            var testValue = "TestValue1349354479";
 
             // Act
             _testClass.GitHubOwner = testValue;
@@ -76,7 +76,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetGitHubRepository()
         {
             // Arrange
-            var testValue = "TestValue1761522556";
+            var testValue = "TestValue1436378387";
 
             // Act
             _testClass.GitHubRepository = testValue;
@@ -89,7 +89,7 @@ namespace Bucket.Updater.Tests.Models
         public void CanSetAndGetCurrentVersion()
         {
             // Arrange
-            var testValue = "TestValue350891467";
+            var testValue = "TestValue1892784408";
 
             // Act
             _testClass.CurrentVersion = testValue;

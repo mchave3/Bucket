@@ -17,7 +17,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetId()
         {
             // Arrange
-            var testValue = 859938251L;
+            var testValue = 2121830755L;
 
             // Act
             _testClass.Id = testValue;
@@ -30,7 +30,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetName()
         {
             // Arrange
-            var testValue = "TestValue2033975504";
+            var testValue = "TestValue1680494134";
 
             // Act
             _testClass.Name = testValue;
@@ -43,7 +43,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetBrowserDownloadUrl()
         {
             // Arrange
-            var testValue = "TestValue1298929893";
+            var testValue = "TestValue329939568";
 
             // Act
             _testClass.BrowserDownloadUrl = testValue;
@@ -56,7 +56,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetSize()
         {
             // Arrange
-            var testValue = 1215869050L;
+            var testValue = 1064243655L;
 
             // Act
             _testClass.Size = testValue;
@@ -69,7 +69,7 @@ namespace Bucket.Updater.Tests.Models.GitHub
         public void CanSetAndGetContentType()
         {
             // Arrange
-            var testValue = "TestValue343748391";
+            var testValue = "TestValue1819937180";
 
             // Act
             _testClass.ContentType = testValue;

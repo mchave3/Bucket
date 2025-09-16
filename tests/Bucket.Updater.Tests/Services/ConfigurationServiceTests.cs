@@ -4,25 +4,25 @@ namespace Bucket.Updater.Tests.Services
     using System.Threading.Tasks;
     using Bucket.Updater.Models;
     using Bucket.Updater.Services;
-    using Moq;
+    using NSubstitute;
     using Xunit;
 
     public class ConfigurationServiceTests
     {
         private readonly ConfigurationService _testClass;
-        private readonly Mock<IAppConfigReader> _appConfigReader;
+        private readonly IAppConfigReader _appConfigReader;
 
         public ConfigurationServiceTests()
         {
-            _appConfigReader = new Mock<IAppConfigReader>();
-            _testClass = new ConfigurationService(_appConfigReader.Object);
+            _appConfigReader = Substitute.For<IAppConfigReader>();
+            _testClass = new ConfigurationService(_appConfigReader);
         }
 
         [Fact]
         public void CanConstruct()
         {
             // Act
-            var instance = new ConfigurationService(_appConfigReader.Object);
+            var instance = new ConfigurationService(_appConfigReader);
 
             // Assert
             Assert.NotNull(instance);
@@ -38,13 +38,13 @@ namespace Bucket.Updater.Tests.Services
         public void CanCallGetConfiguration()
         {
             // Arrange
-            _appConfigReader.Setup(mock => mock.ReadConfiguration()).Returns(new UpdaterConfiguration());
+            _appConfigReader.ReadConfiguration().Returns(new UpdaterConfiguration());
 
             // Act
             var result = _testClass.GetConfiguration();
 
             // Assert
-            _appConfigReader.Verify(mock => mock.ReadConfiguration());
+            _appConfigReader.Received().ReadConfiguration();
 
             throw new NotImplementedException("Create or modify test");
         }
@@ -53,13 +53,13 @@ namespace Bucket.Updater.Tests.Services
         public async Task CanCallLoadConfigurationAsync()
         {
             // Arrange
-            _appConfigReader.Setup(mock => mock.ReadConfigurationAsync()).ReturnsAsync(new UpdaterConfiguration());
+            _appConfigReader.ReadConfigurationAsync().Returns(new UpdaterConfiguration());
 
             // Act
             var result = await _testClass.LoadConfigurationAsync();
 
             // Assert
-            _appConfigReader.Verify(mock => mock.ReadConfigurationAsync());
+            await _appConfigReader.Received().ReadConfigurationAsync();
 
             throw new NotImplementedException("Create or modify test");
         }
