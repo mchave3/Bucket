@@ -10,194 +10,437 @@ namespace Bucket.Updater.Tests.Services
     using NSubstitute;
     using Xunit;
 
-    public class UpdateServiceTests
+    public class UpdateServiceTests : IDisposable
     {
-        private readonly UpdateService _testClass;
         private readonly IConfigurationService _configurationService;
         private readonly IGitHubService _gitHubService;
         private readonly IInstallationService _installationService;
+        private readonly UpdateService _updateService;
+        private bool _disposed;
 
         public UpdateServiceTests()
         {
             _configurationService = Substitute.For<IConfigurationService>();
             _gitHubService = Substitute.For<IGitHubService>();
             _installationService = Substitute.For<IInstallationService>();
-            _testClass = new UpdateService(_configurationService, _gitHubService, _installationService);
+            _updateService = new UpdateService(_configurationService, _gitHubService, _installationService);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed && disposing)
+            {
+                // UpdateService doesn't implement IDisposable
+                _disposed = true;
+            }
         }
 
         [Fact]
-        public void CanConstruct()
+        public void ConstructorShouldThrowOnNullConfigurationService()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new UpdateService(null!, _gitHubService, _installationService));
+        }
+
+        [Fact]
+        public void ConstructorShouldThrowOnNullGitHubService()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new UpdateService(_configurationService, null!, _installationService));
+        }
+
+        [Fact]
+        public void ConstructorShouldThrowOnNullInstallationService()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new UpdateService(_configurationService, _gitHubService, null!));
+        }
+
+        [Fact]
+        public void ConstructorShouldCreateValidInstance()
         {
             // Act
-            var instance = new UpdateService(_configurationService, _gitHubService, _installationService);
+            var service = new UpdateService(_configurationService, _gitHubService, _installationService);
 
             // Assert
-            Assert.NotNull(instance);
+            Assert.NotNull(service);
         }
 
         [Fact]
-        public void CannotConstructWithNullConfigurationService()
-        {
-            Assert.Throws<ArgumentNullException>(() => new UpdateService(default(IConfigurationService), _gitHubService, _installationService));
-        }
-
-        [Fact]
-        public void CannotConstructWithNullGitHubService()
-        {
-            Assert.Throws<ArgumentNullException>(() => new UpdateService(_configurationService, default(IGitHubService), _installationService));
-        }
-
-        [Fact]
-        public void CannotConstructWithNullInstallationService()
-        {
-            Assert.Throws<ArgumentNullException>(() => new UpdateService(_configurationService, _gitHubService, default(IInstallationService)));
-        }
-
-        [Fact]
-        public async Task CanCallCheckForUpdatesAsync()
+        public async Task CheckForUpdatesAsyncShouldLoadConfigurationAndCheckUpdates()
         {
             // Arrange
-            _configurationService.LoadConfigurationAsync().Returns(new UpdaterConfiguration());
-            _gitHubService.CheckForUpdatesAsync(Arg.Any<UpdaterConfiguration>()).Returns(new UpdateInfo
+            var configuration = new UpdaterConfiguration
             {
-                Version = "TestValue1944306379",
-                TagName = "TestValue913443386",
-                Name = "TestValue2146105344",
-                Body = "TestValue145588333",
+                GitHubOwner = "testowner",
+                GitHubRepository = "testrepo",
+                CurrentVersion = "1.0.0",
+                UpdateChannel = UpdateChannel.Release,
+                Architecture = SystemArchitecture.X64
+            };
+
+            var expectedUpdate = new UpdateInfo
+            {
+                Version = "2.0.0",
+                TagName = "v2.0.0",
+                Name = "Version 2.0.0",
+                Body = "Release notes for version 2.0.0",
                 PublishedAt = DateTime.UtcNow,
-                IsPrerelease = true,
-                Assets = new List<UpdateAsset>(),
-                DownloadUrl = "TestValue682640107",
-                FileSize = 1351120026L,
+                IsPrerelease = false,
+                Assets = [],
+                DownloadUrl = "https://github.com/testowner/testrepo/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 1024 * 1024,
                 Channel = UpdateChannel.Release,
-                Architecture = SystemArchitecture.X86
-            });
+                Architecture = SystemArchitecture.X64
+            };
+
+            _configurationService.LoadConfigurationAsync()
+                .Returns(configuration);
+
+            _gitHubService.CheckForUpdatesAsync(configuration)
+                .Returns(expectedUpdate);
 
             // Act
-            var result = await _testClass.CheckForUpdatesAsync();
+            var result = await _updateService.CheckForUpdatesAsync();
 
             // Assert
-            await _configurationService.Received().LoadConfigurationAsync();
-            await _gitHubService.Received().CheckForUpdatesAsync(Arg.Any<UpdaterConfiguration>());
-
-            throw new NotImplementedException("Create or modify test");
+            Assert.Equal(expectedUpdate, result);
+            await _configurationService.Received(1).LoadConfigurationAsync();
+            await _gitHubService.Received(1).CheckForUpdatesAsync(configuration);
         }
 
         [Fact]
-        public async Task CanCallDownloadUpdateAsync()
+        public async Task CheckForUpdatesAsyncShouldReturnNullWhenNoUpdates()
+        {
+            // Arrange
+            var configuration = new UpdaterConfiguration
+            {
+                GitHubOwner = "testowner",
+                GitHubRepository = "testrepo",
+                CurrentVersion = "2.0.0", // Same version
+                UpdateChannel = UpdateChannel.Release,
+                Architecture = SystemArchitecture.X64
+            };
+
+            _configurationService.LoadConfigurationAsync()
+                .Returns(configuration);
+
+            _gitHubService.CheckForUpdatesAsync(configuration)
+                .Returns((UpdateInfo?)null);
+
+            // Act
+            var result = await _updateService.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.Null(result);
+            await _configurationService.Received(1).LoadConfigurationAsync();
+            await _gitHubService.Received(1).CheckForUpdatesAsync(configuration);
+        }
+
+        [Fact]
+        public async Task CheckForUpdatesAsyncShouldReturnNullOnException()
+        {
+            // Arrange
+            _configurationService.LoadConfigurationAsync()
+                .Returns(Task.FromException<UpdaterConfiguration>(new InvalidOperationException("Configuration loading failed")));
+
+            // Act
+            var result = await _updateService.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.Null(result);
+            await _configurationService.Received(1).LoadConfigurationAsync();
+            await _gitHubService.DidNotReceive().CheckForUpdatesAsync(Arg.Any<UpdaterConfiguration>());
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldThrowOnNullUpdateInfo()
+        {
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentNullException>(() =>
+                _updateService.DownloadUpdateAsync(null!));
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldDownloadToTempDirectory()
         {
             // Arrange
             var updateInfo = new UpdateInfo
             {
-                Version = "TestValue1085345783",
-                TagName = "TestValue88719737",
-                Name = "TestValue1497481497",
-                Body = "TestValue2024881683",
-                PublishedAt = DateTime.UtcNow,
-                IsPrerelease = true,
-                Assets = new List<UpdateAsset>(),
-                DownloadUrl = "TestValue1167627006",
-                FileSize = 1361377465L,
-                Channel = UpdateChannel.Nightly,
+                Version = "2.0.0",
+                DownloadUrl = "https://github.com/test/test/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 1024 * 1024
+            };
+
+            var downloadStream = new MemoryStream(new byte[1024 * 1024]); // 1MB of zeros
+            _gitHubService.DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>())
+                .Returns(downloadStream);
+
+            // Act
+            var result = await _updateService.DownloadUpdateAsync(updateInfo);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(File.Exists(result));
+            Assert.Contains("BucketUpdater", result, StringComparison.OrdinalIgnoreCase);
+            Assert.EndsWith("app-2.0.0-x64.msi", result, StringComparison.OrdinalIgnoreCase);
+
+            await _gitHubService.Received(1).DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>());
+
+            // Cleanup
+            if (File.Exists(result))
+                File.Delete(result);
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldReportProgress()
+        {
+            // Arrange
+            var updateInfo = new UpdateInfo
+            {
+                Version = "2.0.0",
+                DownloadUrl = "https://github.com/test/test/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 1024
+            };
+
+            var downloadStream = new MemoryStream(new byte[1024]);
+            var progressReports = new List<(long downloaded, long total)>();
+            var progress = new Progress<(long downloaded, long total)>(report => progressReports.Add(report));
+
+            _gitHubService.DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>())
+                .Returns(downloadStream)
+                .AndDoes(callInfo =>
+                {
+                    var progressArg = callInfo.Arg<IProgress<(long downloaded, long total)>>();
+                    progressArg?.Report((512, 1024)); // 50%
+                    progressArg?.Report((1024, 1024)); // 100%
+                });
+
+            // Act
+            var result = await _updateService.DownloadUpdateAsync(updateInfo, progress);
+
+            // Assert
+            Assert.NotNull(result);
+            // Progress events should be forwarded to GitHubService
+            await _gitHubService.Received(1).DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                progress,
+                Arg.Any<CancellationToken>());
+
+            // Cleanup
+            if (File.Exists(result))
+                File.Delete(result);
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldValidateFileSize()
+        {
+            // Arrange
+            var updateInfo = new UpdateInfo
+            {
+                Version = "2.0.0",
+                DownloadUrl = "https://github.com/test/test/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 2048 // Expected 2KB
+            };
+
+            var downloadStream = new MemoryStream(new byte[1024]); // Only 1KB - significant difference
+            _gitHubService.DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>())
+                .Returns(downloadStream);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _updateService.DownloadUpdateAsync(updateInfo));
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldOverwriteExistingFile()
+        {
+            // Arrange
+            var updateInfo = new UpdateInfo
+            {
+                Version = "2.0.0",
+                DownloadUrl = "https://github.com/test/test/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 1024
+            };
+
+            var tempDir = Path.Combine(Path.GetTempPath(), "BucketUpdater");
+            Directory.CreateDirectory(tempDir);
+            var existingFile = Path.Combine(tempDir, "app-2.0.0-x64.msi");
+            await File.WriteAllTextAsync(existingFile, "old content");
+
+            var downloadStream = new MemoryStream(new byte[1024]);
+            _gitHubService.DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>())
+                .Returns(downloadStream);
+
+            // Act
+            var result = await _updateService.DownloadUpdateAsync(updateInfo);
+
+            // Assert
+            Assert.Equal(existingFile, result);
+            Assert.Equal(1024, new FileInfo(result).Length);
+
+            // Cleanup
+            if (File.Exists(result))
+                File.Delete(result);
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsyncShouldSupportCancellation()
+        {
+            // Arrange
+            var updateInfo = new UpdateInfo
+            {
+                Version = "2.0.0",
+                DownloadUrl = "https://github.com/test/test/releases/download/v2.0.0/app-2.0.0-x64.msi",
+                FileSize = 1024
+            };
+
+            using var cancellationTokenSource = new CancellationTokenSource();
+            await cancellationTokenSource.CancelAsync();
+
+            _gitHubService.DownloadUpdateAsync(
+                updateInfo.DownloadUrl,
+                Arg.Any<IProgress<(long downloaded, long total)>>(),
+                Arg.Any<CancellationToken>())
+                .Returns(Task.FromException<Stream>(new OperationCanceledException()));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                _updateService.DownloadUpdateAsync(updateInfo, cancellationToken: cancellationTokenSource.Token));
+        }
+
+        [Fact]
+        public async Task InstallUpdateAsyncShouldThrowOnNullFilePath()
+        {
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentNullException>(() =>
+                _updateService.InstallUpdateAsync(null!));
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() =>
+                _updateService.InstallUpdateAsync(""));
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() =>
+                _updateService.InstallUpdateAsync("   "));
+        }
+
+        [Fact]
+        public async Task InstallUpdateAsyncShouldDelegateToInstallationService()
+        {
+            // Arrange
+            var msiFilePath = @"C:\temp\update.msi";
+            var progress = new Progress<string>();
+            var cancellationToken = CancellationToken.None;
+
+            _installationService.InstallUpdateAsync(msiFilePath, progress, cancellationToken)
+                .Returns(true);
+
+            // Act
+            var result = await _updateService.InstallUpdateAsync(msiFilePath, progress, cancellationToken);
+
+            // Assert
+            Assert.True(result);
+            await _installationService.Received(1).InstallUpdateAsync(msiFilePath, progress, cancellationToken);
+        }
+
+        [Fact]
+        public async Task InstallUpdateAsyncShouldReturnFalseOnFailure()
+        {
+            // Arrange
+            var msiFilePath = @"C:\temp\update.msi";
+
+            _installationService.InstallUpdateAsync(msiFilePath, Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
+                .Returns(false);
+
+            // Act
+            var result = await _updateService.InstallUpdateAsync(msiFilePath);
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void CleanupFilesShouldThrowOnNullPath()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                _updateService.CleanupFiles(null!));
+
+            Assert.Throws<ArgumentNullException>(() =>
+                _updateService.CleanupFiles(""));
+
+            Assert.Throws<ArgumentNullException>(() =>
+                _updateService.CleanupFiles("   "));
+        }
+
+        [Fact]
+        public void CleanupFilesShouldDelegateToInstallationService()
+        {
+            // Arrange
+            var downloadPath = @"C:\temp\update.msi";
+
+            // Act
+            _updateService.CleanupFiles(downloadPath);
+
+            // Assert
+            _installationService.Received(1).CleanupDownloadedFiles(downloadPath);
+        }
+
+        [Fact]
+        public void CleanupAllTemporaryFilesShouldDelegateToInstallationService()
+        {
+            // Act
+            _updateService.CleanupAllTemporaryFiles();
+
+            // Assert
+            _installationService.Received(1).CleanupAllTemporaryFiles();
+        }
+
+        [Fact]
+        public void GetConfigurationShouldReturnConfigurationFromService()
+        {
+            // Arrange
+            var expectedConfiguration = new UpdaterConfiguration
+            {
+                GitHubOwner = "testowner",
+                GitHubRepository = "testrepo",
+                CurrentVersion = "1.0.0",
+                UpdateChannel = UpdateChannel.Release,
                 Architecture = SystemArchitecture.X64
             };
-            var progress = Substitute.For<IProgress<(long downloaded, long total)>>();
-            var cancellationToken = CancellationToken.None;
 
-            _gitHubService.DownloadUpdateAsync(Arg.Any<string>(), Arg.Any<IProgress<(long downloaded, long total)>>(), Arg.Any<CancellationToken>()).Returns(new MemoryStream());
-
-            // Act
-            var result = await _testClass.DownloadUpdateAsync(updateInfo, progress, cancellationToken);
-
-            // Assert
-            await _gitHubService.Received().DownloadUpdateAsync(Arg.Any<string>(), Arg.Any<IProgress<(long downloaded, long total)>>(), Arg.Any<CancellationToken>());
-
-            throw new NotImplementedException("Create or modify test");
-        }
-
-        [Fact]
-        public async Task CannotCallDownloadUpdateAsyncWithNullUpdateInfo()
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.DownloadUpdateAsync(default(UpdateInfo), Substitute.For<IProgress<(long downloaded, long total)>>(), CancellationToken.None));
-        }
-
-        [Fact]
-        public async Task CanCallInstallUpdateAsync()
-        {
-            // Arrange
-            var msiFilePath = "TestValue1032179395";
-            var progress = Substitute.For<IProgress<string>>();
-            var cancellationToken = CancellationToken.None;
-
-            _installationService.InstallUpdateAsync(Arg.Any<string>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>()).Returns(true);
+            _configurationService.GetConfiguration()
+                .Returns(expectedConfiguration);
 
             // Act
-            var result = await _testClass.InstallUpdateAsync(msiFilePath, progress, cancellationToken);
+            var result = _updateService.GetConfiguration();
 
             // Assert
-            await _installationService.Received().InstallUpdateAsync(Arg.Any<string>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>());
-
-            throw new NotImplementedException("Create or modify test");
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public async Task CannotCallInstallUpdateAsyncWithInvalidMsiFilePath(string value)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() => _testClass.InstallUpdateAsync(value, Substitute.For<IProgress<string>>(), CancellationToken.None));
-        }
-
-        [Fact]
-        public void CanCallCleanupFiles()
-        {
-            // Arrange
-            var downloadPath = "TestValue1086055021";
-
-            // Act
-            _testClass.CleanupFiles(downloadPath);
-
-            // Assert
-            _installationService.Received().CleanupDownloadedFiles(Arg.Any<string>());
-
-            throw new NotImplementedException("Create or modify test");
-        }
-
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void CannotCallCleanupFilesWithInvalidDownloadPath(string value)
-        {
-            Assert.Throws<ArgumentNullException>(() => _testClass.CleanupFiles(value));
-        }
-
-        [Fact]
-        public void CanCallCleanupAllTemporaryFiles()
-        {
-            // Act
-            _testClass.CleanupAllTemporaryFiles();
-
-            // Assert
-            _installationService.Received().CleanupAllTemporaryFiles();
-
-            throw new NotImplementedException("Create or modify test");
-        }
-
-        [Fact]
-        public void CanCallGetConfiguration()
-        {
-            // Arrange
-            _configurationService.GetConfiguration().Returns(new UpdaterConfiguration());
-
-            // Act
-            var result = _testClass.GetConfiguration();
-
-            // Assert
-            _configurationService.Received().GetConfiguration();
-
-            throw new NotImplementedException("Create or modify test");
+            Assert.Equal(expectedConfiguration, result);
+            _configurationService.Received(1).GetConfiguration();
         }
     }
 }

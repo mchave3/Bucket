@@ -1,114 +1,270 @@
 namespace Bucket.Updater.Tests.Models
 {
     using System;
+    using System.Runtime.InteropServices;
     using Bucket.Updater.Models;
     using Xunit;
 
     public class UpdaterConfigurationTests
     {
-        private readonly UpdaterConfiguration _testClass;
-
-        public UpdaterConfigurationTests()
-        {
-            _testClass = new UpdaterConfiguration();
-        }
-
         [Fact]
-        public void CanCallInitializeRuntimeProperties()
+        public void ConstructorShouldInitializeDefaultValues()
         {
             // Act
-            _testClass.InitializeRuntimeProperties();
+            var config = new UpdaterConfiguration();
 
             // Assert
-            throw new NotImplementedException("Create or modify test");
+            Assert.Equal(UpdateChannel.Release, config.UpdateChannel);
+            Assert.Equal(SystemArchitecture.X64, config.Architecture);
+            Assert.Equal("mchave3", config.GitHubOwner);
+            Assert.Equal("Bucket", config.GitHubRepository);
+            Assert.Equal("1.0.0.0", config.CurrentVersion);
+            Assert.Equal(DateTime.MinValue, config.LastUpdateCheck);
         }
 
         [Fact]
-        public void CanCallGetArchitectureString()
-        {
-            // Act
-            var result = _testClass.GetArchitectureString();
-
-            // Assert
-            throw new NotImplementedException("Create or modify test");
-        }
-
-        [Fact]
-        public void CanSetAndGetUpdateChannel()
+        public void PropertiesShouldAllowGetAndSet()
         {
             // Arrange
-            var testValue = UpdateChannel.Nightly;
+            var config = new UpdaterConfiguration();
+            var lastUpdateCheck = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc);
 
             // Act
-            _testClass.UpdateChannel = testValue;
+            config.UpdateChannel = UpdateChannel.Nightly;
+            config.Architecture = SystemArchitecture.ARM64;
+            config.GitHubOwner = "testowner";
+            config.GitHubRepository = "testrepo";
+            config.CurrentVersion = "24.1.15";
+            config.LastUpdateCheck = lastUpdateCheck;
 
             // Assert
-            Assert.Equal(testValue, _testClass.UpdateChannel);
+            Assert.Equal(UpdateChannel.Nightly, config.UpdateChannel);
+            Assert.Equal(SystemArchitecture.ARM64, config.Architecture);
+            Assert.Equal("testowner", config.GitHubOwner);
+            Assert.Equal("testrepo", config.GitHubRepository);
+            Assert.Equal("24.1.15", config.CurrentVersion);
+            Assert.Equal(lastUpdateCheck, config.LastUpdateCheck);
+        }
+
+        [Theory]
+        [InlineData(UpdateChannel.Release)]
+        [InlineData(UpdateChannel.Nightly)]
+        public void UpdateChannelShouldSupportAllChannels(UpdateChannel channel)
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.UpdateChannel = channel;
+
+            // Assert
+            Assert.Equal(channel, config.UpdateChannel);
+        }
+
+        [Theory]
+        [InlineData(SystemArchitecture.X86)]
+        [InlineData(SystemArchitecture.X64)]
+        [InlineData(SystemArchitecture.ARM64)]
+        public void ArchitectureShouldSupportAllArchitectures(SystemArchitecture architecture)
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.Architecture = architecture;
+
+            // Assert
+            Assert.Equal(architecture, config.Architecture);
+        }
+
+        [Theory]
+        [InlineData("1.0.0.0")]
+        [InlineData("24.1.15")]
+        [InlineData("24.1.15.1")]
+        [InlineData("24.1.15-Nightly")]
+        public void CurrentVersionShouldAcceptValidVersionFormats(string version)
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.CurrentVersion = version;
+
+            // Assert
+            Assert.Equal(version, config.CurrentVersion);
+        }
+
+        [Theory]
+        [InlineData("mchave3", "Bucket")]
+        [InlineData("microsoft", "vscode")]
+        [InlineData("owner", "repo")]
+        public void GitHubRepositoryInfoShouldAcceptValidValues(string owner, string repo)
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.GitHubOwner = owner;
+            config.GitHubRepository = repo;
+
+            // Assert
+            Assert.Equal(owner, config.GitHubOwner);
+            Assert.Equal(repo, config.GitHubRepository);
         }
 
         [Fact]
-        public void CanSetAndGetArchitecture()
+        public void InitializeRuntimePropertiesShouldDetectCurrentArchitecture()
         {
             // Arrange
-            var testValue = SystemArchitecture.X86;
+            var config = new UpdaterConfiguration();
+            var expectedArchitecture = RuntimeInformation.ProcessArchitecture switch
+            {
+                System.Runtime.InteropServices.Architecture.X86 => SystemArchitecture.X86,
+                System.Runtime.InteropServices.Architecture.X64 => SystemArchitecture.X64,
+                System.Runtime.InteropServices.Architecture.Arm64 => SystemArchitecture.ARM64,
+                _ => SystemArchitecture.X64
+            };
 
             // Act
-            _testClass.Architecture = testValue;
+            config.InitializeRuntimeProperties();
 
             // Assert
-            Assert.Equal(testValue, _testClass.Architecture);
+            Assert.Equal(expectedArchitecture, config.Architecture);
+        }
+
+        [Theory]
+        [InlineData(SystemArchitecture.X86, "x86")]
+        [InlineData(SystemArchitecture.X64, "x64")]
+        [InlineData(SystemArchitecture.ARM64, "arm64")]
+        public void GetArchitectureStringShouldReturnCorrectString(SystemArchitecture architecture, string expected)
+        {
+            // Arrange
+            var config = new UpdaterConfiguration { Architecture = architecture };
+
+            // Act
+            var result = config.GetArchitectureString();
+
+            // Assert
+            Assert.Equal(expected, result);
         }
 
         [Fact]
-        public void CanSetAndGetGitHubOwner()
+        public void GetArchitectureStringShouldReturnDefaultForUnknownArchitecture()
         {
             // Arrange
-            var testValue = "TestValue1349354479";
+            var config = new UpdaterConfiguration { Architecture = (SystemArchitecture)999 };
 
             // Act
-            _testClass.GitHubOwner = testValue;
+            var result = config.GetArchitectureString();
 
             // Assert
-            Assert.Equal(testValue, _testClass.GitHubOwner);
+            Assert.Equal("x64", result);
         }
 
         [Fact]
-        public void CanSetAndGetGitHubRepository()
+        public void UpdaterConfigurationShouldCreateCompleteReleaseConfiguration()
         {
-            // Arrange
-            var testValue = "TestValue1436378387";
-
-            // Act
-            _testClass.GitHubRepository = testValue;
+            // Arrange & Act
+            var config = new UpdaterConfiguration
+            {
+                UpdateChannel = UpdateChannel.Release,
+                Architecture = SystemArchitecture.X64,
+                GitHubOwner = "mchave3",
+                GitHubRepository = "Bucket",
+                CurrentVersion = "24.1.15",
+                LastUpdateCheck = new DateTime(2024, 1, 15, 10, 30, 0, DateTimeKind.Utc)
+            };
 
             // Assert
-            Assert.Equal(testValue, _testClass.GitHubRepository);
+            Assert.Equal(UpdateChannel.Release, config.UpdateChannel);
+            Assert.Equal(SystemArchitecture.X64, config.Architecture);
+            Assert.Equal("mchave3", config.GitHubOwner);
+            Assert.Equal("Bucket", config.GitHubRepository);
+            Assert.Equal("24.1.15", config.CurrentVersion);
+            Assert.Equal("x64", config.GetArchitectureString());
+            Assert.NotEqual(DateTime.MinValue, config.LastUpdateCheck);
         }
 
         [Fact]
-        public void CanSetAndGetCurrentVersion()
+        public void UpdaterConfigurationShouldCreateCompleteNightlyConfiguration()
         {
-            // Arrange
-            var testValue = "TestValue1892784408";
-
-            // Act
-            _testClass.CurrentVersion = testValue;
+            // Arrange & Act
+            var config = new UpdaterConfiguration
+            {
+                UpdateChannel = UpdateChannel.Nightly,
+                Architecture = SystemArchitecture.ARM64,
+                GitHubOwner = "mchave3",
+                GitHubRepository = "Bucket",
+                CurrentVersion = "24.1.15.1-Nightly",
+                LastUpdateCheck = DateTime.UtcNow
+            };
 
             // Assert
-            Assert.Equal(testValue, _testClass.CurrentVersion);
+            Assert.Equal(UpdateChannel.Nightly, config.UpdateChannel);
+            Assert.Equal(SystemArchitecture.ARM64, config.Architecture);
+            Assert.Equal("mchave3", config.GitHubOwner);
+            Assert.Equal("Bucket", config.GitHubRepository);
+            Assert.Contains("Nightly", config.CurrentVersion, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("arm64", config.GetArchitectureString());
         }
 
         [Fact]
-        public void CanSetAndGetLastUpdateCheck()
+        public void LastUpdateCheckShouldTrackUpdateTiming()
         {
             // Arrange
-            var testValue = DateTime.UtcNow;
+            var config = new UpdaterConfiguration();
+            var beforeUpdate = DateTime.UtcNow;
 
             // Act
-            _testClass.LastUpdateCheck = testValue;
+            config.LastUpdateCheck = DateTime.UtcNow;
+            var afterUpdate = DateTime.UtcNow;
 
             // Assert
-            Assert.Equal(testValue, _testClass.LastUpdateCheck);
+            Assert.True(config.LastUpdateCheck >= beforeUpdate);
+            Assert.True(config.LastUpdateCheck <= afterUpdate);
+            Assert.NotEqual(DateTime.MinValue, config.LastUpdateCheck);
+        }
+
+        [Fact]
+        public void ConfigurationShouldSupportX86Architecture()
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.Architecture = SystemArchitecture.X86;
+
+            // Assert
+            Assert.Equal(SystemArchitecture.X86, config.Architecture);
+            Assert.Equal("x86", config.GetArchitectureString());
+        }
+
+        [Fact]
+        public void ConfigurationShouldSupportX64Architecture()
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.Architecture = SystemArchitecture.X64;
+
+            // Assert
+            Assert.Equal(SystemArchitecture.X64, config.Architecture);
+            Assert.Equal("x64", config.GetArchitectureString());
+        }
+
+        [Fact]
+        public void ConfigurationShouldSupportARM64Architecture()
+        {
+            // Arrange
+            var config = new UpdaterConfiguration();
+
+            // Act
+            config.Architecture = SystemArchitecture.ARM64;
+
+            // Assert
+            Assert.Equal(SystemArchitecture.ARM64, config.Architecture);
+            Assert.Equal("arm64", config.GetArchitectureString());
         }
     }
 }
