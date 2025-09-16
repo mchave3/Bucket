@@ -105,14 +105,14 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="DevWinUI" Version="8.9.2" />
-    <PackageReference Include="DevWinUI.ContextMenu" Version="8.9.1" />
-    <PackageReference Include="DevWinUI.Controls" Version="8.9.2" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="DevWinUI" Version="9.0.0" />
+    <PackageReference Include="DevWinUI.ContextMenu" Version="9.0.0" />
+    <PackageReference Include="DevWinUI.Controls" Version="9.0.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250907003" />
     <PackageReference Include="nucs.JsonSettings" Version="2.0.2" />
     <PackageReference Include="nucs.JsonSettings.AutoSaveGenerator" Version="2.0.4" />
     <PackageReference Include="Serilog" Version="4.3.0" />
@@ -148,4 +148,8 @@
   </ItemGroup>
   <!-- Import the targets file to remove unwanted language folders -->
   <Import Project="RemoveLanguageFolders.targets" />
+
+<ItemGroup>
+	<PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="9.0.9" />
+</ItemGroup>
 </Project>
