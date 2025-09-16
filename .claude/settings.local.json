@@ -12,7 +12,8 @@
       "Bash(findstr:*)",
       "Bash(dotnet test:*)",
       "Bash(awk:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(dotnet --list-sdks)"
     ],
     "deny": [],
     "ask": []

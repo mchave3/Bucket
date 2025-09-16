@@ -22,11 +22,17 @@ dotnet build --configuration Release --runtime win-x64
 
 ### Testing
 ```powershell
-# Run all tests
-dotnet test
+# Run all tests (WinUI projects require specific runtime)
+dotnet test --configuration Release --runtime win-x64
+
+# Run Core tests only (no WinUI dependencies)
+dotnet test tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj
+
+# Run specific test project
+dotnet test tests/Bucket.Updater.Tests/Bucket.Updater.Tests.csproj --configuration Release --runtime win-x64
 
 # Run tests with coverage (if configured)
-dotnet test --collect:"XPlat Code Coverage"
+dotnet test --collect:"XPlat Code Coverage" --configuration Release --runtime win-x64
 ```
 
 ### Code Analysis
