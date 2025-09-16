@@ -76,7 +76,7 @@
             MainWindow.Title = MainWindow.AppWindow.Title = ProcessInfoHelper.ProductNameAndVersion;
             MainWindow.AppWindow.SetIcon("Assets/AppIcon.ico");
 
-            ThemeService.AutoInitialize(MainWindow);
+            ThemeService.Initialize(MainWindow);
 
             MainWindow.Activate();
 

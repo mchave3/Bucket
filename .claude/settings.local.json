@@ -10,7 +10,9 @@
       "mcp__sequentialthinking__sequentialthinking",
       "mcp__memory__create_entities",
       "Bash(findstr:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(awk:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []
