@@ -1,0 +1,16 @@
+﻿global using Bucket.Updater.Common;
+global using Bucket.Updater.Models;
+global using Bucket.Updater.Models.GitHub;
+global using Bucket.Updater.Services;
+global using Bucket.Updater.ViewModels;
+global using Bucket.Updater.Views;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
+global using DevWinUI;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.UI.Xaml;
+global using Microsoft.UI.Xaml.Controls;
+global using Microsoft.UI.Xaml.Navigation;
+global using System.Globalization;
+global using System.Text.Json;
+global using static Bucket.Updater.Common.LoggerSetup;

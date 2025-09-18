@@ -1,4 +1,6 @@
-﻿namespace Bucket.App.Views
+﻿using Bucket.Core.Helpers;
+
+namespace Bucket.App.Views
 {
     public sealed partial class AboutUsSettingPage : Page
     {
@@ -9,7 +11,8 @@
             ViewModel = App.GetService<AboutUsSettingViewModel>();
             this.InitializeComponent();
         }
-    }
 
+        public string AppVersion => VersionHelper.GetAppVersion();
+    }
 
 }

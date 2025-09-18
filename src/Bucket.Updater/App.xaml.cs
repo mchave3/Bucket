@@ -1,0 +1,170 @@
+﻿namespace Bucket.Updater
+{
+    public partial class App : Application
+    {
+        public new static App Current => (App)Application.Current;
+        public static Window MainWindow { get; private set; }
+        public static IntPtr Hwnd => MainWindow != null ? WinRT.Interop.WindowNative.GetWindowHandle(MainWindow) : IntPtr.Zero;
+        public IServiceProvider Services { get; }
+        public IThemeService ThemeService => GetService<IThemeService>();
+
+        public static T GetService<T>() where T : class
+        {
+            var currentApp = App.Current as App;
+            if (currentApp?.Services?.GetService(typeof(T)) is not T service)
+            {
+                throw new ArgumentException($"{typeof(T)} needs to be registered in ConfigureServices within App.xaml.cs.");
+            }
+
+            return service;
+        }
+
+        public static T? GetServiceSafe<T>() where T : class
+        {
+            try
+            {
+                var currentApp = App.Current as App;
+                return currentApp?.Services?.GetService(typeof(T)) as T;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public App()
+        {
+            Services = ConfigureServices();
+            this.InitializeComponent();
+
+            // Enables Multicore JIT with the specified profile
+            System.Runtime.ProfileOptimization.SetProfileRoot(Constants.RootDirectoryPath);
+            System.Runtime.ProfileOptimization.StartProfile("Startup.Profile");
+        }
+
+
+        private static IServiceProvider ConfigureServices()
+        {
+            var services = new ServiceCollection();
+
+            // DevWinUI Services
+            services.AddSingleton<IThemeService, ThemeService>();
+            services.AddSingleton<ContextMenuService>();
+
+            // Configuration Services
+            services.AddSingleton<IAppConfigReader, AppConfigReader>();
+            services.AddSingleton<IConfigurationService, ConfigurationService>();
+
+            // Application Services
+            services.AddSingleton<IGitHubService, GitHubService>();
+            services.AddSingleton<IInstallationService, InstallationService>();
+            services.AddSingleton<IUpdateService, UpdateService>();
+
+            // ViewModels
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<UpdateCheckPageViewModel>();
+            services.AddTransient<DownloadPageViewModel>();
+            services.AddTransient<InstallPageViewModel>();
+
+            return services.BuildServiceProvider();
+        }
+
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        {
+            MainWindow = new MainWindow();
+
+            MainWindow.Title = MainWindow.AppWindow.Title = ProcessInfoHelper.ProductNameAndVersion;
+            MainWindow.AppWindow.SetIcon("Assets/AppIcon.ico");
+
+            ThemeService.Initialize(MainWindow);
+
+            MainWindow.Activate();
+
+            InitializeApp();
+
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+        }
+
+        private async void InitializeApp()
+        {
+            // Configure logging
+            ConfigureLogger();
+            Logger?.Information("Bucket Updater started");
+
+            // Setup unhandled exception logging
+            UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
+
+            var menuService = GetService<ContextMenuService>();
+            if (menuService != null && RuntimeHelper.IsPackaged())
+            {
+                ContextMenuItem menu = new ContextMenuItem
+                {
+                    Title = "Open Bucket.Updater Here",
+                    Param = @"""{path}""",
+                    AcceptFileFlag = (int)FileMatchFlagEnum.All,
+                    AcceptDirectoryFlag = (int)(DirectoryMatchFlagEnum.Directory | DirectoryMatchFlagEnum.Background | DirectoryMatchFlagEnum.Desktop),
+                    AcceptMultipleFilesFlag = (int)FilesMatchFlagEnum.Each,
+                    Index = 0,
+                    Enabled = true,
+                    Icon = ProcessInfoHelper.GetFileVersionInfo().FileName,
+                    Exe = "Bucket.Updater.exe"
+                };
+
+                await menuService.SaveAsync(menu);
+            }
+        }
+
+        private static void OnProcessExit(object? sender, EventArgs e)
+        {
+            Logger?.Information("Bucket Updater shutting down");
+
+            // Cleanup any remaining downloaded files safely
+            try
+            {
+                var updateService = GetServiceSafe<IUpdateService>();
+                if (updateService != null)
+                {
+                    updateService.CleanupAllTemporaryFiles();
+                    Logger?.Information("Cleaned up temporary files on application exit");
+                }
+                else
+                {
+                    Logger?.Debug("UpdateService not available during shutdown, performing manual cleanup");
+
+                    // Manual cleanup fallback
+                    try
+                    {
+                        var tempPath = Path.Combine(Path.GetTempPath(), "BucketUpdater");
+                        if (Directory.Exists(tempPath))
+                        {
+                            var files = Directory.GetFiles(tempPath, "*.msi");
+                            foreach (var file in files)
+                            {
+                                try
+                                {
+                                    File.Delete(file);
+                                    Logger?.Debug("Manually deleted temporary file: {File}", file);
+                                }
+                                catch
+                                {
+                                    // Ignore cleanup errors for individual files
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        Logger?.Debug(cleanupEx, "Manual cleanup failed, but this is not critical");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger?.Warning(ex, "Failed to cleanup temporary files on application exit");
+            }
+
+            // Properly shutdown logger
+            LoggerSetup.Shutdown();
+        }
+    }
+}
