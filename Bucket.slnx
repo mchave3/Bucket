@@ -1,1 +1,19 @@
-<Solution />
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="setup/Bucket.Setup/Bucket.Setup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0" />
+  <Project Path="src/Bucket.App/Bucket.App.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="src/Bucket.Core/Bucket.Core.csproj" />
+  <Project Path="src/Bucket.Updater/Bucket.Updater.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+</Solution>
