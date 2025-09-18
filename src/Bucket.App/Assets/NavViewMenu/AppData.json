@@ -3,7 +3,8 @@
   "Groups": [
     {
       "UniqueId": "Bucket.App",
-      "Title": "Bucket.App",
+      "LocalizeId": "Nav_HomeKey",
+      "UsexUid": true,
       "ImagePath": "ms-appx:///Assets/AppIcon.png",
       "IsSpecialSection": false,
       "ShowItemsWithoutGroup": true,
@@ -11,9 +12,9 @@
       "Items": [
         {
           "UniqueId": "Bucket.App.Views.HomeLandingPage",
-          "Title": "Bucket.App",
-          "Subtitle": "Bucket.App",
-          "ImagePath": "ms-appx:///Assets/AppIcon.png",
+          "LocalizeId": "Nav_HomeKey",
+          "UsexUid": true,
+          "IconGlyph": "\uE80F",
           "HideItem": true
         }
       ]

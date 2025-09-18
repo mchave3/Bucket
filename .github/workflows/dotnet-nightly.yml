@@ -1,9 +1,5 @@
 name: 🌙 Nightly Build
 
-# Global configuration - modify these to change default behavior
-env:
-  SKIP_TESTS_DEFAULT: true  # Set to true to skip tests by default for scheduled runs
-
 on:
   schedule:
     # Run at 2:00 AM UTC every day

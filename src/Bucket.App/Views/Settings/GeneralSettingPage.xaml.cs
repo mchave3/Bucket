@@ -1,6 +1,5 @@
 ﻿using WinUI3Localizer;
 using Bucket.App.Services;
-using Bucket.Core.Models;
 using Bucket.Core.Services;
 
 namespace Bucket.App.Views
@@ -10,12 +9,13 @@ namespace Bucket.App.Views
     public sealed partial class GeneralSettingPage : Page
     {
         public GeneralSettingViewModel ViewModel { get; }
-        private readonly ILocalizationService _localizationService;
+        private readonly LocalizationManager _localizationManager;
+        private bool _isLoadingLanguages = false;
 
         public GeneralSettingPage()
         {
             ViewModel = App.GetService<GeneralSettingViewModel>();
-            _localizationService = App.GetService<ILocalizationService>();
+            _localizationManager = App.GetService<LocalizationManager>();
             this.InitializeComponent();
             this.Loaded += GeneralSettingPage_Loaded;
         }
@@ -27,38 +27,51 @@ namespace Bucket.App.Views
 
         private void LoadAvailableLanguages()
         {
-            // Use centralized language list from the localization service
-            var availableLanguages = _localizationService.SupportedLanguages.ToList();
+            _isLoadingLanguages = true;
 
-            LanguageComboBox.ItemsSource = availableLanguages;
-
-            // Select the current language from the localization service
-            string currentLanguage = _localizationService.CurrentLanguage;
-            var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
-            if (currentItem != null)
+            try
             {
-                LanguageComboBox.SelectedItem = currentItem;
+                // Use centralized language list from the localization manager
+                var availableLanguages = _localizationManager.AllSupportedLanguages.ToList();
+
+                LanguageComboBox.ItemsSource = availableLanguages;
+
+                // Select the current language from the localization manager
+                string currentLanguage = _localizationManager.CurrentLanguage;
+                var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
+                if (currentItem != null)
+                {
+                    LanguageComboBox.SelectedItem = currentItem;
+                }
+                else
+                {
+                    // Fallback to default language if not found
+                    var defaultItem = availableLanguages.FirstOrDefault();
+                    LanguageComboBox.SelectedItem = defaultItem;
+                }
             }
-            else
+            finally
             {
-                // Fallback to default language if not found
-                var defaultItem = availableLanguages.FirstOrDefault();
-                LanguageComboBox.SelectedItem = defaultItem;
+                _isLoadingLanguages = false;
             }
         }
 
         private async void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Ignore selection changes during loading to prevent infinite loop
+            if (_isLoadingLanguages)
+                return;
+
             if (e.AddedItems.FirstOrDefault() is LanguageItem selectedLanguage)
             {
                 try
                 {
-                    bool success = await _localizationService.SetLanguageAsync(selectedLanguage.Code);
-
-                    if (success)
+                    // LocalizationManager handles everything: save to config, platform language change, UI refresh
+                    bool success = await _localizationManager.SetLanguageAsync(selectedLanguage.Code);
+                    
+                    if (!success)
                     {
-                        // Save the selected language in configuration
-                        Settings.SelectedLanguage = selectedLanguage.Code;
+                        System.Diagnostics.Debug.WriteLine($"Failed to set language to {selectedLanguage.Code}");
                     }
                 }
                 catch (Exception ex)
