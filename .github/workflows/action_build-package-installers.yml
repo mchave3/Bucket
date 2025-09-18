@@ -129,7 +129,7 @@ jobs:
         Write-Host "=== Restoring NuGet packages ===" -ForegroundColor Cyan
 
         # Restore packages for all projects
-        dotnet restore Bucket.sln --verbosity minimal
+        dotnet restore Bucket.slnx --verbosity minimal
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "NuGet restore failed!"
