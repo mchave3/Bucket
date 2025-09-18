@@ -426,7 +426,7 @@ setup/**/Bucket.Setup_arm64-cache/
 setup/**/Bucket.Setup_arm64-SetupFiles/
 
 # ClaudeAI files
-.claude/*
+.claude/settings.local.json
 
 # .Codewiz
 .codewiz/*
