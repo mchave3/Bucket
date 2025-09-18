@@ -2,7 +2,6 @@ name: 🚀 Release Build
 
 # Global configuration - modify these to change default behavior
 env:
-  SKIP_TESTS_DEFAULT: true  # Set to true to skip tests by default
 
 on:
   workflow_dispatch:
@@ -19,11 +18,6 @@ on:
         default: ''
       dry-run:
         description: 'Dry run (build only, no release)'
-        required: false
-        type: boolean
-        default: false
-      skip-tests:
-        description: 'Skip running tests'
         required: false
         type: boolean
         default: false
@@ -107,19 +101,6 @@ jobs:
           echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "Release will use commit: $COMMIT_SHA"
 
-  # run-tests:
-  #   name: Run Tests
-  #   needs: [validate-version]
-  #   if: |
-  #     github.ref == 'refs/heads/main' &&
-  #     ((github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-  #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false'))
-  #   uses: ./.github/workflows/action_run-tests.yml
-  #   with:
-  #     configuration: 'Release'
-  #     platforms: 'x64,x86,ARM64'
-  #     generate-coverage: 'true'
-  #     checkout-ref: 'main'
 
   build-and-package:
     name: 🏗️ Build, Package and Create Installers

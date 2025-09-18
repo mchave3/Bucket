@@ -2,7 +2,6 @@ name: 🌙 Nightly Build
 
 # Global configuration - modify these to change default behavior
 env:
-  SKIP_TESTS_DEFAULT: true  # Set to true to skip tests by default for scheduled runs
 
 on:
   schedule:
@@ -12,11 +11,6 @@ on:
     inputs:
       force-build:
         description: 'Force build even if no changes'
-        required: false
-        type: boolean
-        default: false
-      skip-tests:
-        description: 'Skip running tests'
         required: false
         type: boolean
         default: false
@@ -124,19 +118,6 @@ jobs:
           echo "version=$gitVersion" >> $env:GITHUB_OUTPUT
           echo "msi_version=$msiVersion" >> $env:GITHUB_OUTPUT
 
-  # run-tests:
-  #   name: Run Tests
-  #   needs: [check-changes]
-  #   if: |
-  #     needs.check-changes.outputs.should-build == 'true' &&
-  #     ((github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-  #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false'))
-  #   uses: ./.github/workflows/action_run-tests.yml
-  #   with:
-  #     configuration: 'Release'
-  #     platforms: 'x64,x86,ARM64'
-  #     generate-coverage: 'true'
-  #     checkout-ref: 'dev'
 
   build-and-package:
     name: 🏗️ Build, Package and Create Installers
