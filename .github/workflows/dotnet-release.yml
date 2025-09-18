@@ -1,8 +1,5 @@
 name: 🚀 Release Build
 
-# Global configuration - modify these to change default behavior
-env:
-
 on:
   workflow_dispatch:
     inputs:

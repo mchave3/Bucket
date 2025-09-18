@@ -1,8 +1,5 @@
 name: 🌙 Nightly Build
 
-# Global configuration - modify these to change default behavior
-env:
-
 on:
   schedule:
     # Run at 2:00 AM UTC every day
