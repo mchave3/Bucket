@@ -36,7 +36,7 @@ namespace Bucket.App.Views
 
         private void ThemeButton_Click(object sender, RoutedEventArgs e)
         {
-            ThemeService.ChangeThemeWithoutSave(App.MainWindow);
+            App.Current.ThemeService.SetElementThemeWithoutSaveAsync();
         }
 
         private void OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
