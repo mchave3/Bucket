@@ -48,10 +48,11 @@ jobs:
           echo "Build will use commit: $COMMIT_SHA"
 
       - name: Check for merged PRs since last tag
+
         id: check
         shell: pwsh
         run: |
-          Write-Host "Checking for merged PRs since last tag..." -ForegroundColor Cyan
+          Write-Host "Checking for PRs since last tag..." -ForegroundColor Cyan
 
           # Get the latest nightly tag (only compare with previous nightly builds)
           $latestTag = git tag -l --sort=-version:refname | Where-Object { $_ -match '\-Nightly$' } | Select-Object -First 1
@@ -61,25 +62,27 @@ jobs:
             Write-Host "No previous tags found, building first nightly" -ForegroundColor Green
             echo "should-build=true" >> $env:GITHUB_OUTPUT
           } else {
-            # Get all merged PRs since last tag (only merge commits from PRs)
-            $mergedPRs = git log --merges --grep="Merge pull request" --pretty=format:"%h %s" "$latestTag..dev" 2>$null
+            # Get all PRs since last tag (including squash commits with PR numbers)
+            $mergedPRs = git log --grep="(#[0-9]" --pretty=format:"%h %s" "$latestTag..dev" 2>$null
+
             $mergeCount = ($mergedPRs | Measure-Object).Count
 
             if ($mergeCount -eq 0) {
               if ("${{ github.event.inputs.force-build }}" -eq "true") {
-                Write-Host "No PRs merged since last tag, but force build requested" -ForegroundColor Yellow
+                Write-Host "No PRs found since last tag, but force build requested" -ForegroundColor Yellow
                 echo "should-build=true" >> $env:GITHUB_OUTPUT
               } else {
-                Write-Host "No PRs merged to dev since last tag. Skipping build." -ForegroundColor Yellow
+                Write-Host "No PRs found in dev since last tag. Skipping build." -ForegroundColor Yellow
                 echo "should-build=false" >> $env:GITHUB_OUTPUT
               }
             } else {
-              Write-Host "Merged PRs since last tag (dev): $mergeCount" -ForegroundColor Green
+              Write-Host "PRs found since last tag (dev): $mergeCount" -ForegroundColor Green
               Write-Host $mergedPRs
 
-              # Check if only change is a release PR merge (skip in that case)
-              if ($mergeCount -eq 1 -and $mergedPRs -match "Merge pull request #\d+ from .*/release/") {
-                Write-Host "Only change since last tag is a release PR merge. Skipping build." -ForegroundColor Yellow
+              # Check if only change is a release PR (skip in that case)
+              if ($mergeCount -eq 1 -and $mergedPRs -match "from .*/release/") {
+                Write-Host "Only change since last tag is a release PR. Skipping build." -ForegroundColor Yellow
+
                 echo "should-build=false" >> $env:GITHUB_OUTPUT
               } else {
                 echo "should-build=true" >> $env:GITHUB_OUTPUT
