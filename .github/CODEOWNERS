@@ -13,7 +13,7 @@
 
 # Project configuration files - Require admin approval
 *.csproj @mchave3
-*.sln @mchave3
+*.slnx @mchave3
 Directory.Build.props @mchave3
 /src/Bucket.App/Package.appxmanifest @mchave3
 
@@ -30,9 +30,6 @@ Directory.Build.props @mchave3
 
 # Views - UI review (can be delegated to UI team later)
 /src/Bucket.App/Views/ @mchave3
-
-# Tests - Can be more permissive but still require review
-/tests/ @mchave3
 
 # Documentation - Less restrictive
 README.md @mchave3
