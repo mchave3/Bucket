@@ -427,3 +427,6 @@ setup/**/Bucket.Setup_arm64-SetupFiles/
 
 # ClaudeAI files
 .claude/*
+
+# .Codewiz
+.codewiz/*
