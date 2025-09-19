@@ -196,11 +196,6 @@ jobs:
 
         Write-Host "Bucket.Updater x64 published successfully" -ForegroundColor Green
 
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x64") | Out-Null
-
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x64 publish failed!"
           exit 1
@@ -263,11 +258,6 @@ jobs:
 
         Write-Host "Bucket.Updater x86 published successfully" -ForegroundColor Green
 
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x86") | Out-Null
-
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x86 publish failed!"
           exit 1
@@ -329,11 +319,6 @@ jobs:
         }
 
         Write-Host "Bucket.Updater ARM64 published successfully" -ForegroundColor Green
-
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/arm64") | Out-Null
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "ARM64 publish failed!"

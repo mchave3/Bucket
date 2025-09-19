@@ -59,7 +59,7 @@
     <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
     <!-- Path to the publish output for manual file inclusion -->
-    <PublishOutputPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\$(RuntimeIdentifier)\publish\</PublishOutputPath>
+    <PublishOutputPath>..\..\artifacts\publish\$(Platform.ToLowerInvariant())\</PublishOutputPath>
   </PropertyGroup>
   <!-- Pass the publish path to WiX preprocessor -->
   <PropertyGroup>
@@ -67,18 +67,4 @@
     <!-- Suppress ICE03 validation for invalid language IDs -->
     <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
-  <!-- Ensure publish happens before any WiX processing -->
-  <Target Name="PublishApp" BeforeTargets="BeforeBuild">
-    <Message Text="Publishing application to: $(PublishOutputPath)" Importance="high" />
-    <!-- Create publish directory if it doesn't exist -->
-    <MakeDir Directories="$(PublishOutputPath)" Condition="!Exists('$(PublishOutputPath)')" />
-    <!-- Publish the application -->
-    <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false;Version=$(Version);AssemblyVersion=$(AssemblyVersion);FileVersion=$(FileVersion)" />
-    <!-- Verify publish succeeded -->
-    <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish" Condition="!Exists('$(PublishOutputPath)')" />
-    <ItemGroup>
-      <PublishedFiles Include="$(PublishOutputPath)**\*" />
-    </ItemGroup>
-    <Message Text="Published @(PublishedFiles-&gt;Count()) files to $(PublishOutputPath)" Importance="high" />
-  </Target>
 </Project>

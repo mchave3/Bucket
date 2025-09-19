@@ -70,7 +70,7 @@
 
     <!-- Manual file inclusion -->
     <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
-      <Files Include="$(var.Bucket.App.TargetDir)\**" />
+      <Files Include="$(var.PublishOutputPath)\**" />
     </ComponentGroup>
 
   </Package>
