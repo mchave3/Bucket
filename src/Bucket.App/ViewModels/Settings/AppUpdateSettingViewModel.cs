@@ -1,9 +1,11 @@
-﻿using Windows.System;
+﻿using Bucket.App.Services;
 
 namespace Bucket.App.ViewModels
 {
     public partial class AppUpdateSettingViewModel : ObservableObject
     {
+        private readonly IUpdateService _updateService;
+
         [ObservableProperty]
         public string currentVersion;
 
@@ -22,12 +24,17 @@ namespace Bucket.App.ViewModels
         [ObservableProperty]
         public string loadingStatus = "Status";
 
-        private string ChangeLog = string.Empty;
+        [ObservableProperty]
+        public bool isUpdaterAvailable;
 
-        public AppUpdateSettingViewModel()
+        private UpdateInfo? _currentUpdateInfo;
+
+        public AppUpdateSettingViewModel(IUpdateService updateService)
         {
+            _updateService = updateService;
             CurrentVersion = $"Current Version {ProcessInfoHelper.VersionWithPrefix}";
             LastUpdateCheck = Settings.LastUpdateCheck;
+            IsUpdaterAvailable = _updateService.IsUpdaterAvailable();
         }
 
         [RelayCommand]
@@ -37,77 +44,108 @@ namespace Bucket.App.ViewModels
             IsUpdateAvailable = false;
             IsCheckButtonEnabled = false;
             LoadingStatus = "Checking for new version";
-            if (NetworkHelper.IsNetworkAvailable())
+            _currentUpdateInfo = null;
+
+            try
             {
-                try
+                if (!NetworkHelper.IsNetworkAvailable())
                 {
-                    //Todo: Fix UserName and Repo
-                    string username = "";
-                    string repo = "";
-                    LastUpdateCheck = DateTime.Now.ToShortDateString();
-                    Settings.LastUpdateCheck = DateTime.Now.ToShortDateString();
-                    var update = await UpdateHelper.CheckUpdateAsync(username, repo, new Version(ProcessInfoHelper.Version));
-                    if (update.StableRelease.IsExistNewVersion)
-                    {
-                        IsUpdateAvailable = true;
-                        ChangeLog = update.StableRelease.Changelog;
-                        LoadingStatus = $"We found a new version {update.StableRelease.TagName} Created at {update.StableRelease.CreatedAt} and Published at {update.StableRelease.PublishedAt}";
-                    }
-                    else if (update.PreRelease.IsExistNewVersion)
-                    {
-                        IsUpdateAvailable = true;
-                        ChangeLog = update.PreRelease.Changelog;
-                        LoadingStatus = $"We found a new PreRelease Version {update.PreRelease.TagName} Created at {update.PreRelease.CreatedAt} and Published at {update.PreRelease.PublishedAt}";
-                    }
-                    else
-                    {
-                        LoadingStatus = "You are using latest version";
-                    }
+                    LoadingStatus = "Error Connection";
+                    return;
                 }
-                catch (Exception ex)
+
+                LastUpdateCheck = DateTime.Now.ToShortDateString();
+                Settings.LastUpdateCheck = DateTime.Now.ToShortDateString();
+
+                var updateInfo = await _updateService.GetUpdateInfoAsync();
+                if (updateInfo != null)
                 {
-                    LoadingStatus = ex.Message;
-                    IsLoading = false;
-                    IsCheckButtonEnabled = true;
+                    IsUpdateAvailable = true;
+                    _currentUpdateInfo = updateInfo;
+
+                    var updateType = updateInfo.IsPreRelease ? "Pre-release" : "Stable release";
+                    LoadingStatus = $"We found a new {updateType.ToLower()} version {updateInfo.Version} " +
+                                  $"Created at {updateInfo.CreatedAt:yyyy-MM-dd} and Published at {updateInfo.PublishedAt:yyyy-MM-dd}";
+                }
+                else
+                {
+                    LoadingStatus = "You are using latest version";
                 }
             }
-            else
+            catch (Exception ex)
             {
-                LoadingStatus = "Error Connection";
+                LoadingStatus = $"Error checking for updates: {ex.Message}";
+                Logger?.Error(ex, "Error checking for updates in settings page");
             }
-            IsLoading = false;
-            IsCheckButtonEnabled = true;
+            finally
+            {
+                IsLoading = false;
+                IsCheckButtonEnabled = true;
+            }
         }
 
         [RelayCommand]
-        private async Task GoToUpdateAsync()
+        private async Task LaunchUpdaterAsync()
         {
-            //Todo: Change Uri
-            await Launcher.LaunchUriAsync(new Uri("https://github.com/Ghost1372/DevWinUI/releases"));
+            if (!IsUpdaterAvailable)
+            {
+                LoadingStatus = "Updater not available. Please download manually from GitHub.";
+                Logger?.Warning("Updater not available when trying to launch from settings");
+                return;
+            }
+
+            try
+            {
+                LoadingStatus = "Launching updater...";
+                var success = await _updateService.LaunchUpdaterAsync();
+
+                if (!success)
+                {
+                    LoadingStatus = "Failed to launch updater. Please try again or download manually.";
+                    Logger?.Error("Failed to launch updater from settings page");
+                }
+            }
+            catch (Exception ex)
+            {
+                LoadingStatus = $"Error launching updater: {ex.Message}";
+                Logger?.Error(ex, "Error launching updater from settings page");
+            }
         }
 
         [RelayCommand]
         private async Task GetReleaseNotesAsync()
         {
-            ContentDialog dialog = new ContentDialog()
+            try
             {
-                Title = "Release Note",
-                CloseButtonText = "Close",
-                Content = new ScrollViewer
+                var releaseNotes = _currentUpdateInfo?.Changelog ?? "No release notes available.";
+                var version = _currentUpdateInfo?.Version ?? "Unknown";
+
+                ContentDialog dialog = new ContentDialog()
                 {
-                    Content = new TextBlock
+                    Title = $"Release Notes - {version}",
+                    CloseButtonText = "Close",
+                    Content = new ScrollViewer
                     {
-                        Text = ChangeLog,
+                        Content = new TextBlock
+                        {
+                            Text = releaseNotes,
+                            TextWrapping = TextWrapping.Wrap,
+                            Margin = new Thickness(10)
+                        },
+                        MaxHeight = 400,
                         Margin = new Thickness(10)
                     },
-                    Margin = new Thickness(10)
-                },
-                Margin = new Thickness(10),
-                DefaultButton = ContentDialogButton.Close,
-                XamlRoot = App.MainWindow.Content.XamlRoot
-            };
+                    Margin = new Thickness(10),
+                    DefaultButton = ContentDialogButton.Close,
+                    XamlRoot = App.MainWindow.Content.XamlRoot
+                };
 
-            await dialog.ShowAsync();
+                await dialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger?.Error(ex, "Error showing release notes dialog in settings");
+            }
         }
     }
 }
