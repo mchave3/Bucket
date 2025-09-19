@@ -46,7 +46,7 @@
                 <dev:SettingsCard.Description>
                     <HyperlinkButton l:Uids.Uid="/Settings/Update_ReleaseNotes"
                                      Padding="5,0"
-                                     Command="{x:Bind ViewModel.GetReleaseNotesCommand}"
+                                     Command="{x:Bind ViewModel.OpenReleaseNotesCommand}"
                                      Visibility="{x:Bind ViewModel.IsUpdateAvailable, Mode=OneWay}" />
                 </dev:SettingsCard.Description>
                 <StackPanel VerticalAlignment="Center"

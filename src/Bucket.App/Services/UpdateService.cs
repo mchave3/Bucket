@@ -18,7 +18,7 @@ namespace Bucket.App.Services
         /// Gets detailed update information including version and changelog
         /// </summary>
         /// <returns>Update information or null if no update available</returns>
-        Task<UpdateInfo?> GetUpdateInfoAsync();
+        Task<AppUpdateInfo?> GetUpdateInfoAsync();
 
         /// <summary>
         /// Launches the updater application if available
@@ -42,7 +42,7 @@ namespace Bucket.App.Services
     /// <summary>
     /// Simple update information container
     /// </summary>
-    public class UpdateInfo
+    public class AppUpdateInfo
     {
         public string Version { get; set; } = string.Empty;
         public string Changelog { get; set; } = string.Empty;
@@ -91,7 +91,7 @@ namespace Bucket.App.Services
         /// Gets detailed update information including version and changelog
         /// </summary>
         /// <returns>Update information or null if no update available</returns>
-        public async Task<UpdateInfo?> GetUpdateInfoAsync()
+        public async Task<AppUpdateInfo?> GetUpdateInfoAsync()
         {
             try
             {
@@ -107,7 +107,7 @@ namespace Bucket.App.Services
                 // Prefer stable release over pre-release
                 if (update.StableRelease.IsExistNewVersion)
                 {
-                    return new UpdateInfo
+                    return new AppUpdateInfo
                     {
                         Version = update.StableRelease.TagName,
                         Changelog = update.StableRelease.Changelog,
@@ -118,7 +118,7 @@ namespace Bucket.App.Services
                 }
                 else if (update.PreRelease.IsExistNewVersion)
                 {
-                    return new UpdateInfo
+                    return new AppUpdateInfo
                     {
                         Version = update.PreRelease.TagName,
                         Changelog = update.PreRelease.Changelog,

@@ -180,9 +180,9 @@ namespace Bucket.App
                     Logger?.Information("Update available: {Version}", updateInfo.Version);
 
                     // Show update dialog on UI thread
-                    await MainWindow.DispatcherQueue.EnqueueAsync(async () =>
+                    MainWindow.DispatcherQueue.TryEnqueue(() =>
                     {
-                        await ShowUpdateAvailableDialogAsync(updateInfo, updateService);
+                        _ = ShowUpdateAvailableDialogAsync(updateInfo, updateService);
                     });
                 }
                 else
@@ -201,7 +201,7 @@ namespace Bucket.App
         /// </summary>
         /// <param name="updateInfo">Information about the available update</param>
         /// <param name="updateService">Update service for launching the updater</param>
-        private async Task ShowUpdateAvailableDialogAsync(UpdateInfo updateInfo, IUpdateService updateService)
+        private async Task ShowUpdateAvailableDialogAsync(AppUpdateInfo updateInfo, IUpdateService updateService)
         {
             try
             {
@@ -267,7 +267,7 @@ namespace Bucket.App
         /// Shows the release notes for the available update
         /// </summary>
         /// <param name="updateInfo">Update information containing changelog</param>
-        private async Task ShowReleaseNotesDialogAsync(UpdateInfo updateInfo)
+        private async Task ShowReleaseNotesDialogAsync(AppUpdateInfo updateInfo)
         {
             try
             {

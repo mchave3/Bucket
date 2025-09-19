@@ -27,7 +27,7 @@ namespace Bucket.App.ViewModels
         [ObservableProperty]
         public bool isUpdaterAvailable;
 
-        private UpdateInfo? _currentUpdateInfo;
+        private AppUpdateInfo? _currentUpdateInfo;
 
         public AppUpdateSettingViewModel(IUpdateService updateService)
         {
@@ -35,6 +35,15 @@ namespace Bucket.App.ViewModels
             CurrentVersion = $"Current Version {ProcessInfoHelper.VersionWithPrefix}";
             LastUpdateCheck = Settings.LastUpdateCheck;
             IsUpdaterAvailable = _updateService.IsUpdaterAvailable();
+        }
+
+        /// <summary>
+        /// Initializes the view model and performs initial update check
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            // Automatically check for updates when the page loads
+            await CheckForUpdateAsync();
         }
 
         [RelayCommand]
@@ -113,38 +122,38 @@ namespace Bucket.App.ViewModels
         }
 
         [RelayCommand]
-        private async Task GetReleaseNotesAsync()
+        private async Task OpenReleaseNotesAsync()
         {
             try
             {
-                var releaseNotes = _currentUpdateInfo?.Changelog ?? "No release notes available.";
-                var version = _currentUpdateInfo?.Version ?? "Unknown";
-
-                ContentDialog dialog = new ContentDialog()
+                var version = _currentUpdateInfo?.Version;
+                if (string.IsNullOrEmpty(version))
                 {
-                    Title = $"Release Notes - {version}",
-                    CloseButtonText = "Close",
-                    Content = new ScrollViewer
-                    {
-                        Content = new TextBlock
-                        {
-                            Text = releaseNotes,
-                            TextWrapping = TextWrapping.Wrap,
-                            Margin = new Thickness(10)
-                        },
-                        MaxHeight = 400,
-                        Margin = new Thickness(10)
-                    },
-                    Margin = new Thickness(10),
-                    DefaultButton = ContentDialogButton.Close,
-                    XamlRoot = App.MainWindow.Content.XamlRoot
-                };
+                    // Fallback to general releases page if no specific version
+                    await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/mchave3/Bucket/releases"));
+                    Logger?.Information("Opened GitHub releases page (no specific version)");
+                    return;
+                }
 
-                await dialog.ShowAsync();
+                // Open specific release page
+                var releaseUrl = $"https://github.com/mchave3/Bucket/releases/tag/{version}";
+                await Windows.System.Launcher.LaunchUriAsync(new Uri(releaseUrl));
+                Logger?.Information("Opened GitHub release page for version {Version}", version);
             }
             catch (Exception ex)
             {
-                Logger?.Error(ex, "Error showing release notes dialog in settings");
+                Logger?.Error(ex, "Error opening GitHub release notes page");
+
+                // Fallback: try to open general releases page
+                try
+                {
+                    await Windows.System.Launcher.LaunchUriAsync(new Uri("https://github.com/mchave3/Bucket/releases"));
+                    Logger?.Information("Opened fallback GitHub releases page");
+                }
+                catch (Exception fallbackEx)
+                {
+                    Logger?.Error(fallbackEx, "Failed to open fallback releases page");
+                }
             }
         }
     }
