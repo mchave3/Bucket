@@ -111,10 +111,8 @@ namespace Bucket.App
                 await menuService.SaveAsync(menu);
             }
 
-            if (Settings.UseDeveloperMode)
-            {
-                ConfigureLogger();
-            }
+            // Always configure logging, with different levels based on developer mode
+            ConfigureLogger(Settings.UseDeveloperMode);
 
             UnhandledException += (s, e) => Logger?.Error(e.Exception, "UnhandledException");
 
