@@ -32,8 +32,9 @@
     <!-- Disable Windows App SDK packaging features that cause issues in GitHub Actions -->
     <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
-    <GeneratePriFile>false</GeneratePriFile>
-    <EnableDefaultPriItems>false</EnableDefaultPriItems>
+    <!-- CRITICAL: Keep PRI file generation enabled for localization to work -->
+    <GeneratePriFile>true</GeneratePriFile>
+    <EnableDefaultPriItems>true</EnableDefaultPriItems>
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- Disable problematic publish profiles and trimming during CI builds -->
     <PublishProfile Condition="'$(MSBuildProjectName)' != '$(ProjectName)' OR '$(BuildingProject)' != 'true'"></PublishProfile>
