@@ -51,6 +51,11 @@
       <Platform>$(Platform)</Platform>
       <Configuration>Release</Configuration>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Bucket.Updater\Bucket.Updater.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Platform>$(Platform)</Platform>
+      <Configuration>Release</Configuration>
+    </ProjectReference>
   </ItemGroup>
   <!-- Define publish output path for manual file inclusion -->
   <PropertyGroup>
@@ -59,7 +64,7 @@
     <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
     <!-- Path to the publish output for manual file inclusion -->
-    <PublishOutputPath>..\..\src\Bucket.App\bin\$(Platform)\Release\net9.0-windows10.0.26100\$(RuntimeIdentifier)\publish\</PublishOutputPath>
+    <PublishOutputPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())\</PublishOutputPath>
   </PropertyGroup>
   <!-- Pass the publish path to WiX preprocessor -->
   <PropertyGroup>
@@ -67,18 +72,22 @@
     <!-- Suppress ICE03 validation for invalid language IDs -->
     <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
-  <!-- Ensure publish happens before any WiX processing -->
-  <Target Name="PublishApp" BeforeTargets="BeforeBuild">
-    <Message Text="Publishing application to: $(PublishOutputPath)" Importance="high" />
-    <!-- Create publish directory if it doesn't exist -->
-    <MakeDir Directories="$(PublishOutputPath)" Condition="!Exists('$(PublishOutputPath)')" />
-    <!-- Publish the application -->
-    <MSBuild Projects="..\..\src\Bucket.App\Bucket.App.csproj" Targets="Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);PublishDir=$(PublishOutputPath);SelfContained=true;PublishSingleFile=false;PublishTrimmed=false;Version=$(Version);AssemblyVersion=$(AssemblyVersion);FileVersion=$(FileVersion)" />
-    <!-- Verify publish succeeded -->
-    <Error Text="Publish failed: $(PublishOutputPath) does not exist after publish" Condition="!Exists('$(PublishOutputPath)')" />
-    <ItemGroup>
-      <PublishedFiles Include="$(PublishOutputPath)**\*" />
-    </ItemGroup>
-    <Message Text="Published @(PublishedFiles-&gt;Count()) files to $(PublishOutputPath)" Importance="high" />
+
+  <!-- Custom targets to publish both Bucket.App and Bucket.Updater before building MSI -->
+  <Target Name="PublishApplications" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <MainAppPublishPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())</MainAppPublishPath>
+      <UpdaterPublishPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())\Updater</UpdaterPublishPath>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="Publishing Bucket.App to $(MainAppPublishPath)" />
+
+    <!-- Publish Bucket.App to the main directory -->
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.App\Bucket.App.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(MainAppPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
+
+    <Message Importance="high" Text="Publishing Bucket.Updater to $(UpdaterPublishPath)" />
+
+    <!-- Publish Bucket.Updater to the correct subdirectory -->
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.Updater\Bucket.Updater.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(UpdaterPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
   </Target>
 </Project>
