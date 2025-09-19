@@ -139,7 +139,6 @@ jobs:
     with:
       configuration: 'Release'
       version: ${{ needs.check-changes.outputs.msi_version }}
-      create-zip: 'true'
       checkout-ref: 'dev'
 
   create-release:
