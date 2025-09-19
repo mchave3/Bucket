@@ -166,10 +166,35 @@ jobs:
           /p:Platform=x64 `
           /p:PublishSingleFile=false
 
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/x64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x64"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x64") | Out-Null
+        # Build and publish Bucket.Updater for x64
+        Write-Host "Building Bucket.Updater for x64..." -ForegroundColor Yellow
+
+        msbuild src/Bucket.Updater/Bucket.Updater.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x64 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater x64 build failed!"
+          exit 1
+        }
+
+        dotnet publish src/Bucket.Updater/Bucket.Updater.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x64 `
+          --self-contained true `
+          --output "artifacts/publish/x64/Updater" `
+          /p:Platform=x64 `
+          /p:PublishSingleFile=false
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater x64 publish failed!"
+          exit 1
+        }
+
+        Write-Host "Bucket.Updater x64 published successfully" -ForegroundColor Green
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x64 publish failed!"
@@ -203,10 +228,35 @@ jobs:
           /p:Platform=x86 `
           /p:PublishSingleFile=false
 
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/x86/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-x86"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/x86") | Out-Null
+        # Build and publish Bucket.Updater for x86
+        Write-Host "Building Bucket.Updater for x86..." -ForegroundColor Yellow
+
+        msbuild src/Bucket.Updater/Bucket.Updater.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=x86 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater x86 build failed!"
+          exit 1
+        }
+
+        dotnet publish src/Bucket.Updater/Bucket.Updater.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-x86 `
+          --self-contained true `
+          --output "artifacts/publish/x86/Updater" `
+          /p:Platform=x86 `
+          /p:PublishSingleFile=false
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater x86 publish failed!"
+          exit 1
+        }
+
+        Write-Host "Bucket.Updater x86 published successfully" -ForegroundColor Green
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "x86 publish failed!"
@@ -240,10 +290,35 @@ jobs:
           /p:Platform=ARM64 `
           /p:PublishSingleFile=false
 
-        # Create symlink for WiX compatibility
-        $wixPath = "src/Bucket.App/bin/ARM64/${{ inputs.configuration }}/net9.0-windows10.0.26100/win-arm64"
-        New-Item -ItemType Directory -Force -Path $wixPath | Out-Null
-        New-Item -ItemType Junction -Path "$wixPath/publish" -Target (Resolve-Path "artifacts/publish/arm64") | Out-Null
+        # Build and publish Bucket.Updater for ARM64
+        Write-Host "Building Bucket.Updater for ARM64..." -ForegroundColor Yellow
+
+        msbuild src/Bucket.Updater/Bucket.Updater.csproj `
+          /p:Configuration=${{ inputs.configuration }} `
+          /p:Platform=ARM64 `
+          /t:Build `
+          /m `
+          /v:minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater ARM64 build failed!"
+          exit 1
+        }
+
+        dotnet publish src/Bucket.Updater/Bucket.Updater.csproj `
+          --configuration ${{ inputs.configuration }} `
+          --runtime win-arm64 `
+          --self-contained true `
+          --output "artifacts/publish/arm64/Updater" `
+          /p:Platform=ARM64 `
+          /p:PublishSingleFile=false
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bucket.Updater ARM64 publish failed!"
+          exit 1
+        }
+
+        Write-Host "Bucket.Updater ARM64 published successfully" -ForegroundColor Green
 
         if ($LASTEXITCODE -ne 0) {
           Write-Error "ARM64 publish failed!"

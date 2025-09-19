@@ -28,8 +28,8 @@
         /// This file is used to record updater events and errors.
         /// </summary>
         /// <value>
-        /// The full path to the "Updater-Log.log" file.
+        /// The full path to the "Updater.log" file.
         /// </value>
-        public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Updater-Log.log");
+        public static readonly string LogFilePath = Path.Combine(LogDirectoryPath, "Updater.log");
     }
 }

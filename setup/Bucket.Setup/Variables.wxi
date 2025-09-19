@@ -29,9 +29,9 @@
     <?define ProgramFilesFolder = "ProgramFiles64Folder" ?>
   <?endif?>
 
-  <!-- Publish output path - Auto-calculated by .wixproj -->
+  <!-- Publish output path - Points directly to artifacts/publish/{platform} -->
   <?ifndef PublishOutputPath ?>
-    <?define PublishOutputPath = "..\..\src\Bucket.App\bin\x64\Release\net9.0-windows10.0.26100\win-x64\publish\" ?>
+    <?define PublishOutputPath = "..\..\artifacts\publish\x64\" ?>
   <?endif?>
 
   <!-- Target executable name - Auto-extracted from AssemblyName -->
