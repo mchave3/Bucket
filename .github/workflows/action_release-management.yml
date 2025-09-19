@@ -76,7 +76,7 @@ jobs:
       uses: actions/download-artifact@v5
       with:
         name: installer-artifacts
-        path: ${{ inputs.artifacts-path }}/
+        path: ${{ inputs.artifacts-path }}/installers/
 
 
     - name: Calculate file hashes and generate body
