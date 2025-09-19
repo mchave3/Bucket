@@ -75,7 +75,7 @@ jobs:
     - name: Download build artifacts (includes installers)
       uses: actions/download-artifact@v5
       with:
-        name: build-artifacts
+        name: installer-artifacts
         path: ${{ inputs.artifacts-path }}/
 
 
