@@ -2,19 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
 using System.Diagnostics;
 using DevWinUI;
-using Windows.Storage;
 using Windows.System.UserProfile;
 
 namespace Bucket.Core.Services
 {
     public static class LocalizationConstants
     {
-        public const string StringsFolderName = "Strings";
-        public static readonly TimeSpan DebugTimeout = TimeSpan.FromSeconds(10);
-        public static readonly TimeSpan ProductionTimeout = TimeSpan.FromSeconds(2);
         public static readonly TimeSpan InitializationDelay = TimeSpan.FromMilliseconds(50);
     }
 
@@ -382,12 +377,11 @@ namespace Bucket.Core.Services
         }
 
         /// <summary>
-        /// Gets a localized string from native ResourceManager with support for multiple resource files
+        /// Gets a localized string from native ResourceManager
         /// </summary>
         /// <param name="key">Resource key</param>
-        /// <param name="resourceFile">Optional resource file name (e.g., "Settings"). If null, uses default Resources.resw</param>
         /// <returns>Localized string or key if not found</returns>
-        public string GetString(string key, string? resourceFile = null)
+        public string GetString(string key)
         {
             if (_resourceManager == null || _resourceContext == null)
                 return key;
@@ -395,20 +389,6 @@ namespace Bucket.Core.Services
             try
             {
                 var resourceMap = _resourceManager.MainResourceMap;
-
-                // Search specific resource file first if specified
-                if (!string.IsNullOrEmpty(resourceFile))
-                {
-                    var subtree = resourceMap.TryGetSubtree(resourceFile);
-                    if (subtree != null)
-                    {
-                        var resource = subtree.TryGetValue(key, _resourceContext);
-                        if (resource?.ValueAsString is string specificValue)
-                            return specificValue;
-                    }
-                }
-
-                // Search main resource map (Resources.resw)
                 var mainResource = resourceMap.TryGetValue(key, _resourceContext);
                 return mainResource?.ValueAsString ?? key;
             }
@@ -417,16 +397,6 @@ namespace Bucket.Core.Services
                 Debug.WriteLine($"Failed to get localized string for key '{key}': {ex.Message}");
                 return key;
             }
-        }
-
-        /// <summary>
-        /// Gets a localized string from native ResourceManager
-        /// </summary>
-        /// <param name="key">Resource key</param>
-        /// <returns>Localized string or key if not found</returns>
-        public string GetString(string key)
-        {
-            return GetString(key, null);
         }
     }
 
