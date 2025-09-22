@@ -37,7 +37,7 @@ namespace Bucket.Core.Services
             new("fr-FR", "Français")
         }.AsReadOnly();
 
-        private static readonly IReadOnlyDictionary<string, LanguageItem> _languageCache =
+        private static readonly Dictionary<string, LanguageItem> _languageCache =
             All.ToDictionary(lang => lang.Code, StringComparer.OrdinalIgnoreCase);
 
 
@@ -290,7 +290,7 @@ namespace Bucket.Core.Services
         /// Gets the current system language code using Windows APIs
         /// </summary>
         /// <returns>System language code (e.g., "en-US", "fr-FR")</returns>
-        private string GetSystemLanguageCode()
+        private static string GetSystemLanguageCode()
         {
             // Use Windows API to get system language
             try
@@ -479,7 +479,7 @@ namespace Bucket.Core.Services
             }
         }
 
-        private Microsoft.UI.Dispatching.DispatcherQueue? GetMainWindowDispatcher()
+        private static Microsoft.UI.Dispatching.DispatcherQueue? GetMainWindowDispatcher()
         {
             try
             {

@@ -67,7 +67,7 @@ namespace Bucket.App.Views
                 {
                     // LocalizationService handles everything: save to config, platform language change, UI refresh
                     bool success = await _localizationService.SetLanguageAsync(selectedLanguage.Code);
-                    
+
                     if (!success)
                     {
                         System.Diagnostics.Debug.WriteLine($"Failed to set language to {selectedLanguage.Code}");
