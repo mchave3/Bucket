@@ -342,12 +342,13 @@ namespace Bucket.Core.Services
         {
             try
             {
-                await Task.Run(() =>
-                {
-                    _resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
-                    _resourceContext = _resourceManager.CreateResourceContext();
-                    _resourceContext.QualifierValues["Language"] = languageCode;
-                }, cancellationToken);
+                // ResourceManager is thread-safe, no need for Task.Run
+                _resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
+                _resourceContext = _resourceManager.CreateResourceContext();
+                _resourceContext.QualifierValues["Language"] = languageCode;
+
+                // Keep async signature for interface compatibility
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -365,13 +366,14 @@ namespace Bucket.Core.Services
         {
             try
             {
-                await Task.Run(() =>
+                // ResourceManager is thread-safe, no need for Task.Run
+                if (_resourceContext != null)
                 {
-                    if (_resourceContext != null)
-                    {
-                        _resourceContext.QualifierValues["Language"] = languageCode;
-                    }
-                }, cancellationToken);
+                    _resourceContext.QualifierValues["Language"] = languageCode;
+                }
+
+                // Keep async signature for interface compatibility
+                await Task.CompletedTask;
                 return true;
             }
             catch (Exception ex)
@@ -451,14 +453,39 @@ namespace Bucket.Core.Services
         {
             try
             {
-                // Step 1: Set the system language override for WinUI and DevWinUI
-                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = languageCode;
-
-                // Step 2: Use the new DevWinUI ReInitialize() method to refresh navigation
-                var navService = _getNavService() as JsonNavigationService;
-                if (navService != null)
+                // Ensure we're on the UI thread for WinUI operations
+                var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+                if (dispatcherQueue != null)
                 {
-                    navService.ReInitialize();
+                    // Already on UI thread, execute directly
+                    ExecuteUIRefresh(languageCode);
+                }
+                else
+                {
+                    // Not on UI thread, find main window's dispatcher
+                    var mainWindowDispatcher = GetMainWindowDispatcher();
+                    if (mainWindowDispatcher != null)
+                    {
+                        var tcs = new TaskCompletionSource<bool>();
+                        mainWindowDispatcher.TryEnqueue(() =>
+                        {
+                            try
+                            {
+                                ExecuteUIRefresh(languageCode);
+                                tcs.SetResult(true);
+                            }
+                            catch (Exception ex)
+                            {
+                                tcs.SetException(ex);
+                            }
+                        });
+                        await tcs.Task;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Warning: Could not find UI thread dispatcher, executing on current thread");
+                        ExecuteUIRefresh(languageCode);
+                    }
                 }
 
                 // Small delay to ensure reinitialization completes
@@ -469,6 +496,37 @@ namespace Bucket.Core.Services
                 Debug.WriteLine($"Error during WinUI UI refresh: {ex.Message}");
                 throw;
             }
+        }
+
+        private void ExecuteUIRefresh(string languageCode)
+        {
+            // Step 1: Set the system language override for WinUI and DevWinUI
+            Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = languageCode;
+
+            // Step 2: Use the new DevWinUI ReInitialize() method to refresh navigation
+            var navService = _getNavService() as JsonNavigationService;
+            if (navService != null)
+            {
+                navService.ReInitialize();
+            }
+        }
+
+        private Microsoft.UI.Dispatching.DispatcherQueue? GetMainWindowDispatcher()
+        {
+            try
+            {
+                // Try to get dispatcher from main window if available
+                var app = Microsoft.UI.Xaml.Application.Current;
+                if (app != null && Microsoft.UI.Xaml.Window.Current != null)
+                {
+                    return Microsoft.UI.Xaml.Window.Current.DispatcherQueue;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Could not get main window dispatcher: {ex.Message}");
+            }
+            return null;
         }
     }
 }
