@@ -70,26 +70,33 @@ namespace Bucket.App.Views
         private void MainWindow_Closed(object sender, WindowEventArgs e)
         {
             // Cleanup resources before shutdown
-            CleanupResources();
-
-            // Use safe shutdown service to avoid WinRT crash
-            SafeShutdownService.InitiateSafeShutdown();
+            _ = Task.Run(async () =>
+            {
+                await CleanupResourcesAsync();
+                // Use safe shutdown service to avoid WinRT crash
+                SafeShutdownService.InitiateSafeShutdown();
+            });
         }
 
-        private void CleanupResources()
+        private async Task CleanupResourcesAsync()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Starting cleanup...");
+                System.Diagnostics.Debug.WriteLine("Starting async cleanup...");
 
-                // 1. First dispose localization resources
+                // 1. First dispose localization resources asynchronously
                 try
                 {
                     var platformLocalizer = App.GetService<IPlatformLocalizer>();
-                    if (platformLocalizer is IDisposable disposableLocalizer)
+                    if (platformLocalizer is IAsyncDisposable asyncDisposable)
                     {
-                        disposableLocalizer.Dispose();
-                        System.Diagnostics.Debug.WriteLine("Localization disposed");
+                        await asyncDisposable.DisposeAsync();
+                        System.Diagnostics.Debug.WriteLine("Localization disposed asynchronously");
+                    }
+                    else if (platformLocalizer is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                        System.Diagnostics.Debug.WriteLine("Localization disposed synchronously");
                     }
                 }
                 catch (Exception ex)
@@ -113,6 +120,7 @@ namespace Bucket.App.Views
                 System.Diagnostics.Debug.WriteLine($"General cleanup error: {ex.Message}");
             }
         }
+
     }
 
 }

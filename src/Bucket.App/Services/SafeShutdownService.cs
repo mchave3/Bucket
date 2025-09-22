@@ -20,7 +20,7 @@ namespace Bucket.App.Services
             // Delay to allow cleanup to complete
             try
             {
-                Task.Delay(250).Wait();
+                Task.Delay(1000).Wait();
             }
             catch { }
 

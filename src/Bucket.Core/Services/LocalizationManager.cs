@@ -329,7 +329,7 @@ namespace Bucket.Core.Services
     /// <summary>
     /// WinUI3 platform-specific localizer implementation
     /// </summary>
-    public class WinUI3PlatformLocalizer : IPlatformLocalizer, IDisposable
+    public class WinUI3PlatformLocalizer : IPlatformLocalizer, IAsyncDisposable, IDisposable
     {
         private ILocalizer _localizer = null!;
         private bool _disposed = false;
@@ -403,6 +403,31 @@ namespace Bucket.Core.Services
             catch (Exception)
             {
                 return key; // Return key if localization fails
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                if (_localizer is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+                else if (_localizer is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error disposing WinUI3 localizer: {ex.Message}");
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
 
