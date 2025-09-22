@@ -80,20 +80,37 @@ namespace Bucket.App.Views
         {
             try
             {
-                // Dispose localization resources
-                var localizationManager = App.GetService<LocalizationManager>();
-                var platformLocalizer = App.GetService<IPlatformLocalizer>();
-                if (platformLocalizer is IDisposable disposableLocalizer)
+                System.Diagnostics.Debug.WriteLine("Starting cleanup...");
+
+                // 1. First dispose localization resources
+                try
                 {
-                    disposableLocalizer.Dispose();
+                    var platformLocalizer = App.GetService<IPlatformLocalizer>();
+                    if (platformLocalizer is IDisposable disposableLocalizer)
+                    {
+                        disposableLocalizer.Dispose();
+                        System.Diagnostics.Debug.WriteLine("Localization disposed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Localization cleanup error: {ex.Message}");
                 }
 
-                // Cleanup logger
-                LoggerSetup.Shutdown();
+                // 2. Then cleanup logger (this might log, so do it last)
+                try
+                {
+                    LoggerSetup.Shutdown();
+                    System.Diagnostics.Debug.WriteLine("Logger shutdown complete");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Logger cleanup error: {ex.Message}");
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Cleanup error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"General cleanup error: {ex.Message}");
             }
         }
     }

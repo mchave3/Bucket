@@ -17,10 +17,10 @@ namespace Bucket.App.Services
             if (_isShuttingDown) return;
             _isShuttingDown = true;
 
-            // Small delay to allow cleanup to complete
+            // Delay to allow cleanup to complete
             try
             {
-                Task.Delay(100).Wait();
+                Task.Delay(250).Wait();
             }
             catch { }
 
