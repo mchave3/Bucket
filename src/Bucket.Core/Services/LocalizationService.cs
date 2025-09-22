@@ -237,7 +237,7 @@ namespace Bucket.Core.Services
                 {
                     // First startup - detect OS language
                     languageToSet = _platformLanguageDetector.GetBestMatchingLanguage();
-                    
+
                     // Save the detected language to config
                     _saveLanguageToConfig(languageToSet);
                 }
@@ -272,7 +272,7 @@ namespace Bucket.Core.Services
     }
 
     // ================================================================================================
-    // PLATFORM-SPECIFIC IMPLEMENTATIONS - Consolidated from separate files
+    // PLATFORM-SPECIFIC IMPLEMENTATIONS
     // ================================================================================================
 
     /// <summary>
@@ -297,7 +297,7 @@ namespace Bucket.Core.Services
         /// <returns>System language code (e.g., "en-US", "fr-FR")</returns>
         private string GetSystemLanguageCode()
         {
-            // Try Windows API first
+            // Use Windows API to get system language
             try
             {
                 var languages = GlobalizationPreferences.Languages;
@@ -309,7 +309,7 @@ namespace Bucket.Core.Services
                 Debug.WriteLine($"WinRT API call failed: {ex.Message}");
             }
 
-            // Fallback to current culture
+            // Use current culture as fallback
             try
             {
                 var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
@@ -342,12 +342,11 @@ namespace Bucket.Core.Services
         {
             try
             {
-                // ResourceManager is thread-safe, no need for Task.Run
+                // Initialize ResourceManager and set language context
                 _resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
                 _resourceContext = _resourceManager.CreateResourceContext();
                 _resourceContext.QualifierValues["Language"] = languageCode;
 
-                // Keep async signature for interface compatibility
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -366,13 +365,12 @@ namespace Bucket.Core.Services
         {
             try
             {
-                // ResourceManager is thread-safe, no need for Task.Run
+                // Update language context for ResourceManager
                 if (_resourceContext != null)
                 {
                     _resourceContext.QualifierValues["Language"] = languageCode;
                 }
 
-                // Keep async signature for interface compatibility
                 await Task.CompletedTask;
                 return true;
             }
@@ -398,7 +396,7 @@ namespace Bucket.Core.Services
             {
                 var resourceMap = _resourceManager.MainResourceMap;
 
-                // Try specific resource file first if specified
+                // Search specific resource file first if specified
                 if (!string.IsNullOrEmpty(resourceFile))
                 {
                     var subtree = resourceMap.TryGetSubtree(resourceFile);
@@ -410,19 +408,19 @@ namespace Bucket.Core.Services
                     }
                 }
 
-                // Fallback to main resource map (Resources.resw)
+                // Search main resource map (Resources.resw)
                 var mainResource = resourceMap.TryGetValue(key, _resourceContext);
                 return mainResource?.ValueAsString ?? key;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to get localized string for key '{key}': {ex.Message}");
-                return key; // Return key if localization fails
+                return key;
             }
         }
 
         /// <summary>
-        /// Gets a localized string from native ResourceManager (default implementation for IPlatformLocalizer)
+        /// Gets a localized string from native ResourceManager
         /// </summary>
         /// <param name="key">Resource key</param>
         /// <returns>Localized string or key if not found</returns>
@@ -445,7 +443,7 @@ namespace Bucket.Core.Services
         }
 
         /// <summary>
-        /// Refreshes WinUI platform-specific UI elements after language change
+        /// Refreshes WinUI UI elements after language change
         /// </summary>
         /// <param name="languageCode">New language code</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -457,12 +455,12 @@ namespace Bucket.Core.Services
                 var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
                 if (dispatcherQueue != null)
                 {
-                    // Already on UI thread, execute directly
+                    // Execute directly on UI thread
                     ExecuteUIRefresh(languageCode);
                 }
                 else
                 {
-                    // Not on UI thread, find main window's dispatcher
+                    // Get main window's dispatcher and queue operation
                     var mainWindowDispatcher = GetMainWindowDispatcher();
                     if (mainWindowDispatcher != null)
                     {
@@ -488,7 +486,7 @@ namespace Bucket.Core.Services
                     }
                 }
 
-                // Small delay to ensure reinitialization completes
+                // Delay to ensure reinitialization completes
                 await Task.Delay(LocalizationConstants.InitializationDelay, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
@@ -500,10 +498,10 @@ namespace Bucket.Core.Services
 
         private void ExecuteUIRefresh(string languageCode)
         {
-            // Step 1: Set the system language override for WinUI and DevWinUI
+            // Set the system language override for WinUI and DevWinUI
             Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = languageCode;
 
-            // Step 2: Use the new DevWinUI ReInitialize() method to refresh navigation
+            // Reinitialize navigation service to refresh localized content
             var navService = _getNavService() as JsonNavigationService;
             if (navService != null)
             {
@@ -515,7 +513,7 @@ namespace Bucket.Core.Services
         {
             try
             {
-                // Try to get dispatcher from main window if available
+                // Get dispatcher from main window
                 var app = Microsoft.UI.Xaml.Application.Current;
                 if (app != null && Microsoft.UI.Xaml.Window.Current != null)
                 {

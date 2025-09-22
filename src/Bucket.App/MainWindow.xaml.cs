@@ -32,7 +32,7 @@ namespace Bucket.App.Views
                     .ConfigureBreadcrumbBar(BreadCrumbNav, BreadcrumbPageMappings.PageDictionary);
             }
 
-            // Add window closed event handler for cleanup
+            // Add window closed event handler for application shutdown
             this.Closed += MainWindow_Closed;
         }
 
@@ -67,40 +67,35 @@ namespace Bucket.App.Views
 
         internal static MainWindow Instance { get; private set; }
 
+        /// <summary>
+        /// Handles the main window closing event.
+        /// Performs application shutdown by cleaning up the Serilog logger and safely terminating the process.
+        /// </summary>
         private void MainWindow_Closed(object sender, WindowEventArgs e)
         {
-            // Cleanup resources before shutdown
-            _ = Task.Run(async () =>
+            // Shutdown Serilog logger and safely exit application
+            _ = Task.Run(() =>
             {
-                await CleanupResourcesAsync();
-                // Use safe shutdown service to avoid WinRT crash
+                CleanupSerilogLogger();
                 SafeShutdownService.InitiateSafeShutdown();
             });
         }
 
-        private async Task CleanupResourcesAsync()
+        /// <summary>
+        /// Cleanly shuts down the Serilog logger system.
+        /// Ensures all log buffers are flushed and resources are properly released.
+        /// </summary>
+        private static void CleanupSerilogLogger()
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine("Shutting down Serilog logger...");
-
-                // Only cleanup Serilog logger as requested
-                try
-                {
-                    LoggerSetup.Shutdown();
-                    System.Diagnostics.Debug.WriteLine("Serilog shutdown complete");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Serilog cleanup error: {ex.Message}");
-                }
-
-                // Keep async for compatibility with existing Task.Run call
-                await Task.CompletedTask;
+                LoggerSetup.Shutdown();
+                System.Diagnostics.Debug.WriteLine("Serilog shutdown complete");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"General cleanup error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Serilog cleanup error: {ex.Message}");
             }
         }
 
