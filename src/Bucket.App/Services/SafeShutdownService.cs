@@ -17,7 +17,14 @@ namespace Bucket.App.Services
             if (_isShuttingDown) return;
             _isShuttingDown = true;
 
-            // Immediate exit without any cleanup to avoid WinRT access violations
+            // Small delay to allow cleanup to complete
+            try
+            {
+                Task.Delay(100).Wait();
+            }
+            catch { }
+
+            // Immediate exit after cleanup
             ExitProcess(0);
         }
 

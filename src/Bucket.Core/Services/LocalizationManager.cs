@@ -329,9 +329,10 @@ namespace Bucket.Core.Services
     /// <summary>
     /// WinUI3 platform-specific localizer implementation
     /// </summary>
-    public class WinUI3PlatformLocalizer : IPlatformLocalizer
+    public class WinUI3PlatformLocalizer : IPlatformLocalizer, IDisposable
     {
         private ILocalizer _localizer = null!;
+        private bool _disposed = false;
 
         /// <summary>
         /// Initializes the WinUI3Localizer with the specified language
@@ -393,6 +394,8 @@ namespace Bucket.Core.Services
         /// <returns>Localized string or key if not found</returns>
         public string GetString(string key)
         {
+            if (_disposed) return key;
+
             try
             {
                 return _localizer.GetLocalizedString(key);
@@ -400,6 +403,27 @@ namespace Bucket.Core.Services
             catch (Exception)
             {
                 return key; // Return key if localization fails
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+
+            try
+            {
+                if (_localizer is IDisposable disposableLocalizer)
+                {
+                    disposableLocalizer.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error disposing WinUI3 localizer: {ex.Message}");
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
     }

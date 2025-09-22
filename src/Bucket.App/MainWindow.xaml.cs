@@ -1,6 +1,8 @@
 ﻿using Microsoft.UI.Windowing;
 using Bucket.Core.Helpers;
+using Bucket.Core.Services;
 using Bucket.App.Services;
+using Bucket.App.Common;
 
 namespace Bucket.App.Views
 {
@@ -67,8 +69,32 @@ namespace Bucket.App.Views
 
         private void MainWindow_Closed(object sender, WindowEventArgs e)
         {
+            // Cleanup resources before shutdown
+            CleanupResources();
+
             // Use safe shutdown service to avoid WinRT crash
             SafeShutdownService.InitiateSafeShutdown();
+        }
+
+        private void CleanupResources()
+        {
+            try
+            {
+                // Dispose localization resources
+                var localizationManager = App.GetService<LocalizationManager>();
+                var platformLocalizer = App.GetService<IPlatformLocalizer>();
+                if (platformLocalizer is IDisposable disposableLocalizer)
+                {
+                    disposableLocalizer.Dispose();
+                }
+
+                // Cleanup logger
+                LoggerSetup.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Cleanup error: {ex.Message}");
+            }
         }
     }
 
