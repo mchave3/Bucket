@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.IO;
+using System.Diagnostics;
 using DevWinUI;
 using WinUI3Localizer;
 using Windows.Storage;
@@ -11,20 +11,16 @@ using Windows.System.UserProfile;
 
 namespace Bucket.Core.Services
 {
-    // ================================================================================================
-    // MODELS - Consolidated from separate model files
-    // ================================================================================================
+    public static class LocalizationConstants
+    {
+        public const string StringsFolderName = "Strings";
+        public static readonly TimeSpan DebugTimeout = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan ProductionTimeout = TimeSpan.FromSeconds(2);
+        public static readonly TimeSpan InitializationDelay = TimeSpan.FromMilliseconds(50);
+    }
 
-    /// <summary>
-    /// Represents a language option with its code and display name
-    /// </summary>
-    /// <param name="Code">Language code (e.g., "en-US", "fr-FR")</param>
-    /// <param name="DisplayName">Human-readable name (e.g., "English", "Français")</param>
     public record LanguageItem(string Code, string DisplayName);
 
-    /// <summary>
-    /// Event arguments for language change events
-    /// </summary>
     public class LanguageChangedEventArgs : EventArgs
     {
         public string OldLanguage { get; }
@@ -37,190 +33,74 @@ namespace Bucket.Core.Services
         }
     }
 
-    // ================================================================================================
-    // SUPPORTED LANGUAGES - Consolidated from SupportedLanguages.cs
-    // ================================================================================================
-
-    /// <summary>
-    /// Contains supported languages and related constants
-    /// </summary>
     public static class SupportedLanguages
     {
-        /// <summary>
-        /// Default language code
-        /// </summary>
         public const string DefaultLanguage = "en-US";
 
-        /// <summary>
-        /// List of all supported languages
-        /// </summary>
         public static readonly IReadOnlyList<LanguageItem> All = new List<LanguageItem>
         {
             new("en-US", "English"),
             new("fr-FR", "Français")
         }.AsReadOnly();
 
-        /// <summary>
-        /// Gets a language item by its code
-        /// </summary>
-        /// <param name="code">Language code</param>
-        /// <returns>LanguageItem if found, null otherwise</returns>
+        private static readonly IReadOnlyDictionary<string, LanguageItem> _languageCache =
+            All.ToDictionary(lang => lang.Code, StringComparer.OrdinalIgnoreCase);
+
+
         public static LanguageItem? GetByCode(string code)
         {
-            return All.FirstOrDefault(x => x.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrEmpty(code)) return null;
+            _languageCache.TryGetValue(code, out var language);
+            return language;
         }
 
-        /// <summary>
-        /// Checks if a language code is supported
-        /// </summary>
-        /// <param name="code">Language code to check</param>
-        /// <returns>True if supported, false otherwise</returns>
-        public static bool IsSupported(string code)
-        {
-            return All.Any(x => x.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
-        }
+        public static bool IsSupported(string code) =>
+            !string.IsNullOrEmpty(code) && _languageCache.ContainsKey(code);
 
-        /// <summary>
-        /// Gets the default language item
-        /// </summary>
-        /// <returns>Default language item</returns>
-        public static LanguageItem GetDefault()
-        {
-            return GetByCode(DefaultLanguage) ?? All[0];
-        }
+        public static LanguageItem GetDefault() => GetByCode(DefaultLanguage) ?? All[0];
 
-        /// <summary>
-        /// Maps an OS language code to a supported language code
-        /// </summary>
-        /// <param name="osLanguageCode">OS language code (e.g., "en-US", "fr-FR", "fr-CA", "en-GB")</param>
-        /// <returns>Supported language code or default if not supported</returns>
         public static string MapOSLanguageToSupported(string osLanguageCode)
         {
             if (string.IsNullOrWhiteSpace(osLanguageCode))
-            {
                 return DefaultLanguage;
-            }
 
             // Direct match first - return the normalized code from our supported languages
             var directMatch = GetByCode(osLanguageCode);
             if (directMatch != null)
-            {
                 return directMatch.Code;
-            }
 
             // Try to match by language family (e.g., "fr-CA" -> "fr-FR", "en-GB" -> "en-US")
-            var languageFamily = osLanguageCode.Split('-')[0].ToUpperInvariant();
+            var languageFamily = osLanguageCode.Split('-')[0];
 
             var matchingLanguage = All.FirstOrDefault(lang =>
                 lang.Code.Split('-')[0].Equals(languageFamily, StringComparison.OrdinalIgnoreCase));
 
-            if (matchingLanguage != null)
-            {
-                return matchingLanguage.Code;
-            }
-
-            return DefaultLanguage;
+            return matchingLanguage?.Code ?? DefaultLanguage;
         }
 
-        /// <summary>
-        /// Validates a language code and returns a valid one
-        /// </summary>
-        /// <param name="languageCode">Language code to validate</param>
-        /// <returns>Valid language code (may fallback to default)</returns>
-        public static string ValidateLanguageCode(string? languageCode)
-        {
-            if (string.IsNullOrWhiteSpace(languageCode))
-                return DefaultLanguage;
+        public static string ValidateLanguageCode(string? languageCode) =>
+            string.IsNullOrWhiteSpace(languageCode) ? DefaultLanguage : (GetByCode(languageCode)?.Code ?? DefaultLanguage);
 
-            var supportedLanguage = GetByCode(languageCode);
-            return supportedLanguage?.Code ?? DefaultLanguage;
-        }
-
-        /// <summary>
-        /// Gets the appropriate language item for a given code
-        /// </summary>
-        /// <param name="languageCode">Language code</param>
-        /// <returns>LanguageItem (falls back to default if not found)</returns>
-        public static LanguageItem GetLanguageItem(string? languageCode)
-        {
-            var validCode = ValidateLanguageCode(languageCode);
-            return GetByCode(validCode) ?? GetDefault();
-        }
-
-        /// <summary>
-        /// Determines if a language change is actually needed
-        /// </summary>
-        /// <param name="currentLanguage">Current language code</param>
-        /// <param name="newLanguage">New language code</param>
-        /// <returns>True if change is needed, false otherwise</returns>
-        public static bool ShouldChangeLanguage(string? currentLanguage, string? newLanguage)
-        {
-            if (string.IsNullOrWhiteSpace(newLanguage))
-                return false;
-
-            if (string.IsNullOrWhiteSpace(currentLanguage))
-                return true;
-
-            return !currentLanguage.Equals(newLanguage, StringComparison.OrdinalIgnoreCase);
-        }
+        public static LanguageItem GetLanguageItem(string? languageCode) =>
+            GetByCode(ValidateLanguageCode(languageCode)) ?? GetDefault();
     }
 
-    // ================================================================================================
-    // PLATFORM INTERFACES - Minimal interfaces for dependency injection
-    // ================================================================================================
-
-    /// <summary>
-    /// Platform-specific localization interface (replaces heavy WinUI3LocalizationService)
-    /// </summary>
     public interface IPlatformLocalizer
     {
-        /// <summary>
-        /// Initializes the platform localizer
-        /// </summary>
-        /// <param name="languageCode">Language code to initialize with</param>
-        Task InitializeAsync(string languageCode);
-
-        /// <summary>
-        /// Sets the platform language
-        /// </summary>
-        /// <param name="languageCode">Language code to set</param>
-        Task<bool> SetLanguageAsync(string languageCode);
-
-        /// <summary>
-        /// Gets a localized string by key
-        /// </summary>
-        /// <param name="key">Resource key</param>
-        /// <returns>Localized string or key if not found</returns>
+        Task InitializeAsync(string languageCode, CancellationToken cancellationToken = default);
+        Task<bool> SetLanguageAsync(string languageCode, CancellationToken cancellationToken = default);
         string GetString(string key);
     }
 
-    /// <summary>
-    /// Platform-specific language detection interface
-    /// </summary>
     public interface IPlatformLanguageDetector
     {
-        /// <summary>
-        /// Gets the best matching supported language based on system preferences
-        /// </summary>
-        /// <returns>Supported language code</returns>
         string GetBestMatchingLanguage();
     }
 
-    /// <summary>
-    /// Platform-specific UI refresh interface for navigation menu, etc.
-    /// </summary>
     public interface IPlatformUIRefresher
     {
-        /// <summary>
-        /// Refreshes platform-specific UI elements after language change
-        /// </summary>
-        /// <param name="languageCode">New language code</param>
-        Task RefreshUIAsync(string languageCode);
+        Task RefreshUIAsync(string languageCode, CancellationToken cancellationToken = default);
     }
-
-    // ================================================================================================
-    // CENTRAL LOCALIZATION MANAGER - Orchestrates everything
-    // ================================================================================================
 
     /// <summary>
     /// Central localization manager that orchestrates all localization functionality
@@ -265,9 +145,10 @@ namespace Bucket.Core.Services
         /// Initializes the localization manager
         /// </summary>
         /// <param name="savedLanguageCode">Previously saved language code</param>
-        public async Task InitializeAsync(string? savedLanguageCode = null)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task InitializeAsync(string? savedLanguageCode = null, CancellationToken cancellationToken = default)
         {
-            await InitializeInternalAsync(savedLanguageCode, false);
+            await InitializeInternalAsync(savedLanguageCode, false, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -275,30 +156,31 @@ namespace Bucket.Core.Services
         /// </summary>
         /// <param name="savedLanguageCode">Previously saved language code</param>
         /// <param name="isFirstStartup">Whether this is the first startup</param>
-        public async Task InitializeWithAutoDetectionAsync(string? savedLanguageCode = null, bool isFirstStartup = false)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task InitializeWithAutoDetectionAsync(string? savedLanguageCode = null, bool isFirstStartup = false, CancellationToken cancellationToken = default)
         {
-            await InitializeInternalAsync(savedLanguageCode, isFirstStartup);
+            await InitializeInternalAsync(savedLanguageCode, isFirstStartup, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sets the current language with full UI refresh
         /// </summary>
         /// <param name="languageCode">Language code to set</param>
-        public async Task<bool> SetLanguageAsync(string languageCode)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task<bool> SetLanguageAsync(string languageCode, CancellationToken cancellationToken = default)
         {
             var validLanguageCode = SupportedLanguages.ValidateLanguageCode(languageCode);
-            
-            if (!SupportedLanguages.ShouldChangeLanguage(_currentLanguage, validLanguageCode))
-            {
-                return true; // No change needed
-            }
+
+            // No change needed if languages are the same
+            if (_currentLanguage.Equals(validLanguageCode, StringComparison.OrdinalIgnoreCase))
+                return true;
 
             var oldLanguage = _currentLanguage;
 
             try
             {
                 // 1. Set platform language
-                var success = await _platformLocalizer.SetLanguageAsync(validLanguageCode);
+                var success = await _platformLocalizer.SetLanguageAsync(validLanguageCode, cancellationToken).ConfigureAwait(false);
                 if (!success)
                 {
                     return false;
@@ -311,7 +193,7 @@ namespace Bucket.Core.Services
                 _saveLanguageToConfig(validLanguageCode);
 
                 // 4. Refresh platform UI (navigation menu, etc.)
-                await _platformUIRefresher.RefreshUIAsync(validLanguageCode);
+                await _platformUIRefresher.RefreshUIAsync(validLanguageCode, cancellationToken).ConfigureAwait(false);
 
                 // 5. Notify language change
                 LanguageChanged?.Invoke(this, new LanguageChangedEventArgs(oldLanguage, validLanguageCode));
@@ -320,7 +202,7 @@ namespace Bucket.Core.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to set language to {validLanguageCode}: {ex.Message}");
+                Debug.WriteLine($"Failed to set language to {validLanguageCode}: {ex.Message}");
                 return false;
             }
         }
@@ -345,7 +227,7 @@ namespace Bucket.Core.Services
             return SupportedLanguages.GetLanguageItem(languageCode);
         }
 
-        private async Task InitializeInternalAsync(string? savedLanguageCode, bool isFirstStartup)
+        private async Task InitializeInternalAsync(string? savedLanguageCode, bool isFirstStartup, CancellationToken cancellationToken)
         {
             try
             {
@@ -367,20 +249,20 @@ namespace Bucket.Core.Services
                 }
 
                 // Initialize platform localizer
-                await _platformLocalizer.InitializeAsync(languageToSet);
-                
+                await _platformLocalizer.InitializeAsync(languageToSet, cancellationToken).ConfigureAwait(false);
+
                 // Update current language
                 _currentLanguage = languageToSet;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to initialize localization: {ex.Message}");
+                Debug.WriteLine($"Failed to initialize localization: {ex.Message}");
                 _currentLanguage = SupportedLanguages.DefaultLanguage;
-                
+
                 // Fallback initialization
                 try
                 {
-                    await _platformLocalizer.InitializeAsync(_currentLanguage);
+                    await _platformLocalizer.InitializeAsync(_currentLanguage, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -416,67 +298,30 @@ namespace Bucket.Core.Services
         /// <returns>System language code (e.g., "en-US", "fr-FR")</returns>
         private string GetSystemLanguageCode()
         {
+            // Try Windows API first
             try
             {
-                // Use Task.Run with timeout to prevent indefinite blocking of WinRT APIs
-                var task = Task.Run(() =>
-                {
-                    try
-                    {
-                        var languages = GlobalizationPreferences.Languages;
-                        if (languages?.Count > 0)
-                        {
-                            return languages[0];
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log the exception for debugging but don't throw
-                        System.Diagnostics.Debug.WriteLine($"WinRT API call failed: {ex.Message}");
-                    }
-                    return null;
-                });
-
-                // Wait with timeout to avoid infinite blocking - reduced timeout for CI
-                var timeout = System.Diagnostics.Debugger.IsAttached ?
-                    TimeSpan.FromSeconds(10) :  // Longer timeout when debugging
-                    TimeSpan.FromSeconds(2);    // Shorter timeout for CI/production
-
-                if (task.Wait(timeout))
-                {
-                    var result = task.Result;
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        return result;
-                    }
-                }
-                else
-                {
-                    // Task timed out - likely in CI environment or Windows API unavailable
-                    System.Diagnostics.Debug.WriteLine("GlobalizationPreferences.Languages call timed out - using fallback");
-                }
+                var languages = GlobalizationPreferences.Languages;
+                if (languages?.Count > 0 && !string.IsNullOrEmpty(languages[0]))
+                    return languages[0];
             }
             catch (Exception ex)
             {
-                // Log exception and continue to fallback
-                System.Diagnostics.Debug.WriteLine($"Failed to get system language: {ex.Message}");
+                Debug.WriteLine($"WinRT API call failed: {ex.Message}");
             }
 
-            // Fallback to current culture if Windows API fails or times out
+            // Fallback to current culture
             try
             {
                 var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
                 if (!string.IsNullOrEmpty(fallbackLanguage))
-                {
                     return fallbackLanguage;
-                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Fallback culture detection failed: {ex.Message}");
+                Debug.WriteLine($"Fallback culture detection failed: {ex.Message}");
             }
 
-            // Final fallback
             return SupportedLanguages.DefaultLanguage;
         }
     }
@@ -486,18 +331,19 @@ namespace Bucket.Core.Services
     /// </summary>
     public class WinUI3PlatformLocalizer : IPlatformLocalizer
     {
-        private ILocalizer _localizer;
+        private ILocalizer _localizer = null!;
 
         /// <summary>
         /// Initializes the WinUI3Localizer with the specified language
         /// </summary>
         /// <param name="languageCode">Language code to initialize with</param>
-        public async Task InitializeAsync(string languageCode)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task InitializeAsync(string languageCode, CancellationToken cancellationToken = default)
         {
             try
             {
                 // Initialize the "Strings" folder in the executables folder
-                string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, "Strings");
+                string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, LocalizationConstants.StringsFolderName);
                 StorageFolder stringsFolder = await StorageFolder.GetFolderFromPathAsync(stringsFolderPath);
 
                 _localizer = await new LocalizerBuilder()
@@ -506,17 +352,17 @@ namespace Bucket.Core.Services
                     {
                         options.DefaultLanguage = SupportedLanguages.DefaultLanguage;
                     })
-                    .Build();
+                    .Build().ConfigureAwait(false);
 
                 // Set the initial language
                 if (_localizer != null)
                 {
-                    await _localizer.SetLanguage(languageCode);
+                    await _localizer.SetLanguage(languageCode).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to initialize WinUI3 localizer: {ex.Message}");
+                Debug.WriteLine($"Failed to initialize WinUI3 localizer: {ex.Message}");
                 throw;
             }
         }
@@ -525,16 +371,17 @@ namespace Bucket.Core.Services
         /// Sets the language in WinUI3Localizer
         /// </summary>
         /// <param name="languageCode">Language code to set</param>
-        public async Task<bool> SetLanguageAsync(string languageCode)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task<bool> SetLanguageAsync(string languageCode, CancellationToken cancellationToken = default)
         {
             try
             {
-                await _localizer.SetLanguage(languageCode);
+                await _localizer.SetLanguage(languageCode).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to set WinUI3 language to {languageCode}: {ex.Message}");
+                Debug.WriteLine($"Failed to set WinUI3 language to {languageCode}: {ex.Message}");
                 return false;
             }
         }
@@ -573,7 +420,8 @@ namespace Bucket.Core.Services
         /// Refreshes WinUI platform-specific UI elements after language change
         /// </summary>
         /// <param name="languageCode">New language code</param>
-        public async Task RefreshUIAsync(string languageCode)
+        /// <param name="cancellationToken">Cancellation token</param>
+        public async Task RefreshUIAsync(string languageCode, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -588,11 +436,11 @@ namespace Bucket.Core.Services
                 }
 
                 // Small delay to ensure reinitialization completes
-                await Task.Delay(50);
+                await Task.Delay(LocalizationConstants.InitializationDelay, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during WinUI UI refresh: {ex.Message}");
+                Debug.WriteLine($"Error during WinUI UI refresh: {ex.Message}");
                 throw;
             }
         }
