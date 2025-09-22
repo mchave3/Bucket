@@ -82,38 +82,21 @@ namespace Bucket.App.Views
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Starting async cleanup...");
+                System.Diagnostics.Debug.WriteLine("Shutting down Serilog logger...");
 
-                // 1. First dispose localization resources asynchronously
-                try
-                {
-                    var platformLocalizer = App.GetService<IPlatformLocalizer>();
-                    if (platformLocalizer is IAsyncDisposable asyncDisposable)
-                    {
-                        await asyncDisposable.DisposeAsync();
-                        System.Diagnostics.Debug.WriteLine("Localization disposed asynchronously");
-                    }
-                    else if (platformLocalizer is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                        System.Diagnostics.Debug.WriteLine("Localization disposed synchronously");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Localization cleanup error: {ex.Message}");
-                }
-
-                // 2. Then cleanup logger (this might log, so do it last)
+                // Only cleanup Serilog logger as requested
                 try
                 {
                     LoggerSetup.Shutdown();
-                    System.Diagnostics.Debug.WriteLine("Logger shutdown complete");
+                    System.Diagnostics.Debug.WriteLine("Serilog shutdown complete");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Logger cleanup error: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Serilog cleanup error: {ex.Message}");
                 }
+
+                // Keep async for compatibility with existing Task.Run call
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
