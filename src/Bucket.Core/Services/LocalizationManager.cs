@@ -2,6 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
+using DevWinUI;
+using WinUI3Localizer;
+using Windows.Storage;
+using Windows.System.UserProfile;
 
 namespace Bucket.Core.Services
 {
@@ -380,6 +386,214 @@ namespace Bucket.Core.Services
                 {
                     // Silent fallback
                 }
+            }
+        }
+    }
+
+    // ================================================================================================
+    // PLATFORM-SPECIFIC IMPLEMENTATIONS - Consolidated from separate files
+    // ================================================================================================
+
+    /// <summary>
+    /// Windows-specific implementation for detecting system language
+    /// </summary>
+    public class WindowsPlatformLanguageDetector : IPlatformLanguageDetector
+    {
+        /// <summary>
+        /// Gets the best matching supported language based on system preferences
+        /// </summary>
+        /// <returns>Supported language code that best matches system preferences</returns>
+        public string GetBestMatchingLanguage()
+        {
+            var systemLanguage = GetSystemLanguageCode();
+            var mappedLanguage = SupportedLanguages.MapOSLanguageToSupported(systemLanguage);
+            return mappedLanguage;
+        }
+
+        /// <summary>
+        /// Gets the current system language code using Windows APIs
+        /// </summary>
+        /// <returns>System language code (e.g., "en-US", "fr-FR")</returns>
+        private string GetSystemLanguageCode()
+        {
+            try
+            {
+                // Use Task.Run with timeout to prevent indefinite blocking of WinRT APIs
+                var task = Task.Run(() =>
+                {
+                    try
+                    {
+                        var languages = GlobalizationPreferences.Languages;
+                        if (languages?.Count > 0)
+                        {
+                            return languages[0];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the exception for debugging but don't throw
+                        System.Diagnostics.Debug.WriteLine($"WinRT API call failed: {ex.Message}");
+                    }
+                    return null;
+                });
+
+                // Wait with timeout to avoid infinite blocking - reduced timeout for CI
+                var timeout = System.Diagnostics.Debugger.IsAttached ?
+                    TimeSpan.FromSeconds(10) :  // Longer timeout when debugging
+                    TimeSpan.FromSeconds(2);    // Shorter timeout for CI/production
+
+                if (task.Wait(timeout))
+                {
+                    var result = task.Result;
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        return result;
+                    }
+                }
+                else
+                {
+                    // Task timed out - likely in CI environment or Windows API unavailable
+                    System.Diagnostics.Debug.WriteLine("GlobalizationPreferences.Languages call timed out - using fallback");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log exception and continue to fallback
+                System.Diagnostics.Debug.WriteLine($"Failed to get system language: {ex.Message}");
+            }
+
+            // Fallback to current culture if Windows API fails or times out
+            try
+            {
+                var fallbackLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
+                if (!string.IsNullOrEmpty(fallbackLanguage))
+                {
+                    return fallbackLanguage;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Fallback culture detection failed: {ex.Message}");
+            }
+
+            // Final fallback
+            return SupportedLanguages.DefaultLanguage;
+        }
+    }
+
+    /// <summary>
+    /// WinUI3 platform-specific localizer implementation
+    /// </summary>
+    public class WinUI3PlatformLocalizer : IPlatformLocalizer
+    {
+        private ILocalizer _localizer;
+
+        /// <summary>
+        /// Initializes the WinUI3Localizer with the specified language
+        /// </summary>
+        /// <param name="languageCode">Language code to initialize with</param>
+        public async Task InitializeAsync(string languageCode)
+        {
+            try
+            {
+                // Initialize the "Strings" folder in the executables folder
+                string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, "Strings");
+                StorageFolder stringsFolder = await StorageFolder.GetFolderFromPathAsync(stringsFolderPath);
+
+                _localizer = await new LocalizerBuilder()
+                    .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
+                    .SetOptions(options =>
+                    {
+                        options.DefaultLanguage = SupportedLanguages.DefaultLanguage;
+                    })
+                    .Build();
+
+                // Set the initial language
+                if (_localizer != null)
+                {
+                    await _localizer.SetLanguage(languageCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to initialize WinUI3 localizer: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Sets the language in WinUI3Localizer
+        /// </summary>
+        /// <param name="languageCode">Language code to set</param>
+        public async Task<bool> SetLanguageAsync(string languageCode)
+        {
+            try
+            {
+                await _localizer.SetLanguage(languageCode);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to set WinUI3 language to {languageCode}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a localized string from WinUI3Localizer
+        /// </summary>
+        /// <param name="key">Resource key</param>
+        /// <returns>Localized string or key if not found</returns>
+        public string GetString(string key)
+        {
+            try
+            {
+                return _localizer.GetLocalizedString(key);
+            }
+            catch (Exception)
+            {
+                return key; // Return key if localization fails
+            }
+        }
+    }
+
+    /// <summary>
+    /// WinUI platform-specific UI refresher for navigation menu and UI elements
+    /// </summary>
+    public class WinUIPlatformUIRefresher : IPlatformUIRefresher
+    {
+        private readonly Func<object> _getNavService;
+
+        public WinUIPlatformUIRefresher(Func<object> getNavService)
+        {
+            _getNavService = getNavService;
+        }
+
+        /// <summary>
+        /// Refreshes WinUI platform-specific UI elements after language change
+        /// </summary>
+        /// <param name="languageCode">New language code</param>
+        public async Task RefreshUIAsync(string languageCode)
+        {
+            try
+            {
+                // Step 1: Set the system language override for WinUI and DevWinUI
+                Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = languageCode;
+
+                // Step 2: Use the new DevWinUI ReInitialize() method to refresh navigation
+                var navService = _getNavService() as JsonNavigationService;
+                if (navService != null)
+                {
+                    navService.ReInitialize();
+                }
+
+                // Small delay to ensure reinitialization completes
+                await Task.Delay(50);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during WinUI UI refresh: {ex.Message}");
+                throw;
             }
         }
     }

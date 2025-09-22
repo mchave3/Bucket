@@ -1,7 +1,7 @@
 ﻿using Windows.Storage;
 using WinUI3Localizer;
-using Bucket.App.Services;
 using Bucket.Core.Services;
+using Bucket.App.Services;
 
 namespace Bucket.App
 {
@@ -40,10 +40,13 @@ namespace Bucket.App
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
 
-            // Register new unified localization system
+            // Register consolidated localization system
             services.AddSingleton<IPlatformLocalizer, WinUI3PlatformLocalizer>();
             services.AddSingleton<IPlatformLanguageDetector, WindowsPlatformLanguageDetector>();
-            services.AddSingleton<IPlatformUIRefresher, WinUIPlatformUIRefresher>();
+            services.AddSingleton<IPlatformUIRefresher>(provider =>
+            {
+                return new WinUIPlatformUIRefresher(() => provider.GetRequiredService<IJsonNavigationService>());
+            });
 
             // Register centralized LocalizationManager
             services.AddSingleton<LocalizationManager>(provider =>
