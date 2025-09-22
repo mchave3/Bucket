@@ -1,5 +1,4 @@
-﻿using WinUI3Localizer;
-using Bucket.App.Services;
+﻿using Bucket.App.Services;
 using Bucket.Core.Services;
 
 namespace Bucket.App.Views
@@ -9,13 +8,13 @@ namespace Bucket.App.Views
     public sealed partial class GeneralSettingPage : Page
     {
         public GeneralSettingViewModel ViewModel { get; }
-        private readonly LocalizationManager _localizationManager;
+        private readonly LocalizationService _localizationService;
         private bool _isLoadingLanguages = false;
 
         public GeneralSettingPage()
         {
             ViewModel = App.GetService<GeneralSettingViewModel>();
-            _localizationManager = App.GetService<LocalizationManager>();
+            _localizationService = App.GetService<LocalizationService>();
             this.InitializeComponent();
             this.Loaded += GeneralSettingPage_Loaded;
         }
@@ -31,13 +30,13 @@ namespace Bucket.App.Views
 
             try
             {
-                // Use centralized language list from the localization manager
-                var availableLanguages = _localizationManager.AllSupportedLanguages.ToList();
+                // Use centralized language list from the localization service
+                var availableLanguages = _localizationService.AllSupportedLanguages.ToList();
 
                 LanguageComboBox.ItemsSource = availableLanguages;
 
-                // Select the current language from the localization manager
-                string currentLanguage = _localizationManager.CurrentLanguage;
+                // Select the current language from the localization service
+                string currentLanguage = _localizationService.CurrentLanguage;
                 var currentItem = availableLanguages.FirstOrDefault(x => x.Code == currentLanguage);
                 if (currentItem != null)
                 {
@@ -66,8 +65,8 @@ namespace Bucket.App.Views
             {
                 try
                 {
-                    // LocalizationManager handles everything: save to config, platform language change, UI refresh
-                    bool success = await _localizationManager.SetLanguageAsync(selectedLanguage.Code);
+                    // LocalizationService handles everything: save to config, platform language change, UI refresh
+                    bool success = await _localizationService.SetLanguageAsync(selectedLanguage.Code);
                     
                     if (!success)
                     {

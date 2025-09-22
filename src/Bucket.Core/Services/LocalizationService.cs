@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using DevWinUI;
-using WinUI3Localizer;
 using Windows.Storage;
 using Windows.System.UserProfile;
 
@@ -103,9 +102,9 @@ namespace Bucket.Core.Services
     }
 
     /// <summary>
-    /// Central localization manager that orchestrates all localization functionality
+    /// Central localization service that orchestrates all localization functionality
     /// </summary>
-    public class LocalizationManager
+    public class LocalizationService
     {
         private readonly IPlatformLocalizer _platformLocalizer;
         private readonly IPlatformLanguageDetector _platformLanguageDetector;
@@ -129,7 +128,7 @@ namespace Bucket.Core.Services
         /// </summary>
         public event EventHandler<LanguageChangedEventArgs>? LanguageChanged;
 
-        public LocalizationManager(
+        public LocalizationService(
             IPlatformLocalizer platformLocalizer,
             IPlatformLanguageDetector platformLanguageDetector,
             IPlatformUIRefresher platformUIRefresher,
@@ -142,7 +141,7 @@ namespace Bucket.Core.Services
         }
 
         /// <summary>
-        /// Initializes the localization manager
+        /// Initializes the localization service
         /// </summary>
         /// <param name="savedLanguageCode">Previously saved language code</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -327,15 +326,15 @@ namespace Bucket.Core.Services
     }
 
     /// <summary>
-    /// WinUI3 platform-specific localizer implementation
+    /// Native Windows App SDK ResourceManager-based localizer implementation
     /// </summary>
-    public class WinUI3PlatformLocalizer : IPlatformLocalizer, IAsyncDisposable, IDisposable
+    public class NativeResourceLocalizer : IPlatformLocalizer
     {
-        private ILocalizer _localizer = null!;
-        private bool _disposed = false;
+        private Microsoft.Windows.ApplicationModel.Resources.ResourceManager? _resourceManager;
+        private Microsoft.Windows.ApplicationModel.Resources.ResourceContext? _resourceContext;
 
         /// <summary>
-        /// Initializes the WinUI3Localizer with the specified language
+        /// Initializes the native ResourceManager with the specified language
         /// </summary>
         /// <param name="languageCode">Language code to initialize with</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -343,33 +342,22 @@ namespace Bucket.Core.Services
         {
             try
             {
-                // Initialize the "Strings" folder in the executables folder
-                string stringsFolderPath = Path.Combine(AppContext.BaseDirectory, LocalizationConstants.StringsFolderName);
-                StorageFolder stringsFolder = await StorageFolder.GetFolderFromPathAsync(stringsFolderPath);
-
-                _localizer = await new LocalizerBuilder()
-                    .AddStringResourcesFolderForLanguageDictionaries(stringsFolderPath)
-                    .SetOptions(options =>
-                    {
-                        options.DefaultLanguage = SupportedLanguages.DefaultLanguage;
-                    })
-                    .Build().ConfigureAwait(false);
-
-                // Set the initial language
-                if (_localizer != null)
+                await Task.Run(() =>
                 {
-                    await _localizer.SetLanguage(languageCode).ConfigureAwait(false);
-                }
+                    _resourceManager = new Microsoft.Windows.ApplicationModel.Resources.ResourceManager();
+                    _resourceContext = _resourceManager.CreateResourceContext();
+                    _resourceContext.QualifierValues["Language"] = languageCode;
+                }, cancellationToken);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to initialize WinUI3 localizer: {ex.Message}");
+                Debug.WriteLine($"Failed to initialize native ResourceManager: {ex.Message}");
                 throw;
             }
         }
 
         /// <summary>
-        /// Sets the language in WinUI3Localizer
+        /// Sets the language in native ResourceManager
         /// </summary>
         /// <param name="languageCode">Language code to set</param>
         /// <param name="cancellationToken">Cancellation token</param>
@@ -377,79 +365,68 @@ namespace Bucket.Core.Services
         {
             try
             {
-                await _localizer.SetLanguage(languageCode).ConfigureAwait(false);
+                await Task.Run(() =>
+                {
+                    if (_resourceContext != null)
+                    {
+                        _resourceContext.QualifierValues["Language"] = languageCode;
+                    }
+                }, cancellationToken);
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to set WinUI3 language to {languageCode}: {ex.Message}");
+                Debug.WriteLine($"Failed to set native ResourceManager language to {languageCode}: {ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// Gets a localized string from WinUI3Localizer
+        /// Gets a localized string from native ResourceManager with support for multiple resource files
+        /// </summary>
+        /// <param name="key">Resource key</param>
+        /// <param name="resourceFile">Optional resource file name (e.g., "Settings"). If null, uses default Resources.resw</param>
+        /// <returns>Localized string or key if not found</returns>
+        public string GetString(string key, string? resourceFile = null)
+        {
+            if (_resourceManager == null || _resourceContext == null)
+                return key;
+
+            try
+            {
+                var resourceMap = _resourceManager.MainResourceMap;
+
+                // Try specific resource file first if specified
+                if (!string.IsNullOrEmpty(resourceFile))
+                {
+                    var subtree = resourceMap.TryGetSubtree(resourceFile);
+                    if (subtree != null)
+                    {
+                        var resource = subtree.TryGetValue(key, _resourceContext);
+                        if (resource?.ValueAsString is string specificValue)
+                            return specificValue;
+                    }
+                }
+
+                // Fallback to main resource map (Resources.resw)
+                var mainResource = resourceMap.TryGetValue(key, _resourceContext);
+                return mainResource?.ValueAsString ?? key;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to get localized string for key '{key}': {ex.Message}");
+                return key; // Return key if localization fails
+            }
+        }
+
+        /// <summary>
+        /// Gets a localized string from native ResourceManager (default implementation for IPlatformLocalizer)
         /// </summary>
         /// <param name="key">Resource key</param>
         /// <returns>Localized string or key if not found</returns>
         public string GetString(string key)
         {
-            if (_disposed) return key;
-
-            try
-            {
-                return _localizer.GetLocalizedString(key);
-            }
-            catch (Exception)
-            {
-                return key; // Return key if localization fails
-            }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_disposed) return;
-
-            try
-            {
-                if (_localizer is IAsyncDisposable asyncDisposable)
-                {
-                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-                }
-                else if (_localizer is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error disposing WinUI3 localizer: {ex.Message}");
-            }
-            finally
-            {
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (_disposed) return;
-
-            try
-            {
-                if (_localizer is IDisposable disposableLocalizer)
-                {
-                    disposableLocalizer.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error disposing WinUI3 localizer: {ex.Message}");
-            }
-            finally
-            {
-                _disposed = true;
-            }
+            return GetString(key, null);
         }
     }
 

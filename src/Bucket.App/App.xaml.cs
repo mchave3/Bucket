@@ -1,5 +1,4 @@
 ﻿using Windows.Storage;
-using WinUI3Localizer;
 using Bucket.Core.Services;
 using Bucket.App.Services;
 
@@ -41,17 +40,17 @@ namespace Bucket.App
             services.AddSingleton<IJsonNavigationService, JsonNavigationService>();
 
             // Register consolidated localization system
-            services.AddSingleton<IPlatformLocalizer, WinUI3PlatformLocalizer>();
+            services.AddSingleton<IPlatformLocalizer, NativeResourceLocalizer>();
             services.AddSingleton<IPlatformLanguageDetector, WindowsPlatformLanguageDetector>();
             services.AddSingleton<IPlatformUIRefresher>(provider =>
             {
                 return new WinUIPlatformUIRefresher(() => provider.GetRequiredService<IJsonNavigationService>());
             });
 
-            // Register centralized LocalizationManager
-            services.AddSingleton<LocalizationManager>(provider =>
+            // Register centralized LocalizationService
+            services.AddSingleton<LocalizationService>(provider =>
             {
-                return new LocalizationManager(
+                return new LocalizationService(
                     provider.GetRequiredService<IPlatformLocalizer>(),
                     provider.GetRequiredService<IPlatformLanguageDetector>(),
                     provider.GetRequiredService<IPlatformUIRefresher>(),
@@ -125,18 +124,18 @@ namespace Bucket.App
 
         private async Task InitializeLocalizationServiceAsync()
         {
-            var localizationManager = GetService<LocalizationManager>();
+            var localizationService = GetService<LocalizationService>();
 
             // Check if this is the first startup
             bool isFirstStartup = !Settings.HasBeenStartedBefore;
             string savedLanguage = Settings.SelectedLanguage;
 
             // Initialize with auto-detection for first startup
-            await localizationManager.InitializeWithAutoDetectionAsync(savedLanguage, isFirstStartup);
+            await localizationService.InitializeWithAutoDetectionAsync(savedLanguage, isFirstStartup);
 
             // CRITICAL: After initialization, ensure DevWinUI uses the same language
-            // Get the current language from the localization manager (could be auto-detected or saved)
-            string currentLanguage = localizationManager.CurrentLanguage;
+            // Get the current language from the localization service (could be auto-detected or saved)
+            string currentLanguage = localizationService.CurrentLanguage;
             if (!string.IsNullOrEmpty(currentLanguage))
             {
                 Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = currentLanguage;
