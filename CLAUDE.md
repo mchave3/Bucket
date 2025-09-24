@@ -47,7 +47,7 @@ dotnet test --collect:"XPlat Code Coverage" --configuration Release --runtime wi
   - Uses MVVM pattern with CommunityToolkit.Mvvm
   - WinUI 3 with DevWinUI component library
   - Dependency injection via Microsoft.Extensions.DependencyInjection
-  - Multi-language support with WinUI3Localizer (English/French)
+  - Multi-language support with custom localizer (English/French)
   - T4 templates for code generation
 - **`src/Bucket.Core/`** - Core business logic library (net9.0)
   - Platform-agnostic business logic
@@ -59,7 +59,7 @@ dotnet test --collect:"XPlat Code Coverage" --configuration Release --runtime wi
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
 - **Logging**: Serilog (Console, Debug, File sinks)
 - **Settings**: nucs.JsonSettings with auto-save
-- **Localization**: WinUI3Localizer (en-US, fr-FR)
+- **Localization**: custom localizer (en-US, fr-FR)
 
 ### Build Configuration
 - Multi-platform targeting: x86, x64, ARM64
