@@ -11,17 +11,13 @@ on:
         required: false
         type: boolean
         default: false
-      skip-tests:
-        description: 'Skip running tests'
-        required: false
-        type: boolean
-        default: false
 
 # Only run on dev branch
 jobs:
   check-changes:
     name: 🔍 Check for Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       should-build: ${{ steps.check.outputs.should-build }}
       version: ${{ steps.version.outputs.version }}
@@ -117,25 +113,11 @@ jobs:
           echo "version=$gitVersion" >> $env:GITHUB_OUTPUT
           echo "msi_version=$msiVersion" >> $env:GITHUB_OUTPUT
 
-  # run-tests:
-  #   name: Run Tests
-  #   needs: [check-changes]
-  #   if: |
-  #     needs.check-changes.outputs.should-build == 'true' &&
-  #     ((github.event_name == 'workflow_dispatch' && github.event.inputs.skip-tests != 'true') ||
-  #     (github.event_name != 'workflow_dispatch' && env.SKIP_TESTS_DEFAULT == 'false'))
-  #   uses: ./.github/workflows/action_run-tests.yml
-  #   with:
-  #     configuration: 'Release'
-  #     platforms: 'x64,x86,ARM64'
-  #     generate-coverage: 'true'
-  #     checkout-ref: 'dev'
-
   build-and-package:
-    name: 🏗️ Build, Package and Create Installers
+    name: 🏗️ Build MSI Installers
     needs: [check-changes]
     if: needs.check-changes.outputs.should-build == 'true'
-    uses: ./.github/workflows/action_build-package-installers.yml
+    uses: ./.github/workflows/subflow_build-msi.yml
     with:
       configuration: 'Release'
       version: ${{ needs.check-changes.outputs.msi_version }}
@@ -149,7 +131,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: write
-    uses: ./.github/workflows/action_release-management.yml
+    uses: ./.github/workflows/subflow_release-management.yml
     with:
       version: ${{ needs.check-changes.outputs.version }}
       is-prerelease: 'true'
@@ -166,6 +148,8 @@ jobs:
     needs: [check-changes, create-release]
     if: needs.check-changes.outputs.should-build == 'true' && success()
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
     permissions:
       contents: write
 
@@ -186,19 +170,15 @@ jobs:
 
             foreach ($release in $toDelete) {
               Write-Host "Deleting old nightly release: $($release.tagName)" -ForegroundColor Yellow
-              try {
-                gh release delete $release.tagName --yes --cleanup-tag
-              } catch {
-                Write-Host "Failed to delete $($release.tagName): $($_.Exception.Message)" -ForegroundColor Red
-                exit 1
+              gh release delete $release.tagName --yes --cleanup-tag
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "⚠️ Failed to delete $($release.tagName)" -ForegroundColor Yellow
               }
             }
 
-            Write-Host "Cleanup complete. Kept the 7 most recent nightly builds." -ForegroundColor Green
-            exit 0
+            Write-Host "✅ Cleanup complete. Kept the 7 most recent nightly builds." -ForegroundColor Green
           } else {
-            Write-Host "No cleanup needed. Current nightly releases: $($nightlyReleases.Count)" -ForegroundColor Green
-            exit 0
+            Write-Host "✅ No cleanup needed. Current nightly releases: $($nightlyReleases.Count)" -ForegroundColor Green
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -208,6 +188,7 @@ jobs:
     needs: [check-changes, create-release, cleanup-old-releases]
     if: always() && needs.check-changes.outputs.should-build == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Generate summary
@@ -231,11 +212,53 @@ jobs:
           }
 
 
+  notify-failure:
+    name: 🚨 Notify on Failure
+    needs: [check-changes, build-and-package, create-release]
+    if: |
+      always() &&
+      needs.check-changes.outputs.should-build == 'true' &&
+      (needs.build-and-package.result == 'failure' || needs.create-release.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+
+    steps:
+      - name: Create failure issue
+        shell: bash
+        run: |
+          gh issue create \
+            --repo ${{ github.repository }} \
+            --title "🌙 Nightly Build Failed - ${{ needs.check-changes.outputs.version }}" \
+            --body "## ❌ Nightly Build Failure
+
+          **Version:** \`${{ needs.check-changes.outputs.version }}\`
+          **Branch:** dev
+          **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ### Failed Jobs
+          - Build & Package: ${{ needs.build-and-package.result }}
+          - Create Release: ${{ needs.create-release.result }}
+
+          ### Next Steps
+          1. Review the workflow logs linked above
+          2. Identify the root cause
+          3. Fix the issue and push to dev
+          4. Close this issue once resolved
+
+          ---
+          *This issue was automatically created by the nightly build workflow.*" \
+            --label "ci/cd,bug,nightly-failure"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   notify-skip:
     name: ⏭️ Notify Skip
     needs: check-changes
     if: needs.check-changes.outputs.should-build == 'false'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Skip notification

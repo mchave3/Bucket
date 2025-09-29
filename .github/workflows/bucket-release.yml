@@ -23,6 +23,7 @@ jobs:
   validate-version:
     name: ✅ Validate Version
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # Only allow execution from main branch
     if: github.ref == 'refs/heads/main'
 
@@ -100,10 +101,10 @@ jobs:
 
 
   build-and-package:
-    name: 🏗️ Build, Package and Create Installers
+    name: 🏗️ Build MSI Installers
     needs: [validate-version]
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/action_build-package-installers.yml
+    uses: ./.github/workflows/subflow_build-msi.yml
     with:
       configuration: 'Release'
       version: ${{ needs.validate-version.outputs.msi_version }}
@@ -117,7 +118,7 @@ jobs:
       contents: write
       actions: read
       pull-requests: write
-    uses: ./.github/workflows/action_release-management.yml
+    uses: ./.github/workflows/subflow_release-management.yml
     with:
       version: ${{ needs.validate-version.outputs.version }}
       is-prerelease: 'false'
@@ -135,6 +136,7 @@ jobs:
     needs: [validate-version, build-and-package]
     if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
 
@@ -167,6 +169,7 @@ jobs:
     needs: [validate-version, create-release]
     if: github.ref == 'refs/heads/main' && github.event.inputs.dry-run == 'false' && success()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Generate post-release summary
@@ -186,26 +189,3 @@ jobs:
           Write-Host '- 3 MSI installers (x64, x86, ARM64)' >> $env:GITHUB_STEP_SUMMARY
           Write-Host "" >> $env:GITHUB_STEP_SUMMARY
           Write-Host '[**View Release →**](https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate-version.outputs.version }})' >> $env:GITHUB_STEP_SUMMARY
-
-  guard-branch:
-    name: ⛔ Branch Protection
-    runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main'
-
-    steps:
-      - name: Block execution
-        shell: pwsh
-        run: |
-          Write-Host "# ⛔ Workflow Blocked" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "This workflow can only be executed from the **main** branch." >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host '**Current branch**: `${{ github.ref }}`' >> $env:GITHUB_STEP_SUMMARY
-          Write-Host '**Required branch**: `refs/heads/main`' >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "## Next Steps" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "1. Switch to the main branch" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "2. Ensure your code is merged and up-to-date" >> $env:GITHUB_STEP_SUMMARY
-          Write-Host "3. Run this workflow again from the main branch" >> $env:GITHUB_STEP_SUMMARY
-
-          exit 1
