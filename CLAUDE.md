@@ -20,21 +20,6 @@ dotnet build --configuration Release
 dotnet build --configuration Release --runtime win-x64
 ```
 
-### Testing
-```powershell
-# Run all tests (WinUI projects require specific runtime)
-dotnet test --configuration Release --runtime win-x64
-
-# Run Core tests only (no WinUI dependencies)
-dotnet test tests/Bucket.Core.Tests/Bucket.Core.Tests.csproj
-
-# Run specific test project
-dotnet test tests/Bucket.Updater.Tests/Bucket.Updater.Tests.csproj --configuration Release --runtime win-x64
-
-# Run tests with coverage (if configured)
-dotnet test --collect:"XPlat Code Coverage" --configuration Release --runtime win-x64
-```
-
 ### Code Analysis
 - .NET analyzers are enabled globally with `latest` analysis level
 - Code style enforcement is enabled in builds via `EnforceCodeStyleInBuild`
@@ -52,6 +37,10 @@ dotnet test --collect:"XPlat Code Coverage" --configuration Release --runtime wi
 - **`src/Bucket.Core/`** - Core business logic library (net9.0)
   - Platform-agnostic business logic
   - Models, Services, Helpers
+- **`src/Bucket.Updater/`** - Application updater component
+  - Handles application updates and versioning
+- **`setup/Bucket.Setup/`** - WiX installer project
+  - MSI package generation for deployment
 
 ### Key Technologies
 - **UI Framework**: WinUI 3 with DevWinUI components
