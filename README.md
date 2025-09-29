@@ -46,7 +46,7 @@ Try the latest features with our [nightly builds](https://github.com/mchave3/Buc
 ### Prerequisites
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) with WinUI 3 workload
+- [Visual Studio 2026](https://visualstudio.microsoft.com/) with WinUI 3 workload
 - Windows 11 SDK (version 10.0.26100.0 or later)
 
 ### Building
@@ -61,16 +61,14 @@ dotnet restore
 
 # Build the application
 dotnet build --configuration Release
-
-# Run tests
-dotnet test
 ```
 
 ### Project Structure
 
 - **`src/Bucket.App/`** - Main WinUI 3 application
 - **`src/Bucket.Core/`** - Core business logic and services
-- **`tests/`** - Unit and integration tests
+- **`src/Bucket.Updater/`** - Application updater component
+- **`setup/Bucket.Setup/`** - WiX installer project for MSI packaging
 - **`.github/workflows/`** - CI/CD pipelines for automated builds
 
 ### Architecture

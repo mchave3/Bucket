@@ -5,7 +5,6 @@
       xmlns:common="using:Bucket.App.Common"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:dev="using:DevWinUI"
-      xmlns:l="using:WinUI3Localizer"
       xmlns:local="using:Bucket.App"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:views="using:Bucket.App.Views"
@@ -19,13 +18,13 @@
                     Spacing="5">
 
             <!-- Run at startup -->
-            <dev:SettingsCard l:Uids.Uid="/Settings/General_RunAtStartup_Card"
+            <dev:SettingsCard x:Uid="/Settings/General_RunAtStartup_Card"
                               HeaderIcon="{dev:BitmapIcon Source=Assets/Fluent/Startup.png}">
                 <ToggleSwitch IsOn="{x:Bind dev:StartupHelper.IsAppStartupWithWindowsForXamlBindingEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             </dev:SettingsCard>
 
             <!-- Diagnostics & feedback -->
-            <dev:SettingsExpander l:Uids.Uid="/Settings/General_DiagnosticsFeedback_Card"
+            <dev:SettingsExpander x:Uid="/Settings/General_DiagnosticsFeedback_Card"
                                   HeaderIcon="{dev:BitmapIcon Source=Assets/Fluent/DevMode.png}">
                 <ToggleSwitch IsOn="{x:Bind common:AppHelper.Settings.UseDeveloperMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <dev:SettingsExpander.ItemsHeader>
@@ -37,7 +36,7 @@
             </dev:SettingsExpander>
 
             <!-- Language -->
-            <dev:SettingsCard l:Uids.Uid="/Settings/General_Language_Card">
+            <dev:SettingsCard x:Uid="/Settings/General_Language_Card">
                 <dev:SettingsCard.HeaderIcon>
                     <FontIcon Glyph="&#xF2B7;" />
                 </dev:SettingsCard.HeaderIcon>
