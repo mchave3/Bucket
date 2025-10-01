@@ -6,10 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWinUI>true</UseWinUI>
-    <Platforms>x86;x64;ARM64</Platforms>
-    <!-- Enable PRI file generation for WinUI APIs and localization resources -->
-    <GeneratePriFile>true</GeneratePriFile>
-    <AppxGeneratePrisForPortableLibrariesEnabled>true</AppxGeneratePrisForPortableLibrariesEnabled>
+    <!-- Class libraries should NOT specify Platforms or RuntimeIdentifiers -->
+    <!-- They inherit the architecture from the consuming executable project -->
+    <!-- DO NOT generate PRI files for class libraries - only the main app should -->
+    <GeneratePriFile>false</GeneratePriFile>
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
   </PropertyGroup>
 
   <ItemGroup>

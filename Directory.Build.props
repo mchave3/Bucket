@@ -1,61 +1,45 @@
 <Project>
-  <!-- Global properties for all projects -->
+  <!-- ===================================================================================
+       Global MSBuild Properties for Bucket Solution
+       This file applies common settings to all projects in the solution.
+       See: https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-by-directory
+       =================================================================================== -->
 
-  <!-- Code Analysis Configuration -->
-  <PropertyGroup>
-    <!-- Enable .NET analyzers for all projects -->
+  <!-- Code Analysis and Quality -->
+  <PropertyGroup Label="Code Analysis">
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-
-    <!-- Enforce nullable reference types -->
     <Nullable>enable</Nullable>
-
-    <!-- Code style and formatting -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-
-    <!-- Documentation -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Missing XML comment for publicly visible type or member -->
-
-    <!-- Treat warnings as errors in Release builds - DISABLED -->
-    <!-- <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors> -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn><!-- Suppress missing XML comments warning -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
   </PropertyGroup>
 
-  <!-- Fix for MSB4062 Windows App SDK packaging tasks in CI/CD environments -->
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-    <!-- Enable Windows targeting on non-Windows CI/CD environments -->
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <!-- Disable Windows App SDK packaging features that cause issues in GitHub Actions -->
-    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
-    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
-    <EnableMsixTooling>true</EnableMsixTooling>
-  </PropertyGroup>
-
-  <!-- Disable problematic publish profiles and trimming during CI builds - EXCLUDE main app projects -->
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(MSBuildProjectName)' != 'Bucket.App' AND '$(MSBuildProjectName)' != 'Bucket.Updater'">
-    <PublishProfile></PublishProfile>
-    <PublishTrimmed>false</PublishTrimmed>
-  </PropertyGroup>
-
-  <!-- Fix for PRI file generation issues in CI/CD -->
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(MSBuildProjectName)' == 'Bucket.Core'">
-    <!-- Disable PRI merging for library projects to avoid file not found errors -->
-    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
-  </PropertyGroup>
-
-  <!-- Version Management -->
-  <PropertyGroup>
+  <!-- Versioning (Single Source of Truth) -->
+  <PropertyGroup Label="Versioning">
     <Version>1.0.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 
-  <!-- Specific fixes for test projects -->
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true' OR $(MSBuildProjectName.Contains('Test'))">
+  <!-- CI/CD Configuration (GitHub Actions) -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'" Label="GitHub Actions">
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <EnableMsixTooling>true</EnableMsixTooling>
+  </PropertyGroup>
+
+  <!-- Exclude main applications from CI/CD publish overrides -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(MSBuildProjectName)' != 'Bucket.App' AND '$(MSBuildProjectName)' != 'Bucket.Updater'" Label="CI/CD Overrides">
+    <PublishProfile></PublishProfile>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <!-- Test Projects Configuration -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' OR $(MSBuildProjectName.Contains('Test'))" Label="Test Projects">
     <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <GeneratePriFile>false</GeneratePriFile>
@@ -69,4 +53,5 @@
     <PublishAot>false</PublishAot>
     <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
+
 </Project>
