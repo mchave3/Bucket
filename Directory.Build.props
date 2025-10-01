@@ -34,7 +34,7 @@
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
-  
+
   <!-- Disable problematic publish profiles and trimming during CI builds - EXCLUDE main app projects -->
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(MSBuildProjectName)' != 'Bucket.App' AND '$(MSBuildProjectName)' != 'Bucket.Updater'">
     <PublishProfile></PublishProfile>
