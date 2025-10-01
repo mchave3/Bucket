@@ -6,9 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWinUI>true</UseWinUI>
-    <!-- Disable PRI file generation for class library without UI resources -->
-    <GeneratePriFile>false</GeneratePriFile>
-    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
+    <!-- Enable PRI file generation for WinUI APIs and localization resources -->
+    <GeneratePriFile>true</GeneratePriFile>
+    <AppxGeneratePrisForPortableLibrariesEnabled>true</AppxGeneratePrisForPortableLibrariesEnabled>
   </PropertyGroup>
 
   <ItemGroup>
