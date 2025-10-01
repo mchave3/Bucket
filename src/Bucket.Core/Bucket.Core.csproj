@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWinUI>true</UseWinUI>
+    <Platforms>x86;x64;ARM64</Platforms>
     <!-- Enable PRI file generation for WinUI APIs and localization resources -->
     <GeneratePriFile>true</GeneratePriFile>
     <AppxGeneratePrisForPortableLibrariesEnabled>true</AppxGeneratePrisForPortableLibrariesEnabled>
