@@ -191,7 +191,7 @@ jobs:
             "-p:FileVersion=$assemblyVersion",
             "-p:RuntimeIdentifier=${{ matrix.platform.rid }}",
             "-p:ProgramFilesFolder=${{ matrix.platform.pf }}",
-            "--verbosity", "normal"
+            "--verbosity", "minimal"
           )
 
           Write-Host "Build command: dotnet $($buildArgs -join ' ')" -ForegroundColor Cyan
