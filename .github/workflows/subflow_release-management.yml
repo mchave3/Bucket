@@ -1,4 +1,4 @@
-name: '📦 Subflow - Release Management'
+name: '📦 Subflow: Release Management'
 
 on:
   workflow_call:
@@ -53,6 +53,7 @@ jobs:
   release-management:
     name: Release Management
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       actions: read

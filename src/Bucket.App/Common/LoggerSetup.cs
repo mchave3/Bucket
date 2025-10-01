@@ -45,10 +45,29 @@ namespace Bucket.App.Common
         /// </summary>
         public static void Shutdown()
         {
-            Logger?.Information("=== Bucket App Shutting Down ===");
-            if (Logger is IDisposable disposableLogger)
+            try
             {
-                disposableLogger.Dispose();
+                Logger?.Information("=== Bucket App Shutting Down ===");
+            }
+            catch
+            {
+                // Silent fail if logger is already disposed
+            }
+
+            try
+            {
+                if (Logger is IDisposable disposableLogger)
+                {
+                    disposableLogger.Dispose();
+                }
+            }
+            catch
+            {
+                // Silent fail on dispose
+            }
+            finally
+            {
+                Logger = null;
             }
         }
     }

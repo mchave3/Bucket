@@ -1,0 +1,295 @@
+name: '🏗️ Subflow: Build MSI Installers'
+
+on:
+  workflow_call:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        required: false
+        type: string
+        default: 'Release'
+      version:
+        description: 'Version to apply to builds'
+        required: true
+        type: string
+      checkout-ref:
+        description: 'Git reference to checkout'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      artifacts-path:
+        description: 'Path to build artifacts'
+        value: ${{ jobs.aggregate-artifacts.outputs.artifacts-path }}
+      installers-path:
+        description: 'Path to generated installers'
+        value: ${{ jobs.aggregate-artifacts.outputs.installers-path }}
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  WIX_VERSION: '6.0.2'
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build-platform:
+    name: Build ${{ matrix.platform.name }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: 'x64', rid: 'win-x64', pf: 'ProgramFiles64Folder' }
+          - { name: 'x86', rid: 'win-x86', pf: 'ProgramFilesFolder' }
+          - { name: 'ARM64', rid: 'win-arm64', pf: 'ProgramFiles64Folder' }
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.checkout-ref || github.ref }}
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: 'x64'
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    # Cache NuGet packages to speed up builds
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Update version in project files
+      shell: pwsh
+      run: |
+        Write-Host "Setting version to ${{ inputs.version }}..." -ForegroundColor Cyan
+
+        # Extract version numbers (remove any pre-release suffix like -Nightly)
+        $versionBase = "${{ inputs.version }}" -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
+
+        # Ensure we have 4 version parts for assembly version
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
+
+        $assemblyVersion = $versionParts -join '.'
+        $fileVersion = $assemblyVersion
+        $packageVersion = "${{ inputs.version }}"
+
+        Write-Host "Assembly Version: $assemblyVersion"
+        Write-Host "File Version: $fileVersion"
+        Write-Host "Package Version: $packageVersion"
+
+        # Update Directory.Build.props if it exists
+        $buildPropsPath = "Directory.Build.props"
+        if (Test-Path $buildPropsPath) {
+          $content = Get-Content $buildPropsPath -Raw
+          $content = $content -replace '<Version>.*?</Version>', "<Version>$packageVersion</Version>"
+          $content = $content -replace '<AssemblyVersion>.*?</AssemblyVersion>', "<AssemblyVersion>$assemblyVersion</AssemblyVersion>"
+          $content = $content -replace '<FileVersion>.*?</FileVersion>', "<FileVersion>$fileVersion</FileVersion>"
+          Set-Content -Path $buildPropsPath -Value $content
+        }
+
+    - name: Restore NuGet packages
+      shell: pwsh
+      run: |
+        Write-Host "=== Restoring NuGet packages ===" -ForegroundColor Cyan
+        dotnet restore Bucket.slnx --verbosity minimal
+
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "NuGet restore failed!"
+          exit 1
+        }
+
+        Write-Host "✅ NuGet packages restored successfully" -ForegroundColor Green
+
+    # Cache WiX toolset to speed up builds
+    - name: Cache WiX Toolset
+      id: cache-wix
+      uses: actions/cache@v4
+      with:
+        path: ~/.dotnet/tools
+        key: wix-${{ env.WIX_VERSION }}
+
+    - name: Install WiX Toolset 6
+      if: steps.cache-wix.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        Write-Host "=== Installing WiX Toolset ${{ env.WIX_VERSION }} ===" -ForegroundColor Cyan
+        dotnet tool install --global wix --version ${{ env.WIX_VERSION }}
+
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✅ WiX Toolset ${{ env.WIX_VERSION }} installed successfully" -ForegroundColor Green
+        } else {
+          Write-Error "❌ Failed to install WiX Toolset"
+          exit 1
+        }
+
+    - name: Verify WiX installation
+      shell: pwsh
+      run: |
+        wix --version
+        Write-Host "✅ WiX Toolset ready" -ForegroundColor Green
+
+    - name: Setup installer paths
+      shell: pwsh
+      run: |
+        $installersPath = "artifacts/installers"
+        New-Item -ItemType Directory -Force -Path $installersPath | Out-Null
+        Write-Host "Installers will be generated in: $installersPath" -ForegroundColor Cyan
+
+    - name: Build WiX Setup Project for ${{ matrix.platform.name }}
+      shell: pwsh
+      run: |
+        Write-Host "=== Building MSI for ${{ matrix.platform.name }} ===" -ForegroundColor Cyan
+
+        $version = "${{ inputs.version }}"
+        $versionBase = $version -replace '-.*$', ''
+        $versionParts = $versionBase -split '\.'
+
+        while ($versionParts.Count -lt 4) {
+          $versionParts += "0"
+        }
+
+        $assemblyVersion = $versionParts -join '.'
+        Write-Host "Assembly Version: $assemblyVersion" -ForegroundColor Yellow
+
+        # Retry logic: try up to 2 times
+        $maxRetries = 2
+        $attempt = 1
+        $success = $false
+
+        while ($attempt -le $maxRetries -and -not $success) {
+          if ($attempt -gt 1) {
+            Write-Host "  Retry attempt $attempt/$maxRetries..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 5
+          }
+
+          $buildArgs = @(
+            "build",
+            "setup/Bucket.Setup/Bucket.Setup.wixproj",
+            "-c", "${{ inputs.configuration }}",
+            "-p:Platform=${{ matrix.platform.name }}",
+            "-p:Version=$version",
+            "-p:AssemblyVersion=$assemblyVersion",
+            "-p:FileVersion=$assemblyVersion",
+            "-p:RuntimeIdentifier=${{ matrix.platform.rid }}",
+            "-p:ProgramFilesFolder=${{ matrix.platform.pf }}",
+            "--verbosity", "minimal"
+          )
+
+          dotnet @buildArgs
+
+          if ($LASTEXITCODE -eq 0) {
+            $expectedMsi = "artifacts/installers/Bucket-${{ inputs.version }}-${{ matrix.platform.name }}.msi"
+
+            if (Test-Path $expectedMsi) {
+              $fileInfo = Get-Item $expectedMsi
+              $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+              Write-Host "✅ Successfully built MSI: $fileSizeMB MB" -ForegroundColor Green
+              $success = $true
+            } else {
+              Write-Error "❌ Expected MSI file not found: $expectedMsi"
+              $attempt++
+            }
+          } else {
+            Write-Host "❌ Build failed (attempt $attempt/$maxRetries)" -ForegroundColor Red
+            $attempt++
+          }
+        }
+
+        if (-not $success) {
+          Write-Error "❌ Failed to build MSI after $maxRetries attempts"
+          exit 1
+        }
+
+    - name: Upload platform installer artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: installer-${{ matrix.platform.name }}
+        path: artifacts/installers/*.msi
+        retention-days: 1
+        if-no-files-found: error
+
+  aggregate-artifacts:
+    name: Aggregate Installers
+    needs: [build-platform]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      artifacts-path: artifacts
+      installers-path: artifacts/installers
+
+    steps:
+    - name: Create artifacts directory
+      run: mkdir -p artifacts/installers
+
+    - name: Download x64 installer
+      uses: actions/download-artifact@v5
+      with:
+        name: installer-x64
+        path: artifacts/installers/
+
+    - name: Download x86 installer
+      uses: actions/download-artifact@v5
+      with:
+        name: installer-x86
+        path: artifacts/installers/
+
+    - name: Download ARM64 installer
+      uses: actions/download-artifact@v5
+      with:
+        name: installer-ARM64
+        path: artifacts/installers/
+
+    - name: Verify all installers
+      shell: pwsh
+      run: |
+        Write-Host "=== Verifying All Installers ===" -ForegroundColor Cyan
+
+        $expectedFiles = @(
+          "Bucket-${{ inputs.version }}-x64.msi",
+          "Bucket-${{ inputs.version }}-x86.msi",
+          "Bucket-${{ inputs.version }}-ARM64.msi"
+        )
+
+        $allFound = $true
+        foreach ($file in $expectedFiles) {
+          $fullPath = "artifacts/installers/$file"
+          if (Test-Path $fullPath) {
+            $fileInfo = Get-Item $fullPath
+            $sizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+            Write-Host "✅ $file ($sizeMB MB)" -ForegroundColor Green
+          } else {
+            Write-Host "❌ Missing: $file" -ForegroundColor Red
+            $allFound = $false
+          }
+        }
+
+        if (-not $allFound) {
+          Write-Error "Some MSI files are missing"
+          exit 1
+        }
+
+        Write-Host "✅ All installers verified successfully" -ForegroundColor Green
+
+    - name: Upload combined installer artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: installer-artifacts
+        path: artifacts/installers/
+        retention-days: 7
+        if-no-files-found: error

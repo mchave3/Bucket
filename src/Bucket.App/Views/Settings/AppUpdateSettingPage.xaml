@@ -4,7 +4,6 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:dev="using:DevWinUI"
-      xmlns:l="using:WinUI3Localizer"
       xmlns:local="using:Bucket.App"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:views="using:Bucket.App.Views"
@@ -16,13 +15,13 @@
         <StackPanel Margin="10"
                     dev:PanelAttach.ChildrenTransitions="Default"
                     Spacing="5">
-            <dev:SettingsCard l:Uids.Uid="/Settings/Update_CurrentVersion_Card"
+            <dev:SettingsCard x:Uid="/Settings/Update_CurrentVersion_Card"
                               Header="{x:Bind ViewModel.CurrentVersion}"
                               HeaderIcon="{dev:BitmapIcon Source=Assets/Fluent/Update.png}">
                 <dev:SettingsCard.Description>
                     <StackPanel Orientation="Horizontal"
                                 Spacing="5">
-                        <TextBlock l:Uids.Uid="/Settings/Update_LastUpdateCheck"
+                        <TextBlock x:Uid="/Settings/Update_LastUpdateCheck"
                                    Style="{StaticResource SecondaryTextStyle}" />
                         <TextBlock FlowDirection="LeftToRight"
                                    Style="{StaticResource SecondaryTextStyle}"
@@ -32,7 +31,7 @@
                 <StackPanel Orientation="Horizontal"
                             Spacing="10">
                     <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-                    <Button l:Uids.Uid="/Settings/Update_CheckButton"
+                    <Button x:Uid="/Settings/Update_CheckButton"
                             MinWidth="{StaticResource SettingActionControlMinWidth}"
                             Command="{x:Bind ViewModel.CheckForUpdateCommand}"
                             IsEnabled="{x:Bind ViewModel.IsCheckButtonEnabled, Mode=OneWay}"
@@ -40,11 +39,11 @@
                 </StackPanel>
             </dev:SettingsCard>
 
-            <dev:SettingsCard l:Uids.Uid="/Settings/Update_Status_Card"
+            <dev:SettingsCard x:Uid="/Settings/Update_Status_Card"
                               Header="{x:Bind ViewModel.LoadingStatus, Mode=OneWay}"
                               HeaderIcon="{dev:BitmapIcon Source=Assets/Fluent/Info.png}">
                 <dev:SettingsCard.Description>
-                    <HyperlinkButton l:Uids.Uid="/Settings/Update_ReleaseNotes"
+                    <HyperlinkButton x:Uid="/Settings/Update_ReleaseNotes"
                                      Padding="5,0"
                                      Command="{x:Bind ViewModel.OpenReleaseNotesCommand}"
                                      Visibility="{x:Bind ViewModel.IsUpdateAvailable, Mode=OneWay}" />
@@ -52,7 +51,7 @@
                 <StackPanel VerticalAlignment="Center"
                             Orientation="Horizontal"
                             Spacing="10">
-                    <Button l:Uids.Uid="/Settings/Update_DownloadButton"
+                    <Button x:Uid="/Settings/Update_DownloadButton"
                             MinWidth="{StaticResource SettingActionControlMinWidth}"
                             Command="{x:Bind ViewModel.LaunchUpdaterCommand}"
                             IsEnabled="{x:Bind ViewModel.IsUpdaterAvailable, Mode=OneWay}"

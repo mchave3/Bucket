@@ -1,6 +1,8 @@
 ﻿using Microsoft.UI.Windowing;
 using Bucket.Core.Helpers;
+using Bucket.Core.Services;
 using Bucket.App.Services;
+using Bucket.App.Common;
 
 namespace Bucket.App.Views
 {
@@ -30,7 +32,7 @@ namespace Bucket.App.Views
                     .ConfigureBreadcrumbBar(BreadCrumbNav, BreadcrumbPageMappings.PageDictionary);
             }
 
-            // Add window closed event handler for cleanup
+            // Add window closed event handler for application shutdown
             this.Closed += MainWindow_Closed;
         }
 
@@ -65,11 +67,38 @@ namespace Bucket.App.Views
 
         internal static MainWindow Instance { get; private set; }
 
+        /// <summary>
+        /// Handles the main window closing event.
+        /// Performs application shutdown by cleaning up the Serilog logger and safely terminating the process.
+        /// </summary>
         private void MainWindow_Closed(object sender, WindowEventArgs e)
         {
-            // Use safe shutdown service to avoid WinRT crash
-            SafeShutdownService.InitiateSafeShutdown();
+            // Shutdown Serilog logger and safely exit application
+            _ = Task.Run(() =>
+            {
+                CleanupSerilogLogger();
+                SafeShutdownService.InitiateSafeShutdown();
+            });
         }
+
+        /// <summary>
+        /// Cleanly shuts down the Serilog logger system.
+        /// Ensures all log buffers are flushed and resources are properly released.
+        /// </summary>
+        private static void CleanupSerilogLogger()
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("Shutting down Serilog logger...");
+                LoggerSetup.Shutdown();
+                System.Diagnostics.Debug.WriteLine("Serilog shutdown complete");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Serilog cleanup error: {ex.Message}");
+            }
+        }
+
     }
 
 }
