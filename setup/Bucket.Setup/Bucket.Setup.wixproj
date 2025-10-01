@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="WixToolset.Sdk/6.0.2">
+  <!-- Basic configuration -->
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Platforms>x86;x64;ARM64</Platforms>
@@ -7,25 +8,22 @@
     <OutputPath>..\..\artifacts\installers\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
-  <!-- Auto-extract variables from referenced projects -->
+  <!-- Product properties and WiX variables -->
   <PropertyGroup>
-    <!-- Extract properties from Bucket.App.csproj automatically -->
     <Version Condition="'$(Version)' == ''">$(Bucket_App_Version)</Version>
     <Version Condition="'$(Version)' == '' OR '$(Bucket_App_Version)' == ''">1.0.0.0</Version>
     <ProductName Condition="'$(ProductName)' == ''">$(Bucket_App_AssemblyName)</ProductName>
     <ProductName Condition="'$(ProductName)' == '' OR '$(Bucket_App_AssemblyName)' == ''">Bucket</ProductName>
     <Manufacturer Condition="'$(Manufacturer)' == ''">$(Bucket_App_Company)</Manufacturer>
     <Manufacturer Condition="'$(Manufacturer)' == '' OR '$(Bucket_App_Company)' == ''">Mickaël CHAVE</Manufacturer>
-    <!-- Platform-specific directories -->
     <ProgramFilesFolder Condition="'$(Platform)' == 'x64'">ProgramFiles64Folder</ProgramFilesFolder>
     <ProgramFilesFolder Condition="'$(Platform)' == 'x86'">ProgramFilesFolder</ProgramFilesFolder>
     <ProgramFilesFolder Condition="'$(Platform)' == 'ARM64'">ProgramFiles64Folder</ProgramFilesFolder>
-    <!-- Platform-specific GUIDs -->
     <ProductGuid Condition="'$(Platform)' == 'x64'">{8E47B00A-4743-448F-AC7E-F04BF99D7C64}</ProductGuid>
     <ProductGuid Condition="'$(Platform)' == 'x86'">{8E47B00A-4743-448F-AC7E-F04BF99D7C86}</ProductGuid>
     <ProductGuid Condition="'$(Platform)' == 'ARM64'">{8E47B00A-4743-448F-AC7E-F04BF99D7CA4}</ProductGuid>
   </PropertyGroup>
-  <!-- Pass variables to WiX preprocessor using DefineConstants for WiX 5 -->
+  <!-- WiX preprocessor constants -->
   <PropertyGroup>
     <DefineConstants>
       Version=$(Version);
@@ -35,18 +33,13 @@
       ProgramFilesFolder=$(ProgramFilesFolder)
     </DefineConstants>
   </PropertyGroup>
-  <!-- Ensure output directory exists -->
+  <!-- Create output directory if it doesn't exist -->
   <Target Name="EnsureOutputDirectory" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
   </Target>
-  <!-- Project references -->
+  <!-- Project references (Bucket.Core excluded - already referenced by Bucket.App) -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bucket.App\Bucket.App.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Platform>$(Platform)</Platform>
-      <Configuration>Release</Configuration>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Bucket.Core\Bucket.Core.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <Platform>$(Platform)</Platform>
       <Configuration>Release</Configuration>
@@ -57,37 +50,26 @@
       <Configuration>Release</Configuration>
     </ProjectReference>
   </ItemGroup>
-  <!-- Define publish output path for manual file inclusion -->
+  <!-- RuntimeIdentifier mapping and publish paths -->
   <PropertyGroup>
-    <!-- Define RID mapping for different platforms -->
     <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
-    <!-- Path to the publish output for manual file inclusion -->
     <PublishOutputPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())\</PublishOutputPath>
   </PropertyGroup>
-  <!-- Pass the publish path to WiX preprocessor -->
+  <!-- Pass publish path to WiX preprocessor -->
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);PublishOutputPath=$(PublishOutputPath)</DefineConstants>
-    <!-- Suppress ICE03 validation for invalid language IDs -->
-    <!-- <SuppressIces>ICE03</SuppressIces> -->
   </PropertyGroup>
-
-  <!-- Custom targets to publish both Bucket.App and Bucket.Updater before building MSI -->
+  <!-- Publish applications before building the MSI -->
   <Target Name="PublishApplications" BeforeTargets="BeforeBuild">
     <PropertyGroup>
       <MainAppPublishPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())</MainAppPublishPath>
       <UpdaterPublishPath>$(MSBuildProjectDirectory)\..\..\artifacts\publish\$(Platform.ToLowerInvariant())\Updater</UpdaterPublishPath>
     </PropertyGroup>
-
     <Message Importance="high" Text="Publishing Bucket.App to $(MainAppPublishPath)" />
-
-    <!-- Publish Bucket.App to the main directory -->
     <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.App\Bucket.App.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(MainAppPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
-
     <Message Importance="high" Text="Publishing Bucket.Updater to $(UpdaterPublishPath)" />
-
-    <!-- Publish Bucket.Updater to the correct subdirectory -->
     <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.Updater\Bucket.Updater.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(UpdaterPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
   </Target>
 </Project>
