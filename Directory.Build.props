@@ -41,6 +41,12 @@
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
+  <!-- Fix for PRI file generation issues in CI/CD -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' AND '$(MSBuildProjectName)' == 'Bucket.Core'">
+    <!-- Disable PRI merging for library projects to avoid file not found errors -->
+    <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
+  </PropertyGroup>
+
   <!-- Version Management -->
   <PropertyGroup>
     <Version>1.0.0.0</Version>
