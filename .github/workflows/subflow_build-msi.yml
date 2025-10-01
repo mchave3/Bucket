@@ -166,6 +166,8 @@ jobs:
 
         $assemblyVersion = $versionParts -join '.'
         Write-Host "Assembly Version: $assemblyVersion" -ForegroundColor Yellow
+        Write-Host "Platform: ${{ matrix.platform.name }}" -ForegroundColor Yellow
+        Write-Host "Runtime Identifier: ${{ matrix.platform.rid }}" -ForegroundColor Yellow
 
         # Retry logic: try up to 2 times
         $maxRetries = 2
@@ -178,6 +180,7 @@ jobs:
             Start-Sleep -Seconds 5
           }
 
+          # Build with explicit platform configuration
           $buildArgs = @(
             "build",
             "setup/Bucket.Setup/Bucket.Setup.wixproj",
@@ -188,9 +191,10 @@ jobs:
             "-p:FileVersion=$assemblyVersion",
             "-p:RuntimeIdentifier=${{ matrix.platform.rid }}",
             "-p:ProgramFilesFolder=${{ matrix.platform.pf }}",
-            "--verbosity", "minimal"
+            "--verbosity", "normal"
           )
 
+          Write-Host "Build command: dotnet $($buildArgs -join ' ')" -ForegroundColor Cyan
           dotnet @buildArgs
 
           if ($LASTEXITCODE -eq 0) {

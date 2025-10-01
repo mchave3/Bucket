@@ -81,13 +81,15 @@
     </PropertyGroup>
 
     <Message Importance="high" Text="Publishing Bucket.App to $(MainAppPublishPath)" />
+    <Message Importance="high" Text="Platform: $(Platform), RuntimeIdentifier: $(RuntimeIdentifier)" />
 
     <!-- Publish Bucket.App to the main directory -->
-    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.App\Bucket.App.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(MainAppPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.App\Bucket.App.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(MainAppPublishPath)&quot; /p:Platform=$(Platform) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:PublishSingleFile=false /p:Version=$(Version) /p:AssemblyVersion=$(AssemblyVersion) /p:FileVersion=$(FileVersion)" />
 
     <Message Importance="high" Text="Publishing Bucket.Updater to $(UpdaterPublishPath)" />
 
     <!-- Publish Bucket.Updater to the correct subdirectory -->
-    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.Updater\Bucket.Updater.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(UpdaterPublishPath)&quot; /p:Platform=$(Platform) /p:PublishSingleFile=false" />
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\..\src\Bucket.Updater\Bucket.Updater.csproj&quot; --configuration $(Configuration) --runtime $(RuntimeIdentifier) --self-contained true --output &quot;$(UpdaterPublishPath)&quot; /p:Platform=$(Platform) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:PublishSingleFile=false /p:Version=$(Version) /p:AssemblyVersion=$(AssemblyVersion) /p:FileVersion=$(FileVersion)" />
   </Target>
+
 </Project>
