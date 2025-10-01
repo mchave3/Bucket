@@ -6,9 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWinUI>true</UseWinUI>
-    <!-- Class libraries should NOT specify Platforms or RuntimeIdentifiers -->
-    <!-- They inherit the architecture from the consuming executable project -->
-    <!-- DO NOT generate PRI files for class libraries - only the main app should -->
+    <!-- Disable PRI file generation for class library without UI resources -->
     <GeneratePriFile>false</GeneratePriFile>
     <AppxGeneratePrisForPortableLibrariesEnabled>false</AppxGeneratePrisForPortableLibrariesEnabled>
   </PropertyGroup>

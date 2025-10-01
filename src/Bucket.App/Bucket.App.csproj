@@ -20,8 +20,6 @@
     <ImplicitUsings>true</ImplicitUsings>
     <LangVersion>Latest</LangVersion>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <!-- Disable self-contained when no specific platform/RID is specified -->
-    <WindowsAppSDKSelfContained Condition="'$(Platform)' == 'AnyCPU' OR '$(Platform)' == ''">false</WindowsAppSDKSelfContained>
     <IsAotCompatible>true</IsAotCompatible>
     <CsWinRTAotWarningLevel>2</CsWinRTAotWarningLevel>
     <WindowsPackageType>None</WindowsPackageType>
@@ -51,6 +49,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <NeutralLanguage>en</NeutralLanguage>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <None Update="T4Templates\NavigationPageMappings.tt">
