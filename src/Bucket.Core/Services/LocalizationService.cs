@@ -116,7 +116,7 @@ namespace Bucket.Core.Services
         /// <summary>
         /// Gets all supported languages
         /// </summary>
-        public IReadOnlyList<LanguageItem> AllSupportedLanguages => SupportedLanguages.All;
+        public static IReadOnlyList<LanguageItem> AllSupportedLanguages => SupportedLanguages.All;
 
         /// <summary>
         /// Event raised when the language changes

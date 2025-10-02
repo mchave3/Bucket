@@ -31,7 +31,7 @@ namespace Bucket.App.Views
             try
             {
                 // Use centralized language list from the localization service
-                var availableLanguages = _localizationService.AllSupportedLanguages.ToList();
+                var availableLanguages = LocalizationService.AllSupportedLanguages.ToList();
 
                 LanguageComboBox.ItemsSource = availableLanguages;
 
