@@ -1,0 +1,70 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'RequiredModules.psd1'
+      - '*.psd1'
+      - 'source/**/*.psd1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    name: Review Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Dependency Review (GitHub)
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: always
+
+      - name: Check PowerShell module dependency declarations
+        shell: pwsh
+        run: |
+          $requiredModulesPath = './RequiredModules.psd1'
+
+          if (-not (Test-Path $requiredModulesPath)) {
+            Write-Host 'No RequiredModules.psd1 found. Skipping.'
+            exit 0
+          }
+
+          # Safe PSD1 parsing (avoids executing arbitrary code from PR changes)
+          $modules = Import-PowerShellDataFile -Path $requiredModulesPath
+
+          $entries = $modules.GetEnumerator() | Where-Object { $_.Key -ne 'PSDependOptions' }
+          if (-not $entries) {
+            Write-Host 'No module entries found in RequiredModules.psd1.'
+            exit 0
+          }
+
+          if (-not (Get-Command -Name Find-Module -ErrorAction SilentlyContinue)) {
+            Write-Host 'Find-Module is not available. Skipping PSGallery verification.'
+            $entries | Sort-Object Key | ForEach-Object { Write-Host ("- {0}: {1}" -f $_.Key, $_.Value) }
+            exit 0
+          }
+
+          foreach ($entry in ($entries | Sort-Object Key)) {
+            $moduleName = $entry.Key
+            $moduleVersion = $entry.Value
+            Write-Host ("- {0}: {1}" -f $moduleName, $moduleVersion)
+
+            try {
+              $galleryModule = Find-Module -Name $moduleName -ErrorAction Stop
+              Write-Host ("  PSGallery latest: {0}" -f $galleryModule.Version)
+            }
+            catch {
+              Write-Host ("  Could not verify in PSGallery: {0}" -f $_.Exception.Message)
+            }
+          }

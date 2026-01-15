@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint + Build + Test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache required modules
+        uses: actions/cache@v4
+        with:
+          path: output/RequiredModules
+          key: requiredmodules-${{ runner.os }}-${{ hashFiles('RequiredModules.psd1', 'Resolve-Dependency.psd1', 'Resolve-Dependency.ps1') }}
+
+      - name: Run lint + manifest validation + tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $PSVersionTable | Format-List
+
+          # Restore repo-defined build dependencies (InvokeBuild, Pester, PSScriptAnalyzer, etc.)
+          ./build.ps1 -ResolveDependency -Tasks noop
+
+          # Lint source/tests
+          Import-Module PSScriptAnalyzer -ErrorAction Stop
+
+          $allResults = @()
+
+          $sourceResults = Invoke-ScriptAnalyzer -Path ./source -Recurse -Severity @('Error', 'Warning')
+          if ($sourceResults) { $allResults += $sourceResults }
+
+          if (Test-Path ./tests) {
+            $testResults = Invoke-ScriptAnalyzer -Path ./tests -Recurse -Severity @('Error', 'Warning')
+            if ($testResults) { $allResults += $testResults }
+          }
+
+          if ($allResults.Count -gt 0) {
+            $allResults | Select-Object Severity, RuleName, ScriptName, Line, Message | Format-Table -AutoSize
+
+            $errorCount = ($allResults | Where-Object Severity -eq 'Error').Count
+            if ($errorCount -gt 0) {
+              throw "PSScriptAnalyzer found $errorCount error(s)."
+            }
+          }
+
+          # Validate manifest (requires RequiredModules resolvable)
+          Test-ModuleManifest -Path ./source/Bucket.psd1 -ErrorAction Stop | Out-Null
+
+          # Build + tests (default workflow from build.yaml)
+          ./build.ps1

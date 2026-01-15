@@ -1,0 +1,97 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/**'
+      - 'docs/**'
+      - '*.md'
+      - 'build.ps1'
+      - 'build.yaml'
+      - 'RequiredModules.psd1'
+      - 'Resolve-Dependency.ps1'
+      - 'Resolve-Dependency.psd1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-docs:
+    name: Generate and push docs
+    runs-on: windows-latest
+
+    # Prevent an infinite loop when the workflow pushes docs commits.
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache required modules
+        uses: actions/cache@v4
+        with:
+          path: output/RequiredModules
+          key: requiredmodules-${{ runner.os }}-${{ hashFiles('RequiredModules.psd1', 'Resolve-Dependency.psd1', 'Resolve-Dependency.ps1') }}
+
+      - name: Build and generate docs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          ./build.ps1 -ResolveDependency -Tasks noop
+          ./build.ps1 -Tasks build
+
+          Install-Module -Name PlatyPS -Force -Scope CurrentUser
+
+          $moduleName = (Test-ModuleManifest -Path ./source/Bucket.psd1 -ErrorAction Stop).Name
+
+          # Find the built module manifest (latest build output)
+          $builtManifest = Get-ChildItem -Path ./output/module -Recurse -Filter "$moduleName.psd1" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+
+          if (-not $builtManifest) {
+            throw "Could not find built module manifest for '$moduleName' under output/module"
+          }
+
+          $modulePath = Split-Path -Parent $builtManifest.FullName
+          Import-Module $builtManifest.FullName -Force -ErrorAction Stop
+
+          $docsPath = Join-Path $PWD 'docs/commands'
+          New-Item -Path $docsPath -ItemType Directory -Force | Out-Null
+
+          # Regenerate docs (deterministic output preferred)
+          Get-ChildItem -Path $docsPath -Filter '*.md' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          New-MarkdownHelp -Module $moduleName -OutputFolder $docsPath -Force
+
+      - name: Commit and push docs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Ensure we are on main branch (not detached HEAD)
+          git checkout -B main
+
+          git add docs/
+
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host 'No documentation changes to commit.'
+            exit 0
+          }
+
+          $env:GIT_AUTHOR_NAME = 'github-actions[bot]'
+          $env:GIT_AUTHOR_EMAIL = 'github-actions[bot]@users.noreply.github.com'
+          $env:GIT_COMMITTER_NAME = $env:GIT_AUTHOR_NAME
+          $env:GIT_COMMITTER_EMAIL = $env:GIT_AUTHOR_EMAIL
+
+          git commit -m "docs: auto-generate help [skip ci] [skip docs]"
+          git push origin main

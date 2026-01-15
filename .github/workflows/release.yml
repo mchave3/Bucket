@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Module version (SemVer), e.g. 1.2.3'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-psgallery:
+    name: Publish to PowerShell Gallery
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache required modules
+        uses: actions/cache@v4
+        with:
+          path: output/RequiredModules
+          key: requiredmodules-${{ runner.os }}-${{ hashFiles('RequiredModules.psd1', 'Resolve-Dependency.psd1', 'Resolve-Dependency.ps1') }}
+
+      - name: Set module version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $inputVersion = '${{ inputs.version }}'
+
+          if (-not [string]::IsNullOrWhiteSpace($inputVersion)) {
+            $version = $inputVersion.Trim()
+            if ($version -match '^v(?<v>.+)$') {
+              $version = $Matches.v
+            }
+          }
+          elseif ($tag -match '^v(?<v>\d+\.\d+\.\d+.*)$') {
+            $version = $Matches.v
+          }
+          else {
+            throw "Expected tag 'v<version>' or workflow input 'version'. Got ref_name='$tag'" 
+          }
+
+          "ModuleVersion=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Show chosen version
+        shell: pwsh
+        run: |
+          Write-Host "ModuleVersion=$env:ModuleVersion"
+
+      - name: Restore dependencies
+        shell: pwsh
+        run: ./build.ps1 -ResolveDependency -Tasks noop
+
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1 -Tasks build
+
+      - name: Publish module to PSGallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) {
+            throw 'Missing secret PSGALLERY_API_KEY'
+          }
+
+          $sourceManifest = Join-Path $PWD 'source' 'Bucket.psd1'
+          $moduleName = (Test-ModuleManifest -Path $sourceManifest).Name
+
+          $builtManifest = Get-ChildItem -Path (Join-Path $PWD 'output' 'module') -Recurse -Filter "$moduleName.psd1" |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+
+          if (-not $builtManifest) {
+            throw "Could not find built manifest for '$moduleName' under output/module" 
+          }
+
+          $modulePath = Split-Path -Parent $builtManifest.FullName
+
+          $builtInfo = Test-ModuleManifest -Path $builtManifest.FullName
+          if ($builtInfo.Version.ToString() -ne $env:ModuleVersion) {
+            throw "Built module version '$($builtInfo.Version)' does not match tag version '$env:ModuleVersion'" 
+          }
+
+          Import-Module PowerShellGet -ErrorAction SilentlyContinue
+
+          Publish-Module -Path $modulePath -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -ErrorAction Stop
