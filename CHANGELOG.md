@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Require PowerShell 7+ and add dependency on `PwshSpectreConsole`.
+- Update VS Code task shell to use `pwsh.exe` on Windows.
 - For changes in existing functionality.
 
 
