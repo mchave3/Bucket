@@ -1,18 +1,23 @@
 # AGENTS.md (coding-agent guide)
 
-This is a PowerShell module repo built with Sampler + Invoke-Build. Source lives in `source/`, tests in `tests/`, and generated build artifacts go to `output/`.
+This is a PowerShell module repo built with Sampler + Invoke-Build.
+- Source lives in `source/`
+- Tests live in `tests/`
+- Generated build artifacts go in `output/` (do not hand-edit)
 
 ## Repo map
 
-- Module manifest: `source/Bucket.psd1`
-- Root module stub: `source/Bucket.psm1` (rebuilt/merged during build)
-- Public functions: `source/Public/*.ps1` (exported)
-- Private helpers: `source/Private/*.ps1` (internal)
-- Tests:
-  - QA gates: `tests/QA/module.tests.ps1`
-  - Unit tests: `tests/Unit/Public/*.tests.ps1`, `tests/Unit/Private/*.tests.ps1`
+- Module manifest (authoring source): `source/Bucket.psd1`
+- Root module stub (rebuilt/merged during build): `source/Bucket.psm1`
+- Public functions (exported): `source/Public/*.ps1`
+- Private helpers (internal): `source/Private/*.ps1`
+- Localization: `source/en-US/`
 - Build config: `build.yaml`
 - Dependency manifests: `RequiredModules.psd1`, `Resolve-Dependency.psd1`
+
+Tests:
+- QA gates: `tests/QA/module.tests.ps1`
+- Unit tests: `tests/Unit/Public/*.tests.ps1`, `tests/Unit/Private/*.tests.ps1`
 
 ## Editor/assistant rules found
 
@@ -21,13 +26,19 @@ This is a PowerShell module repo built with Sampler + Invoke-Build. Source lives
 
 If these appear later, follow them as higher-priority guidance.
 
-## Build, lint, test (run from repo root)
+## Runtime targets
+
+- Module targets PowerShell 7+ (`PowerShellVersion = '7.0'` in `source/Bucket.psd1`).
+- PSEdition is Core-only (`CompatiblePSEditions = @('Core')`).
+- Runtime dependency: `PwshSpectreConsole` (declared in `source/Bucket.psd1` and `RequiredModules.psd1`).
+
+## Build / lint / test (run from repo root)
 
 ### Prereqs
 
-- Recommended shell: PowerShell 7+ (`pwsh`) for dependency restore.
-- Target runtime: Windows PowerShell 5.0+ (see `PowerShellVersion = '5.0'` in `source/Bucket.psd1`).
-- Git recommended: QA checks validate `CHANGELOG.md` changes via `git diff`.
+- Recommended shell: PowerShell 7+ (`pwsh`).
+- Dependency restore uses `Resolve-Dependency.ps1` (configured for PSResourceGet in `Resolve-Dependency.psd1`).
+- QA tests use `git diff` to enforce changelog updates.
 
 ### Restore dependencies (no build)
 
@@ -35,41 +46,41 @@ If these appear later, follow them as higher-priority guidance.
 
 Notes:
 - Dependencies are typically saved under `output/RequiredModules/` and prepended to `PSModulePath` by `build.ps1`.
-- The default resolver is configured in `Resolve-Dependency.psd1` (currently PSResourceGet).
+- `build.ps1` can auto-restore when dependencies are missing (`-AutoRestore`).
 
 ### List available build tasks
 
 - `pwsh -NoProfile -File .\build.ps1 -Tasks ?`
 
-### Common workflows
+### Common workflows (Sampler)
 
-- Build + test (default): `pwsh -NoProfile -File .\build.ps1`
+- Build + test (default workflow): `pwsh -NoProfile -File .\build.ps1`
 - Build only: `pwsh -NoProfile -File .\build.ps1 -Tasks build`
 - Test only: `pwsh -NoProfile -File .\build.ps1 -Tasks test`
 - Pack: `pwsh -NoProfile -File .\build.ps1 -Tasks pack`
 
 ### Run a single test file (preferred)
 
-Use the pipeline so the module is built and discoverable the same way CI does:
+Use the build pipeline so dependencies + `PSModulePath` match CI:
 
 - `pwsh -NoProfile -File .\build.ps1 -Tasks test -PesterScript .\tests\Unit\Public\Get-Something.tests.ps1`
 
-Other useful filters:
-
-- `pwsh -NoProfile -File .\build.ps1 -Tasks test -PesterTag helpQuality`
-- `pwsh -NoProfile -File .\build.ps1 -Tasks test -PesterExcludeTag FunctionalQuality`
+Notes:
+- `-PesterScript` also has alias `-PesterPath` (future-proof for Pester v5+).
+- You can pass multiple `-PesterScript` paths (array).
 
 ### Run tests directly with Pester (fast iteration)
 
-This can work if the module is already importable in your session:
+This works if the module is already importable in your session:
 
 - `pwsh -NoProfile -Command "Invoke-Pester -Path .\\tests\\Unit\\Public\\Get-Something.tests.ps1 -Output Detailed"`
 
-If it fails to import `Bucket`, run via `build.ps1` instead.
+Tag filtering (Pester 5 style):
+- `pwsh -NoProfile -Command "Invoke-Pester -Path .\\tests -TagFilter helpQuality -ExcludeTagFilter FunctionalQuality"`
 
 ### Linting (PSScriptAnalyzer)
 
-ScriptAnalyzer is enforced by QA tests (`tests/QA/module.tests.ps1`) for each function file.
+QA runs ScriptAnalyzer per-function via `tests/QA/module.tests.ps1`, but you can run it manually:
 
 - `pwsh -NoProfile -Command "Invoke-ScriptAnalyzer -Path .\\source -Recurse"`
 
@@ -79,36 +90,36 @@ Follow existing patterns in `source/Public/Get-Something.ps1` and `source/Privat
 
 ### Layout and file rules
 
-- One function per file; the file name must match the function name.
+- One function per file; file name must match the function name.
 - Public functions go in `source/Public/`; private helpers go in `source/Private/`.
-- Do not hand-edit `output/**` (generated).
+- Do not hand-edit `output/**` (generated by build).
 - Avoid editing `source/Bucket.psm1` directly unless you know the build merge rules.
 
 ### Naming
 
-- Use `Verb-Noun` with approved verbs (e.g. `Get-`, `Set-`, `Test-`).
+- Use approved `Verb-Noun` names.
 - Parameters: PascalCase (`-PrivateData`).
-- Locals: meaningful names; prefer lower camel-case (`$projectPath`).
+- Local variables: meaningful; prefer lower camel-case (`$projectPath`).
 
 ### Advanced function shape
 
-- Prefer advanced functions: `function Verb-Noun { [CmdletBinding()] param(...) begin/process/end }`.
+- Prefer advanced functions:
+  - `function Verb-Noun { [CmdletBinding()] param(...) begin/process/end }`
 - Use `SupportsShouldProcess = $true` for side-effecting commands.
 - Support pipeline input when sensible (`ValueFromPipeline`, `ValueFromPipelineByPropertyName`).
 
 ### Comment-based help (required)
 
-QA tests enforce help quality for every function:
-
-- Include `.SYNOPSIS`.
-- Include `.DESCRIPTION` (must be > ~40 chars).
-- Include at least one `.EXAMPLE`.
-- Every parameter must have a description (and it must be descriptive; length threshold enforced).
+QA enforces help quality for every function:
+- `.SYNOPSIS` present
+- `.DESCRIPTION` present (length threshold enforced)
+- At least one `.EXAMPLE`
+- Every parameter has a descriptive `.PARAMETER` entry (length threshold enforced)
 
 ### Imports and dependencies
 
 - Do not `Import-Module` inside function bodies unless unavoidable.
-- Prefer declaring dependencies via the module manifest (`.psd1`) / build pipeline.
+- Prefer declaring dependencies via `source/Bucket.psd1` / `RequiredModules.psd1`.
 - Tests should `Import-Module` in `BeforeAll` and `Remove-Module` in `AfterAll`.
 
 ### Formatting
@@ -121,7 +132,7 @@ QA tests enforce help quality for every function:
 
 - Prefer explicit parameter types (e.g. `[string]`).
 - Add `[OutputType([type])]` when practical.
-- Prefer outputting objects / `Write-Output` over `return` for clarity.
+- Prefer outputting objects / `Write-Output` over `return`.
 
 ### Error handling
 
@@ -139,9 +150,5 @@ QA tests enforce help quality for every function:
 - Every function must have a unit test file:
   - Public: `tests/Unit/Public/<Function>.tests.ps1`
   - Private: `tests/Unit/Private/<Function>.tests.ps1` (use `InModuleScope`)
-- Prefer `Describe` per function and focused `Context`/`It` blocks.
+- Prefer one `Describe` per function with focused `Context`/`It` blocks.
 - Use `Mock` + `Should -Invoke` to verify internal calls.
-
-## Changelog rule (enforced)
-
-If code changes are made, QA expects `CHANGELOG.md` to be updated with at least one entry under `## [Unreleased]`.
