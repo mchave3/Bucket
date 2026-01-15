@@ -19,9 +19,11 @@
     ChangelogManagement         = 'latest'
     Sampler                     = 'latest'
     'Sampler.GitHubTasks'       = 'latest'
+    PlatyPS                      = 'latest'
 
     # Runtime dependency (also declared in module manifest RequiredModules)
     PwshSpectreConsole           = 'latest'
+
 
 
 }

@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -49,9 +49,11 @@ jobs:
           ./build.ps1 -ResolveDependency -Tasks noop
           ./build.ps1 -Tasks build
 
-          Install-Module -Name PlatyPS -Force -Scope CurrentUser
+          # PlatyPS is restored via RequiredModules.psd1 (PSResourceGet)
+          Import-Module PlatyPS -ErrorAction Stop
 
           $moduleName = (Test-ModuleManifest -Path ./source/Bucket.psd1 -ErrorAction Stop).Name
+
 
           # Find the built module manifest (latest build output)
           $builtManifest = Get-ChildItem -Path ./output/module -Recurse -Filter "$moduleName.psd1" |
