@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Require PowerShell 7+ and add dependency on `PwshSpectreConsole`.
 - For changes in existing functionality.
+
 
 ### Deprecated
 

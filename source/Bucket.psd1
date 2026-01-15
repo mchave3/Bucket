@@ -15,7 +15,7 @@ RootModule = 'Bucket.psm1'
 ModuleVersion = '0.0.1'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core')
 
 # ID used to uniquely identify this module
 GUID = '2df836ad-4448-49ac-8fcc-aa7645291ad5'
@@ -33,7 +33,7 @@ Copyright = '(c) Mickael CHAVE. All rights reserved.'
 Description = 'MySimpleModule Description'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.0'
+PowerShellVersion = '7.0'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -51,7 +51,9 @@ PowerShellVersion = '5.0'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @()
+RequiredModules = @(
+    'PwshSpectreConsole'
+)
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()

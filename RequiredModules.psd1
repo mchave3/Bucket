@@ -20,6 +20,9 @@
     Sampler                     = 'latest'
     'Sampler.GitHubTasks'       = 'latest'
 
+    # Runtime dependency (also declared in module manifest RequiredModules)
+    PwshSpectreConsole           = 'latest'
+
 
 }
 
