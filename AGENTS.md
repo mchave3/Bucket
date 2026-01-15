@@ -152,7 +152,3 @@ QA enforces help quality for every function:
   - Private: `tests/Unit/Private/<Function>.tests.ps1` (use `InModuleScope`)
 - Prefer one `Describe` per function with focused `Context`/`It` blocks.
 - Use `Mock` + `Should -Invoke` to verify internal calls.
-
-## Changelog rule (enforced)
-
-If code changes are made, QA expects `CHANGELOG.md` to be updated with at least one entry under `## [Unreleased]`.
