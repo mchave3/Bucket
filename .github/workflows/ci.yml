@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache required modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: output/RequiredModules
           key: requiredmodules-${{ runner.os }}-${{ hashFiles('RequiredModules.psd1', 'Resolve-Dependency.psd1', 'Resolve-Dependency.ps1') }}
