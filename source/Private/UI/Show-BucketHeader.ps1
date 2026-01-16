@@ -36,6 +36,6 @@ function Show-BucketHeader
 
     process
     {
-        Write-SpectreFigletText -Text 'Bucket' -Color $Color
+        Write-SpectreFigletText -Text 'Bucket' -Color $Color | Out-Null
     }
 }
