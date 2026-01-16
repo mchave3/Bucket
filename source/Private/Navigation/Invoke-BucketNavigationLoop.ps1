@@ -68,7 +68,25 @@ function Invoke-BucketNavigationLoop
             }
 
             # Validate navigation result
-            if ($null -eq $navResult -or -not $navResult.ContainsKey('Action'))
+            if ($null -eq $navResult)
+            {
+                Write-Warning -Message "Screen '$screenName' returned invalid navigation result. Going back."
+                [void]$script:NavigationStack.Pop()
+                Clear-Host
+                continue
+            }
+
+            $hasAction = $false
+            if ($navResult -is [hashtable])
+            {
+                $hasAction = $navResult.ContainsKey('Action')
+            }
+            else
+            {
+                $hasAction = ($null -ne $navResult.PSObject.Properties['Action'])
+            }
+
+            if (-not $hasAction)
             {
                 Write-Warning -Message "Screen '$screenName' returned invalid navigation result. Going back."
                 [void]$script:NavigationStack.Pop()

@@ -28,8 +28,10 @@ function Show-BucketDeleteImageMenu
         if ($images.Count -eq 0)
         {
             Write-SpectreHost ''
-            Write-SpectreHost '[yellow]No images available to delete.[/]'
-            Start-Sleep -Seconds 2
+            Write-SpectreHost '[yellow]No images imported yet.[/]'
+            Write-SpectreHost '[grey]Import an image first before attempting to delete.[/]'
+            Write-SpectreHost ''
+            Read-SpectreConfirm -Prompt 'Press Enter to continue' -DefaultAnswer 'y' | Out-Null
             return New-BucketNavResult -Action Refresh
         }
 

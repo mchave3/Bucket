@@ -48,6 +48,16 @@ function Show-BucketImageManagement
             {
                 'View Available Images'
                 {
+                    $images = Get-BucketImportedImages
+                    if ($images.Count -eq 0)
+                    {
+                        Write-SpectreHost ''
+                        Write-SpectreHost '[yellow]No images imported yet.[/]'
+                        Write-SpectreHost "[grey]Use 'Import Image (WIM)' to add an image first.[/]"
+                        Write-SpectreHost ''
+                        Read-SpectreConfirm -Prompt 'Press Enter to continue' -DefaultAnswer 'y' | Out-Null
+                        return New-BucketNavResult -Action Refresh
+                    }
                     Show-BucketImageViewer
                     return New-BucketNavResult -Action Refresh
                 }
@@ -68,6 +78,16 @@ function Show-BucketImageManagement
                 }
                 'Delete Image'
                 {
+                    $images = Get-BucketImportedImages
+                    if ($images.Count -eq 0)
+                    {
+                        Write-SpectreHost ''
+                        Write-SpectreHost '[yellow]No images imported yet.[/]'
+                        Write-SpectreHost "[grey]Use 'Import Image (WIM)' to add an image first.[/]"
+                        Write-SpectreHost ''
+                        Read-SpectreConfirm -Prompt 'Press Enter to continue' -DefaultAnswer 'y' | Out-Null
+                        return New-BucketNavResult -Action Refresh
+                    }
                     $deleteResult = Show-BucketDeleteImageMenu
                     return $deleteResult
                 }
