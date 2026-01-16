@@ -39,9 +39,6 @@ function Show-BucketAbout
             if ($moduleInfo.ProjectUri) { $projectUri = $moduleInfo.ProjectUri.ToString() }
         }
 
-        Show-BucketSubmenuHeader -Title 'About' -Subtitle 'Bucket - WIM Image Provisioning Tool'
-
-        # Display about information using Spectre panel
         $aboutContent = @(
             "[grey]Version:[/]     [white]$version[/]"
             "[grey]Author:[/]      [white]$author[/]"
@@ -51,13 +48,64 @@ function Show-BucketAbout
             '[grey]Built with[/] [cyan]PwshSpectreConsole[/] [grey]and[/] [cyan]Spectre.Console[/]'
         ) -join "`n"
 
-        $aboutContent | Format-SpectrePanel -Expand -Border Rounded | Out-SpectreHost
-        Write-Host ''
+        $menuColor = 'Cyan1'
+        $aboutResult = $null
 
-        # Simple menu with just Back option
-        $choices = @()
-        $result = Read-BucketMenu -Title 'About' -Choices $choices -ShowBack $true -ShowExit $false
+        $layout = New-SpectreLayout -Name 'root' -Rows @(
+            (New-SpectreLayout -Name 'header' -MinimumSize 5 -Ratio 1 -Data 'empty')
+            (New-SpectreLayout -Name 'content' -Ratio 10 -Data 'empty')
+            (New-SpectreLayout -Name 'footer' -MinimumSize 3 -Ratio 1 -Data 'empty')
+        )
 
-        return $result
+        Invoke-SpectreLive -Data $layout -ScriptBlock {
+            param (
+                [Spectre.Console.LiveDisplayContext] $Context
+            )
+
+            while ($true)
+            {
+                $headerContent = "[bold $menuColor]About[/]`n[grey]Bucket - WIM Image Provisioning Tool[/]"
+                $headerPanel = $headerContent |
+                    Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
+                    Format-SpectrePanel -Expand -Border Rounded -Color $menuColor
+
+                $contentPanel = $aboutContent |
+                    Format-SpectrePanel -Expand -Border Rounded
+
+                $footerContent = '[grey]Enter/Esc: Back[/]'
+                $footerPanel = $footerContent |
+                    Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
+                    Format-SpectrePanel -Expand -Border Rounded
+
+                $layout['header'].Update($headerPanel) | Out-Null
+                $layout['content'].Update($contentPanel) | Out-Null
+                $layout['footer'].Update($footerPanel) | Out-Null
+
+                $Context.Refresh()
+
+                [Console]::TreatControlCAsInput = $true
+                $keyInfo = [Console]::ReadKey($true)
+
+                if ($keyInfo.Key -eq 'Escape')
+                {
+                    Set-Variable -Name 'aboutResult' -Value (New-BucketNavResult -Action Back) -Scope 1
+                    return
+                }
+
+                if ($keyInfo.Key -eq 'C' -and $keyInfo.Modifiers -eq 'Control')
+                {
+                    Set-Variable -Name 'aboutResult' -Value (New-BucketNavResult -Action Back) -Scope 1
+                    return
+                }
+
+                if ($keyInfo.Key -eq 'Enter')
+                {
+                    Set-Variable -Name 'aboutResult' -Value (New-BucketNavResult -Action Back) -Scope 1
+                    return
+                }
+            }
+        }
+
+        return $aboutResult
     }
 }
