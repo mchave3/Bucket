@@ -30,7 +30,7 @@ CompanyName = 'Mickael CHAVE'
 Copyright = '(c) Mickael CHAVE. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'MySimpleModule Description'
+Description = 'A PowerShell module for WIM image provisioning with an interactive terminal UI built on PwshSpectreConsole.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.0'

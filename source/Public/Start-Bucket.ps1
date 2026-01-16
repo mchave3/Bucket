@@ -1,27 +1,116 @@
-Clear-Host
+function Start-Bucket
+{
+    <#
+      .SYNOPSIS
+      Starts the Bucket WIM image provisioning application with interactive terminal UI.
 
-$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding
+      .DESCRIPTION
+      This function is the main entry point for the Bucket module. It performs the following:
+      1. Checks for administrative privileges and auto-elevates if necessary
+      2. Initializes the application state, logging, and navigation systems
+      3. Displays a progress spinner during initialization
+      4. Launches the main navigation loop with the interactive menu system
 
-Write-SpectreFigletText -Text ":bucket: Bucket"
-Write-SpectreHost -Message ":bucket: Bucket"
+      The application provides a stack-based navigation experience for managing WIM images,
+      applying Windows updates, and configuring provisioning options.
 
-# Layout simple pour le menu principal
-$layout = New-SpectreLayout -Name "root" -Rows @(
-    # En-tête
-    (New-SpectreLayout -Name "header" -Ratio 1 -Data ("Bienvenue dans Bucket" | Format-SpectrePanel -Header "Menu Principal" -Expand -Color Cyan1)),
-    # Corps avec 2 colonnes
-    (New-SpectreLayout -Name "body" -Ratio 3 -Columns @(
-        # Colonne gauche - Options
-        (New-SpectreLayout -Name "options" -Ratio 1 -Data (@(
-            "1. Option 1",
-            "2. Option 2", 
-            "3. Option 3",
-            "4. Quitter"
-        ) -join "`n" | Format-SpectrePanel -Header "Options" -Expand -Color Green)),
-        # Colonne droite - Informations
-        (New-SpectreLayout -Name "info" -Ratio 1 -Data ("Informations système ou aide" | Format-SpectrePanel -Header "Info" -Expand -Color Yellow))
-    ))
-)
+      .EXAMPLE
+      Start-Bucket
 
-Clear-Host
-$layout | Out-SpectreHost
+      Starts the Bucket application. If not running as administrator, it will prompt for elevation.
+
+      .EXAMPLE
+      Start-Bucket -Verbose
+
+      Starts the Bucket application with verbose logging output.
+
+      .PARAMETER Elevated
+      Internal switch used to indicate the process was re-launched with elevation.
+      This prevents infinite elevation loops.
+
+      .OUTPUTS
+      [void] This function runs the interactive application and does not return output.
+    #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Interactive application entry point, ShouldProcess would break the user experience.')]
+    [CmdletBinding()]
+    [OutputType([void])]
+    param
+    (
+        [Parameter()]
+        [switch]
+        $Elevated
+    )
+
+    process
+    {
+        # Set UTF-8 encoding for proper display of special characters
+        $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+
+        # Check for administrative privileges
+        if (-not (Test-BucketAdminPrivilege))
+        {
+            if ($Elevated)
+            {
+                # We were supposed to be elevated but aren't - something went wrong
+                Write-Warning -Message 'Failed to obtain administrative privileges. Bucket requires elevation.'
+                return
+            }
+
+            Write-Verbose -Message 'Not running as administrator. Requesting elevation...'
+            Start-BucketElevated
+            return
+        }
+
+        # Clear the screen for a fresh start
+        Clear-Host
+
+        # Show initialization with spinner
+        $initResult = Invoke-SpectreCommandWithStatus -Title 'Initializing Bucket...' -Spinner 'Dots' -ScriptBlock {
+            # Initialize application state (paths, config, metadata)
+            Initialize-BucketState
+
+            # Mark session as elevated
+            $script:BucketState.Session.IsElevated = $true
+
+            # Initialize logging
+            Initialize-BucketLogging
+            Write-BucketLog -Message 'Bucket application started.' -Level Info
+
+            # Initialize navigation system
+            Initialize-BucketNavigation
+            Write-BucketLog -Message 'Navigation system initialized.' -Level Debug
+
+            # Small delay for visual feedback
+            Start-Sleep -Milliseconds 500
+
+            return $true
+        }
+
+        if (-not $initResult)
+        {
+            Write-Warning -Message 'Initialization failed. Please check the logs for details.'
+            return
+        }
+
+        Write-BucketLog -Message 'Initialization complete. Launching main menu.' -Level Info
+
+        # Clear screen before showing main menu
+        Clear-Host
+
+        # Start the main navigation loop
+        try
+        {
+            Invoke-BucketNavigationLoop
+        }
+        catch
+        {
+            Write-BucketLog -Message "Fatal error: $_" -Level Error
+            Write-Warning -Message "An unexpected error occurred: $_"
+        }
+        finally
+        {
+            Write-BucketLog -Message 'Bucket application exited.' -Level Info
+            Write-Verbose -Message 'Bucket session ended.'
+        }
+    }
+}
