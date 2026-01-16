@@ -39,12 +39,13 @@ function Initialize-BucketState
         # Initialize the global state object
         $script:BucketState = [PSCustomObject]@{
             Paths    = [PSCustomObject]@{
-                Root    = $basePath
-                Logs    = Join-Path -Path $basePath -ChildPath 'Logs'
-                Mount   = Join-Path -Path $basePath -ChildPath 'Mount'
-                Images  = Join-Path -Path $basePath -ChildPath 'Images'
-                Updates = Join-Path -Path $basePath -ChildPath 'Updates'
-                Config  = Join-Path -Path $basePath -ChildPath 'config.json'
+                Root     = $basePath
+                Logs     = Join-Path -Path $basePath -ChildPath 'Logs'
+                Mount    = Join-Path -Path $basePath -ChildPath 'Mount'
+                Images   = Join-Path -Path $basePath -ChildPath 'Images'
+                Updates  = Join-Path -Path $basePath -ChildPath 'Updates'
+                Config   = Join-Path -Path $basePath -ChildPath 'config.json'
+                Metadata = Join-Path -Path $basePath -ChildPath 'metadata.json'
             }
             Config   = [PSCustomObject]@{
                 Version = '1.0'
@@ -94,7 +95,7 @@ function Initialize-BucketState
         }
 
         # Load existing image metadata if present
-        $metadataPath = Join-Path -Path $basePath -ChildPath 'metadata.json'
+        $metadataPath = $script:BucketState.Paths.Metadata
         if (Test-Path -Path $metadataPath -PathType Leaf)
         {
             Write-Verbose -Message "Loading metadata from: $metadataPath"

@@ -6,8 +6,9 @@ function Show-BucketImageManagement
 
       .DESCRIPTION
       This function renders the Image Management screen, providing options to view,
-      import, and delete images stored in the Bucket Images directory. Currently
-      implemented as a placeholder structure for future WIM management functionality.
+      import, and delete images stored in the Bucket Images directory. Supports
+      viewing imported images in an interactive browser, importing new WIM files,
+      and deleting existing images from the catalog.
 
       .EXAMPLE
       $result = Show-BucketImageManagement
@@ -25,27 +26,58 @@ function Show-BucketImageManagement
     {
         Show-BucketHeader
 
-        Write-SpectreHost '[grey]Manage your WIM, ISO, and ESD images.[/]'
+        Write-SpectreHost '[grey]Manage your WIM images.[/]'
         Write-SpectreHost ''
 
         $choices = @(
             'View Available Images'
-            'Import Image (WIM/ISO/ESD)'
+            'Import Image (WIM)'
             'Delete Image'
         )
 
         $navigationMap = @{
-            # Future navigation mappings for image management screens
+            # No sub-screen navigation - actions are handled directly below
         }
 
         $result = Read-BucketMenu -Title 'Image Management' -Choices $choices -NavigationMap $navigationMap
 
-        # Handle placeholder selections
+        # Handle menu selections
         if ($result.Action -eq 'Selection')
         {
-            Write-SpectreHost "[yellow]'$($result.Selection)' is not yet implemented.[/]"
-            Start-Sleep -Seconds 1
-            return New-BucketNavResult -Action Refresh
+            switch ($result.Selection)
+            {
+                'View Available Images'
+                {
+                    Show-BucketImageViewer
+                    return New-BucketNavResult -Action Refresh
+                }
+                'Import Image (WIM)'
+                {
+                    Write-SpectreHost ''
+                    $importResult = Import-BucketWim
+                    if ($importResult)
+                    {
+                        Write-SpectreHost ''
+                        Read-SpectreConfirm -Prompt 'Press Enter to continue' -DefaultAnswer 'y' | Out-Null
+                    }
+                    else
+                    {
+                        Start-Sleep -Seconds 2
+                    }
+                    return New-BucketNavResult -Action Refresh
+                }
+                'Delete Image'
+                {
+                    $deleteResult = Show-BucketDeleteImageMenu
+                    return $deleteResult
+                }
+                default
+                {
+                    Write-SpectreHost "[yellow]'$($result.Selection)' is not yet implemented.[/]"
+                    Start-Sleep -Seconds 1
+                    return New-BucketNavResult -Action Refresh
+                }
+            }
         }
 
         return $result
