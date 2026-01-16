@@ -24,10 +24,7 @@ function Show-BucketSettings
 
     process
     {
-        Show-BucketHeader
-
-        Write-SpectreHost '[grey]Configure Bucket module settings.[/]'
-        Write-SpectreHost ''
+        Show-BucketSubmenuHeader -Title 'Settings' -Subtitle 'Configure Bucket module settings.'
 
         $choices = @(
             'Module Configuration'

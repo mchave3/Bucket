@@ -25,10 +25,7 @@ function Show-BucketImageManagement
     process
     {
         Write-BucketLog -Message 'Entering Image Management screen' -Level Debug
-        Show-BucketHeader
-
-        Write-SpectreHost '[grey]Manage your WIM images.[/]'
-        Write-SpectreHost ''
+        Show-BucketSubmenuHeader -Title 'Image Management' -Subtitle 'Manage your WIM images.'
 
         $choices = @(
             'View Available Images'

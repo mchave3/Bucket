@@ -23,10 +23,7 @@ function Show-BucketStartProvisioning
 
     process
     {
-        Show-BucketHeader
-
-        Write-SpectreHost '[grey]Select an image and configure provisioning options.[/]'
-        Write-SpectreHost ''
+        Show-BucketSubmenuHeader -Title 'Start Provisioning' -Subtitle 'Select an image and configure provisioning options.'
 
         # Placeholder choices - will be expanded with actual provisioning workflow
         $choices = @(

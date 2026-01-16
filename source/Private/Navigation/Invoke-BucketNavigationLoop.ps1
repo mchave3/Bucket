@@ -86,6 +86,26 @@ function Invoke-BucketNavigationLoop
                 continue
             }
 
+            # Handle array results (pipeline pollution defense)
+            # If screen accidentally returned multiple objects, extract the last one (usually the nav result)
+            if ($navResult -is [array])
+            {
+                Write-BucketLog -Message "Screen '$screenName' returned array with $($navResult.Count) elements (pipeline pollution). Extracting last element." -Level Warning
+                $navResult = $navResult | Where-Object {
+                    ($_ -is [hashtable] -and $_.ContainsKey('Action')) -or
+                    ($null -ne $_.PSObject.Properties['Action'])
+                } | Select-Object -Last 1
+
+                if ($null -eq $navResult)
+                {
+                    Write-BucketLog -Message "Screen '$screenName' returned array with no valid navigation result" -Level Warning
+                    Write-Warning -Message "Screen '$screenName' returned invalid navigation result. Going back."
+                    [void]$script:NavigationStack.Pop()
+                    Clear-Host
+                    continue
+                }
+            }
+
             $hasAction = $false
             if ($navResult -is [hashtable])
             {

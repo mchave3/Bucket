@@ -23,8 +23,6 @@ function Show-BucketAbout
 
     process
     {
-        Show-BucketHeader
-
         # Get module information
         $moduleInfo = Get-Module -Name Bucket -ListAvailable | Select-Object -First 1
 
@@ -41,17 +39,20 @@ function Show-BucketAbout
             if ($moduleInfo.ProjectUri) { $projectUri = $moduleInfo.ProjectUri.ToString() }
         }
 
-        # Display about information using Spectre formatting
-        Write-SpectreHost ''
-        Write-SpectreHost "[bold cyan]Bucket[/] - WIM Image Provisioning Tool"
-        Write-SpectreHost ''
-        Write-SpectreHost "[grey]Version:[/]     [white]$version[/]"
-        Write-SpectreHost "[grey]Author:[/]      [white]$author[/]"
-        Write-SpectreHost "[grey]Description:[/] [white]$description[/]"
-        Write-SpectreHost "[grey]Repository:[/]  [link=$projectUri]$projectUri[/]"
-        Write-SpectreHost ''
-        Write-SpectreHost '[grey]Built with[/] [cyan]PwshSpectreConsole[/] [grey]and[/] [cyan]Spectre.Console[/]'
-        Write-SpectreHost ''
+        Show-BucketSubmenuHeader -Title 'About' -Subtitle 'Bucket - WIM Image Provisioning Tool'
+
+        # Display about information using Spectre panel
+        $aboutContent = @(
+            "[grey]Version:[/]     [white]$version[/]"
+            "[grey]Author:[/]      [white]$author[/]"
+            "[grey]Description:[/] [white]$description[/]"
+            "[grey]Repository:[/]  [link=$projectUri]$projectUri[/]"
+            ''
+            '[grey]Built with[/] [cyan]PwshSpectreConsole[/] [grey]and[/] [cyan]Spectre.Console[/]'
+        ) -join "`n"
+
+        $aboutContent | Format-SpectrePanel -Expand -Border Rounded | Out-SpectreHost
+        Write-Host ''
 
         # Simple menu with just Back option
         $choices = @()

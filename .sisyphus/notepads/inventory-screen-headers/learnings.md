@@ -1,0 +1,3 @@
+- Screen registry lives in `source/Private/Navigation/Initialize-BucketNavigation.ps1` and maps 6 screens.
+- All registered screens call `Show-BucketHeader` at the top (Figlet header via `Write-SpectreFigletText`).
+- Screen-level title is currently handled by `Read-BucketMenu -Title ...` (likely renders a Spectre panel/title), plus additional `Write-SpectreHost` descriptive lines.

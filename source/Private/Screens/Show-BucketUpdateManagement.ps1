@@ -23,10 +23,7 @@ function Show-BucketUpdateManagement
 
     process
     {
-        Show-BucketHeader
-
-        Write-SpectreHost '[grey]Manage Windows updates for image provisioning.[/]'
-        Write-SpectreHost ''
+        Show-BucketSubmenuHeader -Title 'Update Management' -Subtitle 'Manage Windows updates for image provisioning.'
 
         $choices = @(
             'Download Updates'
