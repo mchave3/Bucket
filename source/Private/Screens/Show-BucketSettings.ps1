@@ -24,8 +24,6 @@ function Show-BucketSettings
 
     process
     {
-        Show-BucketSubmenuHeader -Title 'Settings' -Subtitle 'Configure Bucket module settings.'
-
         $choices = @(
             'Module Configuration'
             'Global Settings'
@@ -36,7 +34,7 @@ function Show-BucketSettings
             # Future navigation mappings for settings screens
         }
 
-        $result = Read-BucketMenu -Title 'Settings' -Choices $choices -NavigationMap $navigationMap
+        $result = Read-BucketMenu -Title 'Settings' -Subtitle 'Configure Bucket module settings.' -Choices $choices -NavigationMap $navigationMap
 
         # Handle placeholder selections
         if ($result.Action -eq 'Selection')

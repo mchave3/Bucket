@@ -25,7 +25,6 @@ function Show-BucketImageManagement
     process
     {
         Write-BucketLog -Message 'Entering Image Management screen' -Level Debug
-        Show-BucketSubmenuHeader -Title 'Image Management' -Subtitle 'Manage your WIM images.'
 
         $choices = @(
             'View Available Images'
@@ -37,7 +36,7 @@ function Show-BucketImageManagement
             # No sub-screen navigation - actions are handled directly below
         }
 
-        $result = Read-BucketMenu -Title 'Image Management' -Choices $choices -NavigationMap $navigationMap
+        $result = Read-BucketMenu -Title 'Image Management' -Subtitle 'Manage your WIM images.' -Choices $choices -NavigationMap $navigationMap
 
         Write-BucketLog -Message "Image Management menu result - Action: $($result.Action), Selection: $($result.Selection)" -Level Debug
 

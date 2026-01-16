@@ -5,22 +5,26 @@ function Read-BucketMenu
       Displays a menu and returns a standardized navigation result based on user selection.
 
       .DESCRIPTION
-      This function wraps Read-SpectreSelection to provide consistent menu behavior across
-      all Bucket screens. It automatically adds Back and Exit options based on context
-      (Back is only shown when not at the root menu) and returns a properly formatted
-      navigation result that the navigation engine can process.
+      This function provides consistent menu behavior across all Bucket screens using
+      Spectre Live rendering. It displays a header panel with title and optional subtitle,
+      a keyboard-navigable menu, and automatically adds Back and Exit options based on
+      context. Returns a properly formatted navigation result that the navigation engine
+      can process.
 
       .EXAMPLE
-      $result = Read-BucketMenu -Title 'Image Management' -Choices @('View Images', 'Import Image', 'Delete Image') -NavigationMap @{
+      $result = Read-BucketMenu -Title 'Image Management' -Subtitle 'Manage your WIM images.' -Choices @('View Images', 'Import Image', 'Delete Image') -NavigationMap @{
           'View Images' = 'ViewImages'
           'Import Image' = 'ImportImage'
           'Delete Image' = 'DeleteImage'
       }
 
-      Displays a menu with the given choices plus Back/Exit, and returns a navigation result.
+      Displays a menu with header panel and choices, returns a navigation result.
 
       .PARAMETER Title
-      The title/message to display above the menu choices.
+      The title text to display in the header panel.
+
+      .PARAMETER Subtitle
+      Optional subtitle/description text displayed below the title in the header.
 
       .PARAMETER Choices
       An array of menu choice strings to display.
@@ -35,7 +39,7 @@ function Read-BucketMenu
       Whether to show the Exit option. Defaults to true.
 
       .PARAMETER Color
-      The accent color for the selected option. Defaults to Cyan1.
+      The accent color for the header and selected option. Defaults to Cyan1.
 
       .OUTPUTS
       [hashtable] A navigation result object compatible with the navigation engine.
@@ -47,6 +51,10 @@ function Read-BucketMenu
         [Parameter(Mandatory = $true)]
         [string]
         $Title,
+
+        [Parameter()]
+        [string]
+        $Subtitle,
 
         [Parameter(Mandatory = $true)]
         [string[]]
@@ -71,39 +79,24 @@ function Read-BucketMenu
 
     process
     {
-        # Build the full choices list
-        $menuChoices = [System.Collections.ArrayList]::new()
-
-        # Add the main choices
-        foreach ($choice in $Choices)
-        {
-            [void]$menuChoices.Add($choice)
+        # Call the live menu to get user selection
+        $liveMenuParams = @{
+            Title    = $Title
+            Choices  = $Choices
+            ShowBack = $ShowBack
+            ShowExit = $ShowExit
+            Color    = $Color
         }
 
-        # Determine if we should show Back based on navigation stack depth
-        $shouldShowBack = $ShowBack
-        if ($null -eq $shouldShowBack)
+        if (-not [string]::IsNullOrWhiteSpace($Subtitle))
         {
-            $shouldShowBack = ($script:NavigationStack.Count -gt 1)
+            $liveMenuParams['Subtitle'] = $Subtitle
         }
 
-        # Add Back option if appropriate
-        if ($shouldShowBack)
-        {
-            [void]$menuChoices.Add('Back')
-        }
+        $result = Read-BucketLiveMenu @liveMenuParams
 
-        # Add Exit option
-        if ($ShowExit)
-        {
-            [void]$menuChoices.Add('Exit')
-        }
-
-        # Display the menu and get selection
-        $selection = Read-SpectreSelection -Message $Title -Choices $menuChoices.ToArray() -Color $Color -PageSize 10
-
-        # Process the selection and return navigation result
-        switch ($selection)
+        # Process the result and apply navigation mapping
+        switch ($result.Action)
         {
             'Back'
             {
@@ -113,8 +106,9 @@ function Read-BucketMenu
             {
                 return New-BucketNavResult -Action Exit
             }
-            default
+            'Selection'
             {
+                $selection = $result.Selection
                 # Check if we have a navigation mapping for this choice
                 if ($NavigationMap.ContainsKey($selection))
                 {
@@ -122,12 +116,17 @@ function Read-BucketMenu
                 }
                 else
                 {
-                    # Return the selection as-is in a special result for screens to handle
+                    # Return the selection as-is for screens to handle
                     return @{
                         Action    = 'Selection'
                         Selection = $selection
                     }
                 }
+            }
+            default
+            {
+                # Pass through any other actions
+                return $result
             }
         }
     }

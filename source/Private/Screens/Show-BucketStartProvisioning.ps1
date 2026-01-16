@@ -23,8 +23,6 @@ function Show-BucketStartProvisioning
 
     process
     {
-        Show-BucketSubmenuHeader -Title 'Start Provisioning' -Subtitle 'Select an image and configure provisioning options.'
-
         # Placeholder choices - will be expanded with actual provisioning workflow
         $choices = @(
             'Select Image'
@@ -36,7 +34,7 @@ function Show-BucketStartProvisioning
             # These will map to actual screens when implemented
         }
 
-        $result = Read-BucketMenu -Title 'Start Provisioning' -Choices $choices -NavigationMap $navigationMap
+        $result = Read-BucketMenu -Title 'Start Provisioning' -Subtitle 'Select an image and configure provisioning options.' -Choices $choices -NavigationMap $navigationMap
 
         # Handle placeholder selections that don't have navigation mappings
         if ($result.Action -eq 'Selection')

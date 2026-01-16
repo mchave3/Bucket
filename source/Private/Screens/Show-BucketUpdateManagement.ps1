@@ -23,8 +23,6 @@ function Show-BucketUpdateManagement
 
     process
     {
-        Show-BucketSubmenuHeader -Title 'Update Management' -Subtitle 'Manage Windows updates for image provisioning.'
-
         $choices = @(
             'Download Updates'
             'View Update Cache'
@@ -35,7 +33,7 @@ function Show-BucketUpdateManagement
             # Future navigation mappings for update management screens
         }
 
-        $result = Read-BucketMenu -Title 'Update Management' -Choices $choices -NavigationMap $navigationMap
+        $result = Read-BucketMenu -Title 'Update Management' -Subtitle 'Manage Windows updates for image provisioning.' -Choices $choices -NavigationMap $navigationMap
 
         # Handle placeholder selections
         if ($result.Action -eq 'Selection')
