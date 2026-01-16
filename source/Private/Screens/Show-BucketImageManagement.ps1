@@ -24,6 +24,7 @@ function Show-BucketImageManagement
 
     process
     {
+        Write-BucketLog -Message 'Entering Image Management screen' -Level Debug
         Show-BucketHeader
 
         Write-SpectreHost '[grey]Manage your WIM images.[/]'
@@ -41,6 +42,8 @@ function Show-BucketImageManagement
 
         $result = Read-BucketMenu -Title 'Image Management' -Choices $choices -NavigationMap $navigationMap
 
+        Write-BucketLog -Message "Image Management menu result - Action: $($result.Action), Selection: $($result.Selection)" -Level Debug
+
         # Handle menu selections
         if ($result.Action -eq 'Selection')
         {
@@ -48,6 +51,7 @@ function Show-BucketImageManagement
             {
                 'View Available Images'
                 {
+                    Write-BucketLog -Message 'User selected: View Available Images' -Level Debug
                     $images = Get-BucketImportedImages
                     if ($images.Count -eq 0)
                     {
@@ -63,6 +67,7 @@ function Show-BucketImageManagement
                 }
                 'Import Image (WIM)'
                 {
+                    Write-BucketLog -Message 'User selected: Import Image (WIM)' -Level Debug
                     Write-SpectreHost ''
                     $importResult = Import-BucketWim
                     if ($importResult)
@@ -78,6 +83,7 @@ function Show-BucketImageManagement
                 }
                 'Delete Image'
                 {
+                    Write-BucketLog -Message 'User selected: Delete Image' -Level Debug
                     $images = Get-BucketImportedImages
                     if ($images.Count -eq 0)
                     {

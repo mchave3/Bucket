@@ -25,6 +25,7 @@ function Invoke-BucketNavigationLoop
     process
     {
         Write-Verbose -Message 'Starting Bucket navigation loop...'
+        Write-BucketLog -Message 'Starting navigation loop' -Level Info
 
         # Push the initial screen onto the stack
         $initialFrame = [PSCustomObject]@{
@@ -41,10 +42,12 @@ function Invoke-BucketNavigationLoop
             $screenArgs = $currentFrame.Arguments
 
             Write-Verbose -Message "Displaying screen: $screenName"
+            Write-BucketLog -Message "Navigating to screen: $screenName" -Level Debug
 
             # Look up the screen function
             if (-not $script:ScreenRegistry.ContainsKey($screenName))
             {
+                Write-BucketLog -Message "Unknown screen requested: $screenName" -Level Warning
                 Write-Warning -Message "Unknown screen: $screenName. Returning to previous screen."
                 [void]$script:NavigationStack.Pop()
                 continue
@@ -56,11 +59,17 @@ function Invoke-BucketNavigationLoop
             $navResult = $null
             try
             {
+                Write-BucketLog -Message "Executing screen function: $screenFunction" -Level Debug
                 $navResult = & $screenFunction @screenArgs
+                Write-BucketLog -Message "Screen '$screenName' returned action: $($navResult.Action)" -Level Debug
             }
             catch
             {
-                Write-Warning -Message "Error in screen '$screenName': $_"
+                $errorMessage = "Error in screen '$screenName': $($_.Exception.Message)"
+                $errorDetails = $_.ScriptStackTrace
+                Write-BucketLog -Message $errorMessage -Level Error
+                Write-BucketLog -Message "Stack trace: $errorDetails" -Level Error
+                Write-Warning -Message $errorMessage
                 # On error, pop the current screen and try to go back
                 [void]$script:NavigationStack.Pop()
                 Clear-Host
@@ -70,6 +79,7 @@ function Invoke-BucketNavigationLoop
             # Validate navigation result
             if ($null -eq $navResult)
             {
+                Write-BucketLog -Message "Screen '$screenName' returned null navigation result" -Level Warning
                 Write-Warning -Message "Screen '$screenName' returned invalid navigation result. Going back."
                 [void]$script:NavigationStack.Pop()
                 Clear-Host
@@ -88,6 +98,7 @@ function Invoke-BucketNavigationLoop
 
             if (-not $hasAction)
             {
+                Write-BucketLog -Message "Screen '$screenName' returned result without Action property" -Level Warning
                 Write-Warning -Message "Screen '$screenName' returned invalid navigation result. Going back."
                 [void]$script:NavigationStack.Pop()
                 Clear-Host
@@ -114,6 +125,7 @@ function Invoke-BucketNavigationLoop
                 'Exit'
                 {
                     Write-Verbose -Message 'Exit requested. Clearing navigation stack.'
+                    Write-BucketLog -Message 'User requested exit. Clearing navigation stack.' -Level Info
                     $script:NavigationStack.Clear()
                 }
                 'Refresh'
@@ -123,6 +135,7 @@ function Invoke-BucketNavigationLoop
                 }
                 default
                 {
+                    Write-BucketLog -Message "Unknown navigation action: $($navResult.Action)" -Level Warning
                     Write-Warning -Message "Unknown navigation action: $($navResult.Action). Going back."
                     [void]$script:NavigationStack.Pop()
                     Clear-Host
@@ -131,5 +144,6 @@ function Invoke-BucketNavigationLoop
         }
 
         Write-Verbose -Message 'Navigation loop ended.'
+        Write-BucketLog -Message 'Navigation loop ended' -Level Info
     }
 }
