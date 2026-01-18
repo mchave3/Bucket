@@ -59,6 +59,9 @@ function Start-BucketElevated
             $commandParts += '$VerbosePreference = ''Continue'''
         }
 
+        # Ensure UTF-8 console encoding is set before importing the module.
+        # Bucket declares PwshSpectreConsole as a required module, and it may emit an encoding warning at import time.
+        $commandParts += '$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()'
         $commandParts += '$ErrorActionPreference = ''Stop'''
         $commandParts += 'try {'
         $commandParts += $importCommand

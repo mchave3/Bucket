@@ -43,8 +43,17 @@ function Start-Bucket
 
     process
     {
-        # Set UTF-8 encoding for proper display of special characters
         $OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+
+        # Ensure the user's PowerShell profile is configured for full Unicode output (PwshSpectreConsole requirement)
+        try
+        {
+            Enable-BucketUnicodeProfile -Force
+        }
+        catch
+        {
+            Write-Verbose -Message "Failed to update PowerShell profile for UTF-8: $_"
+        }
 
         # Check for administrative privileges
         if (-not (Test-BucketAdminPrivilege))
