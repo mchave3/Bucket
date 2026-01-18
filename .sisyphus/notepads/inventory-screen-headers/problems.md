@@ -1,1 +1,0 @@
-- Open question: best standard for screen titles (panel header vs `Read-BucketMenu` title) depends on how `Read-BucketMenu` formats output (not inspected in this task).

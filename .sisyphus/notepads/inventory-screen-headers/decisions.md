@@ -1,2 +1,0 @@
-- Recommendation pattern: keep `Show-BucketHeader` as global branding (Figlet) and integrate per-screen panel header/title at the point where `Read-BucketMenu -Title <screen>` is invoked, or by adding a screen-specific subtitle line immediately after `Show-BucketHeader`.
-- For screens that show content before the menu (About), integrate a Spectre panel header around the content block rather than relying solely on raw `Write-SpectreHost` lines.
