@@ -56,7 +56,8 @@ function Import-BucketWim
         # Validate the file exists
         if (-not (Test-Path -Path $Path -PathType Leaf))
         {
-            Write-SpectreHost "[red]File not found: $Path[/]"
+            $safePath = ('' + $Path).Replace('[', '[[').Replace(']', ']]')
+            Write-SpectreHost "[red]File not found: $safePath[/]"
             return $false
         }
 
@@ -68,7 +69,8 @@ function Import-BucketWim
         }
 
         $fileName = [System.IO.Path]::GetFileName($Path)
-        Write-SpectreHost "[deepskyblue1]Importing:[/] $fileName"
+        $safeFileName = ('' + $fileName).Replace('[', '[[').Replace(']', ']]')
+        Write-SpectreHost "[deepskyblue1]Importing:[/] $safeFileName"
         Write-SpectreHost ''
 
         try
@@ -90,7 +92,9 @@ function Import-BucketWim
             foreach ($index in $metadata.Indexes)
             {
                 $size = [math]::Round($index.ImageSize / 1GB, 2)
-                Write-SpectreHost "  [grey][$($index.ImageIndex)][/] $($index.ImageName) [grey]($($index.Architecture), $size GB)[/]"
+                $safeImageName = ('' + $index.ImageName).Replace('[', '[[').Replace(']', ']]')
+                $safeArchitecture = ('' + $index.Architecture).Replace('[', '[[').Replace(']', ']]')
+                Write-SpectreHost "  [grey]($($index.ImageIndex))[/] $safeImageName [grey]($safeArchitecture, $size GB)[/]"
             }
             Write-SpectreHost ''
 
@@ -99,7 +103,7 @@ function Import-BucketWim
             $duplicate = $existingImages | Where-Object { $_.FileName -eq $fileName }
             if ($duplicate)
             {
-                Write-SpectreHost "[yellow]An image with this filename already exists: $fileName[/]"
+                Write-SpectreHost "[yellow]An image with this filename already exists: $safeFileName[/]"
                 Write-SpectreHost '[yellow]Please delete the existing image first or rename the source file.[/]'
                 return $false
             }
@@ -107,7 +111,7 @@ function Import-BucketWim
             # Step 4: Copy the file to Images directory
             $destinationPath = Join-Path -Path $state.Paths.Images -ChildPath $fileName
 
-            Invoke-SpectreCommandWithStatus -Title "Copying $fileName..." -ScriptBlock {
+            Invoke-SpectreCommandWithStatus -Title "Copying $safeFileName..." -ScriptBlock {
                 Copy-Item -Path $Path -Destination $destinationPath -Force
             }
 
@@ -135,14 +139,16 @@ function Import-BucketWim
             }
 
             Write-SpectreHost ''
-            Write-SpectreHost "[green]Successfully imported:[/] $fileName"
-            Write-SpectreHost "[grey]Image ID: $($metadata.Id)[/]"
+            $safeImageId = ('' + $metadata.Id).Replace('[', '[[').Replace(']', ']]')
+            Write-SpectreHost "[green]Successfully imported:[/] $safeFileName"
+            Write-SpectreHost "[grey]Image ID: $safeImageId[/]"
 
             return $true
         }
         catch
         {
-            Write-SpectreHost "[red]Import failed: $_[/]"
+            $safeError = ('' + $_).Replace('[', '[[').Replace(']', ']]')
+            Write-SpectreHost "[red]Import failed: $safeError[/]"
             Write-BucketLog -Message "Import-BucketWim failed: $_" -Level Error
             return $false
         }

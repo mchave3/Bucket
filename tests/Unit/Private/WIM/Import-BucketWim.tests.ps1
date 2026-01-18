@@ -46,8 +46,16 @@ Describe 'Import-BucketWim' {
             Mock -CommandName Test-Path -MockWith { $true }
             Mock -CommandName New-Item -MockWith { }
             Mock -CommandName Get-Content -MockWith { '{"Images": []}' }
-            Mock -CommandName Write-SpectreHost -MockWith { }
+            # Ensure Write-SpectreHost exists (PwshSpectreConsole) and capture all calls.
+            $script:spectreCalls = @()
+            Set-Item -Path function:Write-SpectreHost -Value {
+                param([Parameter(ValueFromRemainingArguments = $true)] $Args)
+                $script:spectreCalls += ,($Args -join ' ')
+            }
+
             Mock -CommandName Write-BucketLog -MockWith { }
+            Mock -CommandName Copy-Item -MockWith { }
+            Mock -CommandName Save-BucketMetadata -MockWith { }
 
             # Initialize state
             Initialize-BucketState
@@ -58,6 +66,42 @@ Describe 'Import-BucketWim' {
 
             $result = Import-BucketWim -Path 'C:\test.iso'
             $result | Should -BeFalse
+        }
+
+        It 'Should not emit unescaped markup when rendering index list' {
+            # Ensure we reach index rendering:
+            Mock -CommandName Test-Path -MockWith { $true }
+            Mock -CommandName Get-BucketWimMetadata -MockWith {
+                param([Parameter(Mandatory = $true)] [string] $ImagePath)
+
+                return [pscustomobject]@{
+                    Id         = 'id[1]'
+                    FileName   = 'install[1].wim'
+                    IndexCount = 2
+                    Indexes    = @(
+                        [pscustomobject]@{ ImageIndex = 1; ImageName = 'Windows [Pro]'; Architecture = 'x64'; ImageSize = 1GB },
+                        [pscustomobject]@{ ImageIndex = 2; ImageName = 'Windows [Home]'; Architecture = 'x64'; ImageSize = 2GB }
+                    )
+                }
+            }
+            Mock -CommandName Get-BucketImportedImages -MockWith { @() }
+            Mock -CommandName Invoke-SpectreCommandWithStatus -MockWith {
+                param(
+                    [Parameter(Mandatory = $true)]
+                    [string] $Title,
+                    [Parameter(Mandatory = $true)]
+                    [scriptblock] $ScriptBlock
+                )
+
+                return & $ScriptBlock
+            }
+
+            { Import-BucketWim -Path 'C:\Images\install[1].wim' } | Should -Not -Throw
+
+            # Assert using a call history wrapper (more reliable than Pester's Should -Invoke for this case).
+            $script:spectreCalls | Should -Not -BeNullOrEmpty
+            ($script:spectreCalls -join "`n") | Should -Match '\[grey\]\(1\)\[/\]'
+            ($script:spectreCalls -join "`n") | Should -Not -Match '\[grey\]\[1\]\[/\]'
         }
     }
 }
