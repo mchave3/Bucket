@@ -127,6 +127,7 @@ function Invoke-BucketNavigationLoop
                     Write-Verbose -Message 'Exit requested. Clearing navigation stack.'
                     Write-BucketLog -Message 'User requested exit. Clearing navigation stack.' -Level Info
                     $script:NavigationStack.Clear()
+                    Clear-Host
                 }
                 'Refresh'
                 {

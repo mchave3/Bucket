@@ -73,7 +73,7 @@ Describe 'Invoke-BucketNavigationLoop' {
             $script:mainMenuCalls | Should -Be 1
             $script:settingsCalls | Should -Be 1
             $script:NavigationStack.Count | Should -Be 0
-            Should -Invoke Clear-Host -Times 1
+            Should -Invoke Clear-Host -Times 2
         }
     }
 
