@@ -29,12 +29,63 @@ function Start-BucketElevated
 
         $pwshPath = (Get-Process -Id $PID).Path
 
+        $moduleImportTarget = 'Bucket'
+        $bucketModule = Get-Module -Name Bucket -ErrorAction SilentlyContinue
+        if ($bucketModule)
+        {
+            $moduleManifestPath = Join-Path -Path $bucketModule.ModuleBase -ChildPath 'Bucket.psd1'
+            if (Test-Path -Path $moduleManifestPath -PathType Leaf)
+            {
+                $moduleImportTarget = (Resolve-Path -Path $moduleManifestPath).Path
+            }
+        }
+
+        $childVerbose = ($VerbosePreference -eq 'Continue')
+        $childNoExit = ($childVerbose -or $moduleImportTarget -ne 'Bucket')
+
+        if ($moduleImportTarget -eq 'Bucket')
+        {
+            $importCommand = 'Import-Module Bucket -ErrorAction Stop'
+        }
+        else
+        {
+            $escapedImportPath = $moduleImportTarget.Replace("'", "''")
+            $importCommand = "try { Import-Module '$escapedImportPath' -Force -ErrorAction Stop } catch { Import-Module Bucket -Force -ErrorAction Stop }"
+        }
+
+        $commandParts = @()
+        if ($childVerbose)
+        {
+            $commandParts += '$VerbosePreference = ''Continue'''
+        }
+
+        $commandParts += '$ErrorActionPreference = ''Stop'''
+        $commandParts += 'try {'
+        $commandParts += $importCommand
+        $commandParts += 'Start-Bucket -Elevated'
+        $commandParts += '} catch {'
+        $commandParts += 'Write-Error -ErrorRecord $_'
+        $commandParts += '[void](Read-Host ''Bucket failed to start. Press Enter to close'')'
+        $commandParts += '}'
+
+        $command = ($commandParts -join '; ')
+
         $arguments = @(
             '-NoProfile'
             '-NoLogo'
-            '-Command'
-            'Import-Module Bucket; Start-Bucket -Elevated'
         )
+
+        if ($childNoExit)
+        {
+            $arguments += '-NoExit'
+        }
+
+        $arguments += @(
+            '-Command'
+            $command
+        )
+
+        Write-Verbose -Message "Elevation command import target: $moduleImportTarget"
 
         try
         {
