@@ -36,7 +36,7 @@ function Show-BucketStartProvisioning
 
         $result = Read-BucketMenu -Title 'Start Provisioning' -Subtitle 'Select an image and configure provisioning options.' -Choices $choices -NavigationMap $navigationMap
 
-        # Handle placeholder selections that don't have navigation mappings
+        # Handle placeholder selections
         if ($result.Action -eq 'Selection')
         {
             Write-SpectreHost "[yellow]'$($result.Selection)' is not yet implemented.[/]"

@@ -38,6 +38,19 @@ function Initialize-BucketNavigation
             'About'             = 'Show-BucketAbout'
         }
 
+        # Validate that each registered screen maps to an existing function (fail fast)
+        foreach ($screen in $script:ScreenRegistry.GetEnumerator())
+        {
+            $screenName = $screen.Key
+            $screenFunctionName = $screen.Value
+
+            $screenCommand = Get-Command -Name $screenFunctionName -CommandType Function -ErrorAction SilentlyContinue
+            if (-not $screenCommand)
+            {
+                throw "Screen '$screenName' references missing function '$screenFunctionName'."
+            }
+        }
+
         Write-Verbose -Message "Registered $($script:ScreenRegistry.Count) screens."
     }
 }
