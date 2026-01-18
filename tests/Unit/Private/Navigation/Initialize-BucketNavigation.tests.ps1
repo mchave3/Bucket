@@ -16,6 +16,7 @@ Describe 'Initialize-BucketNavigation' {
             function Show-BucketMainMenu { }
             function Show-BucketStartProvisioning { }
             function Show-BucketImageManagement { }
+            function Show-BucketImportWim { }
             function Show-BucketUpdateManagement { }
             function Show-BucketSettings { }
             function Show-BucketAbout { }

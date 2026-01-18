@@ -33,6 +33,7 @@ function Initialize-BucketNavigation
             'MainMenu'          = 'Show-BucketMainMenu'
             'StartProvisioning' = 'Show-BucketStartProvisioning'
             'ImageManagement'   = 'Show-BucketImageManagement'
+            'ImportWim'         = 'Show-BucketImportWim'
             'UpdateManagement'  = 'Show-BucketUpdateManagement'
             'Settings'          = 'Show-BucketSettings'
             'About'             = 'Show-BucketAbout'

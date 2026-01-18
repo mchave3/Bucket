@@ -33,7 +33,7 @@ function Show-BucketImageManagement
         )
 
         $navigationMap = @{
-            # No sub-screen navigation - actions are handled directly below
+            'Import Image (WIM)' = 'ImportWim'
         }
 
         $result = Read-BucketMenu -Title 'Image Management' -Subtitle 'Manage your WIM images.' -Choices $choices -NavigationMap $navigationMap
@@ -63,19 +63,8 @@ function Show-BucketImageManagement
                 }
                 'Import Image (WIM)'
                 {
-                    Write-BucketLog -Message 'User selected: Import Image (WIM)' -Level Debug
-                    Write-SpectreHost ''
-                    $importResult = Import-BucketWim
-                    if ($importResult)
-                    {
-                        Write-SpectreHost ''
-                        Read-SpectreConfirm -Prompt 'Press Enter to continue' -DefaultAnswer 'y' | Out-Null
-                    }
-                    else
-                    {
-                        Start-Sleep -Seconds 2
-                    }
-                    return New-BucketNavResult -Action Refresh
+                    # NavigationMap handles this choice.
+                    return New-BucketNavResult -Action Navigate -Target 'ImportWim'
                 }
                 'Delete Image'
                 {

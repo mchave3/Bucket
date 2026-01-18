@@ -70,8 +70,15 @@ function Import-BucketWim
 
         $fileName = [System.IO.Path]::GetFileName($Path)
         $safeFileName = ('' + $fileName).Replace('[', '[[').Replace(']', ']]')
-        Write-SpectreHost "[deepskyblue1]Importing:[/] $safeFileName"
-        Write-SpectreHost ''
+
+        # If called from an interactive Screen, keep this function quiet to avoid dumping
+        # raw output under the menu. The Screen owns all rendering.
+        $isInteractiveScreenCall = -not [string]::IsNullOrWhiteSpace($env:BUCKET_INTERACTIVE_SCREEN)
+        if (-not $isInteractiveScreenCall)
+        {
+            Write-SpectreHost "[deepskyblue1]Importing:[/] $safeFileName"
+            Write-SpectreHost ''
+        }
 
         try
         {
@@ -82,29 +89,38 @@ function Import-BucketWim
 
             if ($null -eq $metadata)
             {
-                Write-SpectreHost '[red]Failed to extract image metadata.[/]'
+                if (-not $isInteractiveScreenCall)
+                {
+                    Write-SpectreHost '[red]Failed to extract image metadata.[/]'
+                }
                 return $false
             }
 
-            Write-SpectreHost "[green]Found $($metadata.IndexCount) image index(es)[/]"
-
-            # Display index summary
-            foreach ($index in $metadata.Indexes)
+            if (-not $isInteractiveScreenCall)
             {
-                $size = [math]::Round($index.ImageSize / 1GB, 2)
-                $safeImageName = ('' + $index.ImageName).Replace('[', '[[').Replace(']', ']]')
-                $safeArchitecture = ('' + $index.Architecture).Replace('[', '[[').Replace(']', ']]')
-                Write-SpectreHost "  [grey]($($index.ImageIndex))[/] $safeImageName [grey]($safeArchitecture, $size GB)[/]"
+                Write-SpectreHost "[green]Found $($metadata.IndexCount) image index(es)[/]"
+
+                # Display index summary
+                foreach ($index in $metadata.Indexes)
+                {
+                    $size = [math]::Round($index.ImageSize / 1GB, 2)
+                    $safeImageName = ('' + $index.ImageName).Replace('[', '[[').Replace(']', ']]')
+                    $safeArchitecture = ('' + $index.Architecture).Replace('[', '[[').Replace(']', ']]')
+                    Write-SpectreHost "  [grey]($($index.ImageIndex))[/] $safeImageName [grey]($safeArchitecture, $size GB)[/]"
+                }
+                Write-SpectreHost ''
             }
-            Write-SpectreHost ''
 
             # Step 3: Check for duplicates
             $existingImages = Get-BucketImportedImages
             $duplicate = $existingImages | Where-Object { $_.FileName -eq $fileName }
             if ($duplicate)
             {
-                Write-SpectreHost "[yellow]An image with this filename already exists: $safeFileName[/]"
-                Write-SpectreHost '[yellow]Please delete the existing image first or rename the source file.[/]'
+                if (-not $isInteractiveScreenCall)
+                {
+                    Write-SpectreHost "[yellow]An image with this filename already exists: $safeFileName[/]"
+                    Write-SpectreHost '[yellow]Please delete the existing image first or rename the source file.[/]'
+                }
                 return $false
             }
 
@@ -117,11 +133,17 @@ function Import-BucketWim
 
             if (-not (Test-Path -Path $destinationPath -PathType Leaf))
             {
-                Write-SpectreHost '[red]Failed to copy image file.[/]'
+                if (-not $isInteractiveScreenCall)
+                {
+                    Write-SpectreHost '[red]Failed to copy image file.[/]'
+                }
                 return $false
             }
 
-            Write-SpectreHost '[green]File copied successfully.[/]'
+            if (-not $isInteractiveScreenCall)
+            {
+                Write-SpectreHost '[green]File copied successfully.[/]'
+            }
 
             # Step 5: Add to metadata
             # Ensure Images is an array
@@ -138,17 +160,23 @@ function Import-BucketWim
                 Save-BucketMetadata
             }
 
-            Write-SpectreHost ''
-            $safeImageId = ('' + $metadata.Id).Replace('[', '[[').Replace(']', ']]')
-            Write-SpectreHost "[green]Successfully imported:[/] $safeFileName"
-            Write-SpectreHost "[grey]Image ID: $safeImageId[/]"
+            if (-not $isInteractiveScreenCall)
+            {
+                Write-SpectreHost ''
+                $safeImageId = ('' + $metadata.Id).Replace('[', '[[').Replace(']', ']]')
+                Write-SpectreHost "[green]Successfully imported:[/] $safeFileName"
+                Write-SpectreHost "[grey]Image ID: $safeImageId[/]"
+            }
 
             return $true
         }
         catch
         {
             $safeError = ('' + $_).Replace('[', '[[').Replace(']', ']]')
-            Write-SpectreHost "[red]Import failed: $safeError[/]"
+            if (-not $isInteractiveScreenCall)
+            {
+                Write-SpectreHost "[red]Import failed: $safeError[/]"
+            }
             Write-BucketLog -Message "Import-BucketWim failed: $_" -Level Error
             return $false
         }
