@@ -5,10 +5,9 @@ function Show-BucketImportWim
       Displays the Import WIM screen and imports a WIM into the Bucket image store.
 
       .DESCRIPTION
-      This screen provides a dedicated, clean UI for importing a WIM file. It guides the
-      user through selecting a WIM, previews the WIM indexes in a table, asks for a final
-      confirmation, performs the copy + metadata save with status spinners, then shows a
-      success/failure summary panel and waits for Enter before returning to Image Management.
+      This screen provides a dedicated UI for importing a WIM file. It guides the user
+      through selecting a WIM, previews indexes in a table, and then runs the import with
+      a live progress card showing step-by-step status and details.
 
       .EXAMPLE
       $result = Show-BucketImportWim
@@ -125,69 +124,274 @@ function Show-BucketImportWim
                 return New-BucketNavResult -Action Refresh
             }
 
-            # Prevent duplicate by filename
-            $existingImages = Get-BucketImportedImages
-            $duplicate = $existingImages | Where-Object { $_.FileName -eq $fileName }
-            if ($duplicate)
-            {
-                ("[bold yellow]ALREADY IMPORTED[/]`n`n[grey]An image with this filename already exists:[/] $safeFileName") |
-                    Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
-                    Format-SpectrePanel -Expand -Border Rounded -Color 'Yellow' |
-                    Out-SpectreHost
-
-                Read-SpectrePause -Message 'Press Enter to return...'
-                return New-BucketNavResult -Action Refresh
-            }
-
             $state = Get-BucketState
             $destinationPath = Join-Path -Path $state.Paths.Images -ChildPath $fileName
+            $safeDestPath = ('' + $destinationPath).Replace('[', '[[').Replace(']', ']]')
 
-            $copyOk = Invoke-SpectreCommandWithStatus -Title "Copying $safeFileName..." -Spinner 'Dots' -ScriptBlock {
-                Copy-Item -Path $path -Destination $destinationPath -Force
-                Test-Path -Path $destinationPath -PathType Leaf
+            # Step model
+            $steps = @(
+                [pscustomobject]@{ Id = 'Validate'; Title = 'Validate'; Status = 'Pending'; Detail = 'Checking catalog and inputs...'; Percent = $null }
+                [pscustomobject]@{ Id = 'Copy'; Title = 'Copy File'; Status = 'Pending'; Detail = 'Copying to repository...'; Percent = 0 }
+                [pscustomobject]@{ Id = 'Save'; Title = 'Update Catalog'; Status = 'Pending'; Detail = 'Writing metadata...'; Percent = $null }
+            )
+
+            $activeStepId = 'Validate'
+            $overallStatus = 'Running'
+            $detailLines = @(
+                "[grey]Source:[/] $safeFileName"
+                "[grey]Destination:[/] $safeDestPath"
+                "[grey]Indexes:[/] $($metadata.IndexCount)"
+            )
+
+            function Set-Step
+            {
+                param(
+                    [Parameter(Mandatory = $true)] [string] $Id,
+                    [Parameter(Mandatory = $true)] [string] $Status,
+                    [Parameter()] [string] $Detail,
+                    [Parameter()] $Percent
+                )
+
+                $s = $steps | Where-Object { $_.Id -eq $Id } | Select-Object -First 1
+                if ($null -ne $s)
+                {
+                    $s.Status = $Status
+                    if ($PSBoundParameters.ContainsKey('Detail')) { $s.Detail = $Detail }
+                    if ($PSBoundParameters.ContainsKey('Percent')) { $s.Percent = $Percent }
+                }
             }
 
-            if (-not $copyOk)
+            function Render-StepList
             {
-                ('[bold red]COPY FAILED[/]`n`n[grey]Failed to copy image file.[/]') |
+                $lines = @()
+                foreach ($s in $steps)
+                {
+                    switch ($s.Status)
+                    {
+                        'Pending' { $icon = '[grey]○[/]'; $color = 'grey' }
+                        'Running' { $icon = '[deepskyblue1]●[/]'; $color = 'white' }
+                        'Done'    { $icon = '[green]●[/]'; $color = 'grey' }
+                        'Failed'  { $icon = '[red]×[/]'; $color = 'red' }
+                        default   { $icon = '[grey]?[/]'; $color = 'grey' }
+                    }
+
+                    $pct = ''
+                    if ($null -ne $s.Percent)
+                    {
+                        $pct = " [grey]($($s.Percent)%) [/]"
+                    }
+
+                    $detail = ''
+                    if (-not [string]::IsNullOrWhiteSpace($s.Detail))
+                    {
+                        $safeDetail = ('' + $s.Detail).Replace('[', '[[').Replace(']', ']]')
+                        $detail = "`n[grey]  $safeDetail[/]"
+                    }
+
+                    $lines += "$icon [$color]$($s.Title)[/]$pct$detail"
+                }
+
+                return ($lines -join "`n") |
+                    Format-SpectrePanel -Expand -Header '[deepskyblue1]Steps[/]' -Border Rounded -Color 'DeepSkyBlue1'
+            }
+
+            function Render-Details
+            {
+                $content = ($detailLines -join "`n")
+                return $content |
+                    Format-SpectrePanel -Expand -Header '[deepskyblue1]Details[/]' -Border Rounded -Color 'DeepSkyBlue1'
+            }
+
+            function Render-Footer
+            {
+                switch ($overallStatus)
+                {
+                    'Running' { $footer = '[grey]Working... please wait[/]' }
+                    'Failed'  { $footer = '[grey]Press Enter to return[/]' }
+                    'Done'    { $footer = '[grey]Press Enter to return[/]' }
+                    default   { $footer = '[grey]Press Enter to return[/]' }
+                }
+
+                return $footer |
                     Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
-                    Format-SpectrePanel -Expand -Border Rounded -Color 'Red' |
-                    Out-SpectreHost
-
-                Read-SpectrePause -Message 'Press Enter to return...'
-                return New-BucketNavResult -Action Refresh
+                    Format-SpectrePanel -Expand -Border Rounded
             }
 
-            if ($null -eq $state.Metadata.Images)
-            {
-                $state.Metadata.Images = @()
-            }
-            $state.Metadata.Images = @($state.Metadata.Images) + $metadata
-
-            Invoke-SpectreCommandWithStatus -Title 'Saving metadata...' -Spinner 'Dots' -ScriptBlock {
-                Save-BucketMetadata
-                $true
-            } | Out-Null
+            # Progress card layout
+            $layout = New-SpectreLayout -Name 'root' -Rows @(
+                (New-SpectreLayout -Name 'header' -MinimumSize 5 -Ratio 1 -Data 'empty')
+                (New-SpectreLayout -Name 'content' -Ratio 10 -Columns @(
+                    (New-SpectreLayout -Name 'left' -Ratio 2 -Data 'empty')
+                    (New-SpectreLayout -Name 'right' -Ratio 5 -Data 'empty')
+                ))
+                (New-SpectreLayout -Name 'footer' -MinimumSize 3 -Ratio 1 -Data 'empty')
+            )
 
             Clear-Host
 
-            $safeImageId = ('' + $metadata.Id).Replace('[', '[[').Replace(']', ']]')
-            $successLines = @(
-                '[bold green]IMPORT SUCCESSFUL[/]'
-                ''
-                "[grey]File:[/] $safeFileName"
-                "[grey]Image ID:[/] $safeImageId"
-                "[grey]Indexes:[/] $($metadata.IndexCount)"
-                ''
-                '[grey]The image is now available in the catalog.[/]'
-            )
+            Invoke-SpectreLive -Data $layout -ScriptBlock {
+                param([Spectre.Console.LiveDisplayContext] $Context)
 
-            ($successLines -join "`n") |
-                Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
-                Format-SpectrePanel -Expand -Border Rounded -Color 'Green' |
-                Out-SpectreHost
+                $layout['header'].Update($headerPanel) | Out-Null
 
-            Read-SpectrePause -Message 'Press Enter to return to Image Management...'
+                $update = {
+                    $layout['left'].Update((Render-StepList)) | Out-Null
+                    $layout['right'].Update((Render-Details)) | Out-Null
+                    $layout['footer'].Update((Render-Footer)) | Out-Null
+                    $Context.Refresh()
+                }
+
+                & $update
+
+                try
+                {
+                    # Step 1: Validate
+                    Set-Step -Id 'Validate' -Status 'Running' -Detail 'Checking for duplicates...'
+                    & $update
+
+                    $existingImages = Get-BucketImportedImages
+                    $duplicate = $existingImages | Where-Object { $_.FileName -eq $fileName }
+                    if ($duplicate)
+                    {
+                        Set-Step -Id 'Validate' -Status 'Failed' -Detail 'Duplicate filename found.'
+                        $overallStatus = 'Failed'
+                        $detailLines += "[red]Duplicate: an image with this filename already exists.[/]"
+                        & $update
+                        return
+                    }
+
+                    Set-Step -Id 'Validate' -Status 'Done' -Detail 'OK'
+                    & $update
+
+                    # Step 2: Copy (stream copy for live updates)
+                    Set-Step -Id 'Copy' -Status 'Running' -Detail 'Copying bytes...'
+                    & $update
+
+                    $sourceInfo = Get-Item -Path $path
+                    $totalBytes = [int64]$sourceInfo.Length
+                    $copiedBytes = 0
+                    $bufferSize = 4MB
+                    $buffer = [byte[]]::new($bufferSize)
+                    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+                    $lastUiUpdateMs = 0
+
+                    $source = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)
+                    try
+                    {
+                        $dest = [System.IO.File]::Open($destinationPath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+                        try
+                        {
+                            while (($read = $source.Read($buffer, 0, $buffer.Length)) -gt 0)
+                            {
+                                $dest.Write($buffer, 0, $read)
+                                $copiedBytes += $read
+
+                                $percent = 0
+                                if ($totalBytes -gt 0)
+                                {
+                                    $percent = [math]::Floor(($copiedBytes / $totalBytes) * 100)
+                                    if ($percent -gt 100) { $percent = 100 }
+                                }
+
+                                $nowMs = $sw.ElapsedMilliseconds
+                                if (($percent -ne $steps[1].Percent) -or (($nowMs - $lastUiUpdateMs) -ge 200))
+                                {
+                                    $lastUiUpdateMs = $nowMs
+
+                                    $copiedGb = [math]::Round($copiedBytes / 1GB, 2)
+                                    $totalGb = [math]::Round($totalBytes / 1GB, 2)
+                                    $speedMb = 0
+                                    if ($sw.Elapsed.TotalSeconds -gt 0)
+                                    {
+                                        $speedMb = [math]::Round(($copiedBytes / 1MB) / $sw.Elapsed.TotalSeconds, 1)
+                                    }
+
+                                    Set-Step -Id 'Copy' -Status 'Running' -Percent $percent -Detail ("{0}% ({1} / {2} GB) @ {3} MB/s" -f $percent, $copiedGb, $totalGb, $speedMb)
+
+                                    $detailLines = @(
+                                        "[grey]Source:[/] $safeFileName"
+                                        "[grey]Destination:[/] $safeDestPath"
+                                        "[grey]Progress:[/] $percent%"
+                                        "[grey]Copied:[/] $copiedGb / $totalGb GB"
+                                        "[grey]Speed:[/] $speedMb MB/s"
+                                        "[grey]Elapsed:[/] $([int]$sw.Elapsed.TotalSeconds)s"
+                                    )
+
+                                    & $update
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            $dest.Dispose()
+                        }
+                    }
+                    finally
+                    {
+                        $source.Dispose()
+                    }
+
+                    if (-not (Test-Path -Path $destinationPath -PathType Leaf))
+                    {
+                        Set-Step -Id 'Copy' -Status 'Failed' -Detail 'Destination file missing after copy.'
+                        $overallStatus = 'Failed'
+                        & $update
+                        return
+                    }
+
+                    Set-Step -Id 'Copy' -Status 'Done' -Percent 100 -Detail 'File copied.'
+                    & $update
+
+                    # Step 3: Save metadata
+                    Set-Step -Id 'Save' -Status 'Running' -Detail 'Writing metadata.json...'
+                    & $update
+
+                    if ($null -eq $state.Metadata.Images)
+                    {
+                        $state.Metadata.Images = @()
+                    }
+                    $state.Metadata.Images = @($state.Metadata.Images) + $metadata
+                    Save-BucketMetadata
+
+                    Set-Step -Id 'Save' -Status 'Done' -Detail 'Catalog updated.'
+                    $overallStatus = 'Done'
+
+                    $safeImageId = ('' + $metadata.Id).Replace('[', '[[').Replace(']', ']]')
+                    $detailLines = @(
+                        "[bold green]Import complete[/]"
+                        ""
+                        "[grey]File:[/] $safeFileName"
+                        "[grey]Image ID:[/] $safeImageId"
+                        "[grey]Indexes:[/] $($metadata.IndexCount)"
+                        "[grey]Destination:[/] $safeDestPath"
+                    )
+
+                    & $update
+                }
+                catch
+                {
+                    $safeError = ('' + $_).Replace('[', '[[').Replace(']', ']]')
+                    Set-Step -Id $activeStepId -Status 'Failed' -Detail $safeError
+                    $overallStatus = 'Failed'
+                    $detailLines = @(
+                        '[bold red]Import failed[/]'
+                        ''
+                        "[grey]$safeError[/]"
+                    )
+                    & $update
+                }
+
+                # Wait for Enter to return
+                while ($true)
+                {
+                    [Console]::TreatControlCAsInput = $true
+                    $keyInfo = [Console]::ReadKey($true)
+                    if ($keyInfo.Key -eq 'Enter')
+                    {
+                        return
+                    }
+                }
+            }
 
             return New-BucketNavResult -Action Refresh
         }
