@@ -81,7 +81,8 @@ function Show-BucketImageViewer
                     $sizeGB = [math]::Round($img.FileSize / 1GB, 2)
                     $prefix = if ($i -eq $selectedIndex) { '[deepskyblue1]> [/]' } else { '  ' }
                     $highlight = if ($i -eq $selectedIndex) { '[white]' } else { '[grey]' }
-                    $imageListLines += "$prefix$highlight$($img.FileName)[/] [grey]($sizeGB GB, $($img.IndexCount) idx)[/]"
+                    $safeImageFileName = Get-SpectreEscapedText $img.FileName
+                    $imageListLines += "$prefix$highlight$safeImageFileName[/] [grey]($sizeGB GB, $($img.IndexCount) idx)[/]"
                 }
                 $imageListContent = $imageListLines -join "`n"
                 $imageListPanel = $imageListContent | Format-SpectrePanel -Expand -Header '[deepskyblue1]Images[/]' -Border Rounded

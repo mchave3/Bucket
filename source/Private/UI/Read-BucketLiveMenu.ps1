@@ -132,11 +132,14 @@ function Read-BucketLiveMenu
                 # Build header panel
                 if ([string]::IsNullOrWhiteSpace($menuSubtitle))
                 {
-                    $headerContent = "[bold $menuColor]$menuTitle[/]"
+                    $safeTitle = Get-SpectreEscapedText $menuTitle
+                    $headerContent = "[bold $menuColor]$safeTitle[/]"
                 }
                 else
                 {
-                    $headerContent = "[bold $menuColor]$menuTitle[/]`n[grey]$menuSubtitle[/]"
+                    $safeTitle = Get-SpectreEscapedText $menuTitle
+                    $safeSubtitle = Get-SpectreEscapedText $menuSubtitle
+                    $headerContent = "[bold $menuColor]$safeTitle[/]`n[grey]$safeSubtitle[/]"
                 }
                 $headerPanel = $headerContent |
                     Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
@@ -147,14 +150,16 @@ function Read-BucketLiveMenu
                 for ($i = 0; $i -lt $allChoices.Count; $i++)
                 {
                     $choice = $allChoices[$i]
+                    $safeChoice = Get-SpectreEscapedText $choice
                     if ($i -eq $selectedIndex)
                     {
-                        $menuLines += "[$menuColor]> $choice[/]"
+                        $menuLines += "[$menuColor]> $safeChoice[/]"
                     }
                     else
                     {
-                        $menuLines += "  [grey]$choice[/]"
+                        $menuLines += "  [grey]$safeChoice[/]"
                     }
+
                 }
                 $menuContent = $menuLines -join "`n"
                 $menuPanel = $menuContent |

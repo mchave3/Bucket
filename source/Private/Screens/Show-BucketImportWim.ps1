@@ -32,7 +32,7 @@ function Show-BucketImportWim
 
             Clear-Host
 
-            $header = "[bold deepskyblue1]Import WIM Image[/]`n[grey]Select a WIM, preview indexes, then confirm import.[/]"
+            $header = "[bold deepskyblue1]Import WIM Image[/]`n[grey]Select a WIM, preview indexes, then import.[/]"
             $headerPanel = $header |
                 Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
                 Format-SpectrePanel -Expand -Border Rounded -Color 'DeepSkyBlue1'
@@ -116,14 +116,6 @@ function Show-BucketImportWim
             $table | Out-SpectreHost
             Write-SpectreHost ''
 
-            $selection = Read-SpectreSelection -Message 'Import WIM' -Choices @('Import', 'Cancel') -Color 'DeepSkyBlue1'
-            if ($selection -ne 'Import')
-            {
-                Write-SpectreHost '[yellow]Import cancelled.[/]'
-                Start-Sleep -Milliseconds 700
-                return New-BucketNavResult -Action Refresh
-            }
-
             $state = Get-BucketState
             $destinationPath = Join-Path -Path $state.Paths.Images -ChildPath $fileName
             $safeDestPath = ('' + $destinationPath).Replace('[', '[[').Replace(']', ']]')
@@ -164,16 +156,24 @@ function Show-BucketImportWim
 
             $renderStepPanel = {
                 $lines = @()
+
+                $iconPending = Get-SpectreEscapedText '[ ]'
+                $iconRunning = Get-SpectreEscapedText '[*]'
+                $iconDone = Get-SpectreEscapedText '[x]'
+                $iconFailed = Get-SpectreEscapedText '[!]'
+                $iconUnknown = Get-SpectreEscapedText '[?]'
+
                 foreach ($s in $steps)
                 {
                     switch ($s.Status)
                     {
-                        'Pending' { $icon = '[grey][ ][/]'; $titleColor = 'grey' }
-                        'Running' { $icon = '[deepskyblue1][*][/]'; $titleColor = 'white' }
-                        'Done'    { $icon = '[green][x][/]'; $titleColor = 'grey' }
-                        'Failed'  { $icon = '[red][!][/]'; $titleColor = 'red' }
-                        default   { $icon = '[grey][?][/]'; $titleColor = 'grey' }
+                        'Pending' { $icon = "[grey]$iconPending[/]"; $titleColor = 'grey' }
+                        'Running' { $icon = "[deepskyblue1]$iconRunning[/]"; $titleColor = 'white' }
+                        'Done'    { $icon = "[green]$iconDone[/]"; $titleColor = 'grey' }
+                        'Failed'  { $icon = "[red]$iconFailed[/]"; $titleColor = 'red' }
+                        default   { $icon = "[grey]$iconUnknown[/]"; $titleColor = 'grey' }
                     }
+
 
                     $pct = ''
                     if ($null -ne $s.Percent)
@@ -216,28 +216,43 @@ function Show-BucketImportWim
                 (New-SpectreLayout -Name 'footer' -MinimumSize 3 -Ratio 1 -Data 'empty')
             )
 
+            $refreshLive = {
+                param(
+                    [Parameter(Mandatory = $true)] [Spectre.Console.LiveDisplayContext] $Context,
+                    [Parameter(Mandatory = $true)] $Layout,
+                    [Parameter(Mandatory = $true)] $HeaderPanel,
+                    [Parameter(Mandatory = $true)] [scriptblock] $RenderStepPanel,
+                    [Parameter(Mandatory = $true)] [scriptblock] $RenderDetailPanel,
+                    [Parameter(Mandatory = $true)] [scriptblock] $RenderFooterPanel
+                )
+
+                Clear-Host
+                $Layout['header'].Update($HeaderPanel) | Out-Null
+                $Layout['left'].Update((& $RenderStepPanel)) | Out-Null
+                $Layout['right'].Update((& $RenderDetailPanel)) | Out-Null
+                $Layout['footer'].Update((& $RenderFooterPanel)) | Out-Null
+                $Context.Refresh()
+            }
+
+
             Clear-Host
 
             Invoke-SpectreLive -Data $layout -ScriptBlock {
+
                 param([Spectre.Console.LiveDisplayContext] $Context)
 
                 # ScriptAnalyzer sometimes misses nested usages; keep an explicit reference.
                 $null = $Context
 
-                $layout['header'].Update($headerPanel) | Out-Null
-                $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                $Context.Refresh()
+                & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                 try
                 {
                     # Validate
                     & $updateStep -Id 'Validate' -Status 'Running' -Detail 'Checking for duplicates...'
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                    $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                     $existingImages = Get-BucketImportedImages
                     $duplicate = $existingImages | Where-Object { $_.FileName -eq $fileName }
@@ -246,21 +261,19 @@ function Show-BucketImportWim
                         & $updateStep -Id 'Validate' -Status 'Failed' -Detail 'Duplicate filename found.'
                         $detailLines += '[red]Duplicate: an image with this filename already exists.[/]'
 
-                        $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                        $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                        $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                        $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
                         return
                     }
 
                     & $updateStep -Id 'Validate' -Status 'Done' -Detail 'OK'
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                     # Copy (stream copy for live progress)
                     & $updateStep -Id 'Copy' -Status 'Running' -Detail 'Copying bytes...' -Percent 0
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                     $sourceInfo = Get-Item -Path $path
                     $totalBytes = [int64]$sourceInfo.Length
@@ -315,12 +328,12 @@ function Show-BucketImportWim
                                         "[grey]Copied:[/] $copiedGb / $totalGb GB"
                                         "[grey]Speed:[/] $speedMb MB/s"
                                         "[grey]Elapsed:[/] $([int]$sw.Elapsed.TotalSeconds)s"
-                                    )
+                    )
 
-                                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                                    $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                                    $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
+
+
                                 }
                             }
                         }
@@ -338,21 +351,19 @@ function Show-BucketImportWim
                     {
                         & $updateStep -Id 'Copy' -Status 'Failed' -Detail 'Destination file missing after copy.'
 
-                        $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                        $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                        $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                        $Context.Refresh()
+                        & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
                         return
                     }
 
+
                     & $updateStep -Id 'Copy' -Status 'Done' -Percent 100 -Detail 'File copied.'
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                     # Save
                     & $updateStep -Id 'Save' -Status 'Running' -Detail 'Writing metadata.json...'
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
                     if ($null -eq $state.Metadata.Images)
                     {
@@ -373,10 +384,9 @@ function Show-BucketImportWim
                         "[grey]Destination:[/] $safeDestPath"
                     )
 
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                    $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
+
                 }
                 catch
                 {
@@ -393,10 +403,9 @@ function Show-BucketImportWim
                         "[grey]$safeError[/]"
                     )
 
-                    $layout['left'].Update((& $renderStepPanel)) | Out-Null
-                    $layout['right'].Update((& $renderDetailPanel)) | Out-Null
-                    $layout['footer'].Update((& $renderFooterPanel)) | Out-Null
-                    $Context.Refresh()
+                    & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
+
                 }
 
                 # Wait for Enter to return
