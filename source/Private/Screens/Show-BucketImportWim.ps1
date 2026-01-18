@@ -201,11 +201,20 @@ function Show-BucketImportWim
                     Format-SpectrePanel -Expand -Header '[deepskyblue1]Details[/]' -Border Rounded -Color 'DeepSkyBlue1'
             }
 
+            $script:footerMode = 'Working'
+
             $renderFooterPanel = {
-                return '[grey]Working... please wait[/]' |
+                $footerText = switch ($script:footerMode)
+                {
+                    'ReadyToExit' { '[grey]Enter/Esc: Return[/]' }
+                    default       { '[grey]Working... please wait[/]' }
+                }
+
+                return $footerText |
                     Format-SpectreAligned -HorizontalAlignment Center -VerticalAlignment Middle |
                     Format-SpectrePanel -Expand -Border Rounded
             }
+
 
             $layout = New-SpectreLayout -Name 'root' -Rows @(
                 (New-SpectreLayout -Name 'header' -MinimumSize 5 -Ratio 1 -Data 'empty')
@@ -384,7 +393,10 @@ function Show-BucketImportWim
                         "[grey]Destination:[/] $safeDestPath"
                     )
 
+                    $script:footerMode = 'ReadyToExit'
+
                     & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
 
                 }
@@ -403,17 +415,25 @@ function Show-BucketImportWim
                         "[grey]$safeError[/]"
                     )
 
+                    $script:footerMode = 'ReadyToExit'
+
                     & $refreshLive -Context $Context -Layout $layout -HeaderPanel $headerPanel -RenderStepPanel $renderStepPanel -RenderDetailPanel $renderDetailPanel -RenderFooterPanel $renderFooterPanel
+
 
 
                 }
 
-                # Wait for Enter to return
+                # Wait for input to return
                 while ($true)
                 {
                     [Console]::TreatControlCAsInput = $true
                     $keyInfo = [Console]::ReadKey($true)
-                    if ($keyInfo.Key -eq 'Enter')
+                    if ($keyInfo.Key -eq 'Enter' -or $keyInfo.Key -eq 'Escape')
+                    {
+                        return
+                    }
+
+                    if ($keyInfo.Key -eq 'C' -and $keyInfo.Modifiers -eq 'Control')
                     {
                         return
                     }

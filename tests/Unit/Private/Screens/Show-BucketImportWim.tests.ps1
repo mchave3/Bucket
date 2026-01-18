@@ -15,4 +15,17 @@ Describe 'Show-BucketImportWim' {
             Get-Command -Name Show-BucketImportWim -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
         }
     }
+
+    Context 'UI footer behavior' {
+        It 'Should provide a return hint after completion' {
+            $content = Get-Content -Path $privateFunctionPath -Raw
+            $content | Should -Match 'ReadyToExit'
+            $content | Should -Match 'Enter/Esc: Return'
+        }
+
+        It 'Should keep a working footer while running' {
+            $content = Get-Content -Path $privateFunctionPath -Raw
+            $content | Should -Match 'Working\.\.\. please wait'
+        }
+    }
 }
